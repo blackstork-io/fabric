@@ -70,7 +70,7 @@ func readAndParse(files []string) (body hcl.Body, fileMap map[string]*hcl.File, 
 
 func fromDisk() (body hcl.Body, fileMap map[string]*hcl.File, diags diagnostics.Diagnostics) {
 	// TODO: replace with filepath.WalkDir()
-	files, err := filepath.Glob(path + "*.hcl")
+	files, err := filepath.Glob(path + "*.fabric")
 	if diags.FromErr(err, "Can't find files") {
 		return
 	}
@@ -78,7 +78,7 @@ func fromDisk() (body hcl.Body, fileMap map[string]*hcl.File, diags diagnostics.
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to load files",
-			Detail:   fmt.Sprintf("no *.hcl files found at %s", path),
+			Detail:   fmt.Sprintf("no *.fabric files found at %s", path),
 		})
 		return
 	}

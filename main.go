@@ -17,7 +17,7 @@ type Decoder struct {
 }
 
 func argParse() error {
-	flag.StringVar(&path, "path", "", "a path to a directory with *.hcl files")
+	flag.StringVar(&path, "path", "", "a path to a directory with *.fabric files")
 	flag.StringVar(&pluginPath, "plugins", "", "a path to a __plugin file__")
 	flag.StringVar(&docName, "document", "", "the name of the document to process")
 	flag.Parse()
