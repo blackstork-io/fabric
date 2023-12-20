@@ -1,8 +1,8 @@
 package plugins
 
 import (
-	"weave-cli/plugins/content"
-	"weave-cli/plugins/data"
+	"github.com/blackstork-io/fabric/plugins/content"
+	"github.com/blackstork-io/fabric/plugins/data"
 
 	"github.com/hashicorp/go-plugin"
 )
@@ -10,7 +10,7 @@ import (
 var Handshake = plugin.HandshakeConfig{
 	ProtocolVersion:  1,
 	MagicCookieKey:   "PLUGINS_FOR",
-	MagicCookieValue: "weave-cli",
+	MagicCookieValue: "fabric",
 }
 
 var PluginMap = plugin.PluginSet{

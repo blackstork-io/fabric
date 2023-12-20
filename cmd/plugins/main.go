@@ -1,13 +1,13 @@
 package main
 
 import (
-	"weave-cli/plugins"
-	"weave-cli/plugins/content"
-	"weave-cli/plugins/content/table"
-	"weave-cli/plugins/content/text"
-	"weave-cli/plugins/data"
-	"weave-cli/plugins/data/plugin_a"
-	"weave-cli/plugins/data/plugin_b"
+	"github.com/blackstork-io/fabric/plugins"
+	"github.com/blackstork-io/fabric/plugins/content"
+	"github.com/blackstork-io/fabric/plugins/content/table"
+	"github.com/blackstork-io/fabric/plugins/content/text"
+	"github.com/blackstork-io/fabric/plugins/data"
+	"github.com/blackstork-io/fabric/plugins/data/plugin_a"
+	"github.com/blackstork-io/fabric/plugins/data/plugin_b"
 
 	"github.com/hashicorp/go-plugin"
 )

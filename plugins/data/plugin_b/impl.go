@@ -1,8 +1,8 @@
 package plugin_b
 
 import (
-	"weave-cli/pkg/jsontools"
-	"weave-cli/plugins/data"
+	"github.com/blackstork-io/fabric/pkg/jsontools"
+	"github.com/blackstork-io/fabric/plugins/data"
 )
 
 type Impl struct{}

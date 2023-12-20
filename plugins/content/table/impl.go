@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"text/template"
-	"weave-cli/pkg/jsontools"
-	"weave-cli/plugins/content"
+	"github.com/blackstork-io/fabric/pkg/jsontools"
+	"github.com/blackstork-io/fabric/plugins/content"
 )
 
 // Actual implementation of the plugin

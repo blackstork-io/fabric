@@ -7,9 +7,9 @@ import (
 	"slices"
 	"strings"
 	"sync"
-	"weave-cli/pkg/diagnostics"
-	"weave-cli/plugins"
-	plugContent "weave-cli/plugins/content"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugins"
+	plugContent "github.com/blackstork-io/fabric/plugins/content"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"

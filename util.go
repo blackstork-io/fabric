@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"os"
-	"weave-cli/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 
 	"github.com/hashicorp/hcl/v2"
 	"golang.org/x/term"

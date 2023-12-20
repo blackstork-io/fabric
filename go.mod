@@ -1,4 +1,4 @@
-module weave-cli
+module github.com/blackstork-io/fabric
 
 go 1.21.5
 

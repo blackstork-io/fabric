@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"weave-cli/pkg/diagnostics"
-	"weave-cli/pkg/parexec"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/parexec"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
