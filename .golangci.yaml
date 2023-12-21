@@ -1,0 +1,52 @@
+run:
+  skip-dirs:
+    - tmp
+  timeout: 5m
+
+
+linters:
+  enable-all: true
+  disable:
+    # Deprecated
+    - deadcode
+    - golint
+    - ifshort
+    - interfacer
+    - maligned
+    - nosnakecase
+    - scopelint
+    - structcheck
+    - varcheck
+    # Annoying
+    - depguard
+    - exhaustivestruct
+    - exhaustruct
+    - ireturn
+    - nakedret
+    - nlreturn
+    - nonamedreturns
+    - tagliatelle
+    - varnamelen
+    - wsl
+    # Annoying, but useful. Should be enabled in the future
+    - cyclop
+    - funlen
+    - gochecknoglobals
+    - godox
+    - lll
+
+linters-settings:
+  gomnd:
+    # Declaring as non-magical
+    ignored-numbers:
+      - '2'
+  godot:
+    exclude:
+      - "^\\s*XXX:"
+      - "^\\s*TODO:"
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/blackstork-io/fabric)
+
