@@ -5,9 +5,9 @@ import (
 )
 
 const (
-	BK_CONTENT  = "content"
-	BK_DATA     = "data"
-	BK_DOCUMENT = "document"
+	ContentBlockName  = "content"
+	DataBlockName     = "data"
+	DocumentBlockName = "document"
 )
 
 type Templates struct {
@@ -86,8 +86,8 @@ type Block interface {
 	GetBlockKind() string
 	// Get the structure for parsing this block's Extra fields
 	NewBlockExtra() BlockExtra
-	DecodeNestedBlocks(*Decoder, BlockExtra) hcl.Diagnostics
-	UpdateFromRef(any, hcl.Expression) hcl.Diagnostics
+	DecodeNestedBlocks(decoder *Decoder, extraInfo BlockExtra) hcl.Diagnostics
+	UpdateFromRef(refTgt any, ref hcl.Expression) hcl.Diagnostics
 }
 
 type BlockExtra interface {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"text/template"
+
 	"github.com/blackstork-io/fabric/pkg/jsontools"
 	"github.com/blackstork-io/fabric/plugins/content"
 )
@@ -14,7 +15,7 @@ type Impl struct{}
 
 var _ content.Plugin = (*Impl)(nil)
 
-const PLUGIN_NAME = "content.text"
+const PluginName = "content.text"
 
 func (Impl) Execute(attrsRaw, dictRaw any) (resp string, err error) {
 	var attrs struct {
@@ -30,14 +31,14 @@ func (Impl) Execute(attrsRaw, dictRaw any) (resp string, err error) {
 		return
 	}
 
-	tmpl, err := template.New(PLUGIN_NAME).Parse(attrs.Text)
+	tmpl, err := template.New(PluginName).Parse(attrs.Text)
 	if err != nil {
 		err = fmt.Errorf("failed to parse the template: %w; template: `%s`", err, attrs.Text)
 		return
 	}
 
 	var buf bytes.Buffer
-	buf.WriteString(PLUGIN_NAME)
+	buf.WriteString(PluginName)
 	buf.WriteByte(':')
 
 	err = tmpl.Execute(&buf, dict)

@@ -43,7 +43,7 @@ func JoinSurround(sep, surround string, elems ...string) string {
 	return b.String()
 }
 
-// Proper unicode aware captialization function. If something is wrong – just returns string as is
+// Proper unicode aware capitalization function. If something is wrong – just returns string as is.
 func CapitalizeFirstLetter(s string) string {
 	r, offset := utf8.DecodeRuneInString(s)
 	if r == utf8.RuneError {
@@ -61,6 +61,7 @@ func CapitalizeFirstLetter(s string) string {
 	}
 
 	var b strings.Builder
+
 	b.Grow(capitalRuneLen + len(s) - offset)
 	b.WriteRune(upperR)
 	b.WriteString(s[offset:])

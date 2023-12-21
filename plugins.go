@@ -1,21 +1,25 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os/exec"
 	"slices"
 	"strings"
 	"sync"
-	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/plugins"
-	plugContent "github.com/blackstork-io/fabric/plugins/content"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/hcl/v2"
 	"golang.org/x/exp/maps"
+
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugins"
+	plugContent "github.com/blackstork-io/fabric/plugins/content"
 )
+
+var ErrUnknownPluginKind = errors.New("unknown plugin kind")
 
 type Plugins struct {
 	content PluginType
@@ -37,13 +41,12 @@ func NewPluginType(plugins map[string]any) PluginType {
 
 func (p *Plugins) ByKind(kind string) *PluginType {
 	switch kind {
-	case BK_CONTENT:
+	case ContentBlockName:
 		return &p.content
-	case BK_DATA:
+	case DataBlockName:
 		return &p.data
-	default:
-		panic(fmt.Errorf("unknown plugin kind '%s'", kind))
 	}
+	panic(fmt.Errorf("%w: %s", ErrUnknownPluginKind, kind))
 }
 
 func memoizedKeys[M ~map[string]V, V any](m *M) func() string {
@@ -57,13 +60,13 @@ func memoizedKeys[M ~map[string]V, V any](m *M) func() string {
 type genericPlugin struct{}
 
 // Execute implements content.Plugin.
-func (*genericPlugin) Execute(attrs, content any) (string, error) {
+func (*genericPlugin) Execute(_, _ any) (string, error) {
 	return "", nil
 }
 
 var _ plugContent.Plugin = (*genericPlugin)(nil)
 
-func NewPlugins(pluginPath string) (p *Plugins, diag diagnostics.Diagnostics) {
+func NewPlugins(pluginPath string) (p *Plugins, diag diagnostics.Diag) {
 	// TODO: setup pluggin logging?
 	hclog.DefaultOutput = io.Discard
 	client := plugin.NewClient(&plugin.ClientConfig{
@@ -80,7 +83,7 @@ func NewPlugins(pluginPath string) (p *Plugins, diag diagnostics.Diagnostics) {
 
 	// Connect via RPC
 	rpcClient, err := client.Client()
-	if diag.FromErr(err, "Plugin connection error") {
+	if diag.AppendErr(err, "Plugin connection error") {
 		return
 	}
 
@@ -101,9 +104,9 @@ func NewPlugins(pluginPath string) (p *Plugins, diag diagnostics.Diagnostics) {
 		}
 		var tgtMap map[string]any
 		switch split[0] {
-		case BK_CONTENT:
+		case ContentBlockName:
 			tgtMap = content
-		case BK_DATA:
+		case DataBlockName:
 			tgtMap = data
 		default:
 			diag.Append(&hcl.Diagnostic{
@@ -116,7 +119,7 @@ func NewPlugins(pluginPath string) (p *Plugins, diag diagnostics.Diagnostics) {
 		// Request the plugin
 		var rawPlugin any
 		rawPlugin, err = rpcClient.Dispense(pluginName)
-		if diag.FromErr(err, "Plugin RPC error") {
+		if diag.AppendErr(err, "Plugin RPC error") {
 			return
 		}
 		tgtMap[split[1]] = rawPlugin

@@ -3,12 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-
 	"os"
 
+	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
+
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
+// TODO: replace flag with a better parser (argparse).
 var path, pluginPath, docName string
 
 type Decoder struct {
@@ -16,32 +19,35 @@ type Decoder struct {
 	plugins *Plugins
 }
 
-func argParse() error {
-	flag.StringVar(&path, "path", "", "a path to a directory with *.fabric files")
+func argParse() (diags diagnostics.Diag) {
+	flag.StringVar(&path, "path", "", "a path to a directory with *.hcl files")
 	flag.StringVar(&pluginPath, "plugins", "", "a path to a __plugin file__")
 	flag.StringVar(&docName, "document", "", "the name of the document to process")
 	flag.Parse()
 	if path == "" {
-		return fmt.Errorf("path required")
+		diags.Add("Wrong usage", "path required")
 	}
 	if docName == "" {
-		return fmt.Errorf("document name required")
+		diags.Add("Wrong usage", "document name required")
 	}
 	if pluginPath == "" {
-		return fmt.Errorf("plugins required")
+		diags.Add("Wrong usage", "plugins required")
 	}
-	return nil
+	return
 }
 
-func run() error {
-	err := argParse()
-	if err != nil {
-		return err
-	}
-	body, fileMap, diags := fromDisk()
+func run() (diags diagnostics.Diag) {
+	var fileMap map[string]*hcl.File
 	defer func() { PrintDiags(diags, fileMap) }()
-	if diags.HasErrors() {
-		return diags
+
+	diag := argParse()
+	if diags.Extend(diag) {
+		return
+	}
+
+	body, fileMap, diag := fromDisk()
+	if diags.Extend(diag) {
+		return
 	}
 
 	plugins, pluginDiag := NewPlugins(pluginPath)
@@ -67,13 +73,12 @@ func run() error {
 	if diag.HasErrors() {
 		return diags
 	}
-	fmt.Println(output)
+	fmt.Println(output) //nolint: forbidigo
 	return nil
 }
 
 func main() {
-	if err := run(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+	if diags := run(); diags.HasErrors() {
 		os.Exit(1)
 	}
 }

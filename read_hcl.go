@@ -5,16 +5,17 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/pkg/parexec"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
+
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/parexec"
 )
 
 type fileParseResult struct {
 	file  *hcl.File
-	diags diagnostics.Diagnostics
+	diags diagnostics.Diag
 }
 
 func readFile(path string) (bytes []byte, err error) {
@@ -29,27 +30,29 @@ func parseHcl(bytes []byte, filename string) *fileParseResult {
 	file, diags := hclsyntax.ParseConfig(bytes, filename, hcl.InitialPos)
 	return &fileParseResult{
 		file:  file,
-		diags: diagnostics.Diagnostics(diags),
+		diags: diagnostics.Diag(diags),
 	}
 }
 
 func processFile(path string) *fileParseResult {
 	bytes, err := readFile(path)
 	if err != nil {
-		diag := diagnostics.FromErr(err, "File read error")
-		diag.Subject = &hcl.Range{Filename: path}
-		return &fileParseResult{diags: []*hcl.Diagnostic{diag}}
+		return &fileParseResult{
+			diags: diagnostics.FromErrSubj(
+				err, "File read error", &hcl.Range{Filename: path},
+			),
+		}
 	}
 	return parseHcl(bytes, path)
 }
 
-func readAndParse(files []string) (body hcl.Body, fileMap map[string]*hcl.File, diags diagnostics.Diagnostics) {
+func readAndParse(files []string) (body hcl.Body, fileMap map[string]*hcl.File, diags diagnostics.Diag) {
 	slices.Sort(files)
 	bodies := make([]hcl.Body, len(files))
 	fileMap = make(map[string]*hcl.File, len(files))
 
 	pe := parexec.New(
-		parexec.NewLimiter(min(len(files), 4)),
+		parexec.DiskIOLimiter,
 		func(res *fileParseResult, idx int) (cmd parexec.Command) {
 			if diags.Extend(res.diags) {
 				return
@@ -68,10 +71,10 @@ func readAndParse(files []string) (body hcl.Body, fileMap map[string]*hcl.File, 
 	return
 }
 
-func fromDisk() (body hcl.Body, fileMap map[string]*hcl.File, diags diagnostics.Diagnostics) {
+func fromDisk() (body hcl.Body, fileMap map[string]*hcl.File, diags diagnostics.Diag) {
 	// TODO: replace with filepath.WalkDir()
 	files, err := filepath.Glob(path + "*.fabric")
-	if diags.FromErr(err, "Can't find files") {
+	if diags.AppendErr(err, "Can't find files") {
 		return
 	}
 	if len(files) == 0 {

@@ -49,9 +49,12 @@ func (d *Decoder) DecodeBlock(block Block) (diag hcl.Diagnostics) {
 	leftover := extra.GetUnparsed()
 	attrs, attrDiags := leftover.JustAttributes()
 	if attrDiags.HasErrors() {
-		// TODO: messy hcl bug workaround, in some cases might silently ignore user's error
+		// FIXME: messy hcl bug workaround, fix pending approval https://github.com/hashicorp/hcl/pull/646
 		attrDiags = nil
-		body := leftover.(*hclsyntax.Body)
+		body, ok := leftover.(*hclsyntax.Body)
+		if !ok {
+			panic("leftover is always hclsyntax.Body!")
+		}
 		for _, b := range body.Blocks {
 			switch b.Type {
 			case "meta", "content":
@@ -77,7 +80,8 @@ func (d *Decoder) DecodeBlock(block Block) (diag hcl.Diagnostics) {
 				Severity: hcl.DiagWarning,
 				Summary:  "Non-empty ref attribute",
 				Detail: fmt.Sprintf(
-					"Non-empty ref attribute found in block of type '%s'. It will be ignored. Block must have type 'ref' in order to use references",
+					"Non-empty ref attribute found in block of type '%s'. "+
+						"It will be ignored. Block must have type 'ref' in order to use references",
 					*block.GetType(),
 				),
 				Subject:    extra.GetRef().Range().Ptr(),
@@ -91,7 +95,8 @@ func (d *Decoder) DecodeBlock(block Block) (diag hcl.Diagnostics) {
 				Severity: hcl.DiagWarning,
 				Summary:  fmt.Sprintf("Unknown %s block type", block.GetBlockKind()),
 				Detail: fmt.Sprintf(
-					"Unknown content block type '%s', valid block types: %s. Referencing or evaluating this block would cause an error",
+					"Unknown content block type '%s', valid block types: %s. "+
+						"Referencing or evaluating this block would cause an error",
 					*block.GetType(),
 					plugins.Names(),
 				),
@@ -113,11 +118,17 @@ func (d *Decoder) DecodeBlock(block Block) (diag hcl.Diagnostics) {
 		}
 		if extra.GetRef().Range().Empty() {
 			missingRef.Summary = "Missing ref"
-			missingRef.Detail = fmt.Sprintf("Block '%s %s' is of type 'ref', but the ref field is missing", block.GetBlockKind(), block.GetName())
+			missingRef.Detail = fmt.Sprintf(
+				"Block '%s %s' is of type 'ref', but the ref field is missing",
+				block.GetBlockKind(), block.GetName(),
+			)
 			missingRef.Subject = block.GetUnparsed().MissingItemRange().Ptr()
 		} else {
 			missingRef.Summary = "Empty ref"
-			missingRef.Detail = fmt.Sprintf("Block '%s %s' is of type 'ref', but the ref field is empty", block.GetBlockKind(), block.GetName())
+			missingRef.Detail = fmt.Sprintf(
+				"Block '%s %s' is of type 'ref', but the ref field is empty",
+				block.GetBlockKind(), block.GetName(),
+			)
 			missingRef.Subject = extra.GetRef().Range().Ptr()
 			missingRef.Expression = extra.GetRef()
 		}

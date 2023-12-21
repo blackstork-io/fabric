@@ -2,6 +2,7 @@ package data
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/rpc"
 
 	"github.com/hashicorp/go-plugin"
@@ -19,12 +20,14 @@ type RPCServer struct {
 
 func (s *RPCServer) Execute(input []byte, resp *[]byte) (err error) {
 	result, err := s.Impl.Execute(input)
-	if err != nil {
-		return err
+	if err == nil {
+		*resp, err = json.Marshal(Result{
+			Result: result,
+		})
 	}
-	*resp, err = json.Marshal(Result{
-		Result: result,
-	})
+	if err != nil {
+		err = fmt.Errorf("data plugin error: %w", err)
+	}
 	return
 }
 

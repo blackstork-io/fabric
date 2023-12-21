@@ -2,22 +2,29 @@ package jsontools
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+)
+
+var (
+	ErrTraversal      = errors.New("traversal failed")
+	ErrUnmarshalBytes = errors.New("expected a slice of bytes")
 )
 
 func MapSet(m map[string]any, keys []string, val any) (map[string]any, error) {
 	curMap := m
+
 	if len(keys) == 0 {
-		return m, fmt.Errorf("MapSet: keys empty")
+		return m, ErrTraversal
 	}
+
 	if len(keys) > 1 {
 		for _, k := range keys[:len(keys)-1] {
 			v, found := curMap[k]
 			if found {
 				var ok bool
-				curMap, ok = v.(map[string]any)
-				if !ok {
-					return m, fmt.Errorf("MapSet: failed to cast to map[string]any")
+				if curMap, ok = v.(map[string]any); !ok {
+					return m, ErrTraversal
 				}
 			} else {
 				nextMap := map[string]any{}
@@ -26,25 +33,26 @@ func MapSet(m map[string]any, keys []string, val any) (map[string]any, error) {
 			}
 		}
 	}
+
 	curMap[keys[len(keys)-1]] = val
 	return m, nil
 }
 
 func MapGet(m any, keys []string) (val any, err error) {
 	if len(keys) == 0 {
-		err = fmt.Errorf("MapGet: keys empty")
+		err = ErrTraversal
 		return
 	}
 	val = m
 	for _, k := range keys {
 		asMap, ok := val.(map[string]any)
 		if !ok {
-			err = fmt.Errorf("MapGet: failed to cast to map[string]any")
+			err = ErrTraversal
 			return
 		}
 		val, ok = asMap[k]
 		if !ok {
-			err = fmt.Errorf("can't find a key")
+			err = ErrTraversal
 			return
 		}
 	}
@@ -62,7 +70,7 @@ func Dump(obj any) string {
 func UnmarshalBytes(bytes, value any) error {
 	data, ok := bytes.([]byte)
 	if !ok {
-		return fmt.Errorf("expected array of bytes")
+		return ErrUnmarshalBytes
 	}
-	return json.Unmarshal(data, value)
+	return json.Unmarshal(data, value) //nolint: wrapcheck
 }

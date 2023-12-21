@@ -1,62 +1,69 @@
 package parexec
 
 import (
+	"runtime"
 	"sync"
 	"sync/atomic"
 )
 
-// Controls the scheduler. Values: PROCEED (zero-value) and STOP
+// Controls the scheduler. Values: CmdProceed (zero-value) and CmdStop.
 type Command uint8
 
 const (
-	// Continue async execution (zero-value)
-	PROCEED = Command(iota)
-	// Try to stop as soon as possible (start canceling new tasks and stop scheduling alreday submitted)
-	STOP
+	// Continue async execution (zero-value).
+	CmdProceed = Command(iota)
+	// Try to stop as soon as possible (start canceling new tasks and stop scheduling alreday submitted).
+	CmdStop
 )
 
-// Sets no limit to the degree of parallel execution
-var NO_LIMIT = (*Limiter)(nil)
+// NoLimit doesn't limit the degree of parallel execution.
+var NoLimit = (*Limiter)(nil)
+
+// DiskIOLimiter is a shared limiter for all Disk IO tasks.
+var DiskIOLimiter = NewLimiter(4) //nolint: gomnd
+
+// CPULimiter is a shared limiter for all CPU-bound tasks.
+var CPULimiter = NewLimiter(2 * runtime.NumCPU())
 
 type Limiter struct {
 	cond      sync.Cond
-	availible int
+	available int
 	total     int
 }
 
 // Limits parallel executions to at most limit simultaneously.
 //
-// Can be shared between multiple [ParExecutor]s
+// Can be shared between multiple [ParExecutor]s.
 func NewLimiter(limit int) *Limiter {
 	l := &Limiter{
-		availible: limit,
+		available: limit,
 		total:     limit,
 	}
 	l.cond = *sync.NewCond(&sync.Mutex{})
 	return l
 }
 
-// Takes a limiter token. Must [Return] it after
+// Takes a limiter token. Must [Return] it after.
 func (l *Limiter) Take() {
 	l.cond.L.Lock()
-	for l.availible <= 0 {
+	for l.available <= 0 {
 		l.cond.Wait()
 	}
-	l.availible--
+	l.available--
 	l.cond.L.Unlock()
 }
 
-// Returns a token taken with Take
+// Returns a token taken with Take.
 func (l *Limiter) Return() {
 	l.cond.L.Lock()
-	if l.availible == 0 {
+	if l.available == 0 {
 		l.cond.Signal()
 	}
-	l.availible++
+	l.available++
 	l.cond.L.Unlock()
 }
 
-// Parallel executor combined with a [sync.Locker] for results
+// Parallel executor combined with a [sync.Locker] for results.
 type Executor[T any] struct {
 	idx     atomic.Int64
 	tasks   atomic.Int64
@@ -69,7 +76,7 @@ type Executor[T any] struct {
 
 // Create a new parallel executor
 //
-// 'processor' func is called syncronously (under lock) with result of execution and idx –
+// 'processor' func is called synchronously (under lock) with result of execution and idx –
 // a monotonically increasing from 0 number, reflecting the order in which the tasks were scheduled
 //
 // ParExecutor is also a mutex around data captured by the "processor" closure as soon as it's created.
@@ -91,11 +98,8 @@ func (pe *Executor[T]) Unlock() {
 	pe.cond.L.Unlock()
 }
 
-// Wait unill all scheduled parallel tasks are done (or cancelled)
-// After this function returns and before any other tasks are scheduled nothing
-// will execute processor function and you can access its data
-
-// Allows scheduled tasks to modify the "processor" data, wait untill all tasks are done and return
+// Wait unill all scheduled parallel tasks are done (or cancelled), then acquire the lock
+// that guarantees exclusive access to the state captured by the `processor` func of the executor.
 func (pe *Executor[T]) WaitDoneAndLock() {
 	pe.cond.L.Lock()
 	for pe.tasks.Load() != 0 {
@@ -103,7 +107,6 @@ func (pe *Executor[T]) WaitDoneAndLock() {
 	}
 }
 
-// n >= 1!
 func (pe *Executor[T]) taskAdd(n int) (idx int) {
 	if n < 1 {
 		panic("n must be strictly positive")
@@ -120,7 +123,7 @@ func (pe *Executor[T]) taskDone() {
 	}
 }
 
-func (pe *Executor[T]) goroutineBody(idx int, f func() T) {
+func (pe *Executor[T]) execute(idx int, fn func() T) {
 	defer pe.taskDone()
 	limiterActive := pe.limiter != nil
 	if limiterActive {
@@ -134,7 +137,7 @@ func (pe *Executor[T]) goroutineBody(idx int, f func() T) {
 	if pe.stop.Load() {
 		return
 	}
-	res := f()
+	res := fn()
 	if limiterActive {
 		limiterActive = false
 		pe.limiter.Return()
@@ -142,63 +145,75 @@ func (pe *Executor[T]) goroutineBody(idx int, f func() T) {
 	pe.Lock()
 	defer pe.Unlock()
 	cmd := pe.processor(res, idx)
-	if cmd == STOP {
+	if cmd == CmdStop {
 		pe.stop.Store(true)
 	}
 }
 
-// Execute function f in parallel executor, returns the result into executor's "processor" function
+// Execute function f in parallel executor, returns the result into executor's "processor" function.
 func (pe *Executor[T]) Go(f func() T) {
 	if pe.stop.Load() {
 		return
 	}
 	idx := pe.taskAdd(1)
-	go pe.goroutineBody(idx, f)
+	go pe.execute(idx, f)
 }
 
-func GoWithArg[I, T any](pe *Executor[T], f func(I) T) func(I) {
+// Transforms fn (func from I to T) into func(I) that executes in [Executor] and returns the result
+// T into executor's "processor" function.
+func GoWithArg[I, T any](pe *Executor[T], fn func(I) T) func(I) {
 	return func(input I) {
 		pe.Go(func() T {
-			return f(input)
+			return fn(input)
 		})
 	}
 }
 
-func MapRef[I, T any](pe *Executor[T], input []I, f func(*I) T) {
-	if len(input) == 0 || pe.stop.Load() {
+// Applies func fn to the references of the elements of slice in [Executor] and returns the results
+// T into executor's "processor" function.
+// Note: when the results of the execution are collected by the processor func of the executor
+// indexes of slice items would be contigous and orders
+// Safety: the array must not be modified until the executor is done!
+func MapRef[I, T any](pe *Executor[T], slice []I, fn func(*I) T) {
+	if len(slice) == 0 || pe.stop.Load() {
 		return
 	}
-	idxStart := pe.taskAdd(len(input))
-	for i := range input {
+	idxStart := pe.taskAdd(len(slice))
+	for i := range slice {
 		go func(idx int, input *I) {
-			pe.goroutineBody(idx, func() T { return f(input) })
-		}(idxStart+i, &input[i])
+			pe.execute(idx, func() T { return fn(input) })
+		}(idxStart+i, &slice[i])
 	}
 }
 
-func Map[I, T any](pe *Executor[T], input []I, f func(I) T) {
+// Applies func fn to the copies of the elements of slice in [Executor] and returns the results
+// T into executor's "processor" function.
+// Note: when the results of the execution are collected by the processor func of the executor
+// indexes of slice items would be contigous and orders.
+func Map[I, T any](pe *Executor[T], input []I, fn func(I) T) {
 	if len(input) == 0 || pe.stop.Load() {
 		return
 	}
 	idxStart := pe.taskAdd(len(input))
 	for i, input := range input {
 		go func(idx int, input I) {
-			pe.goroutineBody(idx, func() T { return f(input) })
+			pe.execute(idx, func() T { return fn(input) })
 		}(idxStart+i, input)
 	}
 }
 
-// Sets s[idx] = val, growing s if needed, and returns updated slice
-func SetAt[T any](s []T, idx int, val T) []T {
-	needToAlloc := idx - len(s)
+// Sets slice[idx] = val, growing slice if needed, and returns the updated slice.
+func SetAt[T any](slice []T, idx int, val T) []T {
+	needToAlloc := idx - len(slice)
 	switch {
 	case needToAlloc > 0:
-		s = append(s, make([]T, needToAlloc)...)
+		slice = append(slice, make([]T, needToAlloc)...)
+
 		fallthrough
 	case needToAlloc == 0:
-		s = append(s, val)
+		slice = append(slice, val)
 	default:
-		s[idx] = val
+		slice[idx] = val
 	}
-	return s
+	return slice
 }

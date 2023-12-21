@@ -1,7 +1,5 @@
 package main
 
-//
-
 import (
 	"fmt"
 	"slices"
@@ -34,11 +32,11 @@ func (d *Decoder) Traverse(trav hcl.Traversal) (tgt any, diag hcl.Diagnostics) {
 	}
 
 	switch blockKind {
-	case BK_CONTENT:
+	case ContentBlockName:
 		return d.TraverseContentBlocks(d.root.ContentBlocks, trav, travPos)
-	case BK_DATA:
+	case DataBlockName:
 		return d.TraverseDataBlocks(d.root.DataBlocks, trav, travPos)
-	case BK_DOCUMENT:
+	case DocumentBlockName:
 		return d.TraverseDocuments(d.root.Documents, trav, travPos)
 	default:
 		return nil, diag.Append(&hcl.Diagnostic{
@@ -50,7 +48,9 @@ func (d *Decoder) Traverse(trav hcl.Traversal) (tgt any, diag hcl.Diagnostics) {
 	}
 }
 
-func (d *Decoder) TraverseContentBlocks(cb []ContentBlock, trav hcl.Traversal, travPos int) (tgt any, diag hcl.Diagnostics) {
+// TODO: TraverseContentBlocks and TraverseDataBlocks are identical, except for the type of the block
+// Try to join the code by using interfaces at a later date.
+func (d *Decoder) TraverseContentBlocks(cb []ContentBlock, trav hcl.Traversal, travPos int) (tgt any, diag hcl.Diagnostics) { //nolint: dupl
 	blockType, blockTypeTrav, btDiag := decodeHclTraverser(trav, travPos, "content block type")
 	travPos++
 	diag = diag.Extend(btDiag)
@@ -95,7 +95,7 @@ func (d *Decoder) TraverseContentBlock(cb *ContentBlock, trav hcl.Traversal, tra
 	}
 
 	switch blockKind {
-	case BK_CONTENT:
+	case ContentBlockName:
 		if !cb.Decoded {
 			subj := trav[0].SourceRange()
 			subj.End = trav[travPos-1].SourceRange().End
@@ -108,7 +108,7 @@ func (d *Decoder) TraverseContentBlock(cb *ContentBlock, trav hcl.Traversal, tra
 			})
 		}
 		return d.TraverseContentBlocks(cb.NestedContentBlocks, trav, travPos)
-	case BK_DATA, BK_DOCUMENT:
+	case DataBlockName, DocumentBlockName:
 		return nil, diag.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid block kind",
@@ -125,7 +125,7 @@ func (d *Decoder) TraverseContentBlock(cb *ContentBlock, trav hcl.Traversal, tra
 	}
 }
 
-func (d *Decoder) TraverseDataBlocks(db []DataBlock, trav hcl.Traversal, travPos int) (tgt any, diag hcl.Diagnostics) {
+func (d *Decoder) TraverseDataBlocks(db []DataBlock, trav hcl.Traversal, travPos int) (tgt any, diag hcl.Diagnostics) { //nolint: dupl
 	blockType, blockTypeTrav, btDiag := decodeHclTraverser(trav, travPos, "data block type")
 	travPos++
 	diag = diag.Extend(btDiag)
@@ -166,7 +166,7 @@ func (d *Decoder) TraverseDataBlock(db *DataBlock, trav hcl.Traversal, travPos i
 	travPos++
 
 	switch blockKind {
-	case BK_CONTENT, BK_DATA, BK_DOCUMENT:
+	case ContentBlockName, DataBlockName, DocumentBlockName:
 		diag = diag.Extend(bkDiag)
 
 		subj := trav[0].SourceRange()
@@ -174,7 +174,7 @@ func (d *Decoder) TraverseDataBlock(db *DataBlock, trav hcl.Traversal, travPos i
 		diag = diag.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid block nesting",
-			Detail:   "Data blocks can not contain contain any subblocks",
+			Detail:   "Data blocks can not contain any subblocks",
 			Subject:  &subj,
 		})
 	default:
@@ -229,11 +229,11 @@ func (d *Decoder) TraverseDocument(doc *Document, trav hcl.Traversal, travPos in
 	}
 
 	switch blockKind {
-	case BK_CONTENT:
+	case ContentBlockName:
 		return d.TraverseContentBlocks(doc.ContentBlocks, trav, travPos)
-	case BK_DATA:
+	case DataBlockName:
 		return d.TraverseDataBlocks(doc.DataBlocks, trav, travPos)
-	case BK_DOCUMENT:
+	case DocumentBlockName:
 		return nil, diag.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid block kind",
@@ -253,7 +253,7 @@ func (d *Decoder) TraverseDocument(doc *Document, trav hcl.Traversal, travPos in
 // Utils
 
 var validBlockKinds = sync.OnceValue(func() string {
-	return JoinSurround(", ", "'", BK_CONTENT, BK_DATA, BK_DOCUMENT)
+	return JoinSurround(", ", "'", ContentBlockName, DataBlockName, DocumentBlockName)
 })
 
 func decodeHclTraverser(trav hcl.Traversal, travPos int, what string) (name string, traverser hcl.Traverser, diag hcl.Diagnostics) {

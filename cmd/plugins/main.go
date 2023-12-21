@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/hashicorp/go-plugin"
+
 	"github.com/blackstork-io/fabric/plugins"
 	"github.com/blackstork-io/fabric/plugins/content"
 	"github.com/blackstork-io/fabric/plugins/content/table"
@@ -8,8 +10,6 @@ import (
 	"github.com/blackstork-io/fabric/plugins/data"
 	"github.com/blackstork-io/fabric/plugins/data/plugin_a"
 	"github.com/blackstork-io/fabric/plugins/data/plugin_b"
-
-	"github.com/hashicorp/go-plugin"
 )
 
 func main() {

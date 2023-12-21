@@ -1,51 +1,105 @@
 package diagnostics
 
+// More ergonomic wrapper over hcl.Diagnostics.
+
 import "github.com/hashicorp/hcl/v2"
 
-type Diagnostics hcl.Diagnostics
+type Diag hcl.Diagnostics //nolint:errname
 
-func (d Diagnostics) Error() string {
+func (d Diag) Error() string {
 	return (hcl.Diagnostics)(d).Error()
 }
 
-// Appends diag to diagnostics, returns true if the just-appended diagnostic is an error
-func (d *Diagnostics) Append(diag *hcl.Diagnostic) (addedErrors bool) {
-	*d = append(*d, diag)
-	return diag.Severity == hcl.DiagError
+// Appends diag to diagnostics, returns true if the just-appended diagnostic is an error.
+func (d *Diag) Append(diag *hcl.Diagnostic) (addedErrors bool) {
+	if diag != nil {
+		*d = append(*d, diag)
+		return diag.Severity == hcl.DiagError
+	}
+	return false
 }
 
-// Appends all diags to diagnostics, returns true if the just-appended diagnostics contain an error
-func (d *Diagnostics) Extend(diags Diagnostics) (addedErrors bool) {
+// Add new diagnostic error.
+func (d *Diag) Add(summary, detail string) {
+	*d = append(*d, &hcl.Diagnostic{
+		Severity: hcl.DiagError,
+		Summary:  summary,
+		Detail:   detail,
+	})
+}
+
+// Appends all diags to diagnostics, returns true if the just-appended diagnostics contain an error.
+func (d *Diag) Extend(diags Diag) (addedErrors bool) {
 	*d = append(*d, diags...)
 	return diags.HasErrors()
 }
 
-func (d *Diagnostics) ExtendHcl(diags hcl.Diagnostics) (addedErrors bool) {
+// Appends all diags to diagnostics, returns true if the just-appended diagnostics contain an error.
+func (d *Diag) ExtendHcl(diags hcl.Diagnostics) (addedErrors bool) {
 	*d = append(*d, diags...)
 	return diags.HasErrors()
 }
 
 // HasErrors returns true if the receiver contains any diagnostics of
 // severity DiagError.
-func (d *Diagnostics) HasErrors() bool {
+func (d *Diag) HasErrors() bool {
 	return (*hcl.Diagnostics)(d).HasErrors()
 }
 
-// Create diagnostic and append it if err !=nil
-func (d *Diagnostics) FromErr(err error, summary string) (addedErrors bool) {
-	if err == nil {
-		return false
+// Creates diagnostic and appends it if err != nil.
+func (d *Diag) AppendErr(err error, summary string) (addedErrors bool) {
+	// The body of the function is moved into `appendErr` to convince golang to inline the
+	// `AppendErr`, making `err != nil` as cheap as usual.
+	// Otherwise each AppendErr would waste a slow golang call just to check that err == nil and
+	// return false
+	addedErrors = err != nil
+	if addedErrors {
+		appendErr(d, err, summary)
 	}
-	// for FromErr to be inlined more often
-	*d = append(*d, FromErr(err, summary))
-	return true
+	return
 }
 
-func FromErr(err error, summary string) *hcl.Diagnostic {
-	return &hcl.Diagnostic{
+// AppendErr and appendErr together can't be inlined. We're forbiding go from inlining
+// appendErr into AppendErr and thus preventing AppendErr inlining.
+//
+//go:noinline
+func appendErr(d *Diag, err error, summary string) {
+	*d = append(*d, &hcl.Diagnostic{
 		Severity: hcl.DiagError,
 		Summary:  summary,
 		Detail:   err.Error(),
 		Extra:    err,
+	})
+}
+
+func FromHcl(diag *hcl.Diagnostic) Diag {
+	if diag != nil {
+		return Diag{diag}
 	}
+	return nil
+}
+
+func FromErr(err error, summary string) Diag {
+	if err != nil {
+		return Diag{{
+			Severity: hcl.DiagError,
+			Summary:  summary,
+			Detail:   err.Error(),
+			Extra:    err,
+		}}
+	}
+	return nil
+}
+
+func FromErrSubj(err error, summary string, subject *hcl.Range) Diag {
+	if err != nil {
+		return Diag{{
+			Severity: hcl.DiagError,
+			Summary:  summary,
+			Detail:   err.Error(),
+			Extra:    err,
+			Subject:  subject,
+		}}
+	}
+	return nil
 }

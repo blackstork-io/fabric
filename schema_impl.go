@@ -63,7 +63,7 @@ func (b *ContentBlock) GetType() *string {
 }
 
 func (b *ContentBlock) GetBlockKind() string {
-	return BK_CONTENT
+	return ContentBlockName
 }
 
 func (b *ContentBlock) NewBlockExtra() BlockExtra {
@@ -71,7 +71,10 @@ func (b *ContentBlock) NewBlockExtra() BlockExtra {
 }
 
 func (b *ContentBlock) DecodeNestedBlocks(d *Decoder, br BlockExtra) (diag hcl.Diagnostics) {
-	extra := br.((*ContentBlockExtra))
+	extra, ok := br.((*ContentBlockExtra))
+	if !ok {
+		panic("ContentBlock, but Extra is not ContentBlockExtra")
+	}
 	b.NestedContentBlocks = extra.ContentBlocks
 	for i := range b.NestedContentBlocks {
 		// errors in nested content blocks do not prevent us from parsing the current one
@@ -104,8 +107,6 @@ func (b *ContentBlock) UpdateFromRef(refTgt any, ref hcl.Expression) (diag hcl.D
 	if b.Title == nil {
 		b.Title = tgt.Title
 	}
-
-	// TODO: do nested content blocks in the "ref" come over too, or just the attrs?
 	return
 }
 
@@ -148,16 +149,16 @@ func (b *DataBlock) GetType() *string {
 }
 
 func (b *DataBlock) GetBlockKind() string {
-	return BK_DATA
+	return DataBlockName
 }
 
 func (b *DataBlock) NewBlockExtra() BlockExtra {
 	return &DataBlockExtra{}
 }
 
-func (b *DataBlock) DecodeNestedBlocks(d *Decoder, br BlockExtra) (diag hcl.Diagnostics) {
+func (b *DataBlock) DecodeNestedBlocks(_ *Decoder, _ BlockExtra) (diag hcl.Diagnostics) {
 	// DataBlock doesn't have nested blocks
-	return
+	return nil
 }
 
 func (b *DataBlock) UpdateFromRef(refTgt any, ref hcl.Expression) (diag hcl.Diagnostics) {
@@ -171,6 +172,7 @@ func (b *DataBlock) UpdateFromRef(refTgt any, ref hcl.Expression) (diag hcl.Diag
 			Summary:  "Reference to unparsed data",
 			Detail: ("Reference points to contents of the block that hasn't been parsed. " +
 				"Make sure that the reference is located after the block is defined and that the block has no errors"),
+			Subject: ref.Range().Ptr(),
 		})
 	}
 

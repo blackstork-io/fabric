@@ -3,13 +3,14 @@ package main
 import (
 	"bufio"
 	"os"
-	"github.com/blackstork-io/fabric/pkg/diagnostics"
 
 	"github.com/hashicorp/hcl/v2"
 	"golang.org/x/term"
+
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
-func PrintDiags(diags diagnostics.Diagnostics, fileMap map[string]*hcl.File) {
+func PrintDiags(diags diagnostics.Diag, fileMap map[string]*hcl.File) {
 	if len(diags) == 0 {
 		return
 	}

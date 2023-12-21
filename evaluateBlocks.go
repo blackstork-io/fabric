@@ -4,27 +4,31 @@ import (
 	"fmt"
 	"slices"
 	"strings"
-	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/pkg/jsontools"
-	"github.com/blackstork-io/fabric/pkg/parexec"
-	"github.com/blackstork-io/fabric/plugins/content"
-	"github.com/blackstork-io/fabric/plugins/data"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/itchyny/gojq"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/json"
 	"golang.org/x/exp/maps"
+
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/jsontools"
+	"github.com/blackstork-io/fabric/pkg/parexec"
+	"github.com/blackstork-io/fabric/plugins/content"
+	"github.com/blackstork-io/fabric/plugins/data"
 )
+
+// TODO: define magic number
+var limiter = parexec.NewLimiter(5) //nolint: gomnd
 
 // data block evaluation
 
 type dataBlocksEvaluator struct {
-	dataPlugins map[string]any
+	plugins map[string]any
 }
 
 type dataEvalResult struct {
-	diagnostics.Diagnostics
+	diagnostics.Diag
 	Type string
 	Name string
 	Res  any
@@ -35,16 +39,16 @@ func (eb *dataBlocksEvaluator) evalBlock(db *DataBlock) (res dataEvalResult) {
 		res.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Undecoded block",
-			Detail:   fmt.Sprintf(`%s block '%s %s "%s"' wasn't decoded`, BK_DATA, BK_DATA, db.Type, db.Name),
+			Detail:   fmt.Sprintf(`%s block '%s %s "%s"' wasn't decoded`, DataBlockName, DataBlockName, db.Type, db.Name),
 		})
 		return
 	}
-	rawPlugin, found := eb.dataPlugins[db.Type]
+	rawPlugin, found := eb.plugins[db.Type]
 	if !found {
 		res.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Plugin not found",
-			Detail:   fmt.Sprintf("plugin %s.%s not found", BK_DATA, db.Type),
+			Detail:   fmt.Sprintf("plugin %s.%s not found", DataBlockName, db.Type),
 		})
 		return
 	}
@@ -56,7 +60,7 @@ func (eb *dataBlocksEvaluator) evalBlock(db *DataBlock) (res dataEvalResult) {
 
 	var err error
 	res.Res, err = rawPlugin.(data.Plugin).Execute(attrs)
-	if res.FromErr(err, "Data plugin error") {
+	if res.AppendErr(err, "Data plugin error") {
 		return
 	}
 
@@ -65,49 +69,50 @@ func (eb *dataBlocksEvaluator) evalBlock(db *DataBlock) (res dataEvalResult) {
 	return
 }
 
-func EvaluateDataBlocks(dataPlugins map[string]any, dataBlocks []DataBlock) (dict map[string]any, diags diagnostics.Diagnostics) {
+func EvaluateDataBlocks(plugins map[string]any, dbs []DataBlock) (dict map[string]any, diags diagnostics.Diag) {
 	ev := dataBlocksEvaluator{
-		dataPlugins: dataPlugins,
+		plugins: plugins,
 	}
 	// access through pe lock
 	dataDict := map[string]any{}
 	pe := parexec.New(
-		parexec.NewLimiter(5),
+		limiter,
 		func(res dataEvalResult, _ int) (cmd parexec.Command) {
-			if diags.Extend(res.Diagnostics) {
-				return parexec.STOP
+			if diags.Extend(res.Diag) {
+				return parexec.CmdStop
 			}
 			var err error
 			dataDict, err = jsontools.MapSet(dataDict, []string{res.Type, res.Name}, res.Res)
-			diags.FromErr(err, "Data dict set key error")
+			diags.AppendErr(err, "Data dict set key error")
 			return
 		},
 	)
-	parexec.MapRef(pe, dataBlocks, ev.evalBlock)
+	parexec.MapRef(pe, dbs, ev.evalBlock)
 	pe.WaitDoneAndLock()
 	if diags.HasErrors() {
 		return
 	}
 	dict = map[string]any{
-		BK_DATA: dataDict,
+		DataBlockName: dataDict,
 	}
 	return
 }
 
 // content block queries
+
 type queryEvaluator struct {
-	pe              parexec.Executor[diagnostics.Diagnostics]
+	pe              parexec.Executor[diagnostics.Diag]
 	dict            map[string]any
 	goEvaluateQuery func(*ContentBlock)
 }
 
-func EvaluateQueries(dict map[string]any, cbs []ContentBlock) (diags diagnostics.Diagnostics) {
+func EvaluateQueries(dict map[string]any, cbs []ContentBlock) (diags diagnostics.Diag) {
 	ev := queryEvaluator{
 		pe: *parexec.New(
-			parexec.NewLimiter(5),
-			func(res diagnostics.Diagnostics, idx int) (cmd parexec.Command) {
+			limiter,
+			func(res diagnostics.Diag, idx int) (cmd parexec.Command) {
 				if diags.Extend(res) {
-					return parexec.STOP
+					return parexec.CmdStop
 				}
 				return
 			},
@@ -133,7 +138,7 @@ func (ev *queryEvaluator) evaluateQueries(cbs []ContentBlock) {
 	}
 }
 
-func (ev *queryEvaluator) evaluateQuery(cb *ContentBlock) (diags diagnostics.Diagnostics) {
+func (ev *queryEvaluator) evaluateQuery(cb *ContentBlock) (diags diagnostics.Diag) {
 	query, err := gojq.Parse(*cb.Query)
 	if err != nil {
 		diags.Append(&hcl.Diagnostic{
@@ -161,6 +166,7 @@ func (ev *queryEvaluator) evaluateQuery(cb *ContentBlock) (diags diagnostics.Dia
 }
 
 // content block queries
+
 type contentBlocksEvaluator struct {
 	pe                     parexec.Executor[contentEvalResult]
 	contentPlugins         map[string]any
@@ -168,18 +174,18 @@ type contentBlocksEvaluator struct {
 }
 
 type contentEvalResult struct {
-	diagnostics.Diagnostics
+	diagnostics.Diag
 	res string
 }
 
-func EvaluateContentBlocks(contentPlugins map[string]any, cbs []ContentBlock) (output string, diags diagnostics.Diagnostics) {
+func EvaluateContentBlocks(contentPlugins map[string]any, cbs []ContentBlock) (output string, diags diagnostics.Diag) {
 	var orderedResult []string
 	ev := contentBlocksEvaluator{
 		pe: *parexec.New(
-			parexec.NewLimiter(5),
+			limiter,
 			func(res contentEvalResult, idx int) (cmd parexec.Command) {
-				if diags.Extend(res.Diagnostics) {
-					return parexec.STOP
+				if diags.Extend(res.Diag) {
+					return parexec.CmdStop
 				}
 				orderedResult = parexec.SetAt(orderedResult, idx, res.res)
 				return
@@ -202,7 +208,7 @@ func (ev *contentBlocksEvaluator) evaluateContentBlock(cb *ContentBlock) (res co
 		res.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Undecoded block",
-			Detail:   fmt.Sprintf(`%s block '%s %s "%s"' wasn't decoded`, BK_DATA, BK_DATA, cb.Type, cb.Name),
+			Detail:   fmt.Sprintf(`%s block '%s %s "%s"' wasn't decoded`, DataBlockName, DataBlockName, cb.Type, cb.Name),
 		})
 		return
 	}
@@ -211,7 +217,7 @@ func (ev *contentBlocksEvaluator) evaluateContentBlock(cb *ContentBlock) (res co
 		res.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Plugin not found",
-			Detail:   fmt.Sprintf("plugin %s.%s not found", BK_DATA, cb.Type),
+			Detail:   fmt.Sprintf("plugin %s.%s not found", DataBlockName, cb.Type),
 		})
 		return
 	}
@@ -221,7 +227,7 @@ func (ev *contentBlocksEvaluator) evaluateContentBlock(cb *ContentBlock) (res co
 	}
 
 	pluginRes, err := rawPlugin.(content.Plugin).Execute(attrs, cb.localDict)
-	if res.FromErr(err, "Content plugin error") {
+	if res.AppendErr(err, "Content plugin error") {
 		return
 	}
 	res.res = pluginRes
@@ -238,7 +244,7 @@ func (ev *contentBlocksEvaluator) evaluateContentBlocks(cbs []ContentBlock) {
 	}
 }
 
-func (d *Decoder) FindDoc(name string) (doc *Document, diags diagnostics.Diagnostics) {
+func (d *Decoder) FindDoc(name string) (doc *Document, diags diagnostics.Diag) {
 	n := slices.IndexFunc(d.root.Documents, func(d Document) bool {
 		return d.Name == name
 	})
@@ -253,7 +259,7 @@ func (d *Decoder) FindDoc(name string) (doc *Document, diags diagnostics.Diagnos
 	return &d.root.Documents[n], nil
 }
 
-func (d *Decoder) Evaluate(name string) (output string, diags diagnostics.Diagnostics) {
+func (d *Decoder) Evaluate(name string) (output string, diags diagnostics.Diag) {
 	doc, diag := d.FindDoc(name)
 	if diags.Extend(diag) {
 		return
@@ -275,6 +281,7 @@ func (d *Decoder) Evaluate(name string) (output string, diags diagnostics.Diagno
 
 func AttrsToJSON(attrs hcl.Attributes) (res json.SimpleJSONValue, diag hcl.Diagnostics) {
 	attrsMap := make(map[string]cty.Value, len(attrs))
+
 	for key, attr := range attrs {
 		val, dgs := attr.Expr.Value(nil)
 		if len(dgs) > 0 {
@@ -283,9 +290,11 @@ func AttrsToJSON(attrs hcl.Attributes) (res json.SimpleJSONValue, diag hcl.Diagn
 				di.Detail = fmt.Sprintf("Evaluation failed for value at key '%s': %s", key, di.Detail)
 			}
 			diag = diag.Extend(dgs)
+
 			continue
 		}
 		attrsMap[key] = val
 	}
-	return json.SimpleJSONValue{Value: cty.ObjectVal(attrsMap)}, nil
+	res = json.SimpleJSONValue{Value: cty.ObjectVal(attrsMap)}
+	return
 }

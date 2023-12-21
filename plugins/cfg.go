@@ -1,10 +1,10 @@
 package plugins
 
 import (
+	"github.com/hashicorp/go-plugin"
+
 	"github.com/blackstork-io/fabric/plugins/content"
 	"github.com/blackstork-io/fabric/plugins/data"
-
-	"github.com/hashicorp/go-plugin"
 )
 
 var Handshake = plugin.HandshakeConfig{

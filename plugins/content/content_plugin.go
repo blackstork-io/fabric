@@ -25,14 +25,16 @@ type Args struct {
 
 func (s *RPCServer) Execute(input Args, resp *[]byte) (err error) {
 	result, err := s.Impl.Execute(input.Attrs, input.Content)
-	if err != nil {
-		return err
+	if err == nil {
+		*resp, err = json.Marshal(
+			TextStruct{
+				Text: result,
+			},
+		)
 	}
-	*resp, err = json.Marshal(
-		TextStruct{
-			Text: string(result),
-		},
-	)
+	if err != nil {
+		err = fmt.Errorf("content plugin error: %w", err)
+	}
 	return
 }
 
@@ -90,18 +92,4 @@ func (p *GoPlugin) Client(_ *plugin.MuxBroker, c *rpc.Client) (any, error) {
 
 type TextStruct struct {
 	Text string `json:"text"`
-}
-
-func GetText(attrs any) (text string, err error) {
-	m, ok := attrs.(map[string]any)
-	if !ok {
-		err = fmt.Errorf("failed to parse")
-		return
-	}
-	text, ok = m["text"].(string)
-	if !ok {
-		err = fmt.Errorf("failed to parse")
-		return
-	}
-	return
 }

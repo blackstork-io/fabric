@@ -1,4 +1,4 @@
-package plugin_a
+package plugin_a //nolint: revive,stylecheck
 
 import (
 	"github.com/blackstork-io/fabric/pkg/jsontools"
