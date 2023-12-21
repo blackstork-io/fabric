@@ -86,6 +86,16 @@ func (b *ContentBlock) UpdateFromRef(refTgt any, ref hcl.Expression) (diag hcl.D
 		return diag.Append(invalidRefDiag(refTgt, ref, b.GetBlockKind()))
 	}
 
+	if !tgt.Decoded {
+		return diag.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Reference to unparsed data",
+			Detail: ("Reference points to contents of the block that hasn't been parsed. " +
+				"Make sure that the reference is located after the block is defined and that the block has no errors"),
+			Subject: ref.Range().Ptr(),
+		})
+	}
+
 	updateCommon(b, tgt)
 
 	if b.Query == nil {
