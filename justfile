@@ -20,3 +20,6 @@ lint:
 
 lint-extra:
     gofumpt -w -extra .
+
+test:
+    go test -timeout 10s -race -v ./...
