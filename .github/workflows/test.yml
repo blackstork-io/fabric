@@ -24,9 +24,9 @@ jobs:
       with:
         go-version: ${{ matrix.go-version }}
     - name: Build fabric
-      run: go build -v
+      run: go build -v -o ${{ runner.temp }}/fabric
     - name: Build fabric-plugins
-      run: go build -v ./cmd/plugins
+      run: go build -v -o ${{ runner.temp }}/plugins ./cmd/plugins
     - name: Test
       run: go test -race -v -timeout 10s ./...
 
