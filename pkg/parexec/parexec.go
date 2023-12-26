@@ -6,6 +6,12 @@ import (
 	"sync/atomic"
 )
 
+var closedChan = make(chan struct{})
+
+func init() { //nolint:gochecknoinits
+	close(closedChan)
+}
+
 // Controls the scheduler. Values: CmdProceed (zero-value) and CmdStop.
 type Command uint8
 
@@ -67,7 +73,7 @@ func (l *Limiter) Return() {
 type Executor[T any] struct {
 	idx     atomic.Int64
 	tasks   atomic.Int64
-	stop    atomic.Bool
+	stopC   atomic.Pointer[chan struct{}]
 	limiter *Limiter
 
 	cond      sync.Cond
@@ -86,6 +92,8 @@ func New[T any](limiter *Limiter, processor func(res T, idx int) Command) *Execu
 		processor: processor,
 		limiter:   limiter,
 	}
+	ch := make(chan struct{})
+	pe.stopC.Store(&ch)
 	pe.cond.L = &sync.Mutex{}
 	return pe
 }
@@ -105,6 +113,12 @@ func (pe *Executor[T]) WaitDoneAndLock() {
 	for pe.tasks.Load() != 0 {
 		pe.cond.Wait()
 	}
+	chPtr := pe.stopC.Load()
+	if chPtr == &closedChan {
+		ch := make(chan struct{})
+		pe.stopC.Store(&ch)
+	}
+	return
 }
 
 func (pe *Executor[T]) taskAdd(n int) (idx int) {
@@ -123,6 +137,22 @@ func (pe *Executor[T]) taskDone() {
 	}
 }
 
+// must be called under mutex.
+func (pe *Executor[T]) stopExecutor() {
+	ch := pe.stopC.Swap(&closedChan)
+	if ch != &closedChan { // we're the frist task that called stopExecutor
+		close(*ch)
+	}
+}
+
+func (pe *Executor[T]) isStopped() bool {
+	return pe.stopC.Load() == &closedChan
+}
+
+func (pe *Executor[T]) getStopC() <-chan struct{} {
+	return *pe.stopC.Load()
+}
+
 func (pe *Executor[T]) execute(idx int, fn func() T) {
 	defer pe.taskDone()
 	limiterActive := pe.limiter != nil
@@ -134,7 +164,7 @@ func (pe *Executor[T]) execute(idx int, fn func() T) {
 			}
 		}()
 	}
-	if pe.stop.Load() {
+	if pe.isStopped() {
 		return
 	}
 	res := fn()
@@ -146,13 +176,13 @@ func (pe *Executor[T]) execute(idx int, fn func() T) {
 	defer pe.Unlock()
 	cmd := pe.processor(res, idx)
 	if cmd == CmdStop {
-		pe.stop.Store(true)
+		pe.stopExecutor()
 	}
 }
 
 // Execute function f in parallel executor, returns the result into executor's "processor" function.
 func (pe *Executor[T]) Go(f func() T) {
-	if pe.stop.Load() {
+	if pe.isStopped() {
 		return
 	}
 	idx := pe.taskAdd(1)
@@ -172,10 +202,10 @@ func GoWithArg[I, T any](pe *Executor[T], fn func(I) T) func(I) {
 // Applies func fn to the references of the elements of slice in [Executor] and returns the results
 // T into executor's "processor" function.
 // Note: when the results of the execution are collected by the processor func of the executor
-// indexes of slice items would be contigous and orders
+// indexes of slice items would be contigous and ordered
 // Safety: the array must not be modified until the executor is done!
 func MapRef[I, T any](pe *Executor[T], slice []I, fn func(*I) T) {
-	if len(slice) == 0 || pe.stop.Load() {
+	if len(slice) == 0 || pe.isStopped() {
 		return
 	}
 	idxStart := pe.taskAdd(len(slice))
@@ -189,9 +219,9 @@ func MapRef[I, T any](pe *Executor[T], slice []I, fn func(*I) T) {
 // Applies func fn to the copies of the elements of slice in [Executor] and returns the results
 // T into executor's "processor" function.
 // Note: when the results of the execution are collected by the processor func of the executor
-// indexes of slice items would be contigous and orders.
+// indexes of slice items would be contigous and ordered.
 func Map[I, T any](pe *Executor[T], input []I, fn func(I) T) {
-	if len(input) == 0 || pe.stop.Load() {
+	if len(input) == 0 || pe.isStopped() {
 		return
 	}
 	idxStart := pe.taskAdd(len(input))
@@ -199,6 +229,31 @@ func Map[I, T any](pe *Executor[T], input []I, fn func(I) T) {
 		go func(idx int, input I) {
 			pe.execute(idx, func() T { return fn(input) })
 		}(idxStart+i, input)
+	}
+}
+
+// Applies func fn to the channel values in [Executor] and returns the results
+// T into executor's "processor" function.
+// Function returns when the `input` channel is closed or [Executor] is stopped
+// Note: when the results of the execution are collected by the processor func of the executor
+// indexes of slice items would be ordered, but __not__ contigous.
+func MapChan[I, T any](pe *Executor[T], inputC <-chan I, fn func(I) T) (consumedFully bool) {
+	stopC := pe.getStopC()
+	for {
+		select {
+		case <-stopC:
+			// executor stopped before inputC was consumed
+			return false
+		case input, ok := <-inputC:
+			if !ok {
+				// consumed inputC fully
+				return true
+			}
+			idx := pe.taskAdd(1)
+			go func(idx int, input I) {
+				pe.execute(idx, func() T { return fn(input) })
+			}(idx, input)
+		}
 	}
 }
 
