@@ -1,12 +1,13 @@
 module github.com/blackstork-io/fabric
 
-go 1.20
+go 1.21
 
 require (
 	github.com/hashicorp/go-hclog v0.14.1
 	github.com/hashicorp/go-plugin v1.6.0
 	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/itchyny/gojq v0.12.14
+	github.com/stretchr/testify v1.8.4
 	github.com/zclconf/go-cty v1.13.0
 	golang.org/x/exp v0.0.0-20231214170342-aacd6d4b4611
 	golang.org/x/term v0.15.0
@@ -28,8 +29,6 @@ require (
 	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/sanity-io/litter v1.5.5 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.13.0 // indirect

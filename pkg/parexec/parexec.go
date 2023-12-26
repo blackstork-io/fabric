@@ -62,11 +62,9 @@ func (l *Limiter) Take() {
 // Returns a token taken with Take.
 func (l *Limiter) Return() {
 	l.cond.L.Lock()
-	if l.available == 0 {
-		l.cond.Signal()
-	}
 	l.available++
 	l.cond.L.Unlock()
+	l.cond.Signal()
 }
 
 // Parallel executor combined with a [sync.Locker] for results.
@@ -118,7 +116,6 @@ func (pe *Executor[T]) WaitDoneAndLock() {
 		ch := make(chan struct{})
 		pe.stopC.Store(&ch)
 	}
-	return
 }
 
 func (pe *Executor[T]) taskAdd(n int) (idx int) {
