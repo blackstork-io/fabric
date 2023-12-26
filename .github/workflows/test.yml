@@ -27,7 +27,7 @@ jobs:
     - name: Build fabric-plugins
       run: go build -v ./cmd/plugins
     - name: Test
-    - run: go test -v ./...
+      run: go test -v ./...
 
   golangci:
     name: lint
