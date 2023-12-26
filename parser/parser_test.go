@@ -17,6 +17,7 @@ func collect[T any](ch <-chan T) (result []T) {
 }
 
 func TestFindFiles(t *testing.T) {
+	t.Parallel()
 	assert := assert.New(t)
 	fs := fstest.MapFS{
 		"f1.fabric":            &fstest.MapFile{},
@@ -26,35 +27,40 @@ func TestFindFiles(t *testing.T) {
 		"subdir/f5.not_fabric": &fstest.MapFile{},
 	}
 
-	testCases := []struct {
+	type testCase struct {
 		desc      string
 		recursive bool
-		expected  []string
-	}{
+		expected  []parser.FindFilesResult
+	}
+
+	testCases := []testCase{
 		{
 			desc:      "Recursive",
 			recursive: true,
-			expected: []string{
-				"f1.fabric",
-				"f2.fAbRiC",
-				"subdir/f4.fAbRiC",
+			expected: []parser.FindFilesResult{
+				{Path: "f1.fabric"},
+				{Path: "f2.fAbRiC"},
+				{Path: "subdir/f4.fAbRiC"},
 			},
 		},
 		{
 			desc:      "Non-recursive",
 			recursive: false,
-			expected: []string{
-				"f1.fabric",
-				"f2.fAbRiC",
+			expected: []parser.FindFilesResult{
+				{Path: "f1.fabric"},
+				{Path: "f2.fAbRiC"},
 			},
 		},
 	}
 	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-			assert.Equal(
-				tC.expected,
-				collect(parser.FindFiles(fs, tC.recursive)),
-			)
-		})
+		func(tC testCase) {
+			t.Run(tC.desc, func(t *testing.T) {
+				t.Parallel()
+				assert.Equal(
+					tC.expected,
+					collect(parser.FindFiles(fs, tC.recursive)),
+				)
+			})
+		}(tC)
 	}
 }

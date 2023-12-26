@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,73 +17,71 @@ import (
 
 const FabricFileExt = ".fabric"
 
-func FindFiles(rootDir fs.FS, recursive bool) <-chan string {
-	paths := make(chan string, 4)
+type FindFilesResult struct {
+	Path string
+	Err  error
+}
+
+func FindFiles(rootDir fs.FS, recursive bool) <-chan FindFilesResult {
+	results := make(chan FindFilesResult, 4) //nolint:gomnd
 	go func() {
-		defer close(paths)
-		fs.WalkDir(rootDir, ".", func(path string, d fs.DirEntry, err error) error {
-			// TODO: return diags or use better logging
+		defer close(results)
+		err := fs.WalkDir(rootDir, ".", func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
-				log.Printf("Parse files error: %s; path: %s", err, path)
+				results <- FindFilesResult{
+					Path: path,
+					Err:  err,
+				}
+				return nil //nolint:nilerr
 			}
 			if d.IsDir() {
 				if !recursive && path != "." {
 					return fs.SkipDir
-				} else {
-					return nil
 				}
+				return nil
 			}
 			if strings.EqualFold(filepath.Ext(path), FabricFileExt) {
-				paths <- path
+				results <- FindFilesResult{
+					Path: path,
+				}
 			}
 			return nil
 		})
+		if err != nil {
+			results <- FindFilesResult{
+				Path: "",
+				Err:  err,
+			}
+		}
 	}()
-	return paths
+	return results
 }
 
-// func ParseFile(rootDir fs.FS, path string) (diags diagnostics.Diag) {
-// 	return nil
-// }
-
-type fileParseResult struct {
-	file  *hcl.File
-	path  string
-	diags diagnostics.Diag
+type parseResult struct {
+	diagnostics.Diag
+	file *hcl.File
+	path string
 }
 
-func parseHcl(bytes []byte, path string) fileParseResult {
+func parseHcl(bytes []byte, path string) parseResult {
 	file, diags := hclsyntax.ParseConfig(bytes, path, hcl.InitialPos)
-	return fileParseResult{
-		file:  file,
-		path:  path,
-		diags: diagnostics.Diag(diags),
+	return parseResult{
+		Diag: diagnostics.Diag(diags),
+		file: file,
+		path: path,
 	}
 }
 
-func parseFile(rootDir fs.FS, path string) (res fileParseResult) {
-	// bytes, err := os.ReadFile(path)
+func readFile(rootDir fs.FS, path string) ([]byte, error) {
 	file, err := rootDir.Open(path)
 	if err != nil {
-		res.diags.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "File open error",
-			Detail:   fmt.Sprintf("Failed to open file %s: %s", path, err),
-			Extra:    err,
-		})
-		return
+		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 	bytes, err := io.ReadAll(file)
 	if err != nil {
-		res.diags.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "File read error",
-			Detail:   fmt.Sprintf("Failed to read file %s: %s", path, err),
-			Extra:    err,
-		})
-		return
+		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
-	return parseHcl(bytes, path)
+	return bytes, nil
 }
 
 func Go(dir string) (diags diagnostics.Diag) {
@@ -96,8 +93,16 @@ func Go(dir string) (diags diagnostics.Diag) {
 
 	pe := parexec.New(
 		parexec.DiskIOLimiter,
-		func(res fileParseResult, _ int) (cmd parexec.Command) {
-			if diags.Extend(res.diags) {
+		func(res parseResult, _ int) (cmd parexec.Command) {
+			if res.path != "" {
+				for i := range res.Diag {
+					res.Diag[i].Detail = fmt.Sprintf(
+						"Error while looking at '%s': %s",
+						res.path, res.Diag[i].Detail,
+					)
+				}
+			}
+			if diags.Extend(res.Diag) {
 				return
 			}
 			bodies = append(bodies, res.file.Body)
@@ -106,14 +111,30 @@ func Go(dir string) (diags diagnostics.Diag) {
 		},
 	)
 
-	parexec.MapChan(pe, files, func(path string) fileParseResult {
-		return parseFile(dirFs, path)
+	parexec.MapChan(pe, files, func(foundFile FindFilesResult) (res parseResult) {
+		res.path = foundFile.Path
+		if foundFile.Err != nil {
+			res.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagWarning,
+				Summary:  "Directory traversal error",
+				Detail:   foundFile.Err.Error(),
+				Extra:    foundFile.Err,
+			})
+			return
+		}
+		bytes, err := readFile(dirFs, res.path)
+		if err != nil {
+			res.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "File read error",
+				Detail:   err.Error(),
+				Extra:    err,
+			})
+			return
+		}
+		return parseHcl(bytes, res.path)
 	})
-	// parexec.Map(pe, files, processFile)
 	pe.WaitDoneAndLock()
-	// if diags.HasErrors() {
-	// 	return nil, nil, diags
-	// }
-	// body = hcl.MergeBodies(bodies)
+
 	return
 }
