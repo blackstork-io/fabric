@@ -1,4 +1,4 @@
-package plugin_b //nolint: revive,stylecheck
+package plugin_b //nolint: revive,stylecheck // temporary name
 
 import (
 	"github.com/blackstork-io/fabric/pkg/jsontools"

@@ -4,7 +4,7 @@ package diagnostics
 
 import "github.com/hashicorp/hcl/v2"
 
-type Diag hcl.Diagnostics //nolint:errname
+type Diag hcl.Diagnostics //nolint:errname // Diagnostics does implement error interface, but not, itself, an error.
 
 func (d Diag) Error() string {
 	return (hcl.Diagnostics)(d).Error()
@@ -29,13 +29,13 @@ func (d *Diag) Add(summary, detail string) {
 }
 
 // Appends all diags to diagnostics, returns true if the just-appended diagnostics contain an error.
-func (d *Diag) Extend(diags Diag) (addedErrors bool) {
+func (d *Diag) Extend(diags Diag) (haveAddedErrors bool) {
 	*d = append(*d, diags...)
 	return diags.HasErrors()
 }
 
 // Appends all diags to diagnostics, returns true if the just-appended diagnostics contain an error.
-func (d *Diag) ExtendHcl(diags hcl.Diagnostics) (addedErrors bool) {
+func (d *Diag) ExtendHcl(diags hcl.Diagnostics) (haveAddedErrors bool) {
 	*d = append(*d, diags...)
 	return diags.HasErrors()
 }
@@ -47,13 +47,13 @@ func (d *Diag) HasErrors() bool {
 }
 
 // Creates diagnostic and appends it if err != nil.
-func (d *Diag) AppendErr(err error, summary string) (addedErrors bool) {
+func (d *Diag) AppendErr(err error, summary string) (haveAddedErrors bool) {
 	// The body of the function is moved into `appendErr` to convince golang to inline the
 	// `AppendErr`, making `err != nil` as cheap as usual.
 	// Otherwise each AppendErr would waste a slow golang call just to check that err == nil and
 	// return false
-	addedErrors = err != nil
-	if addedErrors {
+	haveAddedErrors = err != nil
+	if haveAddedErrors {
 		appendErr(d, err, summary)
 	}
 	return
