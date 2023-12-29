@@ -30,25 +30,25 @@ func TestFindFiles(t *testing.T) {
 	type testCase struct {
 		desc      string
 		recursive bool
-		expected  []parser.FindFilesResult
+		expected  []string
 	}
 
 	testCases := []testCase{
 		{
 			desc:      "Recursive",
 			recursive: true,
-			expected: []parser.FindFilesResult{
-				{Path: "f1.fabric"},
-				{Path: "f2.fAbRiC"},
-				{Path: "subdir/f4.fAbRiC"},
+			expected: []string{
+				"f1.fabric",
+				"f2.fAbRiC",
+				"subdir/f4.fAbRiC",
 			},
 		},
 		{
 			desc:      "Non-recursive",
 			recursive: false,
-			expected: []parser.FindFilesResult{
-				{Path: "f1.fabric"},
-				{Path: "f2.fAbRiC"},
+			expected: []string{
+				"f1.fabric",
+				"f2.fAbRiC",
 			},
 		},
 	}
@@ -56,10 +56,17 @@ func TestFindFiles(t *testing.T) {
 		func(tC testCase) {
 			t.Run(tC.desc, func(t *testing.T) {
 				t.Parallel()
+				var res []string
+
+				diags := parser.FindFabricFiles(fs, tC.recursive, func(path string) {
+					res = append(res, path)
+				})
+
 				assert.Equal(
 					tC.expected,
-					collect(parser.FindFiles(fs, tC.recursive)),
+					res,
 				)
+				assert.Empty(diags)
 			})
 		}(tC)
 	}

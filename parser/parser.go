@@ -22,39 +22,41 @@ type FindFilesResult struct {
 	Err  error
 }
 
-func FindFiles(rootDir fs.FS, recursive bool) <-chan FindFilesResult {
-	results := make(chan FindFilesResult, 4) //nolint:gomnd
-	go func() {
-		defer close(results)
-		err := fs.WalkDir(rootDir, ".", func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				results <- FindFilesResult{
-					Path: path,
-					Err:  err,
-				}
-				return nil //nolint:nilerr
-			}
-			if d.IsDir() {
-				if !recursive && path != "." {
-					return fs.SkipDir
-				}
-				return nil
-			}
-			if strings.EqualFold(filepath.Ext(path), FabricFileExt) {
-				results <- FindFilesResult{
-					Path: path,
-				}
+// Calls fn with paths to every *.fabric files and collects errors into the returned diags
+func FindFabricFiles(rootDir fs.FS, recursive bool, fn func(path string)) (diags diagnostics.Diag) {
+	err := fs.WalkDir(rootDir, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagWarning,
+				Summary:  "Directory traversal error",
+				Detail: fmt.Sprintf(
+					"Error while looking at '%s': %s",
+					path, err,
+				),
+				Extra: err,
+			})
+			return nil //nolint:nilerr
+		}
+		if d.IsDir() {
+			if !recursive && path != "." {
+				return fs.SkipDir
 			}
 			return nil
-		})
-		if err != nil {
-			results <- FindFilesResult{
-				Path: "",
-				Err:  err,
-			}
 		}
-	}()
-	return results
+		if strings.EqualFold(filepath.Ext(path), FabricFileExt) {
+			fn(path)
+		}
+		return nil
+	})
+	if err != nil {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagWarning,
+			Summary:  "fs.WalkDir error",
+			Detail:   err.Error(),
+			Extra:    err,
+		})
+	}
+	return
 }
 
 type parseResult struct {
