@@ -1,16 +1,15 @@
 package parexec
 
 import (
-	"runtime"
 	"sync"
 	"sync/atomic"
 )
 
-var closedChan = make(chan struct{})
-
-func init() { //nolint:gochecknoinits
-	close(closedChan)
-}
+var closedChan = func() chan struct{} {
+	ch := make(chan struct{})
+	close(ch)
+	return ch
+}()
 
 // Controls the scheduler. Values: CmdProceed (zero-value) and CmdStop.
 type Command uint8
@@ -21,51 +20,6 @@ const (
 	// Try to stop as soon as possible (start canceling new tasks and stop scheduling alreday submitted).
 	CmdStop
 )
-
-// NoLimit doesn't limit the degree of parallel execution.
-var NoLimit = (*Limiter)(nil)
-
-// DiskIOLimiter is a shared limiter for all Disk IO tasks.
-var DiskIOLimiter = NewLimiter(4) //nolint: gomnd
-
-// CPULimiter is a shared limiter for all CPU-bound tasks.
-var CPULimiter = NewLimiter(2 * runtime.NumCPU())
-
-type Limiter struct {
-	cond      sync.Cond
-	available int
-	total     int
-}
-
-// Limits parallel executions to at most limit simultaneously.
-//
-// Can be shared between multiple [ParExecutor]s.
-func NewLimiter(limit int) *Limiter {
-	l := &Limiter{
-		available: limit,
-		total:     limit,
-	}
-	l.cond = *sync.NewCond(&sync.Mutex{})
-	return l
-}
-
-// Takes a limiter token. Must [Return] it after.
-func (l *Limiter) Take() {
-	l.cond.L.Lock()
-	for l.available <= 0 {
-		l.cond.Wait()
-	}
-	l.available--
-	l.cond.L.Unlock()
-}
-
-// Returns a token taken with Take.
-func (l *Limiter) Return() {
-	l.cond.L.Lock()
-	l.available++
-	l.cond.L.Unlock()
-	l.cond.Signal()
-}
 
 // Parallel executor combined with a [sync.Locker] for results.
 type Executor[T any] struct {
@@ -96,26 +50,55 @@ func New[T any](limiter *Limiter, processor func(res T, idx int) Command) *Execu
 	return pe
 }
 
+// Acquires exclusive access to the state captured by the `processor` func of the executor.
+// Does _not_ prevent tasks from being scheduled or run, just prevents calls to the processor function.
+// Done goroutines would pile up and wait on the lock, so you shouldn't hold this value for long.
 func (pe *Executor[T]) Lock() {
 	pe.cond.L.Lock()
 }
 
+// Releases the exclusive access to the state captured by the `processor` func of the executor.
+// Tasks are able to return their results to the processor function again.
 func (pe *Executor[T]) Unlock() {
 	pe.cond.L.Unlock()
 }
 
-// Wait unill all scheduled parallel tasks are done (or cancelled), then acquire the lock
-// that guarantees exclusive access to the state captured by the `processor` func of the executor.
-func (pe *Executor[T]) WaitDoneAndLock() {
-	pe.cond.L.Lock()
-	for pe.tasks.Load() != 0 {
-		pe.cond.Wait()
-	}
+// Acquires exclusive access to the state captured by the `processor` func of the executor and
+// prevents new tasks from running. Running and finished goroutines would pile up and wait on the lock
+// to be able to send their results to the `processor` func of the executor.
+// func (pe *Executor[T]) LockAndPause() {
+// 	// set limiter to 0
+// 	pe.cond.L.Lock()
+// }
+
+// Releases the exclusive access to the state captured by the `processor` func of the executor and
+// allows new tasks to .
+// func (pe *Executor[T]) UnlockAndResume() {
+// 	// restore limiter to initial value
+// 	pe.cond.L.Unlock()
+// }
+
+// Releases the exclusive access to the state captured by the `processor` func of the executor.
+// Tasks are able to return their results to the processor function again.
+// Addidionally resets the stopped status of the executor, making it possible to shedule and run new tasks.
+func (pe *Executor[T]) UnlockResume() {
 	chPtr := pe.stopC.Load()
 	if chPtr == &closedChan {
 		ch := make(chan struct{})
 		pe.stopC.Store(&ch)
 	}
+	pe.cond.L.Unlock()
+}
+
+// Wait unill all scheduled parallel tasks are done (or cancelled), then acquire the lock
+// that guarantees exclusive access to the state captured by the `processor` func of the executor.
+// Returns wheather the executor was stopped (result function returned parexec.CmdStop)
+func (pe *Executor[T]) WaitDoneAndLock() (wasStopped bool) {
+	pe.cond.L.Lock()
+	for pe.tasks.Load() != 0 {
+		pe.cond.Wait()
+	}
+	return pe.isStopped()
 }
 
 func (pe *Executor[T]) taskAdd(n int) (idx int) {
@@ -151,15 +134,17 @@ func (pe *Executor[T]) getStopC() <-chan struct{} {
 }
 
 func (pe *Executor[T]) execute(idx int, fn func() T) {
-	defer pe.taskDone()
 	limiterActive := pe.limiter != nil
+	defer func() {
+		pe.taskDone()
+		if limiterActive {
+			pe.limiter.Return()
+		}
+		// TODO: do something with panic
+		_ = recover()
+	}()
 	if limiterActive {
 		pe.limiter.Take()
-		defer func() {
-			if limiterActive {
-				pe.limiter.Return()
-			}
-		}()
 	}
 	if pe.isStopped() {
 		return
@@ -192,6 +177,16 @@ func GoWithArg[I, T any](pe *Executor[T], fn func(I) T) func(I) {
 	return func(input I) {
 		pe.Go(func() T {
 			return fn(input)
+		})
+	}
+}
+
+// Transforms fn (func from (I1, I2) to T) into func(I1, I2) that executes in [Executor] and returns the result
+// T into executor's "processor" function.
+func GoWithArgs[I1, I2, T any](pe *Executor[T], fn func(I1, I2) T) func(I1, I2) {
+	return func(input1 I1, input2 I2) {
+		pe.Go(func() T {
+			return fn(input1, input2)
 		})
 	}
 }
@@ -241,31 +236,23 @@ func MapChan[I, T any](pe *Executor[T], inputC <-chan I, fn func(I) T) (consumed
 		case <-stopC:
 			// executor stopped before inputC was consumed
 			return false
-		case input, ok := <-inputC:
-			if !ok {
-				// consumed inputC fully
-				return true
+		// stopC is not closed, now we can subscribe to inputC
+		// otherwise select may choose inputC case even if stopC case is also valid
+		default:
+			select {
+			case <-stopC:
+				// executor stopped before inputC was consumed
+				return false
+			case input, ok := <-inputC:
+				if !ok {
+					// consumed inputC fully
+					return true
+				}
+				idx := pe.taskAdd(1)
+				go func(idx int, input I) {
+					pe.execute(idx, func() T { return fn(input) })
+				}(idx, input)
 			}
-			idx := pe.taskAdd(1)
-			go func(idx int, input I) {
-				pe.execute(idx, func() T { return fn(input) })
-			}(idx, input)
 		}
 	}
-}
-
-// Sets slice[idx] = val, growing slice if needed, and returns the updated slice.
-func SetAt[T any](slice []T, idx int, val T) []T {
-	needToAlloc := idx - len(slice)
-	switch {
-	case needToAlloc > 0:
-		slice = append(slice, make([]T, needToAlloc)...)
-
-		fallthrough
-	case needToAlloc == 0:
-		slice = append(slice, val)
-	default:
-		slice[idx] = val
-	}
-	return slice
 }

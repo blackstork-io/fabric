@@ -85,3 +85,61 @@ func TestReenter(t *testing.T) {
 		assert.Exactly(^(i % Len), resArr[i])
 	}
 }
+
+func TestCancel(t *testing.T) {
+	const jobCount = 8
+	t.Parallel()
+	assert := assert.New(t)
+
+	var resArr []int
+	pe := parexec.New(parexec.NoLimit, func(res int, idx int) (cmd parexec.Command) {
+		resArr = append(resArr, res)
+		if len(resArr) == 1 {
+			return parexec.CmdStop
+		}
+		// A single stop command should be enough
+		return
+	})
+
+	for i := 0; i < jobCount; i++ {
+		pe.Go(func() int {
+			return 0
+		})
+	}
+	// max 8 submitted
+	wasStopped := pe.WaitDoneAndLock()
+	assert.True(wasStopped)
+	jobsDone := len(resArr)
+	assert.True(jobsDone >= 1 && jobsDone <= 8)
+
+	pe.Unlock() // did not clear the "stopped" status, so next submitted jobs are silently dropped
+
+	for i := 0; i < jobCount; i++ {
+		pe.Go(func() int {
+			return 1
+		})
+	}
+
+	wasStopped = pe.WaitDoneAndLock()
+	assert.True(wasStopped, "must be still stopped")
+	assert.Len(resArr, jobsDone, "shouldn't execute anything: executor stopped")
+
+	pe.UnlockResume()
+
+	for i := 0; i < jobCount; i++ {
+		pe.Go(func() int {
+			return 2
+		})
+	}
+
+	wasStopped = pe.WaitDoneAndLock()
+	assert.False(wasStopped, "resume should've resumed execution")
+	assert.Len(resArr, jobsDone+jobCount, "all jobCount jobs should've been executed")
+
+	for i := 0; i < jobsDone; i++ {
+		assert.Equal(0, resArr[i])
+	}
+	for i := jobsDone; i < jobsDone+jobCount; i++ {
+		assert.Equal(2, resArr[i])
+	}
+}
