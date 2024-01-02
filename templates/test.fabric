@@ -12,15 +12,19 @@ document "test-document" {
         parameter_y = 2
     }
 
-    ref data.plugin_b.data_plugin_b {}
+    ref {
+        base = data.plugin_b.data_plugin_b
+    }
 
     content text {
         query = ".data.plugin_a.data_plugin_a"
         text = "The value is {{ .data.plugin_a.data_plugin_a.result }}"
     }
 
-    content generic {
-        ref content.text.external_block {}
+    section {
+        ref {
+            base = content.text.external_block
+        }
 
         content table {
             query = ".data.plugin_b.data_plugin_b.result | length"
