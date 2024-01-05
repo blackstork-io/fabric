@@ -7,14 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/blackstork-io/fabric/parser"
+	"github.com/blackstork-io/fabric/pkg/utils"
 )
-
-func collect[T any](ch <-chan T) (result []T) {
-	for v := range ch {
-		result = append(result, v)
-	}
-	return
-}
 
 func TestFindFiles(t *testing.T) {
 	t.Parallel()
@@ -28,14 +22,14 @@ func TestFindFiles(t *testing.T) {
 	}
 
 	type testCase struct {
-		desc      string
+		name      string
 		recursive bool
 		expected  []string
 	}
 
 	testCases := []testCase{
 		{
-			desc:      "Recursive",
+			name:      "Recursive",
 			recursive: true,
 			expected: []string{
 				"f1.fabric",
@@ -44,7 +38,7 @@ func TestFindFiles(t *testing.T) {
 			},
 		},
 		{
-			desc:      "Non-recursive",
+			name:      "Non-recursive",
 			recursive: false,
 			expected: []string{
 				"f1.fabric",
@@ -52,22 +46,21 @@ func TestFindFiles(t *testing.T) {
 			},
 		},
 	}
-	for _, tC := range testCases {
-		func(tC testCase) {
-			t.Run(tC.desc, func(t *testing.T) {
-				t.Parallel()
-				var res []string
 
-				diags := parser.FindFabricFiles(fs, tC.recursive, func(path string) {
-					res = append(res, path)
-				})
+	utils.ApplyFn(testCases, func(tc testCase) {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			var res []string
 
-				assert.Equal(
-					tC.expected,
-					res,
-				)
-				assert.Empty(diags)
+			diags := parser.FindFabricFiles(fs, tc.recursive, func(path string) {
+				res = append(res, path)
 			})
-		}(tC)
-	}
+
+			assert.Equal(
+				tc.expected,
+				res,
+			)
+			assert.Empty(diags)
+		})
+	})
 }

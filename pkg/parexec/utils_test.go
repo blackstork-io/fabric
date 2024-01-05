@@ -7,15 +7,20 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/blackstork-io/fabric/pkg/parexec"
+	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
 func TestSetAt(t *testing.T) {
-	tests := []struct {
+	t.Parallel()
+
+	type testCase struct {
 		name  string
 		slice []int
 		idx   int
 		val   int
-	}{
+	}
+
+	tests := []testCase{
 		{
 			name:  "Regular append",
 			slice: []int{0, 1, 2},
@@ -35,18 +40,20 @@ func TestSetAt(t *testing.T) {
 			val:   1337,
 		},
 	}
-	for _, tC := range tests {
-		t.Run(tC.name, func(t *testing.T) {
-			assert := assert.New(t)
-			orig := slices.Clone(tC.slice)
-			res := parexec.SetAt(tC.slice, tC.idx, tC.val)
 
-			assert.True(len(res) == max(len(orig), tC.idx+1))
+	utils.ApplyFn(tests, func(tc testCase) {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			assert := assert.New(t)
+			orig := slices.Clone(tc.slice)
+			res := parexec.SetAt(tc.slice, tc.idx, tc.val)
+
+			assert.Len(res, max(len(orig), tc.idx+1))
 
 			for i := range res {
 				switch {
-				case i == tC.idx: // value at `idx` should become `val`
-					assert.Equal(tC.val, res[i])
+				case i == tc.idx: // value at `idx` should become `val`
+					assert.Equal(tc.val, res[i])
 				case i < len(orig): // other values from the original slice shouldn't change
 					assert.Equal(orig[i], res[i])
 				default: // i >= len(orig)
@@ -55,5 +62,5 @@ func TestSetAt(t *testing.T) {
 				}
 			}
 		})
-	}
+	})
 }

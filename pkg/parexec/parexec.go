@@ -92,7 +92,7 @@ func (pe *Executor[T]) UnlockResume() {
 
 // Wait unill all scheduled parallel tasks are done (or cancelled), then acquire the lock
 // that guarantees exclusive access to the state captured by the `processor` func of the executor.
-// Returns wheather the executor was stopped (result function returned parexec.CmdStop)
+// Returns wheather the executor was stopped (result function returned parexec.CmdStop).
 func (pe *Executor[T]) WaitDoneAndLock() (wasStopped bool) {
 	pe.cond.L.Lock()
 	for pe.tasks.Load() != 0 {

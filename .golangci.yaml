@@ -34,6 +34,7 @@ linters:
     - gochecknoglobals
     - godox
     - lll
+    - gomnd
 
 linters-settings:
   gomnd:
