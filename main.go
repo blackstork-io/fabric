@@ -7,7 +7,10 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/sanity-io/litter"
+	"golang.org/x/exp/maps"
 
+	"github.com/blackstork-io/fabric/parser"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
@@ -77,8 +80,19 @@ func run() (diags diagnostics.Diag) {
 	return nil
 }
 
+func newRun() (diags diagnostics.Diag) {
+	result := parser.ParseDir("./templates")
+	diags = result.Diag
+	defer func() { PrintDiags(diags, result.FileMap) }()
+	if diags.HasErrors() {
+		return
+	}
+	litter.Dump(maps.Keys(result.FileMap))
+	return
+}
+
 func main() {
-	if diags := run(); diags.HasErrors() {
+	if diags := newRun(); diags.HasErrors() {
 		os.Exit(1)
 	}
 }

@@ -1,0 +1,10 @@
+with-expecter: True
+dir: "mocks/{{.InterfaceDirRelative}}"
+mockname: "{{.InterfaceName}}"
+outpkg: "{{.PackageName}}_mocks"
+packages:
+  github.com/blackstork-io/fabric/parser:
+    config:
+      recursive: True
+    interfaces:
+      FabricBlock:
