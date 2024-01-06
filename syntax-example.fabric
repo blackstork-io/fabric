@@ -2,7 +2,7 @@ fabric {
 
     cache_dir = "./.fabric"
 
-    plugins_registry {
+    plugin_registry {
         mirror_dir = "/tmp/plugins/"
     }
 
