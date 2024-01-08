@@ -3,9 +3,9 @@ package plugin
 import "github.com/Masterminds/semver/v3"
 
 // semver.Version doesn't implement MarshalBinary/UnmarshalBinary required for
-// gob, which is required by net/rpc, which is required by go-plugin.
+// gob (which is required by net/rpc, which is required by go-plugin).
 // This is a temporary workaround, I expect they are going to add these methods
-// when I send a PR.
+// after [my PR](https://github.com/Masterminds/semver/pull/228) is accepted
 
 type Version semver.Version
 
