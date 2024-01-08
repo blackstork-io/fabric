@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"github.com/Masterminds/semver/v3"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
@@ -24,7 +23,7 @@ type Plugin struct {
 	// "text", "plugin_a", etc.
 	Name string
 	// version of the plugin `Kind Name` that is provided by the current binary
-	Version semver.Version
+	Version Version
 	// Specification of the `config` block for this plugin
 	// If nil - providing a `config Kind Name` is an error
 	ConfigSpec hcldec.Spec
@@ -36,7 +35,7 @@ type Args struct {
 	// Specifies which kind, name and version of plugin to execute
 	Kind    string
 	Name    string
-	Version semver.Version
+	Version Version
 
 	// Result of decoding a config block with ConfigSpec
 	Config cty.Value
