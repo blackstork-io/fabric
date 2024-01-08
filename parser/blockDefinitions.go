@@ -42,9 +42,11 @@ func (c *Config) GetKey() *Key {
 		// anonymous config block
 		return nil
 	case 3:
+		// named config block
 		name = c.block.Labels[2]
 		fallthrough
 	case 2:
+		// default config block
 		return &Key{
 			PluginKind: c.block.Labels[0],
 			PluginName: c.block.Labels[1],
@@ -64,8 +66,8 @@ func (c *Config) Block() *hclsyntax.Block {
 func parseConfigDefinition(block *hclsyntax.Block) (config *Config, diags diagnostics.Diag) {
 	diags.Append(validatePluginKind(block, 0))
 	diags.Append(validatePluginName(block, 1))
-	diags.Append(validateBlockName(block, 2, false))
-	diags.Append(validateLabelsLength(block, 3, "plugin_kind plugin_name [block_name]"))
+	diags.Append(validateBlockName(block, 2, true))
+	diags.Append(validateLabelsLength(block, 3, "plugin_kind plugin_name block_name"))
 
 	if diags.HasErrors() {
 		return
@@ -100,12 +102,8 @@ func (p *Plugin) Block() *hclsyntax.Block {
 
 func parsePluginDefinition(block *hclsyntax.Block) (plugin *Plugin, diags diagnostics.Diag) {
 	diags.Append(validatePluginName(block, 0))
-
-	// TODO: top level anonymous blocks can't be reached from any other place
-	// should we consider it an error?
-	diags.Append(validateBlockName(block, 1, false))
-
-	diags.Append(validateLabelsLength(block, 2, "plugin_name [block_name]"))
+	diags.Append(validateBlockName(block, 1, true))
+	diags.Append(validateLabelsLength(block, 2, "plugin_name block_name"))
 
 	if diags.HasErrors() {
 		return
@@ -164,8 +162,8 @@ func (s *Section) Block() *hclsyntax.Block {
 }
 
 func parseSectionDefinition(block *hclsyntax.Block) (s *Section, diags diagnostics.Diag) {
-	diags.Append(validateBlockName(block, 0, false))
-	diags.Append(validateLabelsLength(block, 1, "[block_name]"))
+	diags.Append(validateBlockName(block, 0, true))
+	diags.Append(validateLabelsLength(block, 1, "block_name"))
 	if diags.HasErrors() {
 		return
 	}
@@ -179,7 +177,6 @@ func parseBlockDefinitions(body *hclsyntax.Body) (res *DefinedBlocks, diags diag
 	res = NewDefinedBlocks()
 
 	for _, block := range body.Blocks {
-		// TODO: If top-level blocks must be named - here's the place to enforce it
 		switch block.Type {
 		case BlockKindData, BlockKindContent:
 			plugin, dgs := parsePluginDefinition(block)
@@ -188,7 +185,7 @@ func parseBlockDefinitions(body *hclsyntax.Body) (res *DefinedBlocks, diags diag
 			}
 			key := plugin.GetKey()
 			if key == nil {
-				continue
+				panic("unable to get the key of the top-level block")
 			}
 			diags.Append(AddIfMissing(res.Plugins, *key, plugin))
 		case BlockKindDocument:
@@ -204,7 +201,7 @@ func parseBlockDefinitions(body *hclsyntax.Body) (res *DefinedBlocks, diags diag
 			}
 			key := section.Name()
 			if key == "" {
-				continue
+				panic("unable to get the key of the top-level block")
 			}
 			diags.Append(AddIfMissing(res.Sections, key, section))
 		case BlockKindConfig:
@@ -214,7 +211,7 @@ func parseBlockDefinitions(body *hclsyntax.Body) (res *DefinedBlocks, diags diag
 			}
 			key := cfg.GetKey()
 			if key == nil {
-				continue
+				panic("unable to get the key of the top-level block")
 			}
 			diags.Append(AddIfMissing(res.Config, *key, cfg))
 		default:
