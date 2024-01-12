@@ -1,4 +1,4 @@
-package plugin
+package plugininterface
 
 import (
 	"github.com/hashicorp/hcl/v2"
@@ -49,6 +49,6 @@ type Result struct {
 	// `content` plugins return a markdown string
 	// `data` plugins return a map[string]any that would be put into the global config
 	// TODO: hard-code typecast based on the plugin kind while handling the result
-	result any
-	diags  hcl.Diagnostics
+	Result any
+	Diags  hcl.Diagnostics
 }
