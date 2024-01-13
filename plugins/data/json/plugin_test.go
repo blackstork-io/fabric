@@ -5,16 +5,14 @@ import (
 
 	"github.com/blackstork-io/fabric/plugininterface/v1"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
 )
 
 func TestPlugin_GetPlugins(t *testing.T) {
 	plugin := Plugin{}
 	plugins := plugin.GetPlugins()
-
-	if len(plugins) != 1 {
-		t.Fatalf("expected 2 plugins, got %d", len(plugins))
-	}
+	require.Len(t, plugins, 1, "expected 1 plugin")
 	got := plugins[0]
 	assert.Equal(t, "json", got.Name)
 	assert.Equal(t, "data", got.Kind)
