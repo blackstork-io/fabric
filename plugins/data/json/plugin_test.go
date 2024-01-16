@@ -89,7 +89,7 @@ func TestPlugin_Call(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			plugin := Plugin{}
 			args := plugininterface.Args{
-				Kind: "json",
+				Kind: "data",
 				Name: "json",
 				Args: cty.ObjectVal(map[string]cty.Value{
 					"glob": cty.StringVal(tc.glob),
