@@ -105,7 +105,7 @@ func (Plugin) GetPlugins() []plugininterface.Plugin {
 	}
 }
 
-func makeClient(pcfg cty.Value) (*es.Client, error) {
+func (p Plugin) makeClient(pcfg cty.Value) (*es.Client, error) {
 	cfg := &es.Config{
 		Addresses: []string{defaultBaseURL},
 		Username:  defaultUsername,
@@ -145,7 +145,7 @@ func makeClient(pcfg cty.Value) (*es.Client, error) {
 
 func (p Plugin) Call(args plugininterface.Args) plugininterface.Result {
 
-	client, err := makeClient(args.Config)
+	client, err := p.makeClient(args.Config)
 	if err != nil {
 		return plugininterface.Result{
 			Diags: hcl.Diagnostics{{
