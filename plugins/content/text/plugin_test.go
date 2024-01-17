@@ -296,7 +296,25 @@ func (s *PluginTestSuite) TestCallBlockquoteMultiline() {
 		},
 	}
 	expected := plugininterface.Result{
-		Result: "> Hello\nWorld\nfor you!",
+		Result: "> Hello\n> World\n> for you!",
+	}
+	s.Equal(expected, s.plugin.Call(args))
+}
+
+func (s *PluginTestSuite) TestCallBlockquoteMultilineDoubleNewline() {
+	args := plugininterface.Args{
+		Args: cty.ObjectVal(map[string]cty.Value{
+			"text":                cty.StringVal("Hello\n{{.name}}\n\nfor you!"),
+			"format_as":           cty.StringVal("blockquote"),
+			"absolute_title_size": cty.NullVal(cty.Number),
+			"code_language":       cty.NullVal(cty.String),
+		}),
+		Context: map[string]any{
+			"name": "World",
+		},
+	}
+	expected := plugininterface.Result{
+		Result: "> Hello\n> World\n> \n> for you!",
 	}
 	s.Equal(expected, s.plugin.Call(args))
 }

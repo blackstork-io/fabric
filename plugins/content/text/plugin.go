@@ -136,7 +136,7 @@ func (p Plugin) renderBlockquote(text string, datactx map[string]any) (string, e
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("> %s", text), nil
+	return "> " + strings.ReplaceAll(text, "\n", "\n> "), nil
 }
 
 func (p Plugin) Call(args plugininterface.Args) plugininterface.Result {
