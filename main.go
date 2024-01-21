@@ -41,7 +41,7 @@ func argParse() (diags diagnostics.Diag) {
 
 func run() (diags diagnostics.Diag) {
 	var fileMap map[string]*hcl.File
-	defer func() { PrintDiags(diags, fileMap) }()
+	defer func() { diagnostics.PrintDiags(diags, fileMap) }()
 
 	diag := argParse()
 	if diags.Extend(diag) {
@@ -81,13 +81,41 @@ func run() (diags diagnostics.Diag) {
 }
 
 func newRun() (diags diagnostics.Diag) {
-	result := parser.ParseDir("./templates")
+	if diags.Extend(argParse()) {
+		return
+	}
+	result := parser.ParseDir(path)
 	diags = result.Diag
-	defer func() { PrintDiags(diags, result.FileMap) }()
+	defer func() { diagnostics.PrintDiags(diags, result.FileMap) }()
 	if diags.HasErrors() {
 		return
 	}
 	litter.Dump(maps.Keys(result.FileMap))
+	if len(result.FileMap) == 0 {
+		diags.Add(
+			"No correct fabric files found",
+			fmt.Sprintf("There are no *.fabric files at '%s' or all of them have failed to parse", path),
+		)
+	}
+
+	doc, found := result.Blocks.Documents[docName]
+	if !found {
+		diags.Add(
+			"Document not found",
+			fmt.Sprintf(
+				"Definition for document named '%s' not found in '%s/**.fabric' files",
+				docName,
+				path,
+			),
+		)
+	}
+
+	eval := parser.NewEvaluator(&parser.MockCaller{}, result.Blocks)
+	str, diag := eval.EvaluateDocument(doc)
+	if diags.Extend(diag) {
+		return
+	}
+	fmt.Printf("Hurray! \n%s\n", str)
 	return
 }
 

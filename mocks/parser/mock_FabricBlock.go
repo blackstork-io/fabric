@@ -3,7 +3,7 @@
 package parser_mocks
 
 import (
-	hclsyntax "github.com/hashicorp/hcl/v2/hclsyntax"
+	hcl "github.com/hashicorp/hcl/v2"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -20,49 +20,49 @@ func (_m *FabricBlock) EXPECT() *FabricBlock_Expecter {
 	return &FabricBlock_Expecter{mock: &_m.Mock}
 }
 
-// Block provides a mock function with given fields:
-func (_m *FabricBlock) Block() *hclsyntax.Block {
+// GetHCLBlock provides a mock function with given fields:
+func (_m *FabricBlock) GetHCLBlock() *hcl.Block {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for Block")
+		panic("no return value specified for GetHCLBlock")
 	}
 
-	var r0 *hclsyntax.Block
-	if rf, ok := ret.Get(0).(func() *hclsyntax.Block); ok {
+	var r0 *hcl.Block
+	if rf, ok := ret.Get(0).(func() *hcl.Block); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*hclsyntax.Block)
+			r0 = ret.Get(0).(*hcl.Block)
 		}
 	}
 
 	return r0
 }
 
-// FabricBlock_Block_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Block'
-type FabricBlock_Block_Call struct {
+// FabricBlock_GetHCLBlock_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetHCLBlock'
+type FabricBlock_GetHCLBlock_Call struct {
 	*mock.Call
 }
 
-// Block is a helper method to define mock.On call
-func (_e *FabricBlock_Expecter) Block() *FabricBlock_Block_Call {
-	return &FabricBlock_Block_Call{Call: _e.mock.On("Block")}
+// GetHCLBlock is a helper method to define mock.On call
+func (_e *FabricBlock_Expecter) GetHCLBlock() *FabricBlock_GetHCLBlock_Call {
+	return &FabricBlock_GetHCLBlock_Call{Call: _e.mock.On("GetHCLBlock")}
 }
 
-func (_c *FabricBlock_Block_Call) Run(run func()) *FabricBlock_Block_Call {
+func (_c *FabricBlock_GetHCLBlock_Call) Run(run func()) *FabricBlock_GetHCLBlock_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run()
 	})
 	return _c
 }
 
-func (_c *FabricBlock_Block_Call) Return(_a0 *hclsyntax.Block) *FabricBlock_Block_Call {
+func (_c *FabricBlock_GetHCLBlock_Call) Return(_a0 *hcl.Block) *FabricBlock_GetHCLBlock_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *FabricBlock_Block_Call) RunAndReturn(run func() *hclsyntax.Block) *FabricBlock_Block_Call {
+func (_c *FabricBlock_GetHCLBlock_Call) RunAndReturn(run func() *hcl.Block) *FabricBlock_GetHCLBlock_Call {
 	_c.Call.Return(run)
 	return _c
 }

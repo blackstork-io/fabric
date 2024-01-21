@@ -1,3 +1,15 @@
+data ref "ref_a" {
+    base = data.ref.ref_b
+}
+
+data ref "ref_b" {
+    base = data.ref.ref_c
+}
+data ref "ref_c" {
+    base = data.ref.ref_a
+}
+
+
 data plugin_b "data_plugin_b" {
     parameter_z = ["a", "b", "c", "d"]
 }
@@ -12,8 +24,13 @@ document "test-document" {
         parameter_y = 2
     }
 
-    ref {
+    data ref "ref-name" {
         base = data.plugin_b.data_plugin_b
+        new_param = "123"
+    }
+    data ref "ref-name-2" {
+        base = data.ref.ref_a
+        new_param = "123"
     }
 
     content text {
@@ -22,7 +39,7 @@ document "test-document" {
     }
 
     section {
-        ref {
+        content ref {
             base = content.text.external_block
         }
 

@@ -16,9 +16,10 @@ func validateBlockName(block *hclsyntax.Block, idx int, required bool) *hcl.Diag
 				Severity: hcl.DiagError,
 				Summary:  "Missing block name",
 				Detail:   "Block name was not specified",
-				Context:  block.DefRange().Ptr(),
+				Subject:  block.DefRange().Ptr(),
 			}
 		}
+		return nil
 	}
 
 	if !hclsyntax.ValidIdentifier(block.Labels[idx]) {
@@ -36,7 +37,25 @@ func validateBlockName(block *hclsyntax.Block, idx int, required bool) *hcl.Diag
 	return nil
 }
 
-func validatePluginKind(block *hclsyntax.Block, idx int) *hcl.Diagnostic {
+func validatePluginKind(block *hclsyntax.Block, kind string, kindRange hcl.Range) *hcl.Diagnostic {
+	switch kind {
+	case BlockKindContent, BlockKindData:
+		return nil
+	default:
+		return &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Invalid plugin kind",
+			Detail: fmt.Sprintf(
+				"Unknown plugin kind '%s', valid plugin kinds are '%s' and '%s'",
+				kind, BlockKindContent, BlockKindData,
+			),
+			Subject: kindRange.Ptr(),
+			Context: block.DefRange().Ptr(),
+		}
+	}
+}
+
+func validatePluginKindLabel(block *hclsyntax.Block, idx int) *hcl.Diagnostic {
 	if idx >= len(block.Labels) {
 		return &hcl.Diagnostic{
 			Severity: hcl.DiagError,
@@ -46,21 +65,7 @@ func validatePluginKind(block *hclsyntax.Block, idx int) *hcl.Diagnostic {
 		}
 	}
 
-	switch block.Labels[idx] {
-	case BlockKindContent, BlockKindData:
-	default:
-		return &hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "Invalid plugin kind",
-			Detail: fmt.Sprintf(
-				"Unknown plugin kind '%s', valid plugin kinds are '%s' and '%s'",
-				block.Labels[idx], BlockKindContent, BlockKindData,
-			),
-			Subject: block.LabelRanges[idx].Ptr(),
-			Context: block.DefRange().Ptr(),
-		}
-	}
-	return nil
+	return validatePluginKind(block, block.Labels[idx], block.LabelRanges[idx])
 }
 
 func validatePluginName(block *hclsyntax.Block, idx int) *hcl.Diagnostic {
@@ -94,7 +99,7 @@ func validateLabelsLength(block *hclsyntax.Block, maxLabels int, labelUsage stri
 	return nil
 }
 
-func newNestingDiag(block *hclsyntax.Block, body *hclsyntax.Body, validChildren []string) *hcl.Diagnostic {
+func newNestingDiag(what string, block *hclsyntax.Block, body *hclsyntax.Body, validChildren []string) *hcl.Diagnostic {
 	return &hcl.Diagnostic{
 		Severity: hcl.DiagError,
 		Summary:  "Invalid block type",

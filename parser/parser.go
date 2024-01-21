@@ -66,7 +66,8 @@ const (
 	BlockKindConfig   = "config"
 	BlockKindContent  = "content"
 	BlockKindData     = "data"
-	BlockKindRef      = "ref"
+	BlockKindMeta     = "meta"
+	PluginTypeRef     = "ref" // TODO: not a block kind now
 	BlockKindSection  = "section"
 )
 
@@ -79,11 +80,7 @@ func parseHclBytes(bytes []byte, path string) (res fileParseResult) {
 		return
 	}
 
-	body, ok := res.file.Body.(*hclsyntax.Body)
-	if !ok {
-		res.Add("Failed to parse", fmt.Sprintf("Can't inspect body of the file '%s'", path))
-		return
-	}
+	body := ToHclsyntaxBody(res.file.Body)
 
 	blocks, diags := parseBlockDefinitions(body)
 	res.Extend(diags)
