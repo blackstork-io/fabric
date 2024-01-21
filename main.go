@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sanity-io/litter"
-	"golang.org/x/exp/maps"
-
 	"github.com/blackstork-io/fabric/parser"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
@@ -42,7 +39,6 @@ func newRun() (diags diagnostics.Diag) {
 	if diags.HasErrors() {
 		return
 	}
-	litter.Dump(maps.Keys(result.FileMap))
 	if len(result.FileMap) == 0 {
 		diags.Add(
 			"No correct fabric files found",

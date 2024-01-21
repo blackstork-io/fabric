@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
-	"github.com/sanity-io/litter"
 
 	circularRefDetector "github.com/blackstork-io/fabric/pkg/cirularRefDetector"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
@@ -188,9 +187,6 @@ func (db *DefinedBlocks) EvaluatePlugin(plugin *Plugin) (res PluginEvaluation, d
 		plugin.invoke, ok = res.invocation.(*blockInvocation)
 		if !ok {
 			// Should never happen
-			litter.Dump("Should never happen happened", plugin, res, diags)
-			litter.Dump("plugin", plugin.Kind(), plugin.PluginName(), plugin.BlockName())
-
 			diags.Append(&hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  "Plugin evaluation failed",
@@ -351,7 +347,6 @@ func (db *DefinedBlocks) evaluatePlugin(plugin *Plugin) (res PluginEvaluation, d
 			return
 		}
 
-		litter.Dump("***", res.PluginName, parent.PluginName)
 		res.PluginName = parent.PluginName
 		if res.BlockName == "" {
 			res.BlockName = parent.BlockName

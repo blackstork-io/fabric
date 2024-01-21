@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
-	"github.com/sanity-io/litter"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
 
@@ -161,7 +160,6 @@ func (e *Evaluator) EvaluateSection(d *DocumentOrSection) (diags diagnostics.Dia
 				// delaying content calls until all data calls are completed
 				e.contentCalls = append(e.contentCalls, call)
 			case BlockKindData:
-				litter.Dump("call", call)
 				res, diag := e.caller.CallData(
 					call.PluginName,
 					call.config,
