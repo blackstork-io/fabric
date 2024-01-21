@@ -20,7 +20,7 @@ func TestLimiterOnPanicingJob(t *testing.T) {
 
 	var resArr []int
 
-	pe := New(limiter, func(res int, idx int) (cmd Command) {
+	pe := New(limiter, func(res, idx int) (cmd Command) {
 		resArr = append(resArr, res)
 		return
 	})

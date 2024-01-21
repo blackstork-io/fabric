@@ -19,7 +19,7 @@ func TestManyTasks(t *testing.T) {
 	assert := assert.New(t)
 
 	resArr := make([]int, Len*64)
-	pe := parexec.New(parexec.NoLimit, func(res int, idx int) (cmd parexec.Command) {
+	pe := parexec.New(parexec.NoLimit, func(res, idx int) (cmd parexec.Command) {
 		resArr[idx] = res
 		return
 	})
@@ -45,7 +45,7 @@ func TestLimiter(t *testing.T) {
 				t.Parallel()
 				assert := assert.New(t)
 				resArr := make([]int, Len)
-				pe := parexec.New(parexec.NewLimiter(limit), func(res int, idx int) (cmd parexec.Command) {
+				pe := parexec.New(parexec.NewLimiter(limit), func(res, idx int) (cmd parexec.Command) {
 					resArr[idx] = res
 					return
 				})

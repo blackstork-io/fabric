@@ -15,7 +15,7 @@ func TestBasic(t *testing.T) {
 	assert := assert.New(t)
 
 	resArr := make([]int, Len)
-	pe := parexec.New(parexec.NoLimit, func(res int, idx int) (cmd parexec.Command) {
+	pe := parexec.New(parexec.NoLimit, func(res, idx int) (cmd parexec.Command) {
 		resArr[idx] = res
 		return
 	})
@@ -38,7 +38,7 @@ func TestReenter(t *testing.T) {
 	assert := assert.New(t)
 
 	resArr := make([]int, Len*3)
-	pe := parexec.New(parexec.NewLimiter(4), func(res int, idx int) (cmd parexec.Command) {
+	pe := parexec.New(parexec.NewLimiter(4), func(res, idx int) (cmd parexec.Command) {
 		resArr[idx] = res
 		return
 	})
@@ -92,7 +92,7 @@ func TestCancel(t *testing.T) {
 	assert := assert.New(t)
 
 	var resArr []int
-	pe := parexec.New(parexec.NoLimit, func(res int, idx int) (cmd parexec.Command) {
+	pe := parexec.New(parexec.NoLimit, func(res, idx int) (cmd parexec.Command) {
 		resArr = append(resArr, res)
 		if len(resArr) == 1 {
 			return parexec.CmdStop
