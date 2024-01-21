@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/sanity-io/litter"
 	"golang.org/x/exp/maps"
 
@@ -16,11 +14,6 @@ import (
 
 // TODO: replace flag with a better parser (argparse).
 var path, pluginPath, docName string
-
-type Decoder struct {
-	root    *Templates
-	plugins *Plugins
-}
 
 func argParse() (diags diagnostics.Diag) {
 	flag.StringVar(&path, "path", "", "a path to a directory with *.hcl files")
@@ -37,47 +30,6 @@ func argParse() (diags diagnostics.Diag) {
 		diags.Add("Wrong usage", "plugins required")
 	}
 	return
-}
-
-func run() (diags diagnostics.Diag) {
-	var fileMap map[string]*hcl.File
-	defer func() { diagnostics.PrintDiags(diags, fileMap) }()
-
-	diag := argParse()
-	if diags.Extend(diag) {
-		return
-	}
-
-	body, fileMap, diag := fromDisk()
-	if diags.Extend(diag) {
-		return
-	}
-
-	plugins, pluginDiag := NewPlugins(pluginPath)
-
-	if diags.Extend(pluginDiag) {
-		return diags
-	}
-
-	defer plugins.Kill()
-	d := Decoder{
-		root:    &Templates{},
-		plugins: plugins,
-	}
-	if diags.ExtendHcl(gohcl.DecodeBody(body, nil, d.root)) {
-		return diags
-	}
-
-	if diags.ExtendHcl(d.Decode()) {
-		return diags
-	}
-
-	output, diag := d.Evaluate(docName)
-	if diag.HasErrors() {
-		return diags
-	}
-	fmt.Println(output) //nolint: forbidigo
-	return nil
 }
 
 func newRun() (diags diagnostics.Diag) {
