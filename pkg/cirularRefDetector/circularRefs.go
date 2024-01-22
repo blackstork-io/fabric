@@ -22,11 +22,11 @@ var detector = circularRefDetector{
 type extraMarker struct{}
 
 // Marker to identify circular access diagnostic.
-// Identifies the diagnostic that will be extended with the "backtrace".
+// Identifies the diagnostic that will be extended with the backtrace.
 var ExtraMarker = extraMarker{}
 
 // Adds pointer to circular reference detection.
-// refRange is an optional hcl.Range
+// refRange is optional.
 func Add[T any](ptr *T, refRange *hcl.Range) {
 	detector.add(unsafe.Pointer(ptr), refRange)
 }
@@ -61,7 +61,7 @@ func (d *circularRefDetector) remove(ptr unsafe.Pointer, diags *diagnostics.Diag
 	rng, found := d.refs[ptr]
 	delete(d.refs, ptr)
 	d.mu.Unlock()
-	if !found {
+	if !found || diags == nil {
 		return
 	}
 
