@@ -11,9 +11,12 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 
+	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/parexec"
 )
+
+// FS-level parsing of fabric files
 
 const FabricFileExt = ".fabric"
 
@@ -60,16 +63,6 @@ type fileParseResult struct {
 	path   string
 	blocks *DefinedBlocks
 }
-
-const (
-	BlockKindDocument = "document"
-	BlockKindConfig   = "config"
-	BlockKindContent  = "content"
-	BlockKindData     = "data"
-	BlockKindMeta     = "meta"
-	PluginTypeRef     = "ref" // TODO: not a block kind now
-	BlockKindSection  = "section"
-)
 
 func parseHclBytes(bytes []byte, path string) (res fileParseResult) {
 	file, diag := hclsyntax.ParseConfig(bytes, path, hcl.InitialPos)
@@ -119,7 +112,7 @@ func readFabricFile(dirFs fs.FS, path string) ([]byte, diagnostics.Diag) {
 }
 
 type DirParseResult struct {
-	diagnostics.Diag
+	Diags   diagnostics.Diag
 	Blocks  *DefinedBlocks
 	FileMap map[string]*hcl.File
 }
@@ -134,8 +127,8 @@ func ParseDir(dir string) DirParseResult {
 	parsePE := parexec.New(
 		parexec.CPULimiter,
 		func(res fileParseResult, _ int) (cmd parexec.Command) {
-			result.Extend(res.Diag)
-			result.Extend(result.Blocks.Merge(res.blocks))
+			result.Diags.Extend(res.Diag)
+			result.Diags.Extend(result.Blocks.Merge(res.blocks))
 			result.FileMap[res.path] = res.file
 			return
 		},
@@ -178,6 +171,58 @@ func ParseDir(dir string) DirParseResult {
 	parsePE.WaitDoneAndLock()
 
 	// prepending read diags, since they logically happen earlier
-	result.Diag = append(readDiags, result.Diag...)
+	result.Diags = append(readDiags, result.Diags...)
 	return result
+}
+
+func parseBlockDefinitions(body *hclsyntax.Body) (res *DefinedBlocks, diags diagnostics.Diag) {
+	res = NewDefinedBlocks()
+
+	for _, block := range body.Blocks {
+		switch block.Type {
+		case definitions.BlockKindData, definitions.BlockKindContent:
+			plugin, dgs := definitions.DefinePlugin(block, true)
+			if diags.Extend(dgs) {
+				continue
+			}
+			key := plugin.GetKey()
+			if key == nil {
+				panic("unable to get the key of the top-level block")
+			}
+			diags.Append(AddIfMissing(res.Plugins, *key, plugin))
+		case definitions.BlockKindDocument, definitions.BlockKindSection:
+			blk, dgs := definitions.DefineSectionOrDocument(block, true)
+			if diags.Extend(dgs) {
+				continue
+			}
+			if blk.IsDocument() {
+				diags.Append(AddIfMissing(res.Documents, blk.Name(), blk))
+			} else {
+				diags.Append(AddIfMissing(res.Sections, blk.Name(), blk))
+			}
+		case definitions.BlockKindConfig:
+			cfg, dgs := definitions.DefineConfig(block)
+			if diags.Extend(dgs) {
+				continue
+			}
+			key := cfg.GetKey()
+			if key == nil {
+				panic("unable to get the key of the top-level block")
+			}
+			diags.Append(AddIfMissing(res.Config, *key, cfg))
+		default:
+			diags.Append(definitions.NewNestingDiag(
+				"Top level of fabric document",
+				block,
+				body,
+				[]string{
+					definitions.BlockKindData,
+					definitions.BlockKindContent,
+					definitions.BlockKindDocument,
+					definitions.BlockKindSection,
+					definitions.BlockKindConfig,
+				}))
+		}
+	}
+	return
 }

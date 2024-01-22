@@ -1,4 +1,4 @@
-package parser
+package definitions
 
 import (
 	"fmt"
@@ -99,7 +99,7 @@ func validateLabelsLength(block *hclsyntax.Block, maxLabels int, labelUsage stri
 	return nil
 }
 
-func newNestingDiag(what string, block *hclsyntax.Block, body *hclsyntax.Body, validChildren []string) *hcl.Diagnostic {
+func NewNestingDiag(what string, block *hclsyntax.Block, body *hclsyntax.Body, validChildren []string) *hcl.Diagnostic {
 	return &hcl.Diagnostic{
 		Severity: hcl.DiagError,
 		Summary:  "Invalid block type",

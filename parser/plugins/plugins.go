@@ -6,6 +6,9 @@ import (
 	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
+// Stub implementation of plugin caller
+// TODO: attach to plugin discovery mechanism
+
 type Plugins struct {
 	content PluginType
 	data    PluginType

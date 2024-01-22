@@ -11,14 +11,10 @@ type Diag hcl.Diagnostics //nolint:errname // Diagnostics does implement error i
 type repeatedError struct{}
 
 // Invisible to user error, typically used to signal that the initial block evaluation
-// has failed (and already reported its errors to user).
+// has failed (and already has reported its errors to user).
 var RepeatedError = &hcl.Diagnostic{
 	Severity: hcl.DiagError,
 	Extra:    repeatedError{},
-}
-
-func (d Diag) Find() string {
-	return (hcl.Diagnostics)(d).Error()
 }
 
 func FindByExtra[T any](diags Diag) *hcl.Diagnostic {

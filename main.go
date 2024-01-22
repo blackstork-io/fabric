@@ -34,7 +34,7 @@ func newRun() (diags diagnostics.Diag) {
 		return
 	}
 	result := parser.ParseDir(path)
-	diags = result.Diag
+	diags = result.Diags
 	defer func() { diagnostics.PrintDiags(diags, result.FileMap) }()
 	if diags.HasErrors() {
 		return

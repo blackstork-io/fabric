@@ -7,24 +7,16 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/sanity-io/litter"
-	"github.com/zclconf/go-cty/cty"
 	"golang.org/x/exp/maps"
 
+	"github.com/blackstork-io/fabric/parser/definitions"
+	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	plugin "github.com/blackstork-io/fabric/pluginInterface/v1"
 )
 
-type Configuration interface {
-	Parse(spec hcldec.Spec) (cty.Value, diagnostics.Diag)
-	Range() hcl.Range
-}
-
-type Invocation interface {
-	Parse(spec hcldec.Spec) (cty.Value, diagnostics.Diag)
-	Range() hcl.Range
-	DefRange() hcl.Range
-	MissingItemRange() hcl.Range
-}
+// Stub implementation of plugin caller
+// TODO: attach to plugin discovery mechanism
 
 type pluginKey struct {
 	Kind string
@@ -35,12 +27,12 @@ type pluginData struct {
 	rpc            plugin.PluginRPC
 	Version        plugin.Version
 	ConfigSpec     hcldec.Spec
-	DefaultConfig  Configuration
+	DefaultConfig  evaluation.Configuration
 	InvocationSpec hcldec.Spec
 }
 type PluginCaller interface {
-	CallContent(name string, config Configuration, invocation Invocation, context map[string]any) (result string, diag diagnostics.Diag)
-	CallData(name string, config Configuration, invocation Invocation) (result map[string]any, diag diagnostics.Diag)
+	CallContent(name string, config evaluation.Configuration, invocation evaluation.Invocation, context map[string]any) (result string, diag diagnostics.Diag)
+	CallData(name string, config evaluation.Configuration, invocation evaluation.Invocation) (result map[string]any, diag diagnostics.Diag)
 }
 
 type Caller struct {
@@ -50,7 +42,7 @@ type Caller struct {
 
 var _ PluginCaller = (*Caller)(nil)
 
-func (c *Caller) callPlugin(kind, name string, config Configuration, invocation Invocation, context map[string]any) (res any, diags diagnostics.Diag) {
+func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, invocation evaluation.Invocation, context map[string]any) (res any, diags diagnostics.Diag) {
 	var diag diagnostics.Diag
 	key := pluginKey{
 		Kind: kind,
@@ -122,10 +114,10 @@ func (c *Caller) callPlugin(kind, name string, config Configuration, invocation 
 	return
 }
 
-func (c *Caller) CallContent(name string, config Configuration, invocation Invocation, context map[string]any) (result string, diag diagnostics.Diag) {
+func (c *Caller) CallContent(name string, config evaluation.Configuration, invocation evaluation.Invocation, context map[string]any) (result string, diag diagnostics.Diag) {
 	var ok bool
 	var res any
-	res, diag = c.callPlugin(BlockKindContent, name, config, invocation, context)
+	res, diag = c.callPlugin(definitions.BlockKindContent, name, config, invocation, context)
 	result, ok = res.(string)
 	if !diag.HasErrors() && !ok {
 		diag.Add(
@@ -136,10 +128,10 @@ func (c *Caller) CallContent(name string, config Configuration, invocation Invoc
 	return
 }
 
-func (c *Caller) CallData(name string, config Configuration, invocation Invocation) (result map[string]any, diag diagnostics.Diag) {
+func (c *Caller) CallData(name string, config evaluation.Configuration, invocation evaluation.Invocation) (result map[string]any, diag diagnostics.Diag) {
 	var ok bool
 	var res any
-	res, diag = c.callPlugin(BlockKindData, name, config, invocation, nil)
+	res, diag = c.callPlugin(definitions.BlockKindData, name, config, invocation, nil)
 	result, ok = res.(map[string]any)
 	if !diag.HasErrors() && !ok {
 		diag.Add("Incorrect result type", "Plugin returned incorrect data type")
@@ -152,18 +144,18 @@ type MockCaller struct {
 }
 
 // CallContent implements PluginCaller.
-func (c *MockCaller) CallContent(name string, config Configuration, invocation Invocation, context map[string]any) (result string, diag diagnostics.Diag) {
+func (c *MockCaller) CallContent(name string, config evaluation.Configuration, invocation evaluation.Invocation, context map[string]any) (result string, diag diagnostics.Diag) {
 	c.once.Do(func() {
 		result = litter.Sdump(context) + "\n"
 	})
-	attrs, _ := invocation.(*blockInvocation).JustAttributes()
+	attrs, _ := invocation.(*evaluation.BlockInvocation).JustAttributes()
 	result += litter.Sdump("Call to content:", name, config, maps.Keys(attrs))
 	return
 }
 
 // CallData implements PluginCaller.
-func (*MockCaller) CallData(name string, config Configuration, invocation Invocation) (result map[string]any, diag diagnostics.Diag) {
-	attrs, _ := invocation.(*blockInvocation).JustAttributes()
+func (*MockCaller) CallData(name string, config evaluation.Configuration, invocation evaluation.Invocation) (result map[string]any, diag diagnostics.Diag) {
+	attrs, _ := invocation.(*evaluation.BlockInvocation).JustAttributes()
 
 	result = map[string]any{
 		"result": litter.Sdump("Call to data:", name, config, maps.Keys(attrs)),
