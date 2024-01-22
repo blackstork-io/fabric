@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/blackstork-io/fabric/parser"
-	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
 func TestFindFiles(t *testing.T) {
@@ -46,8 +45,9 @@ func TestFindFiles(t *testing.T) {
 			},
 		},
 	}
+	for _, tc := range testCases {
+		tc := tc
 
-	utils.ApplyFn(testCases, func(tc testCase) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			var res []string
@@ -62,5 +62,5 @@ func TestFindFiles(t *testing.T) {
 			)
 			assert.Empty(diags)
 		})
-	})
+	}
 }

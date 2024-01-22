@@ -50,12 +50,13 @@ func TestMemoizedKeys(t *testing.T) {
 			want: "'A', 'B', 'C', 'D', 'E'",
 		},
 	}
-	utils.ApplyFn(tests, func(tc testCase) {
+	for _, tc := range tests {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			assert.Equal(tc.want, utils.MemoizedKeys(&tc.m)())
 		})
-	})
+	}
 }
 
 func TestMemoizedKeysMemoizes(t *testing.T) {

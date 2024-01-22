@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/blackstork-io/fabric/pkg/parexec"
-	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
 func TestSetAt(t *testing.T) {
@@ -41,7 +40,8 @@ func TestSetAt(t *testing.T) {
 		},
 	}
 
-	utils.ApplyFn(tests, func(tc testCase) {
+	for _, tc := range tests {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			assert := assert.New(t)
@@ -62,5 +62,5 @@ func TestSetAt(t *testing.T) {
 				}
 			}
 		})
-	})
+	}
 }
