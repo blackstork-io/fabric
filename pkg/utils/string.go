@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"sync"
 	"unicode"
 	"unicode/utf8"
 
 	"golang.org/x/exp/maps"
-
-	"github.com/blackstork-io/fabric/pkg/once"
 )
 
 func Surround(surround string, elems ...string) []string {
@@ -74,7 +73,7 @@ func CapitalizeFirstLetter(s string) string {
 }
 
 func MemoizedKeys[M ~map[string]V, V any](m *M) func() string {
-	return once.Value(func() string {
+	return sync.OnceValue(func() string {
 		keys := maps.Keys(*m)
 		slices.Sort(keys)
 		return JoinSurround(", ", "'", keys...)
