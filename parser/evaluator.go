@@ -31,7 +31,7 @@ func NewEvaluator(caller PluginCaller, blocks *DefinedBlocks) *Evaluator {
 
 func (e *Evaluator) EvaluateDocument(d *definitions.DocumentOrSection) (output string, diags diagnostics.Diag) {
 	// sections are basically documents
-	diags = e.EvaluateSection(d)
+	diags = e.evaluateDocOrSection(d)
 	if diags.HasErrors() {
 		return
 	}
@@ -50,7 +50,7 @@ func (e *Evaluator) EvaluateDocument(d *definitions.DocumentOrSection) (output s
 	return
 }
 
-func (e *Evaluator) EvaluateSection(d *definitions.DocumentOrSection) (diags diagnostics.Diag) {
+func (e *Evaluator) evaluateDocOrSection(d *definitions.DocumentOrSection) (diags diagnostics.Diag) {
 	if title := d.Block.Body.Attributes["title"]; title != nil {
 		e.contentCalls = append(e.contentCalls, &evaluation.Plugin{
 			PluginName: "text",
@@ -112,7 +112,7 @@ func (e *Evaluator) EvaluateSection(d *definitions.DocumentOrSection) (diags dia
 			if diags.Extend(diag) {
 				continue
 			}
-			diag = e.EvaluateSection(section)
+			diag = e.evaluateDocOrSection(section)
 			if diags.Extend(diag) {
 				continue
 			}

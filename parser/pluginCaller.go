@@ -27,7 +27,6 @@ type pluginData struct {
 	rpc            plugin.PluginRPC
 	Version        plugin.Version
 	ConfigSpec     hcldec.Spec
-	DefaultConfig  evaluation.Configuration
 	InvocationSpec hcldec.Spec
 }
 type PluginCaller interface {
@@ -58,52 +57,42 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 		Kind:    key.Kind,
 		Name:    key.Name,
 		Version: data.Version,
-		// Config: ,
-		// Args: ,
 		Context: context,
+		// Config ans Args to be filled
 	}
 
-	if data.ConfigSpec != nil {
-		// config required
-		cfg := data.DefaultConfig
-		if config != nil {
-			// override the default
-			cfg = config
+	needsConfig := data.ConfigSpec != nil
+	hasConfig := config != nil
+
+	if needsConfig == hasConfig { // happy path
+		if hasConfig {
+			args.Config, diag = config.ParseConfig(data.ConfigSpec)
+			diags.Extend(diag)
 		}
-		if cfg == nil {
-			diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "Plugin requires configuration",
-				Detail: fmt.Sprintf("Plugin '%s %s' has no default configuration and "+
-					"no configuration was provided at the plugin invocation. "+
-					"Provide an inline config block or a config attribute",
-					kind, name),
-				Subject: invocation.MissingItemRange().Ptr(),
-				Context: invocation.Range().Ptr(),
-			})
-			return
-		}
-		// Todo: detect repeated parse failurs and silence them
-		args.Config, diag = cfg.Parse(data.ConfigSpec)
-		if diags.Extend(diag) {
-			return
-		}
-	} else {
-		// config not needed
-		if config != nil {
-			diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagWarning,
-				Summary:  "Plugin doesn't support configuration",
-				Detail: fmt.Sprintf("Plugin '%s %s' does not support configuration, "+
-					"but was provided with one. Remove it.",
-					kind, name),
-				Subject: config.Range().Ptr(),
-				Context: invocation.Range().Ptr(),
-			})
-		}
+	} else if !hasConfig { // config is needed but absent
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Plugin requires configuration",
+			Detail: fmt.Sprintf("Plugin '%s %s' has no default configuration and "+
+				"no configuration was provided at the plugin invocation. "+
+				"Provide an inline config block or a config attribute",
+				kind, name),
+			Subject: invocation.MissingItemRange().Ptr(),
+			Context: invocation.Range().Ptr(),
+		})
+	} else { // config is present but not needed
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagWarning,
+			Summary:  "Plugin doesn't support configuration",
+			Detail: fmt.Sprintf("Plugin '%s %s' does not support configuration, "+
+				"but was provided with one. Remove it.",
+				kind, name),
+			Subject: config.Range().Ptr(),
+			Context: invocation.Range().Ptr(),
+		})
 	}
 
-	args.Args, diag = invocation.Parse(data.InvocationSpec)
+	args.Args, diag = invocation.ParseInvocation(data.InvocationSpec)
 	diag.Extend(diag)
 	if diag.HasErrors() {
 		return
@@ -120,10 +109,12 @@ func (c *Caller) CallContent(name string, config evaluation.Configuration, invoc
 	res, diag = c.callPlugin(definitions.BlockKindContent, name, config, invocation, context)
 	result, ok = res.(string)
 	if !diag.HasErrors() && !ok {
-		diag.Add(
-			"Incorrect result type",
-			"Plugin returned incorrect data type",
-		)
+		diag.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Incorrect result type",
+			Detail:   "Plugin returned incorrect data type. Please contact fabric developers about this issue",
+			Subject:  invocation.DefRange().Ptr(),
+		})
 	}
 	return
 }
@@ -134,7 +125,12 @@ func (c *Caller) CallData(name string, config evaluation.Configuration, invocati
 	res, diag = c.callPlugin(definitions.BlockKindData, name, config, invocation, nil)
 	result, ok = res.(map[string]any)
 	if !diag.HasErrors() && !ok {
-		diag.Add("Incorrect result type", "Plugin returned incorrect data type")
+		diag.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Incorrect result type",
+			Detail:   "Plugin returned incorrect data type. Please contact fabric developers about this issue",
+			Subject:  invocation.DefRange().Ptr(),
+		})
 	}
 	return
 }

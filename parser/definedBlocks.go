@@ -78,15 +78,6 @@ func (db *DefinedBlocks) Merge(other *DefinedBlocks) (diags diagnostics.Diag) {
 	return
 }
 
-func NewDefinedBlocks() *DefinedBlocks {
-	return &DefinedBlocks{
-		Config:    map[definitions.Key]*definitions.Config{},
-		Documents: map[string]*definitions.DocumentOrSection{},
-		Sections:  map[string]*definitions.DocumentOrSection{},
-		Plugins:   map[definitions.Key]*definitions.Plugin{},
-	}
-}
-
 func AddIfMissing[M ~map[K]V, K comparable, V definitions.FabricBlock](m M, key K, newBlock V) *hcl.Diagnostic {
 	if origBlock, found := m[key]; found {
 		kind := origBlock.GetHCLBlock().Type
@@ -100,4 +91,13 @@ func AddIfMissing[M ~map[K]V, K comparable, V definitions.FabricBlock](m M, key 
 	}
 	m[key] = newBlock
 	return nil
+}
+
+func NewDefinedBlocks() *DefinedBlocks {
+	return &DefinedBlocks{
+		Config:    map[definitions.Key]*definitions.Config{},
+		Documents: map[string]*definitions.DocumentOrSection{},
+		Sections:  map[string]*definitions.DocumentOrSection{},
+		Plugins:   map[definitions.Key]*definitions.Plugin{},
+	}
 }

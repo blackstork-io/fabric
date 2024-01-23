@@ -15,9 +15,9 @@ type Plugin struct {
 
 	// Current plugin name. For unevaluated refs is "ref",
 	// after evaluation will change to the referenced plugin name.
-	Once    sync.Once
-	EvaluatedSuccessfully bool
-	Eval    *evaluation.Plugin
+	Once       sync.Once
+	Evaluated  bool
+	EvalResult *evaluation.Plugin
 }
 
 func (p *Plugin) DefRange() hcl.Range {
@@ -28,15 +28,15 @@ func (p *Plugin) Kind() string {
 	return p.Block.Type
 }
 
-func (p *Plugin) PluginName() string {
-	if p.EvaluatedSuccessfully {
+func (p *Plugin) Name() string {
+	if p.Evaluated {
 		// resolved plugin name (in case of ref)
-		return p.Eval.PluginName
+		return p.EvalResult.PluginName
 	}
 	return p.Block.Labels[0]
 }
 
-// Whether or not the original block was a ref
+// Whether or not the original block is a ref.
 func (p *Plugin) IsRef() bool {
 	return p.Block.Labels[0] == PluginTypeRef
 }
@@ -71,13 +71,14 @@ func DefinePlugin(block *hclsyntax.Block, atTopLevel bool) (plugin *Plugin, diag
 
 	diags.Append(validatePluginKind(block, block.Type, block.TypeRange))
 	diags.Append(validatePluginName(block, 0))
+	diags.Append(validateBlockName(block, 1, nameRequired))
+	var usage string
 	if nameRequired {
-		diags.Append(validateBlockName(block, 1, true))
-		diags.Append(validateLabelsLength(block, 2, "plugin_name block_name"))
+		usage = "plugin_name block_name"
 	} else {
-		diags.Append(validateBlockName(block, 1, false))
-		diags.Append(validateLabelsLength(block, 2, "plugin_name <block_name>"))
+		usage = "plugin_name <block_name>"
 	}
+	diags.Append(validateLabelsLength(block, 2, usage))
 
 	if diags.HasErrors() {
 		return

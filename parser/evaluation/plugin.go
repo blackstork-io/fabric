@@ -10,7 +10,7 @@ type Plugin struct {
 func (pe *Plugin) AsBlockInvocation() *BlockInvocation {
 	res, ok := pe.Invocation.(*BlockInvocation)
 	if !ok {
-		panic("This PluginEvaluation does not store a BlockInvocation!")
+		panic("This Plugin does not store a BlockInvocation!")
 	}
 	return res
 }

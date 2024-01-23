@@ -12,40 +12,40 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
-// Configuration block
+// Configuration block.
 type Config struct {
 	*hcl.Block
-	BlockRange hcl.Range
+	blockRange hcl.Range
 	once       sync.Once
-	val        cty.Value
+	value      cty.Value
 }
 
 var _ evaluation.Configuration = (*Config)(nil)
 
-// Parse implements Configuration.
-func (c *Config) Parse(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
+// ParseConfig implements Configuration.
+func (c *Config) ParseConfig(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
 	c.once.Do(func() {
 		var diag hcl.Diagnostics
-		c.val, diag = hcldec.Decode(c.Body, spec, nil)
+		c.value, diag = hcldec.Decode(c.Body, spec, nil)
 		if diags.ExtendHcl(diag) {
 			// don't let partially-decoded values live
-			c.val = cty.NilVal
+			c.value = cty.NilVal
 		}
 	})
-	val = c.val
+	val = c.value
 	if val.IsNull() && diags == nil {
 		diags.Append(diagnostics.RepeatedError)
 	}
 	return
 }
 
-// Range implements ConfigurationObject.
+// Range implements Configuration.
 func (c *Config) Range() hcl.Range {
-	return c.BlockRange
+	return c.blockRange
 }
 
 func (c *Config) GetKey() *Key {
-	name := ""
+	var name string
 	switch len(c.Block.Labels) {
 	case 0:
 		// anonymous config block
@@ -83,7 +83,7 @@ func DefineConfig(block *hclsyntax.Block) (config *Config, diags diagnostics.Dia
 	}
 	config = &Config{
 		Block:      block.AsHCLBlock(),
-		BlockRange: block.Range(),
+		blockRange: block.Range(),
 	}
 	return
 }

@@ -29,7 +29,9 @@ func (t *titleInvocation) Range() hcl.Range {
 	return t.SrcRange
 }
 
-func (t *titleInvocation) Parse(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
+func (t *titleInvocation) ParseInvocation(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
+	// Titles can only be rendered once, so there's no reason to put `sync.Once` like in proper blocks
+
 	titleVal, diag := t.Expr.Value(nil)
 	if diags.ExtendHcl(diag) {
 		return

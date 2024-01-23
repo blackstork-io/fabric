@@ -15,12 +15,12 @@ type ConfigPtr struct {
 	Ptr *hcl.Attribute
 }
 
-// Parse implements ConfigurationObject.
-func (c *ConfigPtr) Parse(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
-	return c.Cfg.Parse(spec)
+// ParseConfig implements Configuration.
+func (c *ConfigPtr) ParseConfig(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
+	return c.Cfg.ParseConfig(spec)
 }
 
-// Range implements ConfigurationObject.
+// Range implements Configuration.
 func (c *ConfigPtr) Range() hcl.Range {
 	// Use the location of "config = *traversal*" for error reporting, not original config's Range
 	return c.Ptr.Range

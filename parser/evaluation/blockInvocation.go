@@ -19,8 +19,8 @@ func (b *BlockInvocation) DefRange() hcl.Range {
 	return b.DefinitionRange
 }
 
-// Parse implements Invocation.
-func (b *BlockInvocation) Parse(spec hcldec.Spec) (cty.Value, diagnostics.Diag) {
+// ParseInvocation implements Invocation.
+func (b *BlockInvocation) ParseInvocation(spec hcldec.Spec) (cty.Value, diagnostics.Diag) {
 	res, diag := hcldec.Decode(b.Body, spec, nil)
 	return res, diagnostics.Diag(diag)
 }

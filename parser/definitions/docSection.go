@@ -9,7 +9,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
-// Document and section are very similar conceptually
+// Document and section are very similar conceptually.
 type DocumentOrSection struct {
 	Block *hclsyntax.Block
 	Once  sync.Once

@@ -48,7 +48,6 @@ type Args struct {
 type Result struct {
 	// `content` plugins return a markdown string
 	// `data` plugins return a map[string]any that would be put into the global config
-	// TODO: hard-code typecast based on the plugin kind while handling the result
 	Result any
 	Diags  hcl.Diagnostics
 }

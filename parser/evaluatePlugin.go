@@ -36,23 +36,23 @@ func (db *DefinedBlocks) EvaluatePlugin(plugin *definitions.Plugin) (res *evalua
 		if diags.HasErrors() {
 			return
 		}
-		plugin.Eval = res
-		plugin.EvaluatedSuccessfully = true
+		plugin.EvalResult = res
+		plugin.Evaluated = true
 	})
-	if !plugin.EvaluatedSuccessfully {
+	if !plugin.Evaluated {
 		if diags == nil {
 			diags.Append(diagnostics.RepeatedError)
 		}
 		return
 	}
-	res = plugin.Eval
+	res = plugin.EvalResult
 	return
 }
 
 func (db *DefinedBlocks) evaluatePlugin(plugin *definitions.Plugin) (eval *evaluation.Plugin, diags diagnostics.Diag) {
 	var diag hcl.Diagnostics
 	var res evaluation.Plugin
-	res.PluginName = plugin.PluginName()
+	res.PluginName = plugin.Name()
 	res.BlockName = plugin.BlockName()
 
 	// Parsing body
@@ -141,8 +141,12 @@ func (db *DefinedBlocks) evaluatePlugin(plugin *definitions.Plugin) (eval *evalu
 			Block: configBlock,
 		}
 	} else {
-		// if no config provided, look up of the default config
-		// will happen in the plugin call
+		// if no config provided, look up the default config
+		res.Config = db.Config[definitions.Key{
+			PluginKind: plugin.Kind(),
+			PluginName: plugin.Name(),
+			BlockName:  "",
+		}]
 	}
 
 	// Parsing the ref
