@@ -21,11 +21,9 @@ type args struct {
 }
 
 func (args) Version() string {
-	// TODO: How this product is called once again?)
 	return "fabric " + Version
 }
 
-// TODO: write some desctiption
 func (args) Description() string {
 	return "fabric document evaluator"
 }
