@@ -7,7 +7,7 @@ build-plugins:
     go build -o ./bin/plugins ./cmd/plugins
 
 test-run:
-    ./bin/fabric -path ./templates/ -plugins ./bin/plugins -document "test-document"
+    ./bin/fabric --pluginDir ./bin/plugins --document "test-document" ./templates/
 
 clean:
     rm -r ./bin/*
