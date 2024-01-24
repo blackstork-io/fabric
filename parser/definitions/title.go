@@ -12,10 +12,10 @@ import (
 )
 
 // Desugars `title = "foo"` into appropriate `context` invocation.
-type titleInvocation hclsyntax.Attribute
+type TitleInvocation hclsyntax.Attribute
 
 // GetBody implements evaluation.Invocation.
-func (t *titleInvocation) GetBody() *hclsyntax.Body {
+func (t *TitleInvocation) GetBody() *hclsyntax.Body {
 	return &hclsyntax.Body{
 		SrcRange: t.SrcRange,
 		EndRange: hcl.Range{
@@ -27,26 +27,26 @@ func (t *titleInvocation) GetBody() *hclsyntax.Body {
 }
 
 // SetBody implements evaluation.Invocation.
-func (*titleInvocation) SetBody(*hclsyntax.Body) {
+func (*TitleInvocation) SetBody(*hclsyntax.Body) {
 	return
 }
 
-var _ evaluation.Invocation = (*titleInvocation)(nil)
+var _ evaluation.Invocation = (*TitleInvocation)(nil)
 
-func (t *titleInvocation) DefRange() hcl.Range {
+func (t *TitleInvocation) DefRange() hcl.Range {
 	return t.SrcRange
 }
 
-func (t *titleInvocation) MissingItemRange() hcl.Range {
+func (t *TitleInvocation) MissingItemRange() hcl.Range {
 	return t.SrcRange
 }
 
 // Range implements InvocationObject.
-func (t *titleInvocation) Range() hcl.Range {
+func (t *TitleInvocation) Range() hcl.Range {
 	return t.SrcRange
 }
 
-func (t *titleInvocation) ParseInvocation(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
+func (t *TitleInvocation) ParseInvocation(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
 	// Titles can only be rendered once, so there's no reason to put `sync.Once` like in proper blocks
 
 	titleVal, diag := t.Expr.Value(nil)
@@ -72,6 +72,6 @@ func (t *titleInvocation) ParseInvocation(spec hcldec.Spec) (val cty.Value, diag
 	return
 }
 
-func NewTitle(title *hclsyntax.Attribute) *titleInvocation {
-	return (*titleInvocation)(title)
+func NewTitle(title *hclsyntax.Attribute) *TitleInvocation {
+	return (*TitleInvocation)(title)
 }

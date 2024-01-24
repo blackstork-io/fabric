@@ -63,7 +63,7 @@ func newRun() (diags diagnostics.Diag) {
 	if diags.Extend(diag) {
 		return
 	}
-	fmt.Printf("Hurray! \n%s\n", str)
+	fmt.Printf("Document result:\n%s\n", str)
 	return
 }
 

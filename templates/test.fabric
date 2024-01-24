@@ -19,6 +19,7 @@ content text "external_block" {
 }
 
 document "test-document" {
+    title = "test-title"
     data plugin_a "data_plugin_a" {
         parameter_x = 1
         parameter_y = 2
@@ -26,10 +27,6 @@ document "test-document" {
 
     data ref "ref-name" {
         base = data.plugin_b.data_plugin_b
-        new_param = "123"
-    }
-    data ref "ref-name-2" {
-        base = data.ref.ref_a
         new_param = "123"
     }
 
