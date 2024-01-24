@@ -1,39 +1,57 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
+
+	"github.com/alexflint/go-arg"
 
 	"github.com/blackstork-io/fabric/parser"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
-// TODO: replace flag with a better parser (argparse).
-var path, pluginPath, docName string
+// TODO: CD: automatically set to correct version using const overrides in build command
+const Version string = "0.0.0-dev"
 
-func argParse() (diags diagnostics.Diag) {
-	flag.StringVar(&path, "path", "", "a path to a directory with *.hcl files")
-	flag.StringVar(&pluginPath, "plugins", "", "a path to a __plugin file__")
-	flag.StringVar(&docName, "document", "", "the name of the document to process")
-	flag.Parse()
-	if path == "" {
-		diags.Add("Wrong usage", "path required")
+// TODO: multiple plugin support
+type args struct {
+	Path     string `arg:"positional,required"    help:"a path to a directory with *.fabric files to evaluate" placeholder:"DIR"`
+	Plugins  string `arg:"--pluginDir,required"   help:"a path to a __plugin file__"`
+	Document string `arg:"-d,--document,required" help:"the name of the document to render"`
+}
+
+func (args) Version() string {
+	// TODO: How this product is called once again?)
+	return "fabric " + Version
+}
+
+// TODO: write some desctiption
+func (args) Description() string {
+	return "fabric document evaluator"
+}
+
+func parseArgs() (args args) {
+	p := arg.MustParse(&args)
+	stat, err := os.Stat(args.Path)
+	switch {
+	case err == nil:
+		if !stat.IsDir() {
+			p.Fail("Supplied path does not refer to a directory")
+		}
+	case os.IsNotExist(err):
+		// err
+		p.Fail("Supplied path does not exist")
+	default:
+		// err
+		p.Fail(fmt.Sprintf("Path error: %s", err))
 	}
-	if docName == "" {
-		diags.Add("Wrong usage", "document name required")
-	}
-	if pluginPath == "" {
-		diags.Add("Wrong usage", "plugins required")
-	}
+	// TODO: path to plugins
 	return
 }
 
 func newRun() (diags diagnostics.Diag) {
-	if diags.Extend(argParse()) {
-		return
-	}
-	result := parser.ParseDir(path)
+	args := parseArgs()
+	result := parser.ParseDir(args.Path)
 	diags = result.Diags
 	defer func() { diagnostics.PrintDiags(diags, result.FileMap) }()
 	if diags.HasErrors() {
@@ -42,18 +60,18 @@ func newRun() (diags diagnostics.Diag) {
 	if len(result.FileMap) == 0 {
 		diags.Add(
 			"No correct fabric files found",
-			fmt.Sprintf("There are no *.fabric files at '%s' or all of them have failed to parse", path),
+			fmt.Sprintf("There are no *.fabric files at '%s' or all of them have failed to parse", args.Path),
 		)
 	}
 
-	doc, found := result.Blocks.Documents[docName]
+	doc, found := result.Blocks.Documents[args.Document]
 	if !found {
 		diags.Add(
 			"Document not found",
 			fmt.Sprintf(
 				"Definition for document named '%s' not found in '%s/**.fabric' files",
-				docName,
-				path,
+				args.Document,
+				args.Path,
 			),
 		)
 	}
