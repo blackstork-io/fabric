@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hclsyntax"
 
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
@@ -51,15 +50,6 @@ func (db *DefinedBlocks) GetConfig(expr hcl.Expression) (cfg *definitions.Config
 		})
 	}
 	return
-}
-
-func ToHclsyntaxBody(body hcl.Body) *hclsyntax.Body {
-	hclsyntaxBody, ok := body.(*hclsyntax.Body)
-	if !ok {
-		// Should never happen: hcl.Body for hcl documents is always *hclsyntax.Body
-		panic("hcl.Body to *hclsyntax.Body failed")
-	}
-	return hclsyntaxBody
 }
 
 func (db *DefinedBlocks) Merge(other *DefinedBlocks) (diags diagnostics.Diag) {

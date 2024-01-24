@@ -14,6 +14,7 @@ import (
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/parexec"
+	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
 // FS-level parsing of fabric files
@@ -73,7 +74,7 @@ func parseHclBytes(bytes []byte, path string) (res fileParseResult) {
 		return
 	}
 
-	body := ToHclsyntaxBody(res.file.Body)
+	body := utils.ToHclsyntaxBody(res.file.Body)
 
 	blocks, diags := parseBlockDefinitions(body)
 	res.Extend(diags)

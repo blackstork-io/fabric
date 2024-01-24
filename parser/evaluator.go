@@ -2,21 +2,31 @@ package parser
 
 import (
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/itchyny/gojq"
+	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/parser/definitions"
-	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/jsontools"
+	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
 // Evaluates a chosen document
 
+type contentCall struct {
+	*definitions.ParsedPlugin
+	query string
+}
+
 type Evaluator struct {
 	caller         PluginCaller
-	contentCalls   []*evaluation.Plugin
+	contentCalls   []*definitions.ParsedPlugin
 	topLevelBlocks *DefinedBlocks
 	context        map[string]any
 }
@@ -29,6 +39,55 @@ func NewEvaluator(caller PluginCaller, blocks *DefinedBlocks) *Evaluator {
 	}
 }
 
+func (e *Evaluator) evaluateQuery(call *definitions.ParsedPlugin) (context map[string]any, diags diagnostics.Diag) {
+	context = e.context
+	body := call.Invocation.GetBody()
+	queryAttr, found := body.Attributes["query"]
+	if !found {
+		return
+	}
+	val, newBody, dgs := hcldec.PartialDecode(body, &hcldec.ObjectSpec{
+		"query": &hcldec.AttrSpec{
+			Name:     "query",
+			Type:     cty.String,
+			Required: true,
+		},
+	}, nil)
+	call.Invocation.SetBody(utils.ToHclsyntaxBody(newBody))
+	if diags.ExtendHcl(dgs) {
+		return
+	}
+	query := val.GetAttr("query").AsString()
+	q, err := gojq.Parse(query)
+	if err != nil {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Failed to parse the query",
+			Detail:   err.Error(),
+			Subject:  &queryAttr.SrcRange,
+		})
+		return
+	}
+
+	code, err := gojq.Compile(q)
+	if err != nil {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Failed to compile the query",
+			Detail:   err.Error(),
+			Subject:  &queryAttr.SrcRange,
+		})
+		return
+	}
+	queryResultIter := code.Run(context)
+	queryResult, ok := queryResultIter.Next()
+	if ok {
+		context = maps.Clone(context)
+		context["query_result"] = queryResult
+	}
+	return
+}
+
 func (e *Evaluator) EvaluateDocument(d *definitions.DocumentOrSection) (output string, diags diagnostics.Diag) {
 	// sections are basically documents
 	diags = e.evaluateDocOrSection(d)
@@ -38,13 +97,20 @@ func (e *Evaluator) EvaluateDocument(d *definitions.DocumentOrSection) (output s
 
 	results := make([]string, 0, len(e.contentCalls))
 	for _, call := range e.contentCalls {
-		result, diag := e.caller.CallContent(call.PluginName, call.Config, call.Invocation, e.context)
+		context, diag := e.evaluateQuery(call)
+		if diags.Extend(diag) {
+			// query failed, but context is always valid
+			// TODO: #28 #29
+		}
+		result, diag := e.caller.CallContent(call.PluginName, call.Config, call.Invocation, context)
 		if diags.Extend(diag) {
 			// XXX: What to do if we have errors while executing content blocks?
 			// just skipping the value for now...
 			continue
 		}
 		results = append(results, result)
+		// TODO: Here's the place to implement local context #17
+		// However I think we need to rework it a bit before done
 	}
 	output = strings.Join(results, "\n")
 	return
@@ -52,7 +118,7 @@ func (e *Evaluator) EvaluateDocument(d *definitions.DocumentOrSection) (output s
 
 func (e *Evaluator) evaluateDocOrSection(d *definitions.DocumentOrSection) (diags diagnostics.Diag) {
 	if title := d.Block.Body.Attributes["title"]; title != nil {
-		e.contentCalls = append(e.contentCalls, &evaluation.Plugin{
+		e.contentCalls = append(e.contentCalls, &definitions.ParsedPlugin{
 			PluginName: "text",
 			Config:     nil,
 			Invocation: definitions.NewTitle(title),
@@ -68,7 +134,7 @@ func (e *Evaluator) evaluateDocOrSection(d *definitions.DocumentOrSection) (diag
 			if diags.Extend(diag) {
 				continue
 			}
-			call, diag := e.topLevelBlocks.EvaluatePlugin(plugin)
+			call, diag := e.topLevelBlocks.ParsePlugin(plugin)
 			if diags.Extend(diag) {
 				continue
 			}
@@ -85,8 +151,13 @@ func (e *Evaluator) evaluateDocOrSection(d *definitions.DocumentOrSection) (diag
 				if diags.Extend(diag) {
 					continue
 				}
-				// XXX: place the result in the correct path here
-				e.context[call.BlockName] = res
+				var err error
+				e.context, err = jsontools.MapSet(e.context, []string{
+					definitions.BlockKindData,
+					call.PluginName,
+					call.BlockName,
+				}, res)
+				diags.AppendErr(err, "Failed to save data plugin result")
 			default:
 				panic("must be exhaustive")
 			}

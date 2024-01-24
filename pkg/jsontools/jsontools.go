@@ -18,19 +18,17 @@ func MapSet(m map[string]any, keys []string, val any) (map[string]any, error) {
 		return m, ErrTraversal
 	}
 
-	if len(keys) > 1 {
-		for _, k := range keys[:len(keys)-1] {
-			v, found := curMap[k]
-			if found {
-				var ok bool
-				if curMap, ok = v.(map[string]any); !ok {
-					return m, ErrTraversal
-				}
-			} else {
-				nextMap := map[string]any{}
-				curMap[k] = nextMap
-				curMap = nextMap
+	for _, k := range keys[:len(keys)-1] {
+		v, found := curMap[k]
+		if found {
+			var ok bool
+			if curMap, ok = v.(map[string]any); !ok {
+				return m, ErrTraversal
 			}
+		} else {
+			nextMap := map[string]any{}
+			curMap[k] = nextMap
+			curMap = nextMap
 		}
 	}
 

@@ -3,6 +3,7 @@ package evaluation
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
@@ -17,6 +18,8 @@ type Configuration interface {
 // To act as a plugin invocation (body of the plugin call block)
 // struct must implement this interface.
 type Invocation interface {
+	GetBody() *hclsyntax.Body
+	SetBody(*hclsyntax.Body)
 	ParseInvocation(spec hcldec.Spec) (cty.Value, diagnostics.Diag)
 	Range() hcl.Range
 	DefRange() hcl.Range

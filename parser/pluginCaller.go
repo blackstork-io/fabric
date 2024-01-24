@@ -144,17 +144,55 @@ func (c *MockCaller) CallContent(name string, config evaluation.Configuration, i
 	c.once.Do(func() {
 		result = litter.Sdump(context) + "\n"
 	})
+
 	attrs, _ := invocation.(*evaluation.BlockInvocation).JustAttributes()
-	result += litter.Sdump("Call to content:", name, config, maps.Keys(attrs))
+	result += litter.Sdump("Call to content:", name, maps.Keys(attrs))
+	if config == nil {
+		result += "\nNoConfig"
+	} else {
+		switch c := config.(type) {
+		case *definitions.ConfigPtr:
+			if c == nil {
+				result += "\nNoConfig"
+			} else {
+				attrs, _ := c.Cfg.Body.JustAttributes()
+				result += "\nConfigPtr " + litter.Sdump(maps.Keys(attrs))
+			}
+		case *definitions.Config:
+			if c == nil {
+				result += "\nNoConfig"
+			} else {
+				attrs, _ := c.Block.Body.JustAttributes()
+				result += "\nConfig " + litter.Sdump(maps.Keys(attrs))
+			}
+		default:
+			result += "\nUnknownConfig " + litter.Sdump(c)
+		}
+	}
+
 	return
 }
 
 // CallData implements PluginCaller.
 func (*MockCaller) CallData(name string, config evaluation.Configuration, invocation evaluation.Invocation) (result map[string]any, diag diagnostics.Diag) {
-	attrs, _ := invocation.(*evaluation.BlockInvocation).JustAttributes()
-
+	evalAttrs, _ := invocation.(*evaluation.BlockInvocation).JustAttributes()
+	res := litter.Sdump("Call to data:", name, maps.Keys(evalAttrs))
+	if config == nil {
+		res += "\nNoConfig"
+	} else {
+		switch c := config.(type) {
+		case *definitions.ConfigPtr:
+			attrs, _ := c.Cfg.Body.JustAttributes()
+			res += "\nConfigPtr " + litter.Sdump(maps.Keys(attrs))
+		case *definitions.Config:
+			attrs, _ := c.Body.JustAttributes()
+			res += "\nConfig " + litter.Sdump(maps.Keys(attrs))
+		default:
+			res += "\nUnknownConfig " + litter.Sdump(c)
+		}
+	}
 	result = map[string]any{
-		"result": litter.Sdump("Call to data:", name, config, maps.Keys(attrs)),
+		"result": res,
 	}
 	return
 }

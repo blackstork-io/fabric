@@ -14,6 +14,23 @@ import (
 // Desugars `title = "foo"` into appropriate `context` invocation.
 type titleInvocation hclsyntax.Attribute
 
+// GetBody implements evaluation.Invocation.
+func (t *titleInvocation) GetBody() *hclsyntax.Body {
+	return &hclsyntax.Body{
+		SrcRange: t.SrcRange,
+		EndRange: hcl.Range{
+			Filename: t.SrcRange.Filename,
+			Start:    t.SrcRange.End,
+			End:      t.SrcRange.End,
+		},
+	}
+}
+
+// SetBody implements evaluation.Invocation.
+func (*titleInvocation) SetBody(*hclsyntax.Body) {
+	return
+}
+
 var _ evaluation.Invocation = (*titleInvocation)(nil)
 
 func (t *titleInvocation) DefRange() hcl.Range {

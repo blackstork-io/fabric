@@ -75,8 +75,8 @@ func (c *Config) GetHCLBlock() *hcl.Block {
 func DefineConfig(block *hclsyntax.Block) (config *Config, diags diagnostics.Diag) {
 	diags.Append(validatePluginKindLabel(block, 0))
 	diags.Append(validatePluginName(block, 1))
-	diags.Append(validateBlockName(block, 2, true))
-	diags.Append(validateLabelsLength(block, 3, "plugin_kind plugin_name block_name"))
+	diags.Append(validateBlockName(block, 2, false))
+	diags.Append(validateLabelsLength(block, 3, "plugin_kind plugin_name <block_name>"))
 
 	if diags.HasErrors() {
 		return

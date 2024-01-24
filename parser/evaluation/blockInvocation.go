@@ -14,6 +14,16 @@ type BlockInvocation struct {
 	DefinitionRange hcl.Range
 }
 
+// GetBody implements Invocation.
+func (b *BlockInvocation) GetBody() *hclsyntax.Body {
+	return b.Body
+}
+
+// SetBody implements Invocation.
+func (b *BlockInvocation) SetBody(body *hclsyntax.Body) {
+	b.Body = body
+}
+
 // DefRange implements Invocation.
 func (b *BlockInvocation) DefRange() hcl.Range {
 	return b.DefinitionRange

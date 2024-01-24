@@ -13,6 +13,7 @@ const (
 	BlockKindSection  = "section"
 
 	PluginTypeRef = "ref"
+	AttrRefBase   = "base"
 )
 
 type FabricBlock interface {
