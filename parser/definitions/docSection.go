@@ -13,7 +13,7 @@ import (
 type DocumentOrSection struct {
 	Block *hclsyntax.Block
 	Once  sync.Once
-	Meta  MetaBlock
+	Meta  *MetaBlock
 }
 
 func (d *DocumentOrSection) IsDocument() bool {

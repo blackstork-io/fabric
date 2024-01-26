@@ -104,7 +104,8 @@ func NewNestingDiag(what string, block *hclsyntax.Block, body *hclsyntax.Body, v
 		Severity: hcl.DiagError,
 		Summary:  "Invalid block type",
 		Detail: fmt.Sprintf(
-			"Top level of fabric document can't contain '%s' block, only %s",
+			"%s can't contain '%s' block, only %s",
+			what,
 			block.Type,
 			utils.JoinSurround(", ", "'", validChildren...),
 		),

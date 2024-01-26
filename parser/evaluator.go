@@ -90,7 +90,7 @@ func (e *Evaluator) evaluateQuery(call *definitions.ParsedPlugin) (context map[s
 
 func (e *Evaluator) EvaluateDocument(d *definitions.DocumentOrSection) (output string, diags diagnostics.Diag) {
 	// sections are basically documents
-	diags = e.evaluateDocOrSection(d)
+	diags = e.evaluateSectionOrDocument(d)
 	if diags.HasErrors() {
 		return
 	}
@@ -116,7 +116,7 @@ func (e *Evaluator) EvaluateDocument(d *definitions.DocumentOrSection) (output s
 	return
 }
 
-func (e *Evaluator) evaluateDocOrSection(d *definitions.DocumentOrSection) (diags diagnostics.Diag) {
+func (e *Evaluator) evaluateSectionOrDocument(d *definitions.DocumentOrSection) (diags diagnostics.Diag) {
 	if title := d.Block.Body.Attributes["title"]; title != nil {
 		e.contentCalls = append(e.contentCalls, &definitions.ParsedPlugin{
 			PluginName: "text",
@@ -127,9 +127,38 @@ func (e *Evaluator) evaluateDocOrSection(d *definitions.DocumentOrSection) (diag
 
 	var origMeta *hcl.Range
 
+	var validChildren []string
+
+	if d.IsDocument() {
+		validChildren = []string{
+			definitions.BlockKindContent,
+			definitions.BlockKindData,
+			definitions.BlockKindMeta,
+			definitions.BlockKindSection,
+		}
+	} else {
+		validChildren = []string{
+			definitions.BlockKindContent,
+			definitions.BlockKindMeta,
+			definitions.BlockKindSection,
+		}
+	}
+
 	for _, block := range d.Block.Body.Blocks {
 		switch block.Type {
-		case definitions.BlockKindContent, definitions.BlockKindData:
+		case definitions.BlockKindData:
+			if !d.IsDocument() {
+				// Deny data blocks in sections
+				diags.Append(definitions.NewNestingDiag(
+					d.Block.Type,
+					block,
+					d.Block.Body,
+					validChildren,
+				))
+				continue
+			}
+			fallthrough
+		case definitions.BlockKindContent:
 			plugin, diag := definitions.DefinePlugin(block, false)
 			if diags.Extend(diag) {
 				continue
@@ -176,14 +205,18 @@ func (e *Evaluator) evaluateDocOrSection(d *definitions.DocumentOrSection) (diag
 				})
 				continue
 			}
-			diags.ExtendHcl(gohcl.DecodeBody(block.Body, nil, &d.Meta))
+			var meta definitions.MetaBlock
+			if diags.ExtendHcl(gohcl.DecodeBody(block.Body, nil, &meta)) {
+				continue
+			}
+			d.Meta = &meta
 			origMeta = block.DefRange().Ptr()
 		case definitions.BlockKindSection:
 			section, diag := definitions.DefineSectionOrDocument(block, false)
 			if diags.Extend(diag) {
 				continue
 			}
-			diag = e.evaluateDocOrSection(section)
+			diag = e.evaluateSectionOrDocument(section)
 			if diags.Extend(diag) {
 				continue
 			}
@@ -192,12 +225,8 @@ func (e *Evaluator) evaluateDocOrSection(d *definitions.DocumentOrSection) (diag
 				d.Block.Type,
 				block,
 				d.Block.Body,
-				[]string{
-					definitions.BlockKindContent,
-					definitions.BlockKindData,
-					definitions.BlockKindMeta,
-					definitions.BlockKindSection,
-				}))
+				validChildren,
+			))
 		}
 	}
 
