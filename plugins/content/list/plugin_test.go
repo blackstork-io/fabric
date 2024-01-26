@@ -40,6 +40,7 @@ func (s *PluginTestSuite) TestCallNilQueryResult() {
 		Name: "list",
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"item_template": cty.StringVal("{{.}}"),
+			"format":        cty.NullVal(cty.String),
 		}),
 		Context: map[string]any{
 			"foo":          "foo_value",
@@ -63,6 +64,7 @@ func (s *PluginTestSuite) TestCallNonArrayQueryResult() {
 		Name: "list",
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"item_template": cty.StringVal("{{.}}"),
+			"format":        cty.NullVal(cty.String),
 		}),
 		Context: map[string]any{
 			"query_result": "not_an_array",
@@ -79,12 +81,57 @@ func (s *PluginTestSuite) TestCallNonArrayQueryResult() {
 	s.Equal(expected, result)
 }
 
+func (s *PluginTestSuite) TestCallOrdered() {
+	args := plugininterface.Args{
+		Kind: "content",
+		Name: "list",
+		Args: cty.ObjectVal(map[string]cty.Value{
+			"item_template": cty.StringVal("foo {{.}}"),
+			"format":        cty.StringVal("ordered"),
+		}),
+		Context: map[string]any{
+			"query_result": []any{
+				"bar",
+				"baz",
+			},
+		},
+	}
+	result := s.plugin.Call(args)
+	expected := plugininterface.Result{
+		Result: "1. foo bar\n2. foo baz\n",
+	}
+	s.Equal(expected, result)
+}
+
+func (s *PluginTestSuite) TestCallTaskList() {
+	args := plugininterface.Args{
+		Kind: "content",
+		Name: "list",
+		Args: cty.ObjectVal(map[string]cty.Value{
+			"item_template": cty.StringVal("foo {{.}}"),
+			"format":        cty.StringVal("tasklist"),
+		}),
+		Context: map[string]any{
+			"query_result": []any{
+				"bar",
+				"baz",
+			},
+		},
+	}
+	result := s.plugin.Call(args)
+	expected := plugininterface.Result{
+		Result: "* [ ] foo bar\n* [ ] foo baz\n",
+	}
+	s.Equal(expected, result)
+}
+
 func (s *PluginTestSuite) TestCallBasic() {
 	args := plugininterface.Args{
 		Kind: "content",
 		Name: "list",
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"item_template": cty.StringVal("foo {{.}}"),
+			"format":        cty.NullVal(cty.String),
 		}),
 		Context: map[string]any{
 			"query_result": []any{
@@ -105,6 +152,7 @@ func (s *PluginTestSuite) TestCallAdvanced() {
 		Name: "list",
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"item_template": cty.StringVal("foo {{.bar}} {{.baz}}"),
+			"format":        cty.NullVal(cty.String),
 		}),
 		Context: map[string]any{
 			"query_result": []any{
@@ -132,6 +180,7 @@ func (s *PluginTestSuite) TestCallEmptyQueryResult() {
 		Name: "list",
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"item_template": cty.StringVal("foo {{.}}"),
+			"format":        cty.NullVal(cty.String),
 		}),
 		Context: map[string]any{
 			"query_result": []any{},
@@ -150,6 +199,7 @@ func (s *PluginTestSuite) TestCallMissingItemTemplate() {
 		Name: "list",
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"item_template": cty.NullVal(cty.String),
+			"format":        cty.NullVal(cty.String),
 		}),
 	}
 	result := s.plugin.Call(args)
@@ -169,6 +219,7 @@ func (s *PluginTestSuite) TestCallInvalidItemTemplate() {
 		Name: "list",
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"item_template": cty.StringVal("{{"),
+			"format":        cty.NullVal(cty.String),
 		}),
 	}
 	result := s.plugin.Call(args)
@@ -188,6 +239,7 @@ func (s *PluginTestSuite) TestCallMissingDataContext() {
 		Name: "list",
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"item_template": cty.StringVal("foo {{.}}"),
+			"format":        cty.NullVal(cty.String),
 		}),
 	}
 	result := s.plugin.Call(args)

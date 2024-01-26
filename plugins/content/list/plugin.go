@@ -3,6 +3,8 @@ package list
 import (
 	"bytes"
 	"errors"
+	"fmt"
+	"slices"
 	"strings"
 	"text/template"
 
@@ -15,7 +17,12 @@ import (
 
 var Version = semver.MustParse("0.1.0")
 
-const queryResultKey = "query_result"
+const (
+	queryResultKey = "query_result"
+	defaultFormat  = "unordered"
+)
+
+var allowedFormats = []string{"unordered", "ordered", "tasklist"}
 
 type Plugin struct{}
 
@@ -35,13 +42,18 @@ func (Plugin) GetPlugins() []plugininterface.Plugin {
 					Type:     cty.String,
 					Required: true,
 				},
+				"format": &hcldec.AttrSpec{
+					Name:     "format",
+					Type:     cty.String,
+					Required: false,
+				},
 			},
 		},
 	}
 }
 
 func (p Plugin) Call(args plugininterface.Args) plugininterface.Result {
-	tmpl, err := p.parseTemplate(args)
+	format, tmpl, err := p.parseArgs(args)
 	if err != nil {
 		return plugininterface.Result{
 			Diags: hcl.Diagnostics{{
@@ -51,7 +63,7 @@ func (p Plugin) Call(args plugininterface.Args) plugininterface.Result {
 			}},
 		}
 	}
-	result, err := p.render(tmpl, args.Context)
+	result, err := p.render(format, tmpl, args.Context)
 	if err != nil {
 		return plugininterface.Result{
 			Diags: hcl.Diagnostics{{
@@ -66,15 +78,23 @@ func (p Plugin) Call(args plugininterface.Args) plugininterface.Result {
 	}
 }
 
-func (p Plugin) parseTemplate(args plugininterface.Args) (itemTempl, error) {
+func (p Plugin) parseArgs(args plugininterface.Args) (string, itemTempl, error) {
 	itemTemplate := args.Args.GetAttr("item_template")
 	if itemTemplate.IsNull() {
-		return nil, errors.New("item_template is required")
+		return "", nil, errors.New("item_template is required")
 	}
-	return template.New("item").Parse(itemTemplate.AsString())
+	format := args.Args.GetAttr("format")
+	if format.IsNull() {
+		format = cty.StringVal(defaultFormat)
+	}
+	if !slices.Contains(allowedFormats, format.AsString()) {
+		return "", nil, errors.New("invalid format: " + format.AsString())
+	}
+	tmpl, err := template.New("item").Parse(itemTemplate.AsString())
+	return format.AsString(), tmpl, err
 }
 
-func (p Plugin) render(tmpl itemTempl, datactx map[string]any) (string, error) {
+func (p Plugin) render(format string, tmpl itemTempl, datactx map[string]any) (string, error) {
 	if datactx == nil {
 		return "", errors.New("data context is required")
 	}
@@ -87,13 +107,19 @@ func (p Plugin) render(tmpl itemTempl, datactx map[string]any) (string, error) {
 		return "", errors.New("query_result must be an array")
 	}
 	var buf bytes.Buffer
-	for _, item := range items {
+	for i, item := range items {
 		tmpbuf := bytes.Buffer{}
 		err := tmpl.Execute(&tmpbuf, item)
 		if err != nil {
 			return "", err
 		}
-		buf.WriteString("* ")
+		if format == "unordered" {
+			buf.WriteString("* ")
+		} else if format == "tasklist" {
+			buf.WriteString("* [ ] ")
+		} else {
+			fmt.Fprintf(&buf, "%d. ", i+1)
+		}
 		buf.WriteString(strings.TrimSpace(strings.ReplaceAll(tmpbuf.String(), "\n", " ")))
 		buf.WriteString("\n")
 	}
