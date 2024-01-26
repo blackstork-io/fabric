@@ -78,6 +78,7 @@ func (s *PluginTestSuite) TestCallBasic() {
 		Name: "openai_text",
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
+			"model":  cty.NullVal(cty.String),
 		}),
 		Config: cty.ObjectVal(map[string]cty.Value{
 			"api_key":         cty.StringVal("api_key_123"),
@@ -95,7 +96,7 @@ func (s *PluginTestSuite) TestCallBasic() {
 func (s *PluginTestSuite) TestCallAdvanced() {
 
 	s.cli.On("GenerateChatCompletion", mock.Anything, &client.ChatCompletionParams{
-		Model: defaultModel,
+		Model: "model_123",
 		Messages: []client.ChatCompletionMessage{
 			{
 				Role:    "system",
@@ -124,6 +125,7 @@ func (s *PluginTestSuite) TestCallAdvanced() {
 		Name: "openai_text",
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
+			"model":  cty.StringVal("model_123"),
 		}),
 		Config: cty.ObjectVal(map[string]cty.Value{
 			"api_key":         cty.StringVal("api_key_123"),
@@ -149,6 +151,7 @@ func (s *PluginTestSuite) TestCallMissingPrompt() {
 		Name: "openai_text",
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.NullVal(cty.String),
+			"model":  cty.NullVal(cty.String),
 		}),
 		Config: cty.ObjectVal(map[string]cty.Value{
 			"api_key":         cty.StringVal("api_key_123"),
@@ -174,6 +177,7 @@ func (s *PluginTestSuite) TestCallMissingAPIKey() {
 		Name: "openai_text",
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
+			"model":  cty.NullVal(cty.String),
 		}),
 		Config: cty.ObjectVal(map[string]cty.Value{
 			"api_key":         cty.NullVal(cty.String),
@@ -199,6 +203,7 @@ func (s *PluginTestSuite) TestCallFailingClient() {
 		Name: "openai_text",
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
+			"model":  cty.NullVal(cty.String),
 		}),
 		Config: cty.ObjectVal(map[string]cty.Value{
 			"api_key":         cty.StringVal("api_key_123"),

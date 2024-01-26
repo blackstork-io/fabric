@@ -60,6 +60,11 @@ func (Plugin) GetPlugins() []plugininterface.Plugin {
 					Type:     cty.String,
 					Required: true,
 				},
+				"model": &hcldec.AttrSpec{
+					Name:     "model",
+					Type:     cty.String,
+					Required: false,
+				},
 			},
 		},
 	}
@@ -84,8 +89,12 @@ func (p Plugin) generate(cli client.Client, cfg cty.Value, args cty.Value, datac
 	if prompt.IsNull() || prompt.AsString() == "" {
 		return "", errors.New("prompt is required in invocation")
 	}
+	model := args.GetAttr("model")
+	if model.IsNull() || model.AsString() == "" {
+		model = cty.StringVal(defaultModel)
+	}
 	params := client.ChatCompletionParams{
-		Model: defaultModel,
+		Model: model.AsString(),
 	}
 	systemPrompt := cfg.GetAttr("system_prompt")
 	if !systemPrompt.IsNull() && systemPrompt.AsString() != "" {
