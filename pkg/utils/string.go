@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"slices"
 	"strings"
 	"sync"
@@ -10,18 +9,6 @@ import (
 
 	"golang.org/x/exp/maps"
 )
-
-func Surround(surround string, elems ...string) []string {
-	res := make([]string, len(elems))
-	for i := range res {
-		res[i] = fmt.Sprintf("%s%s%s", surround, elems[i], surround)
-	}
-	return res
-}
-
-func Join(sep string, elems ...string) string {
-	return strings.Join(elems, sep)
-}
 
 func JoinSurround(sep, surround string, elems ...string) string {
 	if len(elems) == 0 {
