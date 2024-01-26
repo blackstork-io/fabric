@@ -5,13 +5,17 @@ go 1.21
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/elastic/go-elasticsearch/v8 v8.11.1
+	github.com/google/go-github/v58 v58.0.0
+	github.com/hashicorp/go-hclog v0.14.1
 	github.com/hashicorp/go-plugin v1.6.0
 	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/itchyny/gojq v0.12.14
-	github.com/sanity-io/litter v1.5.5
+	github.com/lib/pq v1.10.9
+	github.com/mattn/go-sqlite3 v1.14.20
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.27.0
 	github.com/testcontainers/testcontainers-go/modules/elasticsearch v0.27.0
+	github.com/testcontainers/testcontainers-go/modules/postgres v0.27.0
 	github.com/zclconf/go-cty v1.13.0
 	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b
 	golang.org/x/term v0.15.0
@@ -41,12 +45,12 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/uuid v1.4.0 // indirect
 	github.com/hashicorp/go-hclog v0.14.1
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/itchyny/timefmt-go v0.1.5 // indirect
 	github.com/klauspost/compress v1.16.0 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.4 // indirect
