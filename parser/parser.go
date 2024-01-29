@@ -191,16 +191,18 @@ func parseBlockDefinitions(body *hclsyntax.Body) (res *DefinedBlocks, diags diag
 				panic("unable to get the key of the top-level block")
 			}
 			diags.Append(AddIfMissing(res.Plugins, *key, plugin))
-		case definitions.BlockKindDocument, definitions.BlockKindSection:
-			blk, dgs := definitions.DefineSectionOrDocument(block, true)
+		case definitions.BlockKindDocument:
+			blk, dgs := definitions.DefineDocument(block)
 			if diags.Extend(dgs) {
 				continue
 			}
-			if blk.IsDocument() {
-				diags.Append(AddIfMissing(res.Documents, blk.Name(), blk))
-			} else {
-				diags.Append(AddIfMissing(res.Sections, blk.Name(), blk))
+			diags.Append(AddIfMissing(res.Documents, blk.Name, blk))
+		case definitions.BlockKindSection:
+			blk, dgs := definitions.DefineSection(block, true)
+			if diags.Extend(dgs) {
+				continue
 			}
+			diags.Append(AddIfMissing(res.Sections, blk.Name(), blk))
 		case definitions.BlockKindConfig:
 			cfg, dgs := definitions.DefineConfig(block)
 			if diags.Extend(dgs) {

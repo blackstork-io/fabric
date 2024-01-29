@@ -105,7 +105,7 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 				})
 				continue
 			}
-			// TODO: decoding currently unused meta block... How it's used?
+
 			var meta definitions.MetaBlock
 			if diags.ExtendHcl(gohcl.DecodeBody(blk.Body, nil, &meta)) {
 				continue

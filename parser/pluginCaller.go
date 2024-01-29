@@ -35,7 +35,6 @@ type PluginCaller interface {
 }
 
 type Caller struct {
-	// TODO: make a ptr? why?
 	plugins map[pluginKey]pluginData
 }
 
@@ -180,7 +179,7 @@ func (c *MockCaller) dumpInvocation(invoke evaluation.Invocation) string {
 		if inv == nil {
 			return "NoInvocation"
 		}
-		val, _ := inv.Expr.Value(nil)
+		val, _ := inv.Expression.Value(nil)
 		return litter.Sdump("TitleInvocation", val.GoString())
 	case nil:
 		return "NoInvocation"

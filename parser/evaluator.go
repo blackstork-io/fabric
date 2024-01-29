@@ -88,9 +88,22 @@ func (e *Evaluator) evaluateQuery(call *definitions.ParsedPlugin) (context map[s
 	return
 }
 
-func (e *Evaluator) EvaluateDocument(d *definitions.DocumentOrSection) (output string, diags diagnostics.Diag) {
-	// sections are basically documents
-	diags = e.evaluateSectionOrDocument(d)
+func (e *Evaluator) EvaluateDocument(d *definitions.Document) (output string, diags diagnostics.Diag) {
+	// TODO: Combining parsing and evaluation of the document is flawed
+	// perhaps a simpler approach is using more steps?
+	// Currently:
+	// 1) Define
+	// 2) ParseAndEvaluate (data)
+	// 3) Evaluate (content)
+	// This introduces compelexity with local content context (such as meta blocks)
+	// Switch to:
+	// 1) Define
+	// 2) ParseDocument
+	// 3) Evaluate (data)
+	// 4) Evaluate (content)
+	// May be a bit slower, but allows us to have access to full evaluation context at each step
+
+	diags = e.parseAndEvaluateDocument(d)
 	if diags.HasErrors() {
 		return
 	}
@@ -116,49 +129,25 @@ func (e *Evaluator) EvaluateDocument(d *definitions.DocumentOrSection) (output s
 	return
 }
 
-func (e *Evaluator) evaluateSectionOrDocument(d *definitions.DocumentOrSection) (diags diagnostics.Diag) {
+func (e *Evaluator) parseAndEvaluateDocument(d *definitions.Document) (diags diagnostics.Diag) {
 	if title := d.Block.Body.Attributes["title"]; title != nil {
+		pluginName := "text"
 		e.contentCalls = append(e.contentCalls, &definitions.ParsedPlugin{
-			PluginName: "text",
-			Config:     nil,
-			Invocation: definitions.NewTitle(title),
+			PluginName: pluginName,
+			Config: e.topLevelBlocks.Config[definitions.Key{
+				PluginKind: definitions.BlockKindContent,
+				PluginName: pluginName,
+				BlockName:  "",
+			}], // use default config
+			Invocation: definitions.NewTitle(title.Expr),
 		})
 	}
 
 	var origMeta *hcl.Range
 
-	var validChildren []string
-
-	if d.IsDocument() {
-		validChildren = []string{
-			definitions.BlockKindContent,
-			definitions.BlockKindData,
-			definitions.BlockKindMeta,
-			definitions.BlockKindSection,
-		}
-	} else {
-		validChildren = []string{
-			definitions.BlockKindContent,
-			definitions.BlockKindMeta,
-			definitions.BlockKindSection,
-		}
-	}
-
 	for _, block := range d.Block.Body.Blocks {
 		switch block.Type {
-		case definitions.BlockKindData:
-			if !d.IsDocument() {
-				// Deny data blocks in sections
-				diags.Append(definitions.NewNestingDiag(
-					d.Block.Type,
-					block,
-					d.Block.Body,
-					validChildren,
-				))
-				continue
-			}
-			fallthrough
-		case definitions.BlockKindContent:
+		case definitions.BlockKindContent, definitions.BlockKindData:
 			plugin, diag := definitions.DefinePlugin(block, false)
 			if diags.Extend(diag) {
 				continue
@@ -170,6 +159,8 @@ func (e *Evaluator) evaluateSectionOrDocument(d *definitions.DocumentOrSection) 
 			switch block.Type {
 			case definitions.BlockKindContent:
 				// delaying content calls until all data calls are completed
+				// TODO: contentCalls must also store a ref to context (here - to the meta of the document)
+				// also requires to parse meta first, not in declaration order
 				e.contentCalls = append(e.contentCalls, call)
 			case definitions.BlockKindData:
 				res, diag := e.caller.CallData(
@@ -212,23 +203,58 @@ func (e *Evaluator) evaluateSectionOrDocument(d *definitions.DocumentOrSection) 
 			d.Meta = &meta
 			origMeta = block.DefRange().Ptr()
 		case definitions.BlockKindSection:
-			section, diag := definitions.DefineSectionOrDocument(block, false)
+			section, diag := definitions.DefineSection(block, false)
 			if diags.Extend(diag) {
 				continue
 			}
-			diag = e.evaluateSectionOrDocument(section)
+			parsedSection, diag := e.topLevelBlocks.ParseSection(section)
 			if diags.Extend(diag) {
 				continue
 			}
+			e.evaluateSection(parsedSection)
 		default:
 			diags.Append(definitions.NewNestingDiag(
 				d.Block.Type,
 				block,
 				d.Block.Body,
-				validChildren,
+				[]string{
+					definitions.BlockKindContent,
+					definitions.BlockKindData,
+					definitions.BlockKindMeta,
+					definitions.BlockKindSection,
+				},
 			))
+			continue
 		}
 	}
 
+	return
+}
+
+func (e *Evaluator) evaluateSection(s *definitions.ParsedSection) {
+	if title := s.Title; title != nil {
+		pluginName := "text"
+		e.contentCalls = append(e.contentCalls, &definitions.ParsedPlugin{
+			PluginName: pluginName,
+			Config: e.topLevelBlocks.Config[definitions.Key{
+				PluginKind: definitions.BlockKindContent,
+				PluginName: pluginName,
+				BlockName:  "",
+			}], // use default config
+			Invocation: definitions.NewTitle(title.Expr),
+		})
+	}
+
+	for _, content := range s.Content {
+		switch contentT := content.(type) {
+		case *definitions.ParsedPlugin:
+			// TODO: contentCalls must also store a ref to context (here - to the meta of the section)
+			e.contentCalls = append(e.contentCalls, contentT)
+		case *definitions.ParsedSection:
+			e.evaluateSection(contentT)
+		default:
+			panic("must be exhaustive")
+		}
+	}
 	return
 }

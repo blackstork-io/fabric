@@ -19,7 +19,7 @@ type Configuration interface {
 // struct must implement this interface.
 type Invocation interface {
 	GetBody() *hclsyntax.Body
-	SetBody(*hclsyntax.Body)
+	SetBody(body *hclsyntax.Body)
 	ParseInvocation(spec hcldec.Spec) (cty.Value, diagnostics.Diag)
 	Range() hcl.Range
 	DefRange() hcl.Range

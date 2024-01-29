@@ -14,6 +14,7 @@ const (
 
 	PluginTypeRef = "ref"
 	AttrRefBase   = "base"
+	AttrTitle     = "title"
 )
 
 type FabricBlock interface {

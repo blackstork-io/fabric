@@ -93,6 +93,19 @@ func (db *DefinedBlocks) Traverse(expr hcl.Expression) (res any, diags diagnosti
 			PluginName: path[1],
 			BlockName:  path[2],
 		}]
+	case definitions.BlockKindSection:
+		switch len(path) {
+		case 1, 2:
+		default:
+			diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Invalid path",
+				Detail:   "The section path should have format section.<optionally_ref>.<section_name>",
+				Subject:  expr.Range().Ptr(),
+			})
+			return
+		}
+		res, found = db.Sections[path[len(path)-1]]
 	default:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,

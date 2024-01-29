@@ -12,16 +12,19 @@ import (
 )
 
 // Desugars `title = "foo"` into appropriate `context` invocation.
-type TitleInvocation hclsyntax.Attribute
+type TitleInvocation struct {
+	hcl.Expression
+}
 
 // GetBody implements evaluation.Invocation.
 func (t *TitleInvocation) GetBody() *hclsyntax.Body {
+	rng := t.Expression.Range()
 	return &hclsyntax.Body{
-		SrcRange: t.SrcRange,
+		SrcRange: rng,
 		EndRange: hcl.Range{
-			Filename: t.SrcRange.Filename,
-			Start:    t.SrcRange.End,
-			End:      t.SrcRange.End,
+			Filename: rng.Filename,
+			Start:    rng.End,
+			End:      rng.End,
 		},
 	}
 }
@@ -34,22 +37,17 @@ func (*TitleInvocation) SetBody(*hclsyntax.Body) {
 var _ evaluation.Invocation = (*TitleInvocation)(nil)
 
 func (t *TitleInvocation) DefRange() hcl.Range {
-	return t.SrcRange
+	return t.Expression.Range()
 }
 
 func (t *TitleInvocation) MissingItemRange() hcl.Range {
-	return t.SrcRange
-}
-
-// Range implements InvocationObject.
-func (t *TitleInvocation) Range() hcl.Range {
-	return t.SrcRange
+	return t.Expression.Range()
 }
 
 func (t *TitleInvocation) ParseInvocation(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
 	// Titles can only be rendered once, so there's no reason to put `sync.Once` like in proper blocks
 
-	titleVal, diag := t.Expr.Value(nil)
+	titleVal, diag := t.Expression.Value(nil)
 	if diags.ExtendHcl(diag) {
 		return
 	}
@@ -60,7 +58,7 @@ func (t *TitleInvocation) ParseInvocation(spec hcldec.Spec) (val cty.Value, diag
 			Severity: hcl.DiagError,
 			Summary:  "Failed to turn title into a string",
 			Detail:   err.Error(),
-			Subject:  t.Expr.Range().Ptr(),
+			Subject:  t.Range().Ptr(),
 		})
 		return
 	}
@@ -72,6 +70,8 @@ func (t *TitleInvocation) ParseInvocation(spec hcldec.Spec) (val cty.Value, diag
 	return
 }
 
-func NewTitle(title *hclsyntax.Attribute) *TitleInvocation {
-	return (*TitleInvocation)(title)
+func NewTitle(title hcl.Expression) *TitleInvocation {
+	return &TitleInvocation{
+		Expression: title,
+	}
 }

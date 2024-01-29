@@ -80,7 +80,6 @@ func validatePluginName(block *hclsyntax.Block, idx int) *hcl.Diagnostic {
 	return nil
 }
 
-// TODO: Is it a hard error or warning?
 func validateLabelsLength(block *hclsyntax.Block, maxLabels int, labelUsage string) *hcl.Diagnostic {
 	if len(block.Labels) > maxLabels {
 		if labelUsage != "" {
@@ -88,6 +87,7 @@ func validateLabelsLength(block *hclsyntax.Block, maxLabels int, labelUsage stri
 		} else {
 			labelUsage = block.Type
 		}
+		// XXX: Is having more labels a hard error or a warning?
 		return &hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  fmt.Sprintf("Invalid %s block", block.Type),

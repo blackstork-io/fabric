@@ -13,9 +13,26 @@ import (
 
 type DefinedBlocks struct {
 	Config    map[definitions.Key]*definitions.Config
-	Documents map[string]*definitions.DocumentOrSection
-	Sections  map[string]*definitions.DocumentOrSection
+	Documents map[string]*definitions.Document
+	Sections  map[string]*definitions.Section
 	Plugins   map[definitions.Key]*definitions.Plugin
+}
+
+func (db *DefinedBlocks) GetSection(expr hcl.Expression) (section *definitions.Section, diags diagnostics.Diag) {
+	res, diags := db.Traverse(expr)
+	if diags.HasErrors() {
+		return
+	}
+	section, ok := res.(*definitions.Section)
+	if !ok {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Invalid path",
+			Detail:   "This path is not referencing a section block",
+			Subject:  expr.Range().Ptr(),
+		})
+	}
+	return
 }
 
 func (db *DefinedBlocks) GetPlugin(expr hcl.Expression) (plugin *definitions.Plugin, diags diagnostics.Diag) {
@@ -86,8 +103,8 @@ func AddIfMissing[M ~map[K]V, K comparable, V definitions.FabricBlock](m M, key 
 func NewDefinedBlocks() *DefinedBlocks {
 	return &DefinedBlocks{
 		Config:    map[definitions.Key]*definitions.Config{},
-		Documents: map[string]*definitions.DocumentOrSection{},
-		Sections:  map[string]*definitions.DocumentOrSection{},
+		Documents: map[string]*definitions.Document{},
+		Sections:  map[string]*definitions.Section{},
 		Plugins:   map[definitions.Key]*definitions.Plugin{},
 	}
 }
