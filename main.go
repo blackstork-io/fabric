@@ -5,19 +5,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/gohcl"
-
+	"github.com/blackstork-io/fabric/parser"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
 // TODO: replace flag with a better parser (argparse).
 var path, pluginPath, docName string
-
-type Decoder struct {
-	root    *Templates
-	plugins *Plugins
-}
 
 func argParse() (diags diagnostics.Diag) {
 	flag.StringVar(&path, "path", "", "a path to a directory with *.hcl files")
@@ -36,49 +29,46 @@ func argParse() (diags diagnostics.Diag) {
 	return
 }
 
-func run() (diags diagnostics.Diag) {
-	var fileMap map[string]*hcl.File
-	defer func() { PrintDiags(diags, fileMap) }()
+func newRun() (diags diagnostics.Diag) {
+	if diags.Extend(argParse()) {
+		return
+	}
+	result := parser.ParseDir(path)
+	diags = result.Diags
+	defer func() { diagnostics.PrintDiags(diags, result.FileMap) }()
+	if diags.HasErrors() {
+		return
+	}
+	if len(result.FileMap) == 0 {
+		diags.Add(
+			"No correct fabric files found",
+			fmt.Sprintf("There are no *.fabric files at '%s' or all of them have failed to parse", path),
+		)
+	}
 
-	diag := argParse()
+	doc, found := result.Blocks.Documents[docName]
+	if !found {
+		diags.Add(
+			"Document not found",
+			fmt.Sprintf(
+				"Definition for document named '%s' not found in '%s/**.fabric' files",
+				docName,
+				path,
+			),
+		)
+	}
+
+	eval := parser.NewEvaluator(&parser.MockCaller{}, result.Blocks)
+	str, diag := eval.EvaluateDocument(doc)
 	if diags.Extend(diag) {
 		return
 	}
-
-	body, fileMap, diag := fromDisk()
-	if diags.Extend(diag) {
-		return
-	}
-
-	plugins, pluginDiag := NewPlugins(pluginPath)
-
-	if diags.Extend(pluginDiag) {
-		return diags
-	}
-
-	defer plugins.Kill()
-	d := Decoder{
-		root:    &Templates{},
-		plugins: plugins,
-	}
-	if diags.ExtendHcl(gohcl.DecodeBody(body, nil, d.root)) {
-		return diags
-	}
-
-	if diags.ExtendHcl(d.Decode()) {
-		return diags
-	}
-
-	output, diag := d.Evaluate(docName)
-	if diag.HasErrors() {
-		return diags
-	}
-	fmt.Println(output) //nolint: forbidigo
-	return nil
+	fmt.Printf("Document result:\n%s\n", str)
+	return
 }
 
 func main() {
-	if diags := run(); diags.HasErrors() {
+	if diags := newRun(); diags.HasErrors() {
 		os.Exit(1)
 	}
 }

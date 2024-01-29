@@ -17,3 +17,9 @@ lint:
     gofumpt -w .
     gci write --skip-generated -s standard -s default -s "prefix(github.com/blackstork-io/fabric)" .
     golangci-lint run
+
+lint-extra:
+    gofumpt -w -extra .
+
+test:
+    go test -timeout 10s -race -v ./...

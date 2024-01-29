@@ -1,3 +1,15 @@
+data ref "ref_a" {
+    base = data.ref.ref_b
+}
+
+data ref "ref_b" {
+    base = data.ref.ref_c
+}
+data ref "ref_c" {
+    base = data.ref.ref_a
+}
+
+
 data plugin_b "data_plugin_b" {
     parameter_z = ["a", "b", "c", "d"]
 }
@@ -6,35 +18,45 @@ content text "external_block" {
     text = "External block body"
 }
 
-document "test-document" {
+section "external_section" {
+    title = "External section"
 
+    content text {
+        query = ".data.plugin_a.data_plugin_a"
+        text = "external_section text {{ .data.plugin_a.data_plugin_a.result }}"
+    }
+}
+
+document "test-document" {
+    title = "test-title"
     data plugin_a "data_plugin_a" {
         parameter_x = 1
         parameter_y = 2
     }
 
-    data ref "data_plugin_b" {
-        // This should be automatically resolved to the referenced block by HCL parser
-        ref = data.plugin_b.data_plugin_b
+    data ref "ref-name" {
+        base = data.plugin_b.data_plugin_b
+        new_param = "123"
     }
 
-    content text _ {
+    content text {
         query = ".data.plugin_a.data_plugin_a"
         text = "The value is {{ .data.plugin_a.data_plugin_a.result }}"
     }
 
-    content generic _ {
-
-        content ref _ {
-            // This should be automatically resolved to the referenced block by HCL parser
-            ref = content.text.external_block
+    section {
+        content ref {
+            base = content.text.external_block
         }
 
-        content table _ {
-            // JQ query
+        content table {
             query = ".data.plugin_b.data_plugin_b.result | length"
             text = "The length of the list is {{ .query_result }}"
             columns = ["ColumnA", "ColumnB", "ColumnC"]
+        }
+
+        section ref {
+            base = section.external_section
         }
     }
 }

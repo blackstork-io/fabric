@@ -9,14 +9,17 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/blackstork-io/fabric/plugininterface/v1"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
+
+	plugin "github.com/blackstork-io/fabric/pluginInterface/v1"
 )
 
-var Version = semver.MustParse("0.1.0")
-var allowedFormats = []string{"text", "title", "code", "blockquote"}
+var (
+	Version        = semver.MustParse("0.1.0")
+	allowedFormats = []string{"text", "title", "code", "blockquote"}
+)
 
 const (
 	minAbsoluteTitleSize     = int64(1)
@@ -28,13 +31,13 @@ const (
 
 type Plugin struct{}
 
-func (Plugin) GetPlugins() []plugininterface.Plugin {
-	return []plugininterface.Plugin{
+func (Plugin) GetPlugins() []plugin.Plugin {
+	return []plugin.Plugin{
 		{
 			Namespace:  "blackstork",
 			Kind:       "content",
 			Name:       "text",
-			Version:    plugininterface.Version(*Version),
+			Version:    plugin.Version(*Version),
 			ConfigSpec: nil,
 			InvocationSpec: &hcldec.ObjectSpec{
 				"text": &hcldec.AttrSpec{
@@ -139,10 +142,10 @@ func (p Plugin) renderBlockquote(text string, datactx map[string]any) (string, e
 	return "> " + strings.ReplaceAll(text, "\n", "\n> "), nil
 }
 
-func (p Plugin) Call(args plugininterface.Args) plugininterface.Result {
+func (p Plugin) Call(args plugin.Args) plugin.Result {
 	result, err := p.render(args.Args, args.Context)
 	if err != nil {
-		return plugininterface.Result{
+		return plugin.Result{
 			Diags: hcl.Diagnostics{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to render text",
@@ -150,7 +153,7 @@ func (p Plugin) Call(args plugininterface.Args) plugininterface.Result {
 			}},
 		}
 	}
-	return plugininterface.Result{
+	return plugin.Result{
 		Result: result,
 	}
 }

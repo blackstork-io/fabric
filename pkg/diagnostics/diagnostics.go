@@ -2,9 +2,29 @@ package diagnostics
 
 // More ergonomic wrapper over hcl.Diagnostics.
 
-import "github.com/hashicorp/hcl/v2"
+import (
+	"github.com/hashicorp/hcl/v2"
+)
 
 type Diag hcl.Diagnostics //nolint:errname // Diagnostics does implement error interface, but not, itself, an error.
+
+type repeatedError struct{}
+
+// Invisible to user error, typically used to signal that the initial block evaluation
+// has failed (and already has reported its errors to user).
+var RepeatedError = &hcl.Diagnostic{
+	Severity: hcl.DiagError,
+	Extra:    repeatedError{},
+}
+
+func FindByExtra[T any](diags Diag) *hcl.Diagnostic {
+	for _, diag := range diags {
+		if _, found := hcl.DiagnosticExtra[T](diag); found {
+			return diag
+		}
+	}
+	return nil
+}
 
 func (d Diag) Error() string {
 	return (hcl.Diagnostics)(d).Error()
