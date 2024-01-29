@@ -1,5 +1,5 @@
 ---
-name: New plugin request - [name]
+name: New plugin request
 about: Create a request for a new plugin
 title: ''
 labels: plugins
