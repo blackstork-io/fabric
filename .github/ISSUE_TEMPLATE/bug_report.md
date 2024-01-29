@@ -8,17 +8,26 @@ assignees: ''
 ---
 
 ### Description
-A clear and concise description of what the bug is.
+Provide a clear and concise description of the bug you are experiencing.
 
-### Environment (please complete the following information)
- - OS name and version: [e.g. macOS Sonoma 14.2.1]
- - `fabric` version: [e.g. 0.0.1]
+### Environment
+Fabric version: [Specify the version of `fabric` CLI where the bug was observed]
+Operating System: [Specify the operating system and version]
+Terminal/Shell: [Specify the terminal or shell environment]
 
-### Steps to reproduce
-Steps to reproduce the behavior.
+### Steps to Reproduce
+Clearly outline the steps to reproduce the bug. Include any relevant commands, inputs, or configurations that lead to the issue. If possible, provide a minimal code example or a step-by-step guide.
 
-### Expected behavior
-A clear and concise description of what you expected to happen.
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+4. ...
 
-### Additional context
-If applicable, add screenshots, stack traces, etc to help explain your problem.
+### Expected Behavior
+Describe what you expected to happen when performing the steps outlined above. This will help us understand the intended functionality and identify deviations from it.
+
+### Actual Behavior
+Describe what actually happened when performing the steps outlined above. Include any error messages or unexpected outcomes that occurred during the process.
+
+### Additional Context
+Include any additional context that might be helpful in resolving the bug. This could include screenshots, configurations, or any recent changes made to the environment.
