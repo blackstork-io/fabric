@@ -3,23 +3,21 @@ package main
 import (
 	"github.com/hashicorp/go-plugin"
 
+	plugininterface "github.com/blackstork-io/fabric/plugininterface/v1"
 	"github.com/blackstork-io/fabric/plugins"
-	"github.com/blackstork-io/fabric/plugins/content"
-	"github.com/blackstork-io/fabric/plugins/content/table"
 	"github.com/blackstork-io/fabric/plugins/content/text"
-	"github.com/blackstork-io/fabric/plugins/data"
-	"github.com/blackstork-io/fabric/plugins/data/plugin_a"
-	"github.com/blackstork-io/fabric/plugins/data/plugin_b"
 )
 
 func main() {
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: plugins.Handshake,
-		Plugins: plugin.PluginSet{
-			"data.plugin_a": &data.GoPlugin{Impl: &plugin_a.Impl{}},
-			"data.plugin_b": &data.GoPlugin{Impl: &plugin_b.Impl{}},
-			"content.table": &content.GoPlugin{Impl: &table.Impl{}},
-			"content.text":  &content.GoPlugin{Impl: &text.Impl{}},
+		VersionedPlugins: map[int]plugin.PluginSet{
+			plugininterface.RPCVersion: {
+				plugins.RPCPluginName: &plugins.GoPlugin{Impl: NewMultiplugin([]plugininterface.PluginRPC{
+					// TODO: add concrete plugininterface.PluginRPC impls here
+					&text.Plugin{},
+				})},
+			},
 		},
 	})
 }

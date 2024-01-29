@@ -27,7 +27,7 @@ section "external_section" {
     }
 }
 
-document "test-document" {
+document "full-test-document" {
     title = "test-title"
     data plugin_a "data_plugin_a" {
         parameter_x = 1

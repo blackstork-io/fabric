@@ -6,11 +6,15 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-// The interface exposed and used by the go-plugin (versioned as 1)
+const RPCVersion = 1
+
+// The interface exposed and used by the go-plugin (versioned as 1).
 type PluginRPC interface {
 	GetPlugins() []Plugin
 	Call(args Args) Result
 }
+
+type Callable func(args Args) Result
 
 // One go-plugin binary can provide multiple plugins and/or one plugin with multiple versions
 // Deciding if we actually will do bundling in that way or stick with one plugin - one binary

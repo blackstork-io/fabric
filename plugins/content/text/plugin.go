@@ -9,7 +9,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/blackstork-io/fabric/plugininterface/v1"
+	plugininterface "github.com/blackstork-io/fabric/plugininterface/v1"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
@@ -29,6 +29,9 @@ const (
 type Plugin struct{}
 
 func (Plugin) GetPlugins() []plugininterface.Plugin {
+	// HACK: rpc: gob error encoding body: gob: type cty.Type has no exported fields
+	// cty.Types can be json encoded, so it seems that config and invocation specs should
+	// be additionally json-encoded
 	return []plugininterface.Plugin{
 		{
 			Namespace:  "blackstork",
