@@ -171,11 +171,12 @@ func (c *Caller) LoadPluginBinary(pluginPath string) (diag diagnostics.Diag) {
 		return
 	}
 
-	pluginRPC, ok := rawPlugin.(plugininterface.PluginRPC)
+	pluginRPCSer, ok := rawPlugin.(plugininterface.PluginRPCSer)
 	if !ok {
 		diag.Add("RPC plugin doesn't conform to spec", "Contact Fabric developers about this")
 		return
 	}
+	pluginRPC := &plugininterface.Derserializer{PluginRPCSer: pluginRPCSer}
 	plugins := pluginRPC.GetPlugins()
 
 	for _, pl := range plugins {

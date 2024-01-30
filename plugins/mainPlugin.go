@@ -13,15 +13,15 @@ import (
 // Interface of the plugin
 
 type RPCServer struct {
-	Impl plugininterface.PluginRPC
+	Impl plugininterface.PluginRPCSer
 }
 
-func (s *RPCServer) Call(args plugininterface.Args, res *plugininterface.Result) error {
+func (s *RPCServer) Call(args plugininterface.ArgsSer, res *plugininterface.Result) error {
 	*res = s.Impl.Call(args)
 	return nil
 }
 
-func (s *RPCServer) GetPlugins(_ struct{}, res *[]plugininterface.Plugin) error {
+func (s *RPCServer) GetPlugins(_ struct{}, res *[]plugininterface.PluginSer) (err error) {
 	*res = s.Impl.GetPlugins()
 	return nil
 }
@@ -32,8 +32,9 @@ type RPCClient struct {
 	client *rpc.Client
 }
 
-// Call implements plugininterface.PluginRPC.
-func (c *RPCClient) Call(args plugininterface.Args) (res plugininterface.Result) {
+// Call implements plugininterface.PluginRPCSer.
+func (c *RPCClient) Call(args plugininterface.ArgsSer) (res plugininterface.Result) {
+	// TODO: better serialization with cty.Type
 	err := c.client.Call("Plugin.Call", args, &res)
 	if err != nil {
 		res.Diags = res.Diags.Append(&hcl.Diagnostic{
@@ -46,7 +47,7 @@ func (c *RPCClient) Call(args plugininterface.Args) (res plugininterface.Result)
 }
 
 // GetPlugins implements plugininterface.PluginRPC.
-func (c *RPCClient) GetPlugins() (res []plugininterface.Plugin) {
+func (c *RPCClient) GetPlugins() (res []plugininterface.PluginSer) {
 	log.Println("RPCClient GetPlugins")
 	err := c.client.Call("Plugin.GetPlugins", struct{}{}, &res)
 	if err != nil {
@@ -56,12 +57,12 @@ func (c *RPCClient) GetPlugins() (res []plugininterface.Plugin) {
 	return
 }
 
-var _ plugininterface.PluginRPC = (*RPCClient)(nil)
+var _ plugininterface.PluginRPCSer = (*RPCClient)(nil)
 
 // The go-plugin plugin, combines all above into one interface
 
 type GoPlugin struct {
-	Impl plugininterface.PluginRPC
+	Impl plugininterface.PluginRPCSer
 }
 
 var _ plugin.Plugin = (*GoPlugin)(nil)

@@ -14,6 +14,49 @@ type PluginRPC interface {
 	Call(args Args) Result
 }
 
+type PluginRPCSer interface {
+	GetPlugins() []PluginSer
+	Call(args ArgsSer) Result
+}
+
+// plugininterface.Plugin, with serialized specs
+type PluginSer struct {
+	Namespace      string
+	Kind           string
+	Name           string
+	Version        Version
+	ConfigSpec     []byte
+	InvocationSpec []byte
+}
+
+type ArgsSer struct {
+	Kind    string
+	Name    string
+	Version Version
+
+	Config  []byte
+	Args    []byte
+	Context map[string]any
+}
+
+type Derserializer struct {
+	PluginRPCSer
+}
+
+// TODO: implement PluginRPC interface that converts to serializable formats
+// and calls the embedded PluginRPCSer with them
+// Call implements PluginRPC.
+func (d *Derserializer) Call(args Args) Result {
+	panic("unimplemented")
+}
+
+// GetPlugins implements PluginRPC.
+func (*Derserializer) GetPlugins() []Plugin {
+	panic("unimplemented")
+}
+
+var _ PluginRPC = (*Derserializer)(nil)
+
 type Callable func(args Args) Result
 
 // One go-plugin binary can provide multiple plugins and/or one plugin with multiple versions

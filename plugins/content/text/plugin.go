@@ -29,9 +29,6 @@ const (
 type Plugin struct{}
 
 func (Plugin) GetPlugins() []plugininterface.Plugin {
-	// HACK: rpc: gob error encoding body: gob: type cty.Type has no exported fields
-	// cty.Types can be json encoded, so it seems that config and invocation specs should
-	// be additionally json-encoded
 	return []plugininterface.Plugin{
 		{
 			Namespace:  "blackstork",
