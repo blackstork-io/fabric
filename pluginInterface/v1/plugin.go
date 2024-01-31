@@ -4,6 +4,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/blackstork-io/fabric/pkg/gobfix"
 )
 
 const RPCVersion = 1
@@ -16,17 +18,17 @@ type PluginRPC interface {
 
 type PluginRPCSer interface {
 	GetPlugins() []PluginSer
-	Call(args ArgsSer) Result
+	Call(args ArgsSer) ResultSer
 }
 
-// plugininterface.Plugin, with serialized specs
+// plugininterface.Plugin, with serialized specs.
 type PluginSer struct {
 	Namespace      string
 	Kind           string
 	Name           string
 	Version        Version
-	ConfigSpec     []byte
-	InvocationSpec []byte
+	ConfigSpec     gobfix.Spec
+	InvocationSpec gobfix.Spec
 }
 
 type ArgsSer struct {
@@ -38,24 +40,6 @@ type ArgsSer struct {
 	Args    []byte
 	Context map[string]any
 }
-
-type Derserializer struct {
-	PluginRPCSer
-}
-
-// TODO: implement PluginRPC interface that converts to serializable formats
-// and calls the embedded PluginRPCSer with them
-// Call implements PluginRPC.
-func (d *Derserializer) Call(args Args) Result {
-	panic("unimplemented")
-}
-
-// GetPlugins implements PluginRPC.
-func (*Derserializer) GetPlugins() []Plugin {
-	panic("unimplemented")
-}
-
-var _ PluginRPC = (*Derserializer)(nil)
 
 type Callable func(args Args) Result
 
@@ -97,4 +81,20 @@ type Result struct {
 	// `data` plugins return a map[string]any that would be put into the global config
 	Result any
 	Diags  hcl.Diagnostics
+}
+
+type ResultSer struct {
+	// `content` plugins return a markdown string
+	// `data` plugins return a map[string]any that would be put into the global config
+	Result any
+	Diags  []*RemoteDiag
+}
+
+// A stripped-down serializable version of hcl.Diagnostic
+type RemoteDiag struct {
+	Severity hcl.DiagnosticSeverity
+	Summary  string
+	Detail   string
+
+	// TODO: have a way to refer to ranges of attributes/blocks from the plugin
 }

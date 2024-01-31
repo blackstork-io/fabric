@@ -2,17 +2,20 @@ package parser
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os/exec"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
-	"github.com/sanity-io/litter"
+	goctyjson "github.com/zclconf/go-cty/cty/json"
 
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/gobfix"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	plugininterface "github.com/blackstork-io/fabric/plugininterface/v1"
 	"github.com/blackstork-io/fabric/plugins"
@@ -27,7 +30,7 @@ type pluginKey struct {
 }
 
 type pluginData struct {
-	rpc            plugininterface.PluginRPC
+	rpc            plugininterface.PluginRPCSer
 	Version        plugininterface.Version
 	ConfigSpec     hcldec.Spec
 	InvocationSpec hcldec.Spec
@@ -61,7 +64,7 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 		return
 	}
 
-	args := plugininterface.Args{
+	args := plugininterface.ArgsSer{
 		Kind:    key.Kind,
 		Name:    key.Name,
 		Version: data.Version,
@@ -69,13 +72,19 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 		// Config ans Args to be filled
 	}
 
+	var err error
+
 	// TODO: check that nil interface values are checked like this everywhere
 	needsConfig := !utils.IsNil(data.ConfigSpec)
 	hasConfig := !utils.IsNil(config)
 	if needsConfig == hasConfig { // happy path
 		if hasConfig {
-			args.Config, diag = config.ParseConfig(data.ConfigSpec)
-			diags.Extend(diag)
+			config, diag := config.ParseConfig(data.ConfigSpec)
+			if !diags.Extend(diag) {
+				// serialize only if no errors
+				args.Config, err = goctyjson.Marshal(config, hcldec.ImpliedType(data.ConfigSpec))
+				diags.AppendErr(err, "Error while serializing config")
+			}
 		}
 	} else if !hasConfig { // config is needed but absent
 		diags.Append(&hcl.Diagnostic{
@@ -99,14 +108,25 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 			Context: invocation.Range().Ptr(),
 		})
 	}
+	pluginArgs, diag := invocation.ParseInvocation(data.InvocationSpec)
+	if !diag.Extend(diag) {
+		// serialize only if no errors
+		args.Args, err = goctyjson.Marshal(pluginArgs, hcldec.ImpliedType(data.InvocationSpec))
+		diags.AppendErr(err, "Error while serializing value")
+	}
 
-	args.Args, diag = invocation.ParseInvocation(data.InvocationSpec)
-	diag.Extend(diag)
 	if diag.HasErrors() {
 		return
 	}
 	result := data.rpc.Call(args)
-	diags.ExtendHcl(result.Diags)
+	for _, d := range result.Diags {
+		diags.Append(&hcl.Diagnostic{
+			Severity: d.Severity,
+			Summary:  d.Summary,
+			Detail:   d.Detail,
+			Subject:  invocation.DefRange().Ptr(),
+		})
+	}
 	res = result.Result
 	return
 }
@@ -145,7 +165,7 @@ func (c *Caller) CallData(name string, config evaluation.Configuration, invocati
 
 func (c *Caller) LoadPluginBinary(pluginPath string) (diag diagnostics.Diag) {
 	// TODO: setup pluggin logging?
-	// hclog.DefaultOutput = io.Discard
+	hclog.DefaultOutput = io.Discard
 
 	client := plugin.NewClient(&plugin.ClientConfig{
 		HandshakeConfig:  plugins.Handshake,
@@ -176,20 +196,19 @@ func (c *Caller) LoadPluginBinary(pluginPath string) (diag diagnostics.Diag) {
 		diag.Add("RPC plugin doesn't conform to spec", "Contact Fabric developers about this")
 		return
 	}
-	pluginRPC := &plugininterface.Derserializer{PluginRPCSer: pluginRPCSer}
-	plugins := pluginRPC.GetPlugins()
 
-	for _, pl := range plugins {
-		log.Println("discovered", pl.Namespace, pl.Kind, pl.Name, pl.Version.Cast().String())
-		litter.Dump(pl)
+	plugins := pluginRPCSer.GetPlugins()
+
+	for _, plSer := range plugins {
+		log.Println("discovered plugin", plSer.Namespace, plSer.Kind, plSer.Name, plSer.Version.Cast().String())
 		c.plugins[pluginKey{
-			Kind: pl.Kind,
-			Name: pl.Name,
+			Kind: plSer.Kind,
+			Name: plSer.Name,
 		}] = pluginData{
-			rpc:            pluginRPC,
-			Version:        pl.Version,
-			ConfigSpec:     pl.ConfigSpec,
-			InvocationSpec: pl.InvocationSpec,
+			rpc:            pluginRPCSer,
+			Version:        plSer.Version,
+			ConfigSpec:     gobfix.ToHcl(plSer.ConfigSpec),
+			InvocationSpec: gobfix.ToHcl(plSer.InvocationSpec),
 		}
 	}
 	return

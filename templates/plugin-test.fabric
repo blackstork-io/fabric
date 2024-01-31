@@ -3,4 +3,7 @@ document "test-document" {
     content text {
         text = "Hello from the plugin"
     }
+    content shout {
+        text = "this is an example"
+    }
 }

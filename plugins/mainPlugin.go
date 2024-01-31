@@ -16,7 +16,7 @@ type RPCServer struct {
 	Impl plugininterface.PluginRPCSer
 }
 
-func (s *RPCServer) Call(args plugininterface.ArgsSer, res *plugininterface.Result) error {
+func (s *RPCServer) Call(args plugininterface.ArgsSer, res *plugininterface.ResultSer) error {
 	*res = s.Impl.Call(args)
 	return nil
 }
@@ -33,11 +33,10 @@ type RPCClient struct {
 }
 
 // Call implements plugininterface.PluginRPCSer.
-func (c *RPCClient) Call(args plugininterface.ArgsSer) (res plugininterface.Result) {
-	// TODO: better serialization with cty.Type
+func (c *RPCClient) Call(args plugininterface.ArgsSer) (res plugininterface.ResultSer) {
 	err := c.client.Call("Plugin.Call", args, &res)
 	if err != nil {
-		res.Diags = res.Diags.Append(&hcl.Diagnostic{
+		res.Diags = append(res.Diags, &plugininterface.RemoteDiag{
 			Severity: hcl.DiagError,
 			Summary:  "RPC Call error",
 			Detail:   err.Error(),
