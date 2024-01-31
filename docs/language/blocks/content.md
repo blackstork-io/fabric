@@ -58,25 +58,4 @@ Other nested blocks are not supported.
 
 ## References
 
-If the label `ref` is used instead of `<plugin-name>`, the block references another content block defined on a root level. The name of the referer block is optional if the block is defined within the document. If the referer block (with label `ref`) is defined on a root level of the config file, the name is required.
-
-```hcl
-content openai "foo" {
-  ...
-}
-
-document "overview" {
-
-  content ref {
-    base = content.openai.foo
-    ...
-  }
-
-}
-
-```
-Every referer data block must have a `base` attribute set, pointing to a data block defined on a root level in the config file.
-
-Other supported arguments are defined by the plugin of the referent block (`openai` in the above example). If any arguments are provided in the referer block, they take precedence over the arguments set in the referent block.
-
-Referer blocks can not contain nested blocks.
+To see information related to refreces see [here](../refrence.md#content-block-references).

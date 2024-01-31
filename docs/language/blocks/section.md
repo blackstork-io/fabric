@@ -50,29 +50,4 @@ No other arguments are supported.
 
 ## References ([#9](https://github.com/blackstork-io/fabric/issues/9))
 
-If the label `ref` is used instead of `<section-name>`, the block references another `section` block defined on a root level. The name of the referer block is optional if the block is defined within the document. If the referer block (with label `ref`) is defined on a root level of the config file, the name is required.
-
-```hcl
-
-section "foo" {
-  ...
-}
-
-document "overview" {
-
-  section ref {
-    base = section.foo
-    ...
-  }
-
-}
-```
-
-If `title` argument is provided in the referer block, it takes precedence over the title defined in the referent block.
-
-Every referer block must have a `base` attribute set, pointing to a block defined on a root level in the config file.
-
-Referer blocks can not contain nested blocks.
-
-
-
+To see information related to refreces see [here](../refrence.md#section-block-references).
