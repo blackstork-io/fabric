@@ -23,7 +23,7 @@ Codifying and automating mission-critical communications with standardized and r
 
 Fabric is an open-source configuration language and a CLI tool that enables the codification and automation of content generation process.
 
-Fabric produces rich Markdown documents from the template files that declaratively define data requirements and content structure. The templates consist of reusable blocks, powered by plugins. Data is fetched through integrations from various external data stores, security solutions and platforms. The content is rendered by plugins from static text, [Go template](https://pkg.go.dev/text/template) strings, or through external APIs (for example, OpenAI LLM). The output file is a Markdown document that can be rendered into PDF / HTML using any 3rd party Markdown renderer.
+Fabric produces rich Markdown documents from the template files that declaratively define data requirements and content structure. The templates consist of reusable blocks, powered by plugins. Data is fetched through integrations from various external data stores, security solutions and platforms. The content is rendered by plugins from static text, template strings, or through external APIs (for example, OpenAI LLM). The output file is a Markdown document that can be rendered into PDF / HTML using any 3rd party Markdown renderer.
 
 
 # Installation
@@ -34,6 +34,11 @@ Fabric produces rich Markdown documents from the template files that declarative
 # Usage
 
 [TBD]
+
+
+# Documentation
+
+Visit [https://blackstork.io/fabric/docs/](https://blackstork.io/fabric/docs/) for full documentation.
 
 
 # Security
