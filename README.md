@@ -2,13 +2,11 @@
 
 <img src=".assets/fabric.svg" alt="fabric-logo" width="250px"/>
 <br/>
+<br/>
 
 Codifying and automating mission-critical communications with standardized and reusable templates.
 
-
-<strong>
-[Releases](https://github.com/blackstork-io/fabric/releases) | [Docs](https://blackstork.io/fabric/docs/) | [Use Cases](https://blackstork.io/fabric/docs/use-cases/) | [Slack](https://fabric-community.slack.com/)
-</strong>
+#### [Releases](https://github.com/blackstork-io/fabric/releases) | [Docs](https://blackstork.io/fabric/docs/) | [Use Cases](https://blackstork.io/fabric/docs/use-cases/) | [Slack](https://fabric-community.slack.com/)
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/blackstork-io/fabric?style=social)
 ![GitHub Release](https://img.shields.io/github/v/release/blackstork-io/fabric)
