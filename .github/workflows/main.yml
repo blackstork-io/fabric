@@ -37,10 +37,10 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go-version }}
-     - name: Build fabric
-       run: go build -v -o ${{ runner.temp }}/fabric
-     - name: Build plugins
-       run: go build -v -o ${{ runner.temp }}/plugins ./cmd/plugins
+      - name: Build fabric
+        run: go build -v -o ${{ runner.temp }}/fabric
+      - name: Build plugins
+        run: go build -v -o ${{ runner.temp }}/plugins ./cmd/plugins
 
   golangci:
     runs-on: ubuntu-latest
