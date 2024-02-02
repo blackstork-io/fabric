@@ -47,7 +47,6 @@ func (c *RPCClient) Call(args plugininterface.ArgsSer) (res plugininterface.Resu
 
 // GetPlugins implements plugininterface.PluginRPC.
 func (c *RPCClient) GetPlugins() (res []plugininterface.PluginSer) {
-	log.Println("RPCClient GetPlugins")
 	err := c.client.Call("Plugin.GetPlugins", struct{}{}, &res)
 	if err != nil {
 		// TODO: hmmm, add diags/ error?

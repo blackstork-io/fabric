@@ -3,7 +3,6 @@ package parser
 import (
 	"fmt"
 	"io"
-	"log"
 	"os/exec"
 
 	"github.com/hashicorp/go-hclog"
@@ -200,7 +199,6 @@ func (c *Caller) LoadPluginBinary(pluginPath string) (diag diagnostics.Diag) {
 	plugins := pluginRPCSer.GetPlugins()
 
 	for _, plSer := range plugins {
-		log.Println("discovered plugin", plSer.Namespace, plSer.Kind, plSer.Name, plSer.Version.Cast().String())
 		c.plugins[pluginKey{
 			Kind: plSer.Kind,
 			Name: plSer.Name,
