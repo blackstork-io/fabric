@@ -12,15 +12,20 @@ require (
 	github.com/itchyny/gojq v0.12.14
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-sqlite3 v1.14.20
+	github.com/pelletier/go-toml/v2 v2.1.1
+	github.com/sanity-io/litter v1.5.5
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.27.0
 	github.com/testcontainers/testcontainers-go/modules/elasticsearch v0.27.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.27.0
+	github.com/wundergraph/graphql-go-tools/v2 v2.0.0-rc.5
 	github.com/zclconf/go-cty v1.13.0
 	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b
 	golang.org/x/term v0.15.0
 	gopkg.in/yaml.v3 v3.0.1
 )
+
+require github.com/cespare/xxhash/v2 v2.2.0 // indirect
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
@@ -47,13 +52,12 @@ require (
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/uuid v1.4.0 // indirect
-	github.com/hashicorp/go-hclog v0.14.1
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/itchyny/timefmt-go v0.1.5 // indirect
-	github.com/klauspost/compress v1.16.0 // indirect
+	github.com/klauspost/compress v1.17.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
-	github.com/mattn/go-colorable v0.1.4 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/go-testing-interface v0.0.0-20171004221916-a61a99592b77 // indirect
 	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect
