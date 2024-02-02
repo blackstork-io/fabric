@@ -1,4 +1,4 @@
-package plugin
+package plugininterface
 
 import (
 	"github.com/hashicorp/hcl/v2"

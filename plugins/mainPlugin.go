@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/hcl/v2"
 
-	plugininterface "github.com/blackstork-io/fabric/plugininterface/v1"
+	"github.com/blackstork-io/fabric/plugininterface/v1"
 )
 
 // Interface of the plugin

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/zclconf/go-cty/cty"
 	goctyjson "github.com/zclconf/go-cty/cty/json"
 
 	"github.com/blackstork-io/fabric/parser/definitions"
@@ -16,7 +17,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/gobfix"
 	"github.com/blackstork-io/fabric/pkg/utils"
-	plugininterface "github.com/blackstork-io/fabric/plugininterface/v1"
+	"github.com/blackstork-io/fabric/plugininterface/v1"
 	"github.com/blackstork-io/fabric/plugins"
 )
 
@@ -76,16 +77,19 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 	// TODO: check that nil interface values are checked like this everywhere
 	needsConfig := !utils.IsNil(data.ConfigSpec)
 	hasConfig := !utils.IsNil(config)
-	if needsConfig == hasConfig { // happy path
-		if hasConfig {
-			config, diag := config.ParseConfig(data.ConfigSpec)
-			if !diags.Extend(diag) {
-				// serialize only if no errors
-				args.Config, err = goctyjson.Marshal(config, hcldec.ImpliedType(data.ConfigSpec))
-				diags.AppendErr(err, "Error while serializing config")
-			}
+
+	switch {
+	case needsConfig && hasConfig: // happy path
+		var configVal cty.Value
+		configVal, diag = config.ParseConfig(data.ConfigSpec)
+		if !diags.Extend(diag) {
+			// serialize only if no errors
+			args.Config, err = goctyjson.Marshal(configVal, hcldec.ImpliedType(data.ConfigSpec))
+			diags.AppendErr(err, "Error while serializing config")
 		}
-	} else if !hasConfig { // config is needed but absent
+	case !needsConfig && !hasConfig:
+		// happy path, do nothing
+	case needsConfig && !hasConfig:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Plugin requires configuration",
@@ -96,7 +100,7 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 			Subject: invocation.MissingItemRange().Ptr(),
 			Context: invocation.Range().Ptr(),
 		})
-	} else { // config is present but not needed
+	case !needsConfig && hasConfig:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
 			Summary:  "Plugin doesn't support configuration",
@@ -107,6 +111,7 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 			Context: invocation.Range().Ptr(),
 		})
 	}
+
 	pluginArgs, diag := invocation.ParseInvocation(data.InvocationSpec)
 	if !diag.Extend(diag) {
 		// serialize only if no errors

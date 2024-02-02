@@ -9,7 +9,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/gobfix"
 	"github.com/blackstork-io/fabric/pkg/utils"
-	plugininterface "github.com/blackstork-io/fabric/plugininterface/v1"
+	"github.com/blackstork-io/fabric/plugininterface/v1"
 )
 
 type key struct {
@@ -111,6 +111,7 @@ func NewMultiplugin(plugins []plugininterface.PluginRPC) (res *Multiplugin) {
 	for _, pluginsRPC := range plugins {
 		plugins := pluginsRPC.GetPlugins()
 		for _, plugin := range plugins {
+			plugin := plugin
 			k := key{
 				Kind:    plugin.Kind,
 				Name:    plugin.Name,

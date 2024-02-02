@@ -9,10 +9,11 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/semver/v3"
-	plugininterface "github.com/blackstork-io/fabric/plugininterface/v1"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/blackstork-io/fabric/plugininterface/v1"
 )
 
 var Version = semver.MustParse("0.1.0")

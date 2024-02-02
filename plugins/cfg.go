@@ -3,7 +3,7 @@ package plugins
 import (
 	"github.com/hashicorp/go-plugin"
 
-	plugininterface "github.com/blackstork-io/fabric/plugininterface/v1"
+	"github.com/blackstork-io/fabric/plugininterface/v1"
 )
 
 const RPCPluginName = "FabricPlugin"

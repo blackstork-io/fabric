@@ -34,8 +34,8 @@ type ParsedSection struct {
 	Content []ContentPluginOrSection
 }
 
-func (d *Section) GetHCLBlock() *hcl.Block {
-	return d.Block.AsHCLBlock()
+func (s *Section) GetHCLBlock() *hcl.Block {
+	return s.Block.AsHCLBlock()
 }
 
 func (s *Section) IsRef() bool {
