@@ -1,16 +1,47 @@
-package plugin
+package plugininterface
 
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/blackstork-io/fabric/pkg/gobfix"
 )
 
-// The interface exposed and used by the go-plugin (versioned as 1)
+const RPCVersion = 1
+
+// The interface exposed and used by the go-plugin (versioned as 1).
 type PluginRPC interface {
 	GetPlugins() []Plugin
 	Call(args Args) Result
 }
+
+type PluginRPCSer interface {
+	GetPlugins() []PluginSer
+	Call(args ArgsSer) ResultSer
+}
+
+// plugininterface.Plugin, with serialized specs.
+type PluginSer struct {
+	Namespace      string
+	Kind           string
+	Name           string
+	Version        Version
+	ConfigSpec     gobfix.Spec
+	InvocationSpec gobfix.Spec
+}
+
+type ArgsSer struct {
+	Kind    string
+	Name    string
+	Version Version
+
+	Config  []byte
+	Args    []byte
+	Context map[string]any
+}
+
+type Callable func(args Args) Result
 
 // One go-plugin binary can provide multiple plugins and/or one plugin with multiple versions
 // Deciding if we actually will do bundling in that way or stick with one plugin - one binary
@@ -50,4 +81,20 @@ type Result struct {
 	// `data` plugins return a map[string]any that would be put into the global config
 	Result any
 	Diags  hcl.Diagnostics
+}
+
+type ResultSer struct {
+	// `content` plugins return a markdown string
+	// `data` plugins return a map[string]any that would be put into the global config
+	Result any
+	Diags  []*RemoteDiag
+}
+
+// A stripped-down serializable version of hcl.Diagnostic
+type RemoteDiag struct {
+	Severity hcl.DiagnosticSeverity
+	Summary  string
+	Detail   string
+
+	// TODO: have a way to refer to ranges of attributes/blocks from the plugin
 }

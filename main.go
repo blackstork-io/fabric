@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/hashicorp/go-plugin"
+
 	"github.com/blackstork-io/fabric/parser"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
@@ -30,6 +32,8 @@ func argParse() (diags diagnostics.Diag) {
 }
 
 func newRun() (diags diagnostics.Diag) {
+	defer plugin.CleanupClients()
+
 	if diags.Extend(argParse()) {
 		return
 	}
@@ -58,7 +62,13 @@ func newRun() (diags diagnostics.Diag) {
 		)
 	}
 
-	eval := parser.NewEvaluator(&parser.MockCaller{}, result.Blocks)
+	caller := parser.NewPluginCaller()
+	diag := caller.LoadPluginBinary(pluginPath)
+	if diags.Extend(diag) {
+		return
+	}
+
+	eval := parser.NewEvaluator(caller, result.Blocks)
 	str, diag := eval.EvaluateDocument(doc)
 	if diags.Extend(diag) {
 		return

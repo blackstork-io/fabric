@@ -19,11 +19,6 @@ import (
 
 // Evaluates a chosen document
 
-type contentCall struct {
-	*definitions.ParsedPlugin
-	query string
-}
-
 type Evaluator struct {
 	caller         PluginCaller
 	contentCalls   []*definitions.ParsedPlugin

@@ -5,7 +5,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
-	"github.com/zclconf/go-cty/cty/convert"
 
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
@@ -46,27 +45,33 @@ func (t *TitleInvocation) MissingItemRange() hcl.Range {
 
 func (t *TitleInvocation) ParseInvocation(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
 	// Titles can only be rendered once, so there's no reason to put `sync.Once` like in proper blocks
-
-	titleVal, diag := t.Expression.Value(nil)
-	if diags.ExtendHcl(diag) {
-		return
-	}
-
-	titleStrVal, err := convert.Convert(titleVal, cty.String)
-	if err != nil {
+	expr, ok := t.Expression.(hclsyntax.Expression)
+	if !ok {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
-			Summary:  "Failed to turn title into a string",
-			Detail:   err.Error(),
-			Subject:  t.Range().Ptr(),
+			Summary:  "Incorrect title",
+			Detail:   "Title must be an expression",
+			Subject:  t.DefRange().Ptr(),
 		})
 		return
 	}
-	// cty.MapVal()?
-	val = cty.ObjectVal(map[string]cty.Value{
-		"text":      titleStrVal,
-		"format_as": cty.StringVal("title"),
-	})
+	body := t.GetBody()
+	body.Attributes = hclsyntax.Attributes{
+		"text": &hclsyntax.Attribute{
+			Name: "text",
+			Expr: expr,
+		},
+		"format_as": &hclsyntax.Attribute{
+			Name: "format_as",
+			Expr: &hclsyntax.LiteralValueExpr{
+				Val:      cty.StringVal("title"),
+				SrcRange: t.Expression.Range(),
+			},
+		},
+	}
+
+	val, diag := hcldec.Decode(body, spec, nil)
+	diags.ExtendHcl(diag)
 	return
 }
 

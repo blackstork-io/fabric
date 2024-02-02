@@ -2,17 +2,23 @@ package parser
 
 import (
 	"fmt"
-	"strings"
+	"io"
+	"os/exec"
 
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
-	"github.com/sanity-io/litter"
-	"golang.org/x/exp/maps"
+	"github.com/zclconf/go-cty/cty"
+	goctyjson "github.com/zclconf/go-cty/cty/json"
 
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	plugin "github.com/blackstork-io/fabric/pluginInterface/v1"
+	"github.com/blackstork-io/fabric/pkg/gobfix"
+	"github.com/blackstork-io/fabric/pkg/utils"
+	"github.com/blackstork-io/fabric/plugininterface/v1"
+	"github.com/blackstork-io/fabric/plugins"
 )
 
 // Stub implementation of plugin caller
@@ -24,8 +30,8 @@ type pluginKey struct {
 }
 
 type pluginData struct {
-	rpc            plugin.PluginRPC
-	Version        plugin.Version
+	rpc            plugininterface.PluginRPCSer
+	Version        plugininterface.Version
 	ConfigSpec     hcldec.Spec
 	InvocationSpec hcldec.Spec
 }
@@ -36,6 +42,12 @@ type PluginCaller interface {
 
 type Caller struct {
 	plugins map[pluginKey]pluginData
+}
+
+func NewPluginCaller() *Caller {
+	return &Caller{
+		plugins: map[pluginKey]pluginData{},
+	}
 }
 
 var _ PluginCaller = (*Caller)(nil)
@@ -52,7 +64,7 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 		return
 	}
 
-	args := plugin.Args{
+	args := plugininterface.ArgsSer{
 		Kind:    key.Kind,
 		Name:    key.Name,
 		Version: data.Version,
@@ -60,15 +72,24 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 		// Config ans Args to be filled
 	}
 
-	needsConfig := data.ConfigSpec != nil
-	hasConfig := config != nil
+	var err error
 
-	if needsConfig == hasConfig { // happy path
-		if hasConfig {
-			args.Config, diag = config.ParseConfig(data.ConfigSpec)
-			diags.Extend(diag)
+	// TODO: check that nil interface values are checked like this everywhere
+	needsConfig := !utils.IsNil(data.ConfigSpec)
+	hasConfig := !utils.IsNil(config)
+
+	switch {
+	case needsConfig && hasConfig: // happy path
+		var configVal cty.Value
+		configVal, diag = config.ParseConfig(data.ConfigSpec)
+		if !diags.Extend(diag) {
+			// serialize only if no errors
+			args.Config, err = goctyjson.Marshal(configVal, hcldec.ImpliedType(data.ConfigSpec))
+			diags.AppendErr(err, "Error while serializing config")
 		}
-	} else if !hasConfig { // config is needed but absent
+	case !needsConfig && !hasConfig:
+		// happy path, do nothing
+	case needsConfig && !hasConfig:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Plugin requires configuration",
@@ -79,7 +100,7 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 			Subject: invocation.MissingItemRange().Ptr(),
 			Context: invocation.Range().Ptr(),
 		})
-	} else { // config is present but not needed
+	case !needsConfig && hasConfig:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
 			Summary:  "Plugin doesn't support configuration",
@@ -91,13 +112,25 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 		})
 	}
 
-	args.Args, diag = invocation.ParseInvocation(data.InvocationSpec)
-	diag.Extend(diag)
+	pluginArgs, diag := invocation.ParseInvocation(data.InvocationSpec)
+	if !diag.Extend(diag) {
+		// serialize only if no errors
+		args.Args, err = goctyjson.Marshal(pluginArgs, hcldec.ImpliedType(data.InvocationSpec))
+		diags.AppendErr(err, "Error while serializing value")
+	}
+
 	if diag.HasErrors() {
 		return
 	}
 	result := data.rpc.Call(args)
-	diags.ExtendHcl(result.Diags)
+	for _, d := range result.Diags {
+		diags.Append(&hcl.Diagnostic{
+			Severity: d.Severity,
+			Summary:  d.Summary,
+			Detail:   d.Detail,
+			Subject:  invocation.DefRange().Ptr(),
+		})
+	}
 	res = result.Result
 	return
 }
@@ -134,79 +167,52 @@ func (c *Caller) CallData(name string, config evaluation.Configuration, invocati
 	return
 }
 
-type MockCaller struct{}
+func (c *Caller) LoadPluginBinary(pluginPath string) (diag diagnostics.Diag) {
+	// TODO: setup pluggin logging?
+	hclog.DefaultOutput = io.Discard
 
-func (c *MockCaller) dumpContext(context map[string]any) string {
-	return litter.Sdump("Context:", context)
-}
+	client := plugin.NewClient(&plugin.ClientConfig{
+		HandshakeConfig:  plugins.Handshake,
+		VersionedPlugins: plugins.PluginMap,
+		Cmd:              exec.Command(pluginPath),
+		Managed:          true,
+		// Logger:          hclog.de,
+	})
+	defer func() {
+		if diag.HasErrors() {
+			client.Kill()
+		}
+	}()
 
-func (c *MockCaller) dumpConfig(config evaluation.Configuration) string {
-	switch c := config.(type) {
-	case *definitions.ConfigPtr:
-		if c == nil {
-			return "NoConfig"
-		}
-		attrs, _ := c.Cfg.Body.JustAttributes()
-		return litter.Sdump("ConfigPtr", maps.Keys(attrs))
-	case *definitions.Config:
-		if c == nil {
-			return "NoConfig"
-		}
-		attrs, _ := c.Block.Body.JustAttributes()
-		return litter.Sdump("Config", maps.Keys(attrs))
-	case nil:
-		return "NoConfig"
-	default:
-		return "UnknownConfig " + litter.Sdump(c)
+	// Connect via RPC
+	rpcClient, err := client.Client()
+	if diag.AppendErr(err, "Plugin connection error") {
+		return
 	}
-}
 
-func (c *MockCaller) dumpInvocation(invoke evaluation.Invocation) string {
-	switch inv := invoke.(type) {
-	case *evaluation.BlockInvocation:
-		if inv == nil {
-			return "NoConfig"
-		}
-		attrStringed := map[string]string{}
-		attrs, _ := inv.Body.JustAttributes()
-		for k, v := range attrs {
-			val, _ := v.Expr.Value(nil)
-			attrStringed[k] = val.GoString()
-		}
-
-		return litter.Sdump("BlockInvocation", attrStringed)
-	case *definitions.TitleInvocation:
-		if inv == nil {
-			return "NoInvocation"
-		}
-		val, _ := inv.Expression.Value(nil)
-		return litter.Sdump("TitleInvocation", val.GoString())
-	case nil:
-		return "NoInvocation"
-	default:
-		return "UnknownInvocation " + litter.Sdump(inv)
+	rawPlugin, err := rpcClient.Dispense(plugins.RPCPluginName)
+	if diag.AppendErr(err, "Plugin RPC error") {
+		return
 	}
-}
 
-// CallContent implements PluginCaller.
-func (c *MockCaller) CallContent(name string, config evaluation.Configuration, invocation evaluation.Invocation, context map[string]any) (result string, diag diagnostics.Diag) {
-	dump := []string{
-		"Call to content:",
+	pluginRPCSer, ok := rawPlugin.(plugininterface.PluginRPCSer)
+	if !ok {
+		diag.Add("RPC plugin doesn't conform to spec", "Contact Fabric developers about this")
+		return
 	}
-	dump = append(dump, c.dumpConfig(config))
-	dump = append(dump, c.dumpInvocation(invocation))
-	dump = append(dump, c.dumpContext(context))
-	return strings.Join(dump, "\n") + "\n\n", nil
-}
 
-// CallData implements PluginCaller.
-func (c *MockCaller) CallData(name string, config evaluation.Configuration, invocation evaluation.Invocation) (result map[string]any, diag diagnostics.Diag) {
-	dump := []string{
-		"Call to data:",
+	plugins := pluginRPCSer.GetPlugins()
+
+	for _, plSer := range plugins {
+		c.plugins[pluginKey{
+			Kind: plSer.Kind,
+			Name: plSer.Name,
+		}] = pluginData{
+			rpc:            pluginRPCSer,
+			Version:        plSer.Version,
+			ConfigSpec:     gobfix.ToHcl(plSer.ConfigSpec),
+			InvocationSpec: gobfix.ToHcl(plSer.InvocationSpec),
+		}
 	}
-	dump = append(dump, c.dumpConfig(config))
-	dump = append(dump, c.dumpInvocation(invocation))
-	return map[string]any{"dumpResult": strings.Join(dump, "\n")}, nil
+	return
 }
-
-var _ PluginCaller = (*MockCaller)(nil)
