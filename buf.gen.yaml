@@ -1,0 +1,15 @@
+version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: github.com/blackstork-io/fabric/plugin
+plugins:
+  - plugin: buf.build/protocolbuffers/go
+    out: .
+    opt: module=github.com/blackstork-io/fabric
+  - plugin: buf.build/grpc/go
+    out: .
+    opt: module=github.com/blackstork-io/fabric
+  # - plugin: buf.build/connectrpc/go
+  #   out: .
+  #   opt: module=github.com/knobz-io/knobz
