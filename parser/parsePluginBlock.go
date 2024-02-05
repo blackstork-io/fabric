@@ -158,7 +158,8 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 }
 
 func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAttr *hcl.Attribute, configBlock *hcl.Block, refBaseConfig evaluation.Configuration) (config evaluation.Configuration, diags diagnostics.Diag) {
-	if configAttr != nil && configBlock != nil {
+	switch {
+	case configAttr != nil && configBlock != nil:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Both config attribute and block are specified",
@@ -174,9 +175,20 @@ func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAtt
 			Context:  plugin.Block.Body.Range().Ptr(),
 		})
 		return
-	} else if configAttr != nil {
-		cfg, diag := db.GetConfig(configAttr.Expr)
+	case configAttr != nil:
+		// config attr referensing top-level config block
+		cfg, diag := Resolve[*definitions.Config](db, configAttr.Expr)
 		if diags.Extend(diag) {
+			return
+		}
+		if !cfg.ApplicableTo(plugin) {
+			diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Inapplicable configuration",
+				Detail:   "This configuration is for another plugin",
+				Subject:  &configAttr.Range,
+				Context:  plugin.Block.Body.Range().Ptr(),
+			})
 			return
 		}
 
@@ -184,25 +196,29 @@ func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAtt
 			Cfg: cfg,
 			Ptr: configAttr,
 		}
-	} else if configBlock != nil {
+	case configBlock != nil:
+		// anonymous config block
 		config = &definitions.Config{
 			Block: configBlock,
 		}
-	} else if plugin.IsRef() {
+	case plugin.IsRef():
+		// Config wasn't provided: inherit config from the base block
 		config = refBaseConfig
-	} else if defaultCfg := db.DefaultConfigFor(plugin); defaultCfg != nil {
-		// Apply default configs to non-refs only
-		config = defaultCfg
-	} else {
-		config = &definitions.ConfigEmpty{
-			MissingItemRange: plugin.Block.Body.MissingItemRange(),
+	default:
+		if defaultCfg := db.DefaultConfigFor(plugin); defaultCfg != nil {
+			// Apply default configs to non-refs only
+			config = defaultCfg
+		} else {
+			config = &definitions.ConfigEmpty{
+				MissingItemRange: plugin.Block.Body.MissingItemRange(),
+			}
 		}
 	}
 	return
 }
 
 func (db *DefinedBlocks) parseRefBase(plugin *definitions.Plugin, base hcl.Expression) (baseEval *definitions.ParsedPlugin, diags diagnostics.Diag) {
-	basePlugin, diags := db.GetPlugin(base)
+	basePlugin, diags := Resolve[*definitions.Plugin](db, base)
 	if diags.HasErrors() {
 		return
 	}

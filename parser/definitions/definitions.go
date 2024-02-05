@@ -1,7 +1,11 @@
 package definitions
 
 import (
+	"reflect"
+	"strings"
+
 	"github.com/hashicorp/hcl/v2"
+	"github.com/zclconf/go-cty/cty"
 )
 
 const (
@@ -20,6 +24,19 @@ const (
 
 type FabricBlock interface {
 	GetHCLBlock() *hcl.Block
+	CtyType() cty.Type
+}
+
+func ToCtyValue(b FabricBlock) cty.Value {
+	return cty.CapsuleVal(b.CtyType(), b)
+}
+
+func capsuleTypeFor[V any]() cty.Type {
+	ty := reflect.TypeOf((*V)(nil)).Elem()
+	return cty.Capsule(
+		strings.ToLower(ty.Name()),
+		ty,
+	)
 }
 
 // Identifies a plugin block

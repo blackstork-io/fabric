@@ -137,7 +137,7 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 	}
 
 	if refBase != nil {
-		baseSection, diag := db.GetSection(refBase)
+		baseSection, diag := Resolve[*definitions.Section](db, refBase)
 		if diags.Extend(diag) {
 			return
 		}
