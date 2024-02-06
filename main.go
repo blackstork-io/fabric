@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hashicorp/go-plugin"
-
 	"github.com/blackstork-io/fabric/internal/builtin"
 	"github.com/blackstork-io/fabric/parser"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
@@ -37,8 +35,6 @@ func argParse() (diags diagnostics.Diag) {
 }
 
 func newRun() (diags diagnostics.Diag) {
-	defer plugin.CleanupClients()
-
 	if diags.Extend(argParse()) {
 		return
 	}
@@ -84,10 +80,10 @@ func newRun() (diags diagnostics.Diag) {
 			"blackstork/terraform":     version,
 		}),
 	)
-	if diags.Extend(diagnostics.Diag(stdDiag)) {
+	if diags.ExtendHcl(stdDiag) {
 		return
 	}
-	defer func() { diags.Extend(diagnostics.Diag(runner.Close())) }()
+	defer func() { diags.ExtendHcl(runner.Close()) }()
 
 	caller := parser.NewPluginCaller(runner)
 
