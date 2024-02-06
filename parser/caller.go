@@ -44,7 +44,7 @@ var _ PluginCaller = (*Caller)(nil)
 func (c *Caller) pluginData(kind, name string) (pluginData, diagnostics.Diag) {
 	switch kind {
 	case "data":
-		plugin, diag := c.plugins.DataSource(name)
+		plugin, diag := c.plugins.GetDataSource(name)
 		if diag.HasErrors() {
 			return pluginData{}, diagnostics.Diag(diag)
 		}
@@ -53,7 +53,7 @@ func (c *Caller) pluginData(kind, name string) (pluginData, diagnostics.Diag) {
 			InvocationSpec: plugin.Args,
 		}, nil
 	case "content":
-		plugin, diag := c.plugins.ContentProvider(name)
+		plugin, diag := c.plugins.GetContentProvider(name)
 		if diag.HasErrors() {
 			return pluginData{}, diagnostics.Diag(diag)
 		}
@@ -155,7 +155,7 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 	}
 	switch kind {
 	case "data":
-		source, diags := c.plugins.DataSource(name)
+		source, diags := c.plugins.GetDataSource(name)
 		if diags.HasErrors() {
 			return nil, diagnostics.Diag(diags)
 		}
@@ -171,7 +171,7 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 		}
 		result.Diags = diags
 	case "content":
-		provider, diags := c.plugins.ContentProvider(name)
+		provider, diags := c.plugins.GetContentProvider(name)
 		if diags.HasErrors() {
 			return nil, diagnostics.Diag(diags)
 		}

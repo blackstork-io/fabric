@@ -34,7 +34,7 @@ func Load(o ...Option) (*Runner, hcl.Diagnostics) {
 	}, nil
 }
 
-func (m *Runner) DataSource(name string) (*plugin.DataSource, hcl.Diagnostics) {
+func (m *Runner) GetDataSource(name string) (*plugin.DataSource, hcl.Diagnostics) {
 	source, has := m.dataMap[name]
 	if !has {
 		return nil, hcl.Diagnostics{{
@@ -46,7 +46,7 @@ func (m *Runner) DataSource(name string) (*plugin.DataSource, hcl.Diagnostics) {
 	return source.DataSource, nil
 }
 
-func (m *Runner) ContentProvider(name string) (*plugin.ContentProvider, hcl.Diagnostics) {
+func (m *Runner) GetContentProvider(name string) (*plugin.ContentProvider, hcl.Diagnostics) {
 	provider, has := m.contentMap[name]
 	if !has {
 		return nil, hcl.Diagnostics{{
