@@ -1,0 +1,44 @@
+document "example-openai" {
+    title = "Testing plugins"
+    data csv "csv_file" {
+        path = "./data.csv"
+    }
+    content text {
+        text = "Values from the CSV file"
+        format_as = "title"
+        absolute_title_size = 2
+    }
+    content table {
+        query = ".data.csv.csv_file.result"
+        columns = [
+            {
+                "header" = "ID"
+                "value"  = "ID:{{.id}}"
+            },
+            {
+                "header" = "Active"
+                "value"  = "{{.active}}"
+            },
+            {
+                "header" = "Name"
+                "value"  = "{{.name}}"
+            },
+            {
+                "header" = "Age"
+                "value"  = "{{.age}}"
+            },
+            {
+                "header" = "Height"
+                "value"  = "{{.height}}"
+            }
+        ]
+    }
+    content openai_text {
+        config {
+            api_key = "<API_KEY>"
+        }
+        query = ".data.csv.csv_file.result"
+        model = "gpt-3.5-turbo"
+        prompt = "List names of these people"
+    }
+}

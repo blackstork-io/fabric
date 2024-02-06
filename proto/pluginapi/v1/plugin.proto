@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package pluginapi.v1;
+
+import "pluginapi/v1/data.proto";
+import "pluginapi/v1/cty.proto";
+import "pluginapi/v1/schema.proto";
+import "pluginapi/v1/diagnostics.proto";
+import "pluginapi/v1/content.proto";
+
+service PluginService {
+    rpc GetSchema(GetSchemaRequest) returns (GetSchemaResponse) {}
+    rpc RetrieveData(RetrieveDataRequest) returns (RetrieveDataResponse) {}
+    rpc ProvideContent(ProvideContentRequest) returns (ProvideContentResponse) {}
+}
+
+message GetSchemaRequest {}
+
+message GetSchemaResponse {
+    Schema schema = 1;
+}
+
+message RetrieveDataRequest {
+    string    source = 1;
+    CtyValue  args   = 2;
+    CtyValue  config = 3;
+}
+
+message RetrieveDataResponse {
+    Data                data        = 1;
+    repeated Diagnostic diagnostics = 2;
+}
+
+message ProvideContentRequest {
+    string       provider     = 1;
+    CtyValue     args         = 2;
+    CtyValue     config       = 3;
+    MapData      data_context = 4;
+}
+
+message ProvideContentResponse {
+    Content             content     = 1;
+    repeated Diagnostic diagnostics = 2;
+}
+
+

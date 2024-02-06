@@ -1,10 +1,19 @@
-with-expecter: True
-dir: "mocks/{{.InterfaceDirRelative}}"
+with-expecter: true
+dir: mocks/{{ replaceAll .InterfaceDirRelative "internal" "internalpkg" }}
 mockname: "{{.InterfaceName}}"
 outpkg: "{{.PackageName}}_mocks"
+filename: "{{.InterfaceName | snakecase}}.go"
 packages:
-  github.com/blackstork-io/fabric/parser:
+  github.com/blackstork-io/fabric/parser/definitions:
     config:
-      recursive: True
+      recursive: true
     interfaces:
       FabricBlock:
+  github.com/blackstork-io/fabric/internal/github:
+    config:
+    interfaces:
+      Client:
+  github.com/blackstork-io/fabric/internal/openai/client:
+    config:
+    interfaces:
+      Client:

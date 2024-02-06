@@ -1,6 +1,0 @@
-document "test-document" {
-    title = "test-title"
-    content text {
-        text = "Hello from the plugin"
-    }
-}

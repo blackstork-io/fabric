@@ -9,9 +9,6 @@ build-plugins:
 test-run:
     ./bin/fabric -path ./templates/ -plugins ./bin/plugins -document "test-document"
 
-clean:
-    rm -r ./bin/*
-
 format:
     go mod tidy
     gofumpt -w .
@@ -27,4 +24,10 @@ lint: format
     golangci-lint run
 
 test:
-    go test -timeout 10s -race -v ./...
+    go test -timeout 10s -race -short -v ./...
+
+test-all:
+    go test -timeout 5m -race -v ./...
+
+generate:
+    go generate ./...

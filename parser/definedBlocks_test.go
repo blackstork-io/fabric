@@ -6,30 +6,30 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/assert"
 
-	parser_mocks "github.com/blackstork-io/fabric/mocks/parser"
+	definitions_mocks "github.com/blackstork-io/fabric/mocks/parser/definitions"
 	"github.com/blackstork-io/fabric/parser"
 )
 
 func TestAddIfMissing(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
-	m := map[string]*parser_mocks.FabricBlock{}
+	m := map[string]*definitions_mocks.FabricBlock{}
 
-	m1 := parser_mocks.NewFabricBlock(t)
+	m1 := definitions_mocks.NewFabricBlock(t)
 	m1.EXPECT().GetHCLBlock().Return(&hcl.Block{})
 
 	diag := parser.AddIfMissing(m, "key_1", m1)
 	assert.Empty(diag)
 	assert.Same(m1, m["key_1"])
 
-	m2 := parser_mocks.NewFabricBlock(t)
+	m2 := definitions_mocks.NewFabricBlock(t)
 
 	diag = parser.AddIfMissing(m, "key_2", m2)
 	assert.Empty(diag)
 	assert.Same(m1, m["key_1"])
 	assert.Same(m2, m["key_2"])
 
-	m3 := parser_mocks.NewFabricBlock(t)
+	m3 := definitions_mocks.NewFabricBlock(t)
 	m3.EXPECT().GetHCLBlock().Return(&hcl.Block{}).Once()
 
 	diag = parser.AddIfMissing(m, "key_1", m3)

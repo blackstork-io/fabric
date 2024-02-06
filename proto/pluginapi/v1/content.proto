@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package pluginapi.v1;
+
+message Content {
+    string markdown = 1;
+}

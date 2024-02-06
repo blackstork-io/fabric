@@ -7,12 +7,17 @@ import (
 
 	"github.com/hashicorp/go-plugin"
 
+	"github.com/blackstork-io/fabric/internal/builtin"
 	"github.com/blackstork-io/fabric/parser"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin/runner"
 )
 
 // TODO: replace flag with a better parser (argparse).
 var path, pluginPath, docName string
+
+// set using goreleaser by default
+var version string
 
 func argParse() (diags diagnostics.Diag) {
 	flag.StringVar(&path, "path", "", "a path to a directory with *.hcl files")
@@ -61,12 +66,30 @@ func newRun() (diags diagnostics.Diag) {
 			),
 		)
 	}
-
-	caller := parser.NewPluginCaller()
-	diag := caller.LoadPluginBinary(pluginPath)
-	if diags.Extend(diag) {
+	runner, stdDiag := runner.Load(
+		runner.WithBuiltIn(
+			builtin.Plugin(version),
+		),
+		runner.WithPluginDir(pluginPath),
+		// TODO: get versions from the fabric configuration file.
+		// atm, it's hardcoded to use all plugins with the same version as the CLI.
+		runner.WithPluginVersions(runner.VersionMap{
+			"blackstork/elasticsearch": version,
+			"blackstork/github":        version,
+			"blackstork/graphql":       version,
+			"blackstork/openai":        version,
+			"blackstork/opencti":       version,
+			"blackstork/postgresql":    version,
+			"blackstork/sqlite":        version,
+			"blackstork/terraform":     version,
+		}),
+	)
+	if diags.Extend(diagnostics.Diag(stdDiag)) {
 		return
 	}
+	defer func() { diags.Extend(diagnostics.Diag(runner.Close())) }()
+
+	caller := parser.NewPluginCaller(runner)
 
 	eval := parser.NewEvaluator(caller, result.Blocks)
 	str, diag := eval.EvaluateDocument(doc)

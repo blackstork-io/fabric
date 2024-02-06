@@ -120,7 +120,7 @@ func (e *Evaluator) EvaluateDocument(d *definitions.Document) (output string, di
 		// TODO: Here's the place to implement local context #17
 		// However I think we need to rework it a bit before done
 	}
-	output = strings.Join(results, "\n")
+	output = strings.Join(results, "\n\n")
 	return
 }
 
