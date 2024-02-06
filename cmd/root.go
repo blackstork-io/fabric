@@ -2,43 +2,52 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
 // Set by goreleaser
 var version = "v0.0.0-dev"
 
-type logLevel struct {
-	Name string
-	Val  int
+type logLevels struct {
+	Names []string
+	Vals  []slog.Level
 }
 
-type logLevels []logLevel
-
-func (ll logLevels) Find(name string) (level int, found bool) {
-	name = strings.ToLower(strings.TrimSpace(rawArgs.logLevel))
-	idx := slices.IndexFunc(ll, func(s logLevel) bool {
-		return s.Name == name
-	})
+func (ll *logLevels) Find(name string) (level slog.Level, err error) {
+	nameKey := strings.ToLower(strings.TrimSpace(rawArgs.logLevel))
+	idx := slices.Index(ll.Names, nameKey)
 	if idx == -1 {
+		err = fmt.Errorf("unknown log level '%s'", name)
 		return
 	}
-	return ll[idx].Val, true
+	return ll.Vals[idx], nil
 }
 
-// TODO: convert to appropriate type for logging framework of choice
-var ValidLogLevels = logLevels{
-	{"trace", 0},
-	{"debug", 1},
-	{"info", 2},
-	{"warn", 3},
-	{"error", 4},
-	{"fatal", 5},
+func (ll *logLevels) String() string {
+	return utils.JoinSurround(", ", "'", ll.Names...)
+}
+
+var validLogLevels = logLevels{
+	Names: []string{
+		"debug",
+		"info",
+		"warn",
+		"error",
+	},
+	Vals: []slog.Level{
+		slog.LevelDebug,
+		slog.LevelInfo,
+		slog.LevelWarn,
+		slog.LevelError,
+	},
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -54,27 +63,38 @@ to quickly create a Cobra application.`,
 	Version: version,
 
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) (err error) {
-		if rawArgs.verbose {
-			rawArgs.logLevel = "debug"
-		}
-		logLevel, found := ValidLogLevels.Find(rawArgs.logLevel)
-		if !found {
-			return fmt.Errorf("invalid log level '%s'", rawArgs.logLevel)
-		}
-		// TODO: set log output format
-		_ = logLevel
-		output := strings.ToLower(strings.TrimSpace(rawArgs.logOutput))
-		switch output {
-		case "json", "plain":
-			// TODO: set log output format
-			_ = output
-		default:
-			return fmt.Errorf("invalid log output '%s'", rawArgs.logOutput)
-		}
 		SourceDir, err = filepath.Abs(rawArgs.sourceDir)
 		if err != nil {
 			return fmt.Errorf("bad source dir '%s': %w", rawArgs.sourceDir, err)
 		}
+
+		var level slog.Level
+		if rawArgs.verbose {
+			level = slog.LevelDebug
+		} else {
+			level, err = validLogLevels.Find(rawArgs.logLevel)
+			if err != nil {
+				return
+			}
+		}
+		opts := &slog.HandlerOptions{
+			Level: level,
+			// add source if in debug mode
+			AddSource: level == slog.LevelDebug,
+		}
+
+		var logger *slog.Logger
+
+		switch strings.ToLower(strings.TrimSpace(rawArgs.logOutput)) {
+		case "plain":
+			logger = slog.New(slog.NewTextHandler(os.Stderr, opts))
+		case "json":
+			logger = slog.New(slog.NewJSONHandler(os.Stderr, opts))
+		default:
+			return fmt.Errorf("unknown log output '%s'", rawArgs.logOutput)
+		}
+		slog.SetDefault(logger)
+		slog.Debug("Logging enabled")
 		return nil
 	},
 }
@@ -103,6 +123,9 @@ var rawArgs = struct {
 func init() {
 	rootCmd.PersistentFlags().StringVar(&rawArgs.sourceDir, "source-dir", ".", "a path to a directory with *.fabric files")
 	rootCmd.PersistentFlags().StringVar(&rawArgs.logOutput, "log-output", "plain", "log output kind (plain or json)")
-	rootCmd.PersistentFlags().StringVar(&rawArgs.logLevel, "logging-level", "info", "logging level")
+	rootCmd.PersistentFlags().StringVar(
+		&rawArgs.logLevel, "logging-level", "info",
+		fmt.Sprintf("logging level (%s)", validLogLevels.String()),
+	)
 	rootCmd.PersistentFlags().BoolVarP(&rawArgs.verbose, "verbose", "v", false, "a shortcut to --logging-level debug")
 }
