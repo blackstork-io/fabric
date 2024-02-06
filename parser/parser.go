@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -118,7 +117,7 @@ type DirParseResult struct {
 	FileMap map[string]*hcl.File
 }
 
-func ParseDir(dir string) DirParseResult {
+func ParseDir(dir fs.FS) DirParseResult {
 	result := DirParseResult{
 		Blocks:  NewDefinedBlocks(),
 		FileMap: map[string]*hcl.File{},
@@ -141,7 +140,6 @@ func ParseDir(dir string) DirParseResult {
 		return res
 	})
 
-	dirFs := os.DirFS(dir)
 	var readDiags diagnostics.Diag
 
 	readPE := parexec.New(
@@ -154,7 +152,7 @@ func ParseDir(dir string) DirParseResult {
 
 	// Reads files in readPE and shedules them to be parsed in parsePE
 	goReadFabricFile := parexec.GoWithArg(readPE, func(path string) diagnostics.Diag {
-		bytes, diag := readFabricFile(dirFs, path)
+		bytes, diag := readFabricFile(dir, path)
 		if !diag.HasErrors() {
 			goParseHCL(bytes, path)
 		}
@@ -163,7 +161,7 @@ func ParseDir(dir string) DirParseResult {
 
 	// Walks the given dir and schedules files to be read in readPE
 	readPE.Go(func() diagnostics.Diag {
-		return FindFabricFiles(dirFs, true, goReadFabricFile)
+		return FindFabricFiles(dir, true, goReadFabricFile)
 	})
 
 	// All files have been read
