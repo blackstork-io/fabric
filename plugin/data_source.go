@@ -58,8 +58,7 @@ func (ds *DataSource) Execute(ctx context.Context, params *RetrieveDataParams) (
 	if ds == nil {
 		return nil, hcl.Diagnostics{{
 			Severity: hcl.DiagError,
-			Summary:  "No schema",
-			Detail:   "No schema defined",
+			Summary:  "Missing DataSource schema",
 		}}
 	}
 	if ds.DataFunc == nil {

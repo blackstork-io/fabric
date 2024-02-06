@@ -55,8 +55,7 @@ func (cg *ContentProvider) Execute(ctx context.Context, params *ProvideContentPa
 	if cg == nil {
 		return nil, hcl.Diagnostics{{
 			Severity: hcl.DiagError,
-			Summary:  "Incomplete ContentProviderSchema",
-			Detail:   "Content provider not loaded",
+			Summary:  "Missing ContentProvider schema",
 		}}
 	}
 	if cg.ContentFunc == nil {
