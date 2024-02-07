@@ -2,13 +2,14 @@ package pluginapiv1
 
 import (
 	"fmt"
+	"log/slog"
 	"os/exec"
 	"path"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
 	goplugin "github.com/hashicorp/go-plugin"
 
+	"github.com/blackstork-io/fabric/pkg/sloghclog"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -30,8 +31,7 @@ func NewClient(loc string) (p *plugin.Schema, closefn func() error, err error) {
 		AllowedProtocols: []goplugin.Protocol{
 			goplugin.ProtocolGRPC,
 		},
-		// TODO: Add logger
-		Logger: hclog.NewNullLogger(),
+		Logger: sloghclog.Adapt(slog.Default()),
 	})
 	rpcClient, err := client.Client()
 	if err != nil {
