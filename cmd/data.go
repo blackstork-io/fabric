@@ -15,7 +15,7 @@ var dataCmd = &cobra.Command{
 	Use:   "data TARGET",
 	Short: "Execute a single data block",
 	Long:  `Execute the data block and print out prettified JSON to stdout`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		data(args[0])
 	},
 	Args: cobra.ExactArgs(1),

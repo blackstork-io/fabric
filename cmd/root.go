@@ -62,7 +62,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Version: version,
 
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) (err error) {
+	PersistentPreRunE: func(_ *cobra.Command, _ []string) (err error) {
 		SourceDir, err = filepath.Abs(rawArgs.sourceDir)
 		if err != nil {
 			return fmt.Errorf("bad source dir '%s': %w", rawArgs.sourceDir, err)

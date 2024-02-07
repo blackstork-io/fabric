@@ -110,7 +110,7 @@ var renderCmd = &cobra.Command{
 	Use:   "render TARGET",
 	Short: "Render the document",
 	Long:  `Render the specified document into Markdown and output it either to stdout or to a file`,
-	RunE: func(cmd *cobra.Command, args []string) (err error) {
+	RunE: func(_ *cobra.Command, args []string) (err error) {
 		var out *os.File
 		if outFile == "" {
 			out = os.Stdout
