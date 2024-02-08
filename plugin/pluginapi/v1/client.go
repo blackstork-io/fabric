@@ -31,7 +31,13 @@ func NewClient(loc string) (p *plugin.Schema, closefn func() error, err error) {
 		AllowedProtocols: []goplugin.Protocol{
 			goplugin.ProtocolGRPC,
 		},
-		Logger: sloghclog.Adapt(slog.Default()),
+		Logger: sloghclog.Adapt(
+			slog.Default(),
+			sloghclog.Name("plugin."+pluginName),
+			// disable code location reporting, it's always going to be incorrect
+			// for remote plugin logs
+			sloghclog.AddSource(false),
+		),
 	})
 	rpcClient, err := client.Client()
 	if err != nil {

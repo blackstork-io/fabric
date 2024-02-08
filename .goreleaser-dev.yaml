@@ -1,0 +1,70 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+
+version: 1
+
+project_name: fabric
+
+env:
+  - CGO_ENABLED=0
+
+snapshot:
+  name_template: "v0.0.0-dev"
+
+builds:
+  # CLI
+  - id: fabric
+    main: .
+    binary: fabric
+    ldflags:
+      "-X github.com/blackstork-io/fabric/cmd.version={{.Version}}"
+    no_unique_dist_dir: true
+
+  # Plugins
+
+  - id: elasticsearch
+    main: ./internal/elasticsearch/cmd
+    binary: "plugins/blackstork/elasticsearch@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    no_unique_dist_dir: true
+
+  - id: github
+    main: ./internal/github/cmd
+    binary: "plugins/blackstork/github@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    no_unique_dist_dir: true
+
+  - id: graphql
+    main: ./internal/graphql/cmd
+    binary: "plugins/blackstork/graphql@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    no_unique_dist_dir: true
+
+  - id: openai
+    main: ./internal/openai/cmd
+    binary: "plugins/blackstork/openai@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    no_unique_dist_dir: true
+
+  - id: opencti
+    main: ./internal/opencti/cmd
+    binary: "plugins/blackstork/opencti@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    no_unique_dist_dir: true
+
+  - id: postgresql
+    main: ./internal/postgresql/cmd
+    binary: "plugins/blackstork/postgresql@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    no_unique_dist_dir: true
+
+  - id: sqlite
+    main: ./internal/sqlite/cmd
+    binary: "plugins/blackstork/sqlite@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    no_unique_dist_dir: true
+
+  - id: terraform
+    main: ./internal/terraform/cmd
+    binary: "plugins/blackstork/terraform@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    no_unique_dist_dir: true

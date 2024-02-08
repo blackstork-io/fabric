@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
-	"path/filepath"
 	"slices"
 	"strings"
 
@@ -13,8 +13,10 @@ import (
 	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
-// Set by goreleaser
-var version = "v0.0.0-dev"
+const devVersion = "v0.0.0-dev"
+
+// Overriden by goreleaser
+var version = devVersion
 
 type logLevels struct {
 	Names []string
@@ -50,6 +52,23 @@ var validLogLevels = logLevels{
 	},
 }
 
+func validateDir(what, dir string) error {
+	info, err := os.Stat(dir)
+	switch {
+	case err == nil:
+	case errors.Is(err, os.ErrNotExist):
+		return fmt.Errorf("failed to open %s: path '%s' doesn't exist", what, dir)
+	case errors.Is(err, os.ErrPermission):
+		return fmt.Errorf("failed to open %s: permission to access path '%s' denied", what, dir)
+	default:
+		return fmt.Errorf("failed to open %s: path '%s': %w", what, dir, err)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("failed to open %s: path '%s' is not a directory", what, dir)
+	}
+	return nil
+}
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "fabric",
@@ -63,10 +82,18 @@ to quickly create a Cobra application.`,
 	Version: version,
 
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) (err error) {
-		SourceDir, err = filepath.Abs(rawArgs.sourceDir)
+		err = validateDir("source dir", rawArgs.sourceDir)
 		if err != nil {
-			return fmt.Errorf("bad source dir '%s': %w", rawArgs.sourceDir, err)
+			return
 		}
+		cliArgs.sourceDir = rawArgs.sourceDir
+
+		// TODO: make optional after #5 is implemented
+		err = validateDir("plugins dir", rawArgs.pluginsDir)
+		if err != nil {
+			return
+		}
+		cliArgs.pluginsDir = rawArgs.pluginsDir
 
 		var level slog.Level
 		if rawArgs.verbose {
@@ -95,6 +122,9 @@ to quickly create a Cobra application.`,
 		}
 		slog.SetDefault(logger)
 		slog.Debug("Logging enabled")
+		if version == devVersion {
+			slog.Warn("This is a dev version of the software")
+		}
 		return nil
 	},
 }
@@ -108,24 +138,33 @@ func Execute() {
 	}
 }
 
-// exposed args
-var (
-	SourceDir string
-)
+var cliArgs = struct {
+	sourceDir  string
+	pluginsDir string
+}{}
 
 var rawArgs = struct {
-	sourceDir string
-	logOutput string
-	logLevel  string
-	verbose   bool
+	sourceDir  string
+	logOutput  string
+	logLevel   string
+	pluginsDir string
+	verbose    bool
 }{}
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&rawArgs.sourceDir, "source-dir", ".", "a path to a directory with *.fabric files")
-	rootCmd.PersistentFlags().StringVar(&rawArgs.logOutput, "log-output", "plain", "log output kind (plain or json)")
+	rootCmd.PersistentFlags().StringVar(&rawArgs.logOutput, "log-format", "plain", "format of the logs (plain or json)")
 	rootCmd.PersistentFlags().StringVar(
-		&rawArgs.logLevel, "logging-level", "info",
+		&rawArgs.logLevel, "log-level", "info",
 		fmt.Sprintf("logging level (%s)", validLogLevels.String()),
 	)
-	rootCmd.PersistentFlags().BoolVarP(&rawArgs.verbose, "verbose", "v", false, "a shortcut to --logging-level debug")
+	rootCmd.PersistentFlags().BoolVarP(&rawArgs.verbose, "verbose", "v", false, "a shortcut to --log-level debug")
+	// TODO: after #5 is implemented - make optional
+	rootCmd.PersistentFlags().StringVar(
+		&rawArgs.pluginsDir, "plugins-dir", "", "override for plugins dir from fabric configuration (required)",
+	)
+	err := rootCmd.MarkPersistentFlagRequired("plugins-dir")
+	if err != nil {
+		panic(err)
+	}
 }

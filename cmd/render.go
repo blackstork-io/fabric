@@ -5,20 +5,22 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/blackstork-io/fabric/internal/builtin"
 	"github.com/blackstork-io/fabric/parser"
+	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/runner"
 )
 
 var outFile string
 
-func render(docName string, w io.Writer) (diags diagnostics.Diag) {
-	result := parser.ParseDir(os.DirFS(SourceDir))
-	diags = result.Diags
+func render(dest io.Writer, docName string) {
+	result := parser.ParseDir(os.DirFS(cliArgs.sourceDir))
+	diags := result.Diags
 	defer func() { diagnostics.PrintDiags(diags, result.FileMap) }()
 	if diags.HasErrors() {
 		return
@@ -26,8 +28,9 @@ func render(docName string, w io.Writer) (diags diagnostics.Diag) {
 	if len(result.FileMap) == 0 {
 		diags.Add(
 			"No correct fabric files found",
-			fmt.Sprintf("There are no *.fabric files at '%s' or all of them have failed to parse", SourceDir),
+			fmt.Sprintf("There are no *.fabric files at '%s' or all of them have failed to parse", cliArgs.sourceDir),
 		)
+		return
 	}
 
 	doc, found := result.Blocks.Documents[docName]
@@ -37,18 +40,22 @@ func render(docName string, w io.Writer) (diags diagnostics.Diag) {
 			fmt.Sprintf(
 				"Definition for document named '%s' not found in '%s/**.fabric' files",
 				docName,
-				SourceDir,
+				cliArgs.sourceDir,
 			),
 		)
+		return
 	}
 
-	// TODO: read from config
-	pluginPath := "./plugins"
+	// TODO: read pluginsDir from config #5
+	var pluginsDir string
+	if cliArgs.pluginsDir != "" {
+		pluginsDir = cliArgs.pluginsDir
+	}
 	runner, stdDiag := runner.Load(
 		runner.WithBuiltIn(
 			builtin.Plugin(version),
 		),
-		runner.WithPluginDir(pluginPath),
+		runner.WithPluginDir(pluginsDir),
 		// TODO: get versions from the fabric configuration file.
 		// atm, it's hardcoded to use all plugins with the same version as the CLI.
 		runner.WithPluginVersions(runner.VersionMap{
@@ -74,34 +81,26 @@ func render(docName string, w io.Writer) (diags diagnostics.Diag) {
 	if diags.Extend(diag) {
 		return
 	}
-	diags.Extend(writeResults(w, results))
-	return
+	diags.Extend(writeResults(dest, results))
 }
 
-func writeResults(w io.Writer, results []string) (diags diagnostics.Diag) {
+func writeResults(dest io.Writer, results []string) (diags diagnostics.Diag) {
 	if len(results) == 0 {
 		diags.Add("Empty output", "No content was produced")
 		return
 	}
-	var err error
-	defer func() {
-		diags.AppendErr(err, "Error while outputing result")
-	}()
-	_, err = w.Write([]byte(results[0]))
-	if err != nil {
-		return
-	}
+	w := bufio.NewWriter(dest)
+
+	// bufio.Writer preserves the first encountered error,
+	// so we're only cheking it once at flush
+	_, _ = w.Write([]byte(results[0]))
 	for _, result := range results[1:] {
-		_, err = w.Write([]byte("\n\n"))
-		if err != nil {
-			return
-		}
-		_, err = w.Write([]byte(result))
-		if err != nil {
-			return
-		}
+		_, _ = w.Write([]byte("\n\n"))
+		_, _ = w.Write([]byte(result))
 	}
-	_, err = w.Write([]byte("\n"))
+	_, _ = w.Write([]byte("\n"))
+	err := w.Flush()
+	diags.AppendErr(err, "Error while outputing result")
 	return
 }
 
@@ -111,19 +110,26 @@ var renderCmd = &cobra.Command{
 	Short: "Render the document",
 	Long:  `Render the specified document into Markdown and output it either to stdout or to a file`,
 	RunE: func(_ *cobra.Command, args []string) (err error) {
-		var out *os.File
-		if outFile == "" {
-			out = os.Stdout
-		} else {
-			out, err = os.Create(outFile)
-			if err != nil {
-				return
-			}
-			defer out.Close()
+		target := strings.TrimSpace(args[0])
+		const docPrefix = definitions.BlockKindDocument + "."
+		switch {
+		case strings.HasPrefix(target, docPrefix):
+			target = target[len(docPrefix):]
+		default:
+			return fmt.Errorf("target should have the format '%s<name_of_the_document>'", docPrefix)
 		}
-		wr := bufio.NewWriter(out)
-		defer wr.Flush()
-		render(args[0], wr)
+
+		var dest *os.File
+		if outFile == "" {
+			dest = os.Stdout
+		} else {
+			dest, err = os.Create(outFile)
+			if err != nil {
+				return fmt.Errorf("can't create the out-file: %w", err)
+			}
+			defer dest.Close()
+		}
+		render(dest, target)
 		return nil
 	},
 	Args: cobra.ExactArgs(1),

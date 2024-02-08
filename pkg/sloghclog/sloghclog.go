@@ -6,9 +6,55 @@ import (
 	"io"
 	"log"
 	"log/slog"
+	"runtime"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 )
+
+type adapter struct {
+	origLogger *slog.Logger
+	logger     *slog.Logger
+	name       string
+	with       []any
+	addSource  bool
+}
+
+func Adapt(logger *slog.Logger, opts ...adapterOption) hclog.Logger {
+	a := &adapter{
+		origLogger: logger,
+		logger:     logger,
+	}
+	for _, opt := range opts {
+		opt.apply(a)
+	}
+	return a
+}
+
+type adapterOption interface {
+	apply(a *adapter)
+}
+
+type funcAdapterOption func(a *adapter)
+
+func (fao funcAdapterOption) apply(a *adapter) {
+	fao(a)
+}
+
+func AddSource(val bool) adapterOption {
+	return funcAdapterOption(func(a *adapter) {
+		a.addSource = val
+	})
+}
+
+func Name(val string) adapterOption {
+	return funcAdapterOption(func(a *adapter) {
+		a.name = val
+		a.applyName()
+	})
+}
+
+const LevelTrace slog.Level = slog.Level(-8)
 
 func convertLevel(level hclog.Level) slog.Level {
 	if level == hclog.NoLevel {
@@ -17,92 +63,84 @@ func convertLevel(level hclog.Level) slog.Level {
 	return slog.Level((level - 3) * 4)
 }
 
-func Adapt(logger *slog.Logger) hclog.Logger {
-	return &Adapter{
-		origLogger: logger,
-		logger:     logger,
-	}
-}
-
-type Adapter struct {
-	origLogger *slog.Logger
-	logger     *slog.Logger
-	name       string
-	with       []any
-}
-
-const levelTrace slog.Level = slog.Level(-8)
-
 // Args are alternating key, val pairs
 // keys must be strings
 // vals can be any type, but display is implementation specific
 // Emit a message and key/value pairs at a provided log level
-func (a *Adapter) Log(level hclog.Level, msg string, args ...interface{}) {
-	a.logger.Log(context.Background(), convertLevel(level), msg, args...)
+func (a *adapter) Log(level hclog.Level, msg string, args ...interface{}) {
+	a.log(level, msg, args...)
+}
+
+func (a *adapter) log(level hclog.Level, msg string, args ...interface{}) {
+	var pcs [1]uintptr
+	if a.addSource {
+		// skip [Callers, log, (Log|Info|...)]
+		runtime.Callers(3, pcs[:])
+	}
+	r := slog.NewRecord(time.Now(), convertLevel(level), msg, pcs[0])
+	r.Add(args...)
+	a.logger.Handler().Handle(context.Background(), r)
 }
 
 // Emit a message and key/value pairs at the TRACE level
-func (a *Adapter) Trace(msg string, args ...interface{}) {
-	a.logger.Log(context.Background(), levelTrace, msg, args...)
+func (a *adapter) Trace(msg string, args ...interface{}) {
+	a.log(hclog.Trace, msg, args...)
 }
 
 // Emit a message and key/value pairs at the DEBUG level
-func (a *Adapter) Debug(msg string, args ...interface{}) {
-	a.logger.Debug(msg, args...)
+func (a *adapter) Debug(msg string, args ...interface{}) {
+	a.log(hclog.Debug, msg, args...)
 }
 
 // Emit a message and key/value pairs at the INFO level
-func (a *Adapter) Info(msg string, args ...interface{}) {
-	a.logger.Info(msg, args...)
+func (a *adapter) Info(msg string, args ...interface{}) {
+	a.log(hclog.Info, msg, args...)
 }
 
 // Emit a message and key/value pairs at the WARN level
-func (a *Adapter) Warn(msg string, args ...interface{}) {
-	a.logger.Warn(msg, args...)
+func (a *adapter) Warn(msg string, args ...interface{}) {
+	a.log(hclog.Warn, msg, args...)
 }
 
 // Emit a message and key/value pairs at the ERROR level
-func (a *Adapter) Error(msg string, args ...interface{}) {
-	a.logger.Error(msg, args...)
+func (a *adapter) Error(msg string, args ...interface{}) {
+	a.log(hclog.Error, msg, args...)
 }
 
 // Indicate if TRACE logs would be emitted. This and the other Is* guards
 // are used to elide expensive logging code based on the current level.
-func (a *Adapter) IsTrace() bool {
-	return a.logger.Enabled(context.Background(), levelTrace)
+func (a *adapter) IsTrace() bool {
+	return a.logger.Enabled(context.Background(), LevelTrace)
 }
 
 // Indicate if DEBUG logs would be emitted. This and the other Is* guards
-func (a *Adapter) IsDebug() bool {
+func (a *adapter) IsDebug() bool {
 	return a.logger.Enabled(context.Background(), slog.LevelDebug)
 }
 
 // Indicate if INFO logs would be emitted. This and the other Is* guards
-func (a *Adapter) IsInfo() bool {
+func (a *adapter) IsInfo() bool {
 	return a.logger.Enabled(context.Background(), slog.LevelInfo)
 }
 
 // Indicate if WARN logs would be emitted. This and the other Is* guards
-func (a *Adapter) IsWarn() bool {
+func (a *adapter) IsWarn() bool {
 	return a.logger.Enabled(context.Background(), slog.LevelWarn)
 }
 
 // Indicate if ERROR logs would be emitted. This and the other Is* guards
-func (a *Adapter) IsError() bool {
+func (a *adapter) IsError() bool {
 	return a.logger.Enabled(context.Background(), slog.LevelError)
 }
 
 // ImpliedArgs returns With key/value pairs
-func (a *Adapter) ImpliedArgs() []interface{} {
+func (a *adapter) ImpliedArgs() []interface{} {
 	return a.with
 }
 
 // Creates a sublogger that will always have the given key/value pairs
-func (a *Adapter) With(args ...interface{}) hclog.Logger {
-	dup := &Adapter{
-		origLogger: a.origLogger,
-		name:       a.name,
-	}
+func (a *adapter) With(args ...interface{}) hclog.Logger {
+	dup := *a
 
 	length := len(a.with) + len(args)
 	if a.name != "" {
@@ -123,14 +161,14 @@ func (a *Adapter) With(args ...interface{}) hclog.Logger {
 	}
 
 	if len(with) != 0 {
-		a.logger = a.origLogger.With(with...)
+		dup.logger = a.origLogger.With(with...)
 	} else {
-		a.logger = a.origLogger
+		dup.logger = a.origLogger
 	}
-	return dup
+	return &dup
 }
 
-func (a *Adapter) applyName() {
+func (a *adapter) applyName() {
 	var with []any
 	if a.name != "" {
 		with = make([]any, 0, len(a.with)+2)
@@ -147,7 +185,7 @@ func (a *Adapter) applyName() {
 }
 
 // Returns the Name of the logger
-func (a *Adapter) Name() string {
+func (a *adapter) Name() string {
 	return a.name
 }
 
@@ -155,7 +193,7 @@ func (a *Adapter) Name() string {
 // If the logger already has a name, the new value will be appended to the current
 // name. That way, a major subsystem can use this to decorate all it's own logs
 // without losing context.
-func (a *Adapter) Named(name string) hclog.Logger {
+func (a *adapter) Named(name string) hclog.Logger {
 	dup := *a
 	if dup.name != "" {
 		dup.name = dup.name + "." + name
@@ -169,7 +207,7 @@ func (a *Adapter) Named(name string) hclog.Logger {
 // Create a logger that will prepend the name string on the front of all messages.
 // This sets the name of the logger to the value directly, unlike Named which honor
 // the current name as well.
-func (a *Adapter) ResetNamed(name string) hclog.Logger {
+func (a *adapter) ResetNamed(name string) hclog.Logger {
 	dup := *a
 	dup.name = name
 	dup.applyName()
@@ -178,12 +216,12 @@ func (a *Adapter) ResetNamed(name string) hclog.Logger {
 
 // Updates the level. This should affect all sub-loggers as well. If an
 // implementation cannot update the level on the fly, it should no-op.
-func (a *Adapter) SetLevel(level hclog.Level) {
+func (a *adapter) SetLevel(level hclog.Level) {
 	// no-op: we can't be sure that we can update the level
 }
 
 // Return a value that conforms to the stdlib log.Logger interface
-func (a *Adapter) StandardLogger(opts *hclog.StandardLoggerOptions) *log.Logger {
+func (a *adapter) StandardLogger(opts *hclog.StandardLoggerOptions) *log.Logger {
 	if opts == nil {
 		opts = &hclog.StandardLoggerOptions{}
 	}
@@ -193,7 +231,7 @@ func (a *Adapter) StandardLogger(opts *hclog.StandardLoggerOptions) *log.Logger 
 }
 
 // Return a value that conforms to io.Writer, which can be passed into log.SetOutput()
-func (a *Adapter) StandardWriter(opts *hclog.StandardLoggerOptions) io.Writer {
+func (a *adapter) StandardWriter(opts *hclog.StandardLoggerOptions) io.Writer {
 	return &stdlogAdapter{
 		log:   a,
 		level: convertLevel(opts.ForceLevel),
@@ -201,7 +239,7 @@ func (a *Adapter) StandardWriter(opts *hclog.StandardLoggerOptions) io.Writer {
 }
 
 type stdlogAdapter struct {
-	log   *Adapter
+	log   *adapter
 	level slog.Level
 }
 
@@ -210,5 +248,3 @@ func (sa *stdlogAdapter) Write(data []byte) (n int, err error) {
 	sa.log.logger.Log(context.Background(), sa.level, string(data))
 	return len(data), nil
 }
-
-var _ hclog.Logger = (*Adapter)(nil)

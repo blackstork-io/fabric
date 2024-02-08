@@ -1,0 +1,6 @@
+document "hello" {
+    title = "Welcome"
+    content text {
+        text = "Hello from fabric"
+    }
+}
