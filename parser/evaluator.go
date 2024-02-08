@@ -3,7 +3,6 @@ package parser
 import (
 	"fmt"
 	"maps"
-	"strings"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -83,7 +82,7 @@ func (e *Evaluator) evaluateQuery(call *definitions.ParsedPlugin) (context map[s
 	return
 }
 
-func (e *Evaluator) EvaluateDocument(d *definitions.Document) (output string, diags diagnostics.Diag) {
+func (e *Evaluator) EvaluateDocument(d *definitions.Document) (results []string, diags diagnostics.Diag) {
 	// TODO: Combining parsing and evaluation of the document is flawed
 	// perhaps a simpler approach is using more steps?
 	// Currently:
@@ -103,7 +102,7 @@ func (e *Evaluator) EvaluateDocument(d *definitions.Document) (output string, di
 		return
 	}
 
-	results := make([]string, 0, len(e.contentCalls))
+	results = make([]string, 0, len(e.contentCalls))
 	for _, call := range e.contentCalls {
 		context, diag := e.evaluateQuery(call)
 		if diags.Extend(diag) {
@@ -120,7 +119,6 @@ func (e *Evaluator) EvaluateDocument(d *definitions.Document) (output string, di
 		// TODO: Here's the place to implement local context #17
 		// However I think we need to rework it a bit before done
 	}
-	output = strings.Join(results, "\n\n")
 	return
 }
 

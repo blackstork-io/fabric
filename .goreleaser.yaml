@@ -10,6 +10,9 @@ builds:
     binary: fabric
     env:
       - CGO_ENABLED=0
+    # Default: '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser'
+    ldflags:
+      - -s -w -X github.com/blackstork-io/fabric/cmd.version={{.Version}}
     goos:
       - linux
       - windows

@@ -1,13 +1,10 @@
-default: build build-plugins test-run
+default: build test-run
 
 build:
-    go build -o ./bin/ .
-
-build-plugins:
-    go build -o ./bin/plugins ./cmd/plugins
+    goreleaser build --config ./.goreleaser-dev.yaml --single-target --snapshot --clean
 
 test-run:
-    ./bin/fabric -path ./templates/ -plugins ./bin/plugins -document "test-document"
+    ./dist/fabric render "document.hello" --source-dir ./examples/templates/basic_hello/ -v --plugins-dir ./dist/plugins/
 
 format:
     go mod tidy
@@ -18,9 +15,6 @@ format-extra: format
     gofumpt -w -extra .
 
 lint: format
-    go mod tidy
-    gofumpt -w .
-    gci write --skip-generated -s standard -s default -s "prefix(github.com/blackstork-io/fabric)" .
     golangci-lint run
 
 test:
