@@ -93,12 +93,12 @@ func writeResults(dest io.Writer, results []string) (diags diagnostics.Diag) {
 
 	// bufio.Writer preserves the first encountered error,
 	// so we're only cheking it once at flush
-	_, _ = w.Write([]byte(results[0]))
+	_, _ = w.WriteString(results[0])
 	for _, result := range results[1:] {
-		_, _ = w.Write([]byte("\n\n"))
-		_, _ = w.Write([]byte(result))
+		_, _ = w.WriteString("\n\n")
+		_, _ = w.WriteString(result)
 	}
-	_, _ = w.Write([]byte("\n"))
+	_ = w.WriteByte('\n')
 	err := w.Flush()
 	diags.AppendErr(err, "Error while outputing result")
 	return

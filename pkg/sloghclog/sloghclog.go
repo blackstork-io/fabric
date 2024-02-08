@@ -79,7 +79,7 @@ func (a *adapter) log(level hclog.Level, msg string, args ...interface{}) {
 	}
 	r := slog.NewRecord(time.Now(), convertLevel(level), msg, pcs[0])
 	r.Add(args...)
-	a.logger.Handler().Handle(context.Background(), r)
+	_ = a.logger.Handler().Handle(context.Background(), r)
 }
 
 // Emit a message and key/value pairs at the TRACE level
