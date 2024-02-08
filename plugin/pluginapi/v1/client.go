@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"strings"
 
 	goplugin "github.com/hashicorp/go-plugin"
@@ -13,21 +13,34 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 )
 
-func NewClient(loc string) (p *plugin.Schema, closefn func() error, err error) {
-	base := path.Base(loc)
-	if base == "" {
-		return nil, nil, fmt.Errorf("invalid plugin location: %s", loc)
-	}
-	parts := strings.SplitN(base, "@", 2)
+func parsePluginInfo(path string) (name, version string, err error) {
+	nameVer := filepath.Base(path)
+	ext := filepath.Ext(path)
+
+	parts := strings.SplitN(
+		nameVer[:len(nameVer)-len(ext)],
+		"@", 2,
+	)
 	if len(parts) != 2 {
-		return nil, nil, fmt.Errorf("invalid plugin name: %s", base)
+		err = fmt.Errorf("plugin at '%s' must have a file name '<plugin_name>@<plugin_version>[.exe]'", path)
+		return
+	}
+	name = parts[0]
+	version = parts[1]
+	return
+}
+
+func NewClient(loc string) (p *plugin.Schema, closefn func() error, err error) {
+	pluginName, _, err := parsePluginInfo(loc)
+	if err != nil {
+		return
 	}
 	client := goplugin.NewClient(&goplugin.ClientConfig{
 		HandshakeConfig: handshake,
 		Plugins: map[string]goplugin.Plugin{
-			parts[0]: &grpcPlugin{},
+			pluginName: &grpcPlugin{},
 		},
-		Cmd: exec.Command("sh", "-c", loc),
+		Cmd: exec.Command(loc),
 		AllowedProtocols: []goplugin.Protocol{
 			goplugin.ProtocolGRPC,
 		},
@@ -43,7 +56,7 @@ func NewClient(loc string) (p *plugin.Schema, closefn func() error, err error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create plugin client: %v", err)
 	}
-	raw, err := rpcClient.Dispense(parts[0])
+	raw, err := rpcClient.Dispense(pluginName)
 	if err != nil {
 		rpcClient.Close()
 		return nil, nil, fmt.Errorf("failed to dispense plugin: %v", err)
