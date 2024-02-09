@@ -1,0 +1,694 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "fileTypes": [
+    "fabric"
+  ],
+  "name": "Fabric by BlackStork",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#attribute_definition"
+    },
+    {
+      "include": "#config-blocks"
+    },
+    {
+      "include": "#plugin-blocks"
+    },
+    {
+      "include": "#simple-blocks"
+    }
+  ],
+  "repository": {
+    "attribute_access": {
+      "begin": "\\.(?!\\*)",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.operator.accessor.fabric"
+        }
+      },
+      "comment": "Matches traversal attribute access such as .attr",
+      "end": "[[:alpha:]][\\w-]*|\\d*",
+      "endCaptures": {
+        "0": {
+          "patterns": [
+            {
+              "comment": "Attribute name",
+              "match": "(?!null|false|true)[[:alpha:]][\\w-]*",
+              "name": "variable.other.member.fabric"
+            },
+            {
+              "comment": "Optional attribute index",
+              "match": "\\d+",
+              "name": "constant.numeric.integer.fabric"
+            }
+          ]
+        }
+      }
+    },
+    "attribute_definition": {
+      "captures": {
+        "1": {
+          "name": "punctuation.section.parens.begin.fabric"
+        },
+        "2": {
+          "name": "variable.other.readwrite.fabric"
+        },
+        "3": {
+          "name": "punctuation.section.parens.end.fabric"
+        },
+        "4": {
+          "name": "keyword.operator.assignment.fabric"
+        }
+      },
+      "comment": "Identifier \"=\" with optional parens",
+      "match": "(\\()?(\\b(?!null\\b|false\\b|true\\b)[[:alpha:]][[:alnum:]_-]*)(\\))?\\s*(\\=(?!\\=|\\>))\\s*",
+      "name": "variable.declaration.fabric"
+    },
+    "block_inline_comments": {
+      "begin": "/\\*",
+      "captures": {
+        "0": {
+          "name": "punctuation.definition.comment.fabric"
+        }
+      },
+      "comment": "Inline comments start with the /* sequence and end with the */ sequence, and may have any characters within except the ending sequence. An inline comment is considered equivalent to a whitespace sequence",
+      "end": "\\*/",
+      "name": "comment.block.fabric"
+    },
+    "brackets": {
+      "begin": "\\[",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.section.brackets.begin.fabric"
+        }
+      },
+      "end": "\\]",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.brackets.end.fabric"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comma"
+        },
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#inline_for_expression"
+        },
+        {
+          "include": "#inline_if_expression"
+        },
+        {
+          "include": "#expressions"
+        },
+        {
+          "include": "#local_identifiers"
+        }
+      ]
+    },
+    "char_escapes": {
+      "comment": "Character Escapes",
+      "match": "\\\\[nrt\"\\\\]|\\\\u(\\h{8}|\\h{4})",
+      "name": "constant.character.escape.fabric"
+    },
+    "comma": {
+      "comment": "Commas - used in certain expressions",
+      "match": "\\,",
+      "name": "punctuation.separator.fabric"
+    },
+    "comments": {
+      "patterns": [
+        {
+          "include": "#hash_line_comments"
+        },
+        {
+          "include": "#double_slash_line_comments"
+        },
+        {
+          "include": "#block_inline_comments"
+        }
+      ]
+    },
+    "config-blocks": {
+      "begin": "(config)\\s+([\\w][\\-\\w]*)\\s+([\\w][\\-\\w]*)\\s+([\\s\\\"\\-\\w]*)(\\{)",
+      "beginCaptures": {
+        "1": {
+          "patterns": [
+            {
+              "comment": "Config block type",
+              "match": "\\b(config)\\b",
+              "name": "entity.name.type.fabric"
+            }
+          ]
+        },
+        "2": {
+          "patterns": [
+            {
+              "comment": "Known block type that supports configuration",
+              "match": "\\b(data|content)\\b",
+              "name": "entity.name.type.fabric"
+            }
+          ]
+        },
+        "3": {
+          "patterns": [
+            {
+              "comment": "Plugin name",
+              "match": "[\\-\\w]+",
+              "name": "entity.name.function.fabric"
+            }
+          ]
+        },
+        "4": {
+          "patterns": [
+            {
+              "comment": "Block name",
+              "match": "\\\"[\\-\\w]+\\\"",
+              "name": "variable.other.enummember.fabric"
+            }
+          ]
+        },
+        "5": {
+          "name": "punctuation.section.block.begin.fabric"
+        }
+      },
+      "comment": "This will catch all supported blocks",
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.block.end.fabric"
+        }
+      },
+      "name": "meta.block.config.fabric",
+      "patterns": [
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#attribute_definition"
+        },
+        {
+          "include": "#simple-blocks"
+        },
+        {
+          "include": "#expressions"
+        }
+      ]
+    },
+    "double_slash_line_comments": {
+      "begin": "//",
+      "captures": {
+        "0": {
+          "name": "punctuation.definition.comment.fabric"
+        }
+      },
+      "comment": "Line comments start with // sequence and end with the next newline sequence. A line comment is considered equivalent to a newline sequence",
+      "end": "$\\n?",
+      "name": "comment.line.double-slash.fabric"
+    },
+    "expressions": {
+      "patterns": [
+        {
+          "include": "#literal_values"
+        },
+        {
+          "include": "#operators"
+        },
+        {
+          "include": "#brackets"
+        },
+        {
+          "include": "#objects"
+        },
+        {
+          "include": "#attribute_access"
+        },
+        {
+          "include": "#functions"
+        },
+        {
+          "include": "#parens"
+        }
+      ]
+    },
+    "functions": {
+      "begin": "(\\w+)(\\()",
+      "beginCaptures": {
+        "1": {
+          "patterns": [
+            {
+              "match": "\\b(from_env_var)\\b",
+              "name": "support.function.builtin.fabric"
+            }
+          ]
+        },
+        "2": {
+          "name": "punctuation.section.parens.begin.fabric"
+        }
+      },
+      "comment": "Built-in function calls",
+      "end": "\\)",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.parens.end.fabric"
+        }
+      },
+      "name": "meta.function-call.fabric",
+      "patterns": [
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#expressions"
+        },
+        {
+          "include": "#comma"
+        }
+      ]
+    },
+    "hash_line_comments": {
+      "begin": "#",
+      "captures": {
+        "0": {
+          "name": "punctuation.definition.comment.fabric"
+        }
+      },
+      "comment": "Line comments start with # sequence and end with the next newline sequence. A line comment is considered equivalent to a newline sequence",
+      "end": "$\\n?",
+      "name": "comment.line.number-sign.fabric"
+    },
+    "heredoc": {
+      "begin": "(\\<\\<\\-?)\\s*(\\w+)\\s*$",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.operator.heredoc.fabric"
+        },
+        "2": {
+          "name": "keyword.control.heredoc.fabric"
+        }
+      },
+      "comment": "String Heredoc",
+      "end": "^\\s*\\2\\s*$",
+      "endCaptures": {
+        "0": {
+          "name": "keyword.control.heredoc.fabric"
+        }
+      },
+      "name": "string.unquoted.heredoc.fabric"
+    },
+    "language_constants": {
+      "comment": "Fabric language constants",
+      "match": "\\b(true|false|null)\\b",
+      "name": "constant.language.fabric"
+    },
+    "literal_values": {
+      "patterns": [
+        {
+          "include": "#numeric_literals"
+        },
+        {
+          "include": "#language_constants"
+        },
+        {
+          "include": "#string_literals"
+        },
+        {
+          "include": "#heredoc"
+        },
+        {
+          "include": "#named_value_references"
+        }
+      ]
+    },
+    "local_identifiers": {
+      "comment": "Local identifiers",
+      "match": "\\b(?!null|false|true)[[:alpha:]][[:alnum:]_-]*\\b",
+      "name": "variable.other.readwrite.fabric"
+    },
+    "named_value_references": {
+      "comment": "Constant values available in Fabric context",
+      "match": "\\b(content|data|section|config|document)\\b",
+      "name": "variable.other.readwrite.fabric"
+    },
+    "numeric_literals": {
+      "patterns": [
+        {
+          "captures": {
+            "1": {
+              "name": "punctuation.separator.exponent.fabric"
+            }
+          },
+          "comment": "Integer, no fraction, optional exponent",
+          "match": "\\b\\d+([Ee][+-]?)\\d+\\b",
+          "name": "constant.numeric.float.fabric"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "punctuation.separator.decimal.fabric"
+            },
+            "2": {
+              "name": "punctuation.separator.exponent.fabric"
+            }
+          },
+          "comment": "Integer, fraction, optional exponent",
+          "match": "\\b\\d+(\\.)\\d+(?:([Ee][+-]?)\\d+)?\\b",
+          "name": "constant.numeric.float.fabric"
+        },
+        {
+          "comment": "Integers",
+          "match": "\\b\\d+\\b",
+          "name": "constant.numeric.integer.fabric"
+        }
+      ]
+    },
+    "object_key_values": {
+      "patterns": [
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#literal_values"
+        },
+        {
+          "include": "#operators"
+        },
+        {
+          "include": "#heredoc"
+        },
+        {
+          "include": "#functions"
+        }
+      ]
+    },
+    "objects": {
+      "begin": "\\{",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.section.braces.begin.fabric"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.braces.end.fabric"
+        }
+      },
+      "name": "meta.braces.fabric",
+      "patterns": [
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#objects"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "meta.mapping.key.hcl variable.other.readwrite.fabric"
+            },
+            "2": {
+              "name": "keyword.operator.assignment.fabric",
+              "patterns": [
+                {
+                  "match": "\\=\\>",
+                  "name": "storage.type.function.fabric"
+                }
+              ]
+            }
+          },
+          "comment": "Literal, named object key",
+          "match": "\\b((?!null|false|true)[[:alpha:]][[:alnum:]_-]*)\\s*(\\=\\>?)\\s*"
+        },
+        {
+          "captures": {
+            "0": {
+              "patterns": [
+                {
+                  "include": "#named_value_references"
+                }
+              ]
+            },
+            "1": {
+              "name": "meta.mapping.key.hcl string.quoted.double.fabric"
+            },
+            "2": {
+              "name": "punctuation.definition.string.begin.fabric"
+            },
+            "3": {
+              "name": "punctuation.definition.string.end.fabric"
+            },
+            "4": {
+              "name": "keyword.operator.fabric"
+            }
+          },
+          "comment": "String object key",
+          "match": "\\b((\").*(\"))\\s*(\\=)\\s*"
+        },
+        {
+          "begin": "^\\s*\\(",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.section.parens.begin.fabric"
+            }
+          },
+          "comment": "Computed object key (any expression between parens)",
+          "end": "(\\))\\s*(=|:)\\s*",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.section.parens.end.fabric"
+            },
+            "2": {
+              "name": "keyword.operator.fabric"
+            }
+          },
+          "name": "meta.mapping.key.fabric",
+          "patterns": [
+            {
+              "include": "#named_value_references"
+            },
+            {
+              "include": "#attribute_access"
+            }
+          ]
+        },
+        {
+          "include": "#object_key_values"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "match": "\\>\\=",
+          "name": "keyword.operator.fabric"
+        },
+        {
+          "match": "\\<\\=",
+          "name": "keyword.operator.fabric"
+        },
+        {
+          "match": "\\=\\=",
+          "name": "keyword.operator.fabric"
+        },
+        {
+          "match": "\\!\\=",
+          "name": "keyword.operator.fabric"
+        },
+        {
+          "match": "\\+",
+          "name": "keyword.operator.arithmetic.fabric"
+        },
+        {
+          "match": "\\-",
+          "name": "keyword.operator.arithmetic.fabric"
+        },
+        {
+          "match": "\\*",
+          "name": "keyword.operator.arithmetic.fabric"
+        },
+        {
+          "match": "\\/",
+          "name": "keyword.operator.arithmetic.fabric"
+        },
+        {
+          "match": "\\%",
+          "name": "keyword.operator.arithmetic.fabric"
+        },
+        {
+          "match": "\\&\\&",
+          "name": "keyword.operator.logical.fabric"
+        },
+        {
+          "match": "\\|\\|",
+          "name": "keyword.operator.logical.fabric"
+        },
+        {
+          "match": "\\!",
+          "name": "keyword.operator.logical.fabric"
+        },
+        {
+          "match": "\\>",
+          "name": "keyword.operator.fabric"
+        },
+        {
+          "match": "\\<",
+          "name": "keyword.operator.fabric"
+        },
+        {
+          "match": "\\?",
+          "name": "keyword.operator.fabric"
+        },
+        {
+          "match": "\\.\\.\\.",
+          "name": "keyword.operator.fabric"
+        },
+        {
+          "match": "\\:"
+        }
+      ]
+    },
+    "plugin-blocks": {
+      "begin": "([\\w][\\-\\w]*)\\s+([\\w]+)\\s*([\\s\\\"\\-\\w]*)(\\{)",
+      "beginCaptures": {
+        "1": {
+          "patterns": [
+            {
+              "comment": "Known block type that requires a plugin name",
+              "match": "\\b(data|content|section)\\b",
+              "name": "entity.name.type.fabric"
+            }
+          ]
+        },
+        "2": {
+          "patterns": [
+            {
+              "comment": "Reference keyword",
+              "match": "\\b(ref)\\b",
+              "name": "keyword.control.reference.fabric"
+            },
+            {
+              "comment": "Plugin name",
+              "match": "[\\-\\w]+",
+              "name": "entity.name.function.fabric"
+            }
+          ]
+        },
+        "3": {
+          "patterns": [
+            {
+              "comment": "Block name",
+              "match": "\\\"[\\-\\w]+\\\"",
+              "name": "variable.other.enummember.fabric"
+            }
+          ]
+        },
+        "4": {
+          "name": "punctuation.section.block.begin.fabric"
+        }
+      },
+      "comment": "This will catch all supported blocks",
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.block.end.fabric"
+        }
+      },
+      "name": "meta.block.plugin.fabric",
+      "patterns": [
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#attribute_definition"
+        },
+        {
+          "include": "#simple-blocks"
+        },
+        {
+          "include": "#expressions"
+        }
+      ]
+    },
+    "simple-blocks": {
+      "begin": "([\\w][\\-\\w]*)([\\s\\\"\\-\\w]*)(\\{)",
+      "beginCaptures": {
+        "1": {
+          "patterns": [
+            {
+              "comment": "Known block type",
+              "match": "\\b(fabric|document|section|meta)\\b",
+              "name": "entity.name.type.fabric"
+            }
+          ]
+        },
+        "2": {
+          "patterns": [
+            {
+              "comment": "Block name",
+              "match": "\\\"[\\-\\w]+\\\"",
+              "name": "variable.other.enummember.fabric"
+            }
+          ]
+        },
+        "3": {
+          "name": "punctuation.section.block.begin.fabric"
+        }
+      },
+      "comment": "This will catch all supported blocks",
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.block.end.fabric"
+        }
+      },
+      "name": "meta.block.simple.fabric",
+      "patterns": [
+        {
+          "include": "#comments"
+        },
+        {
+          "include": "#attribute_definition"
+        },
+        {
+          "include": "#plugin-blocks"
+        },
+        {
+          "include": "#simple-blocks"
+        },
+        {
+          "include": "#expressions"
+        }
+      ]
+    },
+    "string_literals": {
+      "begin": "\"",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.fabric"
+        }
+      },
+      "comment": "Strings",
+      "end": "\"",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.fabric"
+        }
+      },
+      "name": "string.quoted.double.fabric",
+      "patterns": [
+        {
+          "include": "#char_escapes"
+        }
+      ]
+    }
+  },
+  "scopeName": "source.hcl.fabric",
+  "uuid": "ff95ab8b-1f2f-4bb2-9240-717e7a794f67"
+}
