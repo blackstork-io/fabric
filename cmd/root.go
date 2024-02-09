@@ -93,6 +93,8 @@ var rootCmd = &cobra.Command{
 		}
 		cliArgs.pluginsDir = rawArgs.pluginsDir
 
+		cliArgs.colorize = rawArgs.colorize && term.IsTerminal(int(os.Stderr.Fd()))
+
 		var level slog.Level
 		if rawArgs.verbose {
 			level = slog.LevelDebug
@@ -112,14 +114,13 @@ var rootCmd = &cobra.Command{
 
 		switch strings.ToLower(strings.TrimSpace(rawArgs.logOutput)) {
 		case "plain":
-			colorize := rawArgs.colorLogs && term.IsTerminal(int(os.Stderr.Fd()))
-			if colorize && level <= slog.LevelDebug {
+			if cliArgs.colorize && level <= slog.LevelDebug {
 				handler = devslog.NewHandler(os.Stderr, &devslog.Options{
 					HandlerOptions: opts,
 				})
 			} else {
 				var output io.Writer
-				if colorize {
+				if cliArgs.colorize {
 					// only affects windows, noop on *nix
 					output = colorable.NewColorable(os.Stderr)
 				} else {
@@ -132,7 +133,7 @@ var rootCmd = &cobra.Command{
 						AddSource:   opts.AddSource,
 						Level:       opts.Level,
 						ReplaceAttr: opts.ReplaceAttr,
-						NoColor:     !colorize,
+						NoColor:     !cliArgs.colorize,
 					},
 				)
 			}
@@ -162,6 +163,7 @@ func Execute() {
 var cliArgs = struct {
 	sourceDir  string
 	pluginsDir string
+	colorize   bool
 }{}
 
 var rawArgs = struct {
@@ -170,7 +172,7 @@ var rawArgs = struct {
 	logLevel   string
 	pluginsDir string
 	verbose    bool
-	colorLogs  bool
+	colorize   bool
 }{}
 
 func init() {
@@ -180,7 +182,7 @@ func init() {
 		&rawArgs.logLevel, "log-level", "info",
 		fmt.Sprintf("logging level (%s)", validLogLevels.String()),
 	)
-	rootCmd.PersistentFlags().BoolVar(&rawArgs.colorLogs, "log-color", true, "enables coloring the logs (if supported by the terminal and log format)")
+	rootCmd.PersistentFlags().BoolVar(&rawArgs.colorize, "color", true, "enables colorizing the logs and diagnostics (if supported by the terminal and log format)")
 	rootCmd.PersistentFlags().BoolVarP(&rawArgs.verbose, "verbose", "v", false, "a shortcut to --log-level debug")
 	// TODO: after #5 is implemented - make optional
 	rootCmd.PersistentFlags().StringVar(
