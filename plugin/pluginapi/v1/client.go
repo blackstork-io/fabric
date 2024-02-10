@@ -46,7 +46,7 @@ func NewClient(loc string) (p *plugin.Schema, closefn func() error, err error) {
 		},
 		Logger: sloghclog.Adapt(
 			slog.Default(),
-			sloghclog.Name("plugin."+parts[0]),
+			sloghclog.Name("plugin."+pluginName),
 			// disable code location reporting, it's always going to be incorrect
 			// for remote plugin logs
 			sloghclog.AddSource(false),
