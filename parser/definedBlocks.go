@@ -78,14 +78,21 @@ func (db *DefinedBlocks) AsValueMap() map[string]cty.Value {
 		definitions.BlockKindContent: cfgContent,
 		definitions.BlockKindData:    cfgData,
 	})
-	sections := make(map[string]cty.Value, len(db.Sections))
-	for k, v := range db.Sections {
-		sections[k] = definitions.ToCtyValue(v)
+
+	var sections cty.Value
+	if len(db.Sections) == 0 {
+		sections = cty.MapValEmpty(cty.Map((*definitions.Section)(nil).CtyType()))
+	} else {
+		sect := make(map[string]cty.Value, len(db.Sections))
+		for k, v := range db.Sections {
+			sect[k] = definitions.ToCtyValue(v)
+		}
+		sections = cty.MapVal(sect)
 	}
 	return map[string]cty.Value{
 		definitions.BlockKindContent: content,
 		definitions.BlockKindData:    data,
-		definitions.BlockKindSection: cty.MapVal(sections),
+		definitions.BlockKindSection: sections,
 		definitions.BlockKindConfig:  config,
 	}
 }
