@@ -1,6 +1,10 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 version: 1
 
 project_name: fabric
+
+env:
+  - CGO_ENABLED=0
 
 builds:
   # CLI
@@ -8,11 +12,10 @@ builds:
   - id: fabric
     main: .
     binary: fabric
-    env:
-      - CGO_ENABLED=0
-    # Default: '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser'
+    flags: "-trimpath"
     ldflags:
-      - -s -w -X github.com/blackstork-io/fabric/cmd.version={{.Version}}
+      - -s -w
+      - -X github.com/blackstork-io/fabric/cmd.version={{.Version}}
     goos:
       - linux
       - windows
@@ -23,8 +26,7 @@ builds:
   - id: elasticsearch
     main: ./internal/elasticsearch/cmd
     binary: "plugins/blackstork/elasticsearch@{{ .Version }}"
-    env:
-      - CGO_ENABLED=0
+    flags: "-trimpath"
     goos:
       - linux
       - windows
@@ -33,8 +35,7 @@ builds:
   - id: github
     main: ./internal/github/cmd
     binary: "plugins/blackstork/github@{{ .Version }}"
-    env:
-      - CGO_ENABLED=0
+    flags: "-trimpath"
     goos:
       - linux
       - windows
@@ -43,8 +44,7 @@ builds:
   - id: graphql
     main: ./internal/graphql/cmd
     binary: "plugins/blackstork/graphql@{{ .Version }}"
-    env:
-      - CGO_ENABLED=0
+    flags: "-trimpath"
     goos:
       - linux
       - windows
@@ -53,8 +53,7 @@ builds:
   - id: openai
     main: ./internal/openai/cmd
     binary: "plugins/blackstork/openai@{{ .Version }}"
-    env:
-      - CGO_ENABLED=0
+    flags: "-trimpath"
     goos:
       - linux
       - windows
@@ -63,8 +62,7 @@ builds:
   - id: opencti
     main: ./internal/opencti/cmd
     binary: "plugins/blackstork/opencti@{{ .Version }}"
-    env:
-      - CGO_ENABLED=0
+    flags: "-trimpath"
     goos:
       - linux
       - windows
@@ -73,8 +71,7 @@ builds:
   - id: postgresql
     main: ./internal/postgresql/cmd
     binary: "plugins/blackstork/postgresql@{{ .Version }}"
-    env:
-      - CGO_ENABLED=0
+    flags: "-trimpath"
     goos:
       - linux
       - windows
@@ -83,8 +80,7 @@ builds:
   - id: sqlite
     main: ./internal/sqlite/cmd
     binary: "plugins/blackstork/sqlite@{{ .Version }}"
-    env:
-      - CGO_ENABLED=0
+    flags: "-trimpath"
     goos:
       - linux
       - windows
@@ -93,8 +89,7 @@ builds:
   - id: terraform
     main: ./internal/terraform/cmd
     binary: "plugins/blackstork/terraform@{{ .Version }}"
-    env:
-      - CGO_ENABLED=0
+    flags: "-trimpath"
     goos:
       - linux
       - windows
