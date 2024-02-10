@@ -93,7 +93,7 @@ func (p *Plugin) CtyType() cty.Type {
 }
 
 func DefinePlugin(block *hclsyntax.Block, atTopLevel bool) (plugin *Plugin, diags diagnostics.Diag) {
-	nameRequired := atTopLevel || (block.Type == BlockKindData)
+	nameRequired := atTopLevel
 
 	diags.Append(validatePluginKind(block, block.Type, block.TypeRange))
 	diags.Append(validatePluginName(block, 0))

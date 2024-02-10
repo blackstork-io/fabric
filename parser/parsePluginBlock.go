@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
@@ -49,7 +50,6 @@ func (db *DefinedBlocks) ParsePlugin(plugin *definitions.Plugin) (res *definitio
 }
 
 func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *definitions.ParsedPlugin, diags diagnostics.Diag) {
-	var diag hcl.Diagnostics
 	// var res evaluation.Plugin
 	res := definitions.ParsedPlugin{
 		PluginName: plugin.Name(),
@@ -58,71 +58,67 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 	}
 
 	// Parsing body
+	body := utils.ToHclsyntaxBody(plugin.Block.Body)
 
-	attrs := []hcl.AttributeSchema{
-		{Name: definitions.BlockKindConfig, Required: false},
-	}
-	if plugin.IsRef() {
-		attrs = append(attrs, hcl.AttributeSchema{Name: definitions.AttrRefBase, Required: true})
-	}
+	configAttr, _ := utils.Pop(body.Attributes, definitions.BlockKindConfig)
+	var configBlock *hclsyntax.Block
 
-	partialBody, restHcl, diag := plugin.Block.Body.PartialContent(&hcl.BodySchema{
-		Attributes: attrs,
-		Blocks: []hcl.BlockHeaderSchema{
-			{Type: definitions.BlockKindConfig, LabelNames: nil},
-			{Type: definitions.BlockKindMeta, LabelNames: nil},
+	body.Blocks = slices.DeleteFunc(
+		body.Blocks,
+		func(blk *hclsyntax.Block) bool {
+			switch blk.Type {
+			case definitions.BlockKindConfig:
+				if configBlock != nil {
+					diags.Append(&hcl.Diagnostic{
+						Severity: hcl.DiagWarning,
+						Summary:  "More than one embedded config block",
+						Detail:   "No more than one config block is allowed. Only the first one will be evaluated.",
+						Subject:  blk.DefRange().Ptr(),
+						Context:  plugin.Block.Range().Ptr(),
+					})
+					return true
+				}
+				configBlock = blk
+
+			case definitions.BlockKindMeta:
+				if res.Meta != nil {
+					diags.Append(&hcl.Diagnostic{
+						Severity: hcl.DiagWarning,
+						Summary:  "More than one meta block",
+						Detail:   "No more than one meta block is allowed. Only the first one will be used.",
+						Subject:  blk.DefRange().Ptr(),
+						Context:  plugin.Block.Range().Ptr(),
+					})
+					return true
+				}
+
+				var meta definitions.MetaBlock
+				if diags.ExtendHcl(gohcl.DecodeBody(blk.Body, nil, &meta)) {
+					return true
+				}
+				res.Meta = &meta
+
+			default:
+				return false
+			}
+			return true
 		},
-	})
-	if diags.ExtendHcl(diag) {
-		return
-	}
-
-	configAttr := partialBody.Attributes[definitions.BlockKindConfig]
-	var configBlock *hcl.Block
-
-	for _, blk := range partialBody.Blocks {
-		switch blk.Type {
-		case definitions.BlockKindConfig:
-			if configBlock != nil {
-				diags.Append(&hcl.Diagnostic{
-					Severity: hcl.DiagWarning,
-					Summary:  "More than one embedded config block",
-					Detail:   "No more than one config block is allowed. Only the first one will be evaluated.",
-					Subject:  &blk.DefRange,
-					Context:  plugin.Block.Range().Ptr(),
-				})
-				continue
-			}
-			configBlock = blk
-		case definitions.BlockKindMeta:
-			if res.Meta != nil {
-				diags.Append(&hcl.Diagnostic{
-					Severity: hcl.DiagWarning,
-					Summary:  "More than one meta block",
-					Detail:   "No more than one meta block is allowed. Only the first one will be used.",
-					Subject:  &blk.DefRange,
-					Context:  plugin.Block.Range().Ptr(),
-				})
-				continue
-			}
-
-			var meta definitions.MetaBlock
-			if diags.ExtendHcl(gohcl.DecodeBody(blk.Body, nil, &meta)) {
-				continue
-			}
-			res.Meta = &meta
-		}
-	}
+	)
 
 	invocation := &evaluation.BlockInvocation{
-		Body:            utils.ToHclsyntaxBody(restHcl),
+		Body:            body,
 		DefinitionRange: plugin.DefRange(),
 	}
 
 	// Parsing the ref
 	var refBaseConfig evaluation.Configuration
-	if plugin.IsRef() {
-		baseEval, diag := db.parseRefBase(plugin, partialBody.Attributes[definitions.AttrRefBase].Expr)
+
+	refBase, refFound := utils.Pop(body.Attributes, definitions.AttrRefBase)
+	pluginIsRef := plugin.IsRef()
+	switch {
+	case !pluginIsRef && !refFound: // happy path, no ref
+	case pluginIsRef && refFound: // happy path, ref present
+		baseEval, diag := db.parseRefBase(plugin, refBase.Expr)
 		if diags.Extend(diag) {
 			return
 		}
@@ -132,12 +128,38 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 		// inherit config from parent. Can be overridden later
 		refBaseConfig = baseEval.Config
 		if res.BlockName == "" {
-			// TODO: display warning for data plugins? See issue #25
 			res.BlockName = baseEval.BlockName
+			if plugin.Kind() == definitions.BlockKindData {
+				diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagWarning,
+					Summary:  "Potential data conflict",
+					Detail:   fmt.Sprintf("This 'data ref' will inherit its name from its base (\"%s\"). Creating another anonymous 'data ref' with the same 'base' would override the current block's execution results. We recommend naming all 'data ref' blocks uniquely", res.BlockName),
+					Subject:  plugin.DefRange().Ptr(),
+				})
+			}
 		}
 
 		updateRefBody(invocation.Body, baseEval.GetBlockInvocation().Body)
+
+	case pluginIsRef && !refFound:
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Ref block missing 'base' attribute",
+			Detail:   "Ref blocks must contain the 'base' attribute",
+			Subject:  body.MissingItemRange().Ptr(),
+			Context:  &body.SrcRange,
+		})
+		return
+	case !pluginIsRef && refFound:
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagWarning,
+			Summary:  "Non-ref block contains 'base' attribute",
+			Detail:   "Did you mean to make it a 'ref'?",
+			Subject:  refBase.Range().Ptr(),
+			Context:  &body.SrcRange,
+		})
 	}
+
 	var dgs diagnostics.Diag
 	res.Config, dgs = db.parsePluginConfig(plugin, configAttr, configBlock, refBaseConfig)
 	if diags.Extend(dgs) {
@@ -157,21 +179,21 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 	return
 }
 
-func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAttr *hcl.Attribute, configBlock *hcl.Block, refBaseConfig evaluation.Configuration) (config evaluation.Configuration, diags diagnostics.Diag) {
+func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAttr *hclsyntax.Attribute, configBlock *hclsyntax.Block, refBaseConfig evaluation.Configuration) (config evaluation.Configuration, diags diagnostics.Diag) {
 	switch {
 	case configAttr != nil && configBlock != nil:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Both config attribute and block are specified",
 			Detail:   "Remove one of them",
-			Subject:  configBlock.DefRange.Ptr(),
+			Subject:  configBlock.DefRange().Ptr(),
 			Context:  plugin.Block.Body.Range().Ptr(),
 		})
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Both config attribute and block are specified",
 			Detail:   "Remove one of them",
-			Subject:  &configAttr.Range,
+			Subject:  configAttr.Range().Ptr(),
 			Context:  plugin.Block.Body.Range().Ptr(),
 		})
 		return
@@ -186,7 +208,7 @@ func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAtt
 				Severity: hcl.DiagError,
 				Summary:  "Inapplicable configuration",
 				Detail:   "This configuration is for another plugin",
-				Subject:  &configAttr.Range,
+				Subject:  configAttr.Range().Ptr(),
 				Context:  plugin.Block.Body.Range().Ptr(),
 			})
 			return
@@ -194,12 +216,12 @@ func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAtt
 
 		config = &definitions.ConfigPtr{
 			Cfg: cfg,
-			Ptr: configAttr,
+			Ptr: configAttr.AsHCLAttribute(),
 		}
 	case configBlock != nil:
 		// anonymous config block
 		config = &definitions.Config{
-			Block: configBlock,
+			Block: configBlock.AsHCLBlock(),
 		}
 	case plugin.IsRef():
 		// Config wasn't provided: inherit config from the base block
