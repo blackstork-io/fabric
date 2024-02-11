@@ -21,7 +21,9 @@ var outFile string
 func render(dest io.Writer, docName string) {
 	result := parser.ParseDir(os.DirFS(cliArgs.sourceDir))
 	diags := result.Diags
-	defer func() { diagnostics.PrintDiags(diags, result.FileMap) }()
+	defer func() {
+		diagnostics.PrintDiags(os.Stderr, diags, result.FileMap, cliArgs.colorize)
+	}()
 	if diags.HasErrors() {
 		return
 	}

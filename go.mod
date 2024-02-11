@@ -1,15 +1,20 @@
 module github.com/blackstork-io/fabric
 
-go 1.21
+go 1.21.0
+
+toolchain go1.21.1
 
 require (
 	github.com/elastic/go-elasticsearch/v8 v8.11.1
+	github.com/golang-cz/devslog v0.0.8
 	github.com/google/go-github/v58 v58.0.0
 	github.com/hashicorp/go-hclog v0.14.1
 	github.com/hashicorp/go-plugin v1.6.0
 	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/itchyny/gojq v0.12.14
 	github.com/lib/pq v1.10.9
+	github.com/lmittmann/tint v1.0.4
+	github.com/mattn/go-colorable v0.1.13
 	github.com/mattn/go-sqlite3 v1.14.20
 	github.com/pelletier/go-toml/v2 v2.1.1
 	github.com/sanity-io/litter v1.5.5
@@ -60,7 +65,6 @@ require (
 	github.com/klauspost/compress v1.17.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/go-testing-interface v0.0.0-20171004221916-a61a99592b77 // indirect
 	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect

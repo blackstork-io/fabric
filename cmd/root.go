@@ -3,12 +3,17 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"slices"
 	"strings"
 
+	"github.com/golang-cz/devslog"
+	"github.com/lmittmann/tint"
+	"github.com/mattn/go-colorable"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 
 	"github.com/blackstork-io/fabric/pkg/utils"
 )
@@ -88,6 +93,8 @@ var rootCmd = &cobra.Command{
 		}
 		cliArgs.pluginsDir = rawArgs.pluginsDir
 
+		cliArgs.colorize = rawArgs.colorize && term.IsTerminal(int(os.Stderr.Fd()))
+
 		var level slog.Level
 		if rawArgs.verbose {
 			level = slog.LevelDebug
@@ -103,17 +110,39 @@ var rootCmd = &cobra.Command{
 			AddSource: level == slog.LevelDebug,
 		}
 
-		var logger *slog.Logger
+		var handler slog.Handler
 
 		switch strings.ToLower(strings.TrimSpace(rawArgs.logOutput)) {
 		case "plain":
-			logger = slog.New(slog.NewTextHandler(os.Stderr, opts))
+			if cliArgs.colorize && level <= slog.LevelDebug {
+				handler = devslog.NewHandler(os.Stderr, &devslog.Options{
+					HandlerOptions: opts,
+				})
+			} else {
+				var output io.Writer
+				if cliArgs.colorize {
+					// only affects windows, noop on *nix
+					output = colorable.NewColorable(os.Stderr)
+				} else {
+					output = os.Stderr
+				}
+
+				handler = tint.NewHandler(
+					output,
+					&tint.Options{
+						AddSource:   opts.AddSource,
+						Level:       opts.Level,
+						ReplaceAttr: opts.ReplaceAttr,
+						NoColor:     !cliArgs.colorize,
+					},
+				)
+			}
 		case "json":
-			logger = slog.New(slog.NewJSONHandler(os.Stderr, opts))
+			handler = slog.NewJSONHandler(os.Stderr, opts)
 		default:
 			return fmt.Errorf("unknown log output '%s'", rawArgs.logOutput)
 		}
-		slog.SetDefault(logger)
+		slog.SetDefault(slog.New(handler))
 		slog.Debug("Logging enabled")
 		if version == devVersion {
 			slog.Warn("This is a dev version of the software")
@@ -134,6 +163,7 @@ func Execute() {
 var cliArgs = struct {
 	sourceDir  string
 	pluginsDir string
+	colorize   bool
 }{}
 
 var rawArgs = struct {
@@ -142,6 +172,7 @@ var rawArgs = struct {
 	logLevel   string
 	pluginsDir string
 	verbose    bool
+	colorize   bool
 }{}
 
 func init() {
@@ -151,6 +182,7 @@ func init() {
 		&rawArgs.logLevel, "log-level", "info",
 		fmt.Sprintf("logging level (%s)", validLogLevels.String()),
 	)
+	rootCmd.PersistentFlags().BoolVar(&rawArgs.colorize, "color", true, "enables colorizing the logs and diagnostics (if supported by the terminal and log format)")
 	rootCmd.PersistentFlags().BoolVarP(&rawArgs.verbose, "verbose", "v", false, "a shortcut to --log-level debug")
 	// TODO: after #5 is implemented - make optional
 	rootCmd.PersistentFlags().StringVar(

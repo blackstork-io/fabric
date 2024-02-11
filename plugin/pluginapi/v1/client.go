@@ -35,6 +35,7 @@ func NewClient(loc string) (p *plugin.Schema, closefn func() error, err error) {
 	if err != nil {
 		return
 	}
+	slog.Info("Loading plugin", "filename", loc)
 	client := goplugin.NewClient(&goplugin.ClientConfig{
 		HandshakeConfig: handshake,
 		Plugins: map[string]goplugin.Plugin{
@@ -50,6 +51,7 @@ func NewClient(loc string) (p *plugin.Schema, closefn func() error, err error) {
 			// disable code location reporting, it's always going to be incorrect
 			// for remote plugin logs
 			sloghclog.AddSource(false),
+			sloghclog.Level(slog.LevelInfo), // debug is too noisy for plugins
 		),
 	})
 	rpcClient, err := client.Client()

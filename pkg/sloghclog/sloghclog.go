@@ -6,10 +6,16 @@ import (
 	"io"
 	"log"
 	"log/slog"
+	"math"
 	"runtime"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+)
+
+const (
+	LevelTrace slog.Level = slog.Level(-8)
+	minLevel              = slog.Level(math.MinInt)
 )
 
 type adapter struct {
@@ -18,12 +24,14 @@ type adapter struct {
 	name       string
 	with       []any
 	addSource  bool
+	leveler    slog.Leveler
 }
 
 func Adapt(logger *slog.Logger, opts ...adapterOption) hclog.Logger {
 	a := &adapter{
 		origLogger: logger,
 		logger:     logger,
+		leveler:    minLevel,
 	}
 	for _, opt := range opts {
 		opt.apply(a)
@@ -54,7 +62,11 @@ func Name(val string) adapterOption {
 	})
 }
 
-const LevelTrace slog.Level = slog.Level(-8)
+func Level(level slog.Leveler) adapterOption {
+	return funcAdapterOption(func(a *adapter) {
+		a.leveler = level
+	})
+}
 
 func convertLevel(level hclog.Level) slog.Level {
 	if level == hclog.NoLevel {
@@ -71,13 +83,21 @@ func (a *adapter) Log(level hclog.Level, msg string, args ...interface{}) {
 	a.log(level, msg, args...)
 }
 
+func (a *adapter) enabled(level slog.Level) bool {
+	return a.leveler.Level() <= level && a.logger.Enabled(context.Background(), level)
+}
+
 func (a *adapter) log(level hclog.Level, msg string, args ...interface{}) {
+	lvl := convertLevel(level)
+	if !a.enabled(lvl) {
+		return
+	}
 	var pcs [1]uintptr
 	if a.addSource {
 		// skip [Callers, log, (Log|Info|...)]
 		runtime.Callers(3, pcs[:])
 	}
-	r := slog.NewRecord(time.Now(), convertLevel(level), msg, pcs[0])
+	r := slog.NewRecord(time.Now(), lvl, msg, pcs[0])
 	r.Add(args...)
 	_ = a.logger.Handler().Handle(context.Background(), r)
 }
@@ -110,27 +130,27 @@ func (a *adapter) Error(msg string, args ...interface{}) {
 // Indicate if TRACE logs would be emitted. This and the other Is* guards
 // are used to elide expensive logging code based on the current level.
 func (a *adapter) IsTrace() bool {
-	return a.logger.Enabled(context.Background(), LevelTrace)
+	return a.enabled(LevelTrace)
 }
 
 // Indicate if DEBUG logs would be emitted. This and the other Is* guards
 func (a *adapter) IsDebug() bool {
-	return a.logger.Enabled(context.Background(), slog.LevelDebug)
+	return a.enabled(slog.LevelDebug)
 }
 
 // Indicate if INFO logs would be emitted. This and the other Is* guards
 func (a *adapter) IsInfo() bool {
-	return a.logger.Enabled(context.Background(), slog.LevelInfo)
+	return a.enabled(slog.LevelInfo)
 }
 
 // Indicate if WARN logs would be emitted. This and the other Is* guards
 func (a *adapter) IsWarn() bool {
-	return a.logger.Enabled(context.Background(), slog.LevelWarn)
+	return a.enabled(slog.LevelWarn)
 }
 
 // Indicate if ERROR logs would be emitted. This and the other Is* guards
 func (a *adapter) IsError() bool {
-	return a.logger.Enabled(context.Background(), slog.LevelError)
+	return a.enabled(slog.LevelError)
 }
 
 // ImpliedArgs returns With key/value pairs
@@ -217,7 +237,13 @@ func (a *adapter) ResetNamed(name string) hclog.Logger {
 // Updates the level. This should affect all sub-loggers as well. If an
 // implementation cannot update the level on the fly, it should no-op.
 func (a *adapter) SetLevel(level hclog.Level) {
-	// no-op: we can't be sure that we can update the level
+	type settableLeveler interface {
+		Set(l slog.Level)
+	}
+	setter, ok := a.leveler.(settableLeveler)
+	if ok {
+		setter.Set(convertLevel(level))
+	}
 }
 
 // Return a value that conforms to the stdlib log.Logger interface

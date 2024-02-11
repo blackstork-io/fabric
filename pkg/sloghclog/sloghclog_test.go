@@ -68,11 +68,107 @@ func Test_isLevel(t *testing.T) {
 	}
 }
 
+func Test_levelRespected(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+	buf := &bytes.Buffer{}
+
+	for _, logLevel := range []slog.Level{slog.LevelDebug, slog.LevelInfo} {
+		for _, adapterLevel := range []slog.Level{minLevel, slog.LevelDebug, slog.LevelInfo} {
+			logger := slog.New(slog.NewTextHandler(buf, &slog.HandlerOptions{
+				Level: logLevel,
+			}))
+			var a hclog.Logger
+			if adapterLevel == minLevel {
+				a = Adapt(logger)
+			} else {
+				a = Adapt(logger, Level(adapterLevel))
+			}
+			for _, msgLevel := range []hclog.Level{hclog.Debug, hclog.Info} {
+				slogMsgLevel := convertLevel(msgLevel)
+				a.Log(msgLevel, "test")
+				msg := readBuf(buf)
+				if logLevel <= slogMsgLevel && adapterLevel <= slogMsgLevel {
+					assert.NotEmpty(msg)
+				} else {
+					assert.Empty(msg)
+				}
+			}
+		}
+	}
+
+	levels := []slog.Level{
+		LevelTrace,
+		slog.LevelDebug,
+		slog.LevelInfo,
+		slog.LevelWarn,
+		slog.LevelError,
+	}
+	for _, logLevel := range levels {
+		a := Adapt(slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{
+			Level: logLevel,
+		})))
+		assert.Equal(logLevel <= LevelTrace, a.IsTrace())
+		assert.Equal(logLevel <= slog.LevelDebug, a.IsDebug())
+		assert.Equal(logLevel <= slog.LevelInfo, a.IsInfo())
+		assert.Equal(logLevel <= slog.LevelWarn, a.IsWarn())
+		assert.Equal(logLevel <= slog.LevelError, a.IsError())
+	}
+}
+
+func Test_levelSettable(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+	buf := &bytes.Buffer{}
+
+	for _, logLevel := range []slog.Level{slog.LevelDebug, slog.LevelInfo} {
+		a := Adapt(
+			slog.New(slog.NewTextHandler(buf, &slog.HandlerOptions{
+				Level: logLevel,
+			})),
+			Level(&slog.LevelVar{}),
+		)
+		for _, adapterLevel := range []hclog.Level{hclog.Trace, hclog.Debug, hclog.Info} {
+			a.SetLevel(adapterLevel)
+			for _, msgLevel := range []hclog.Level{hclog.Trace, hclog.Debug, hclog.Info} {
+				slogMsgLevel := convertLevel(msgLevel)
+				a.Log(msgLevel, "test")
+				msg := readBuf(buf)
+				if logLevel <= slogMsgLevel && adapterLevel <= msgLevel {
+					assert.NotEmpty(msg)
+				} else {
+					assert.Empty(msg)
+				}
+			}
+		}
+
+	}
+
+	levels := []slog.Level{
+		LevelTrace,
+		slog.LevelDebug,
+		slog.LevelInfo,
+		slog.LevelWarn,
+		slog.LevelError,
+	}
+	for _, logLevel := range levels {
+		a := Adapt(slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{
+			Level: logLevel,
+		})))
+		assert.Equal(logLevel <= LevelTrace, a.IsTrace())
+		assert.Equal(logLevel <= slog.LevelDebug, a.IsDebug())
+		assert.Equal(logLevel <= slog.LevelInfo, a.IsInfo())
+		assert.Equal(logLevel <= slog.LevelWarn, a.IsWarn())
+		assert.Equal(logLevel <= slog.LevelError, a.IsError())
+	}
+}
+
 func readBuf(buf *bytes.Buffer) string {
 	return string(buf.Next(buf.Len()))
 }
 
 func Test_adapterName(t *testing.T) {
+	t.Parallel()
 	assert := assert.New(t)
 
 	buf := &bytes.Buffer{}
@@ -121,6 +217,7 @@ func Test_adapterName(t *testing.T) {
 }
 
 func Test_adapterIndependance(t *testing.T) {
+	t.Parallel()
 	t.Run("calling named funcs doesn't affect the parent", func(t *testing.T) {
 		t.Parallel()
 		assert := assert.New(t)
@@ -242,6 +339,7 @@ func Test_adapterIndependance(t *testing.T) {
 }
 
 func Test_adapterOpts(t *testing.T) {
+	t.Parallel()
 	t.Run("Option Name", func(t *testing.T) {
 		t.Parallel()
 		buf := &bytes.Buffer{}
