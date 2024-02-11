@@ -29,17 +29,15 @@ document "foobar" {
 }
 ```
 
-If a `content` block is defined at the root level of the configuration file, outside of the `document`, both names – the plugin name and the block name – must be provided. A combination of block type `content`, plugin name and block name serves as a unique identifier of a block within the codebase. 
+If a `content` block is defined at the root level of the configuration file, outside of the `document`, both names – the plugin name and the block name – must be provided. A combination of block type `content`, plugin name and block name serves as a unique identifier of a block within the codebase.
 
 If a `content` block is defined within the document, only plugin name is required, while block name is optional.
 
 A content block is implemented by a content plugin specified by `<plugin-name>` in a block signature. See [Plugins]({{< ref "plugins.md" >}}) for the details on the plugins supported by Fabric.
 
-
 ## Supported Arguments
 
 The arguments provided in the block are either generic arguments or plugin-specific input parameters.
-
 
 ### Generic Arguments
 
@@ -50,17 +48,14 @@ The arguments provided in the block are either generic arguments or plugin-speci
 - `query_input_required`: (optional) a boolean flag that specifies if `query_input` must be explicitely provided when the content block is referenced. `false` by default. See [Query Input Requirement]({{< ref "references.md#query-input-requirement" >}}) for the details.
 - `query_input`: (optional) a JQ query to be applied to the context object. The results of the query are stored under `query_input` field in the context. See [Query Input Requirement]({{< ref "references.md#query-input-requirement" >}}) for the details.
 
-
 ### Plugin-specific Arguments
 
 Plugin-specific arguments are defined by a plugin specification. See [Plugins]({{< ref "plugins.md" >}}) for the details on the supported arguments per plugin.
-
 
 ## Supported Nested Blocks
 
 - `meta`: (optional) a block containing metadata for the block.
 - `config`: (optional) an inline configuration for the block. If provided, it takes precedence over the `config` argument and default configuration for the plugin.
-
 
 ## Context
 
@@ -71,11 +66,9 @@ The context object is a JSON dictionary with pre-defined root-level fields:
 - `data` contains a map of all resolved data definitions for the document. The JSON path to a specific data point follows the data block signature: `data.<plugin-name>.<block-name>`.
 - `query_result` contains a result of the execution of a JQ query provided in `query` attribute, as requested by `query_input_required` attribute. This is mostly used in `ref` blocks to explicitely provide data to the query in `query` attribute.
 
-
 ## References
 
 See [References]({{< ref references.md >}}) for the details about referencing content blocks.
-
 
 ## Example
 

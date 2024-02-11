@@ -4,8 +4,7 @@ type: docs
 weight: 2
 ---
 
-
-# Fabric Configuration Language 
+# Fabric Configuration Language
 
 Fabric Configuration Language (FCL) serves as the core feature for Fabric — a powerful tool designed to streamline document generation. FCL enables users to express data requirements and template structures within configuration files with lightweight syntax.
 
@@ -48,9 +47,7 @@ config data elasticsearch {
 }
 ```
 
-
 See [Syntax](./syntax/) for more details on the FCL syntax.
-
 
 ## IDE Support
 
@@ -59,6 +56,3 @@ Since Fabric configuration language is based on HCL, IDE extensions for HCL synt
 If you are using Microsoft VSCode, take a look at [Fabric Extension for Visual Studio Code](https://github.com/blackstork-io/vscode-fabric).
 
 ![VSCode Fabric Extension screenshot](./vscode-fabric-screenshot.png)
-
-
-

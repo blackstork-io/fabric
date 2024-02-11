@@ -26,33 +26,26 @@ The plugin name and the block name are required, and, together with the block ty
 
 The data, represented by the block, is accessible under `data.<plugin-name>.<block-name>` path in the context (see [Context]({{< ref "content-blocks.md#context" >}}) for more details).
 
-
 ## Supported Arguments
 
 The arguments provided in the block are either generic arguments or plugin-specific input parameters.
-
 
 ### Generic Arguments
 
 - `config`: (optional) a reference to a named config block defined outside the document. If provided, it takes precedence over the default configuration for the plugin. See [Plugin Configuration]({{< ref "configs.md#plugin-configuration" >}}) for the details.
 
-
 ### Plugin-specific Arguments
 
 Plugin-specific arguments are defined by a plugin specification. See [Plugins]({{< ref "plugins.md" >}}) for the details on the supported arguments per plugin.
-
 
 ## Supported Nested Blocks
 
 - `meta`: (optional) a block containing metadata for the block.
 - `config`: (optional) an inline configuration for the block. If provided, it takes precedence over the `config` argument and default configuration for the plugin.
 
-
-
 ## References
 
 See [References]({{< ref references.md >}}) for the details about referencing data blocks.
-
 
 ## Example
 
