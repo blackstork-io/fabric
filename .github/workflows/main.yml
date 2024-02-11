@@ -28,15 +28,12 @@ jobs:
   builds:
     strategy:
       fail-fast: true
-      matrix:
-        go-version: ["1.21.x"]
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: stable
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
