@@ -1,109 +1,64 @@
 ---
 title: Language
 type: docs
-weight: 3
+weight: 2
 ---
 
-# Understanding Fabric Blocks
-Blocks in Fabric stand as pivotal components, creating structure of your projects. Blocks prioritize readability, maintainability, and collaborative development, shaping  your processed documents.
 
-Similar to Terraform, Blocks are one of the [two main components](../syntax/) that make up our language. Think of Blocks as blueprint of your document.
+# Fabric Configuration Language 
 
-## Key Advantages of Fabric Blocks
+Fabric Configuration Language (FCL) serves as the core feature for Fabric — a powerful tool designed to streamline document generation. FCL enables users to express data requirements and template structures within configuration files with lightweight syntax.
 
-Fabric Blocks offer substantial advantages, emphasizing:
+The document templates defined in the configuration files act as blueprints for data consolidation and creation of Markdown documents.
 
-- **Organization:** Efficiently structure configurations into manageable sections.
-- **Collaboration:** Enable seamless teamwork by dissecting specific blocks.
-- **Readability:** Foster clarity and comprehension through well-structured configurations.
+FCL empowers users to define, manage, and automate the document production process, delivering a sturdy and adaptable solution for content generation.
 
-## Types of Blocks
+Fabric configuration files have extension `.fabric` and contain configurations, data requirements and content definitions. Fabric configuration codebase can consist of multiple files and sub-directories.
 
-In Fabric, Blocks define the structure, content, and organization of your processed documents. Let's delve deeper into each type of block to understand their roles, syntax, and the problems they solve.
+## Core Concepts
 
-In Fabric there are three types of Blocks:
-- Content
-- Data
-- Section
+Similar to [Terraform Configuration Language](https://developer.hashicorp.com/terraform/language), FCL is based on [HCL syntax](https://github.com/hashicorp/hcl), that consists of two core elements:
 
-## Data Blocks
+- **Blocks** are containers that define an object, like a configuration, a data requirement or a content structure. Blocks always have a block type, zero or more labels, and can be named or anonymous.
+- **Arguments** assign a value to a name inside a blocks.
 
-Data blocks defines a call to a data plugin, sourcing external data for content rendering. The order of data block definitions within the document is immaterial.
+```hcl
+# Named data block:
 
-```
-data <plugin-name> "<result-name>" {
-  ...
+data elasticsearch "alerts" {
+    index = ".alerts-security.alerts-*"
+    query_string = "kibana.alert.severity:critical"
 }
 
-document "foobar" {
-
-  data <plugin-name> "<result-name>" {
-    ...
-  }
-
-}
-```
-
-At the root level, ensure you provide both the plugin and result names; they serve as crucial identifiers within your codebase. If you're declaring data blocks outside the document, make sure to reference them inside your template.
-
-Now, when defining data blocks within the document, you only need the plugin and result names, forming a unique pair that acts as identifiers. The parameters within the block serve as inputs for the data plugin, and the data generated is stored globally under data.<plugin-name>.<result-name>.
-
-## Content Blocks
-
-The content block defines a call to a content plugin that generates document segments. The order in which content blocks are defined is crucial, determining the sequence of generated content in the document.
-
-```
-content <plugin-name> "<block-name>" {
-  ...
+<BLOCK-TYPE> <PLUGIN> "<BLOCK-NAME>" {
+    <ARGUMENT> = <VALUE>
 }
 
-document "foobar" {
 
-  content <plugin-name> "<block-name>" {
-    ...
-  }
+# Anonymous configuration block for a data plugin:
 
-  content <plugin-name> {
-    ...
-  }
+config data elasticsearch {
+    cloud_id = "my-elastic-cloud-id"
+    api_key = "my-elastic-cloud-api-key"
+}
 
+
+<CONFIG-LABEL> <BLOCK-TYPE> <PLUGIN> {
+    <ARGUMENT> = <VALUE>
 }
 ```
 
 
-At the root level, you'll need both the plugin name and, if desired, the block name, as they act as crucial identifiers within your codebase—essential for referencing the block. If you're defining content blocks outside the document, make sure to reference them within your template.
+See [Syntax](./syntax/) for more details on the FCL syntax.
 
-Now, when it comes to content blocks within the document, only the plugin's name is necessary; the block name is optional.
 
-Within the block, you set the parameters, serving as inputs for the content plugin, alongside the plugin configuration and the local context map. These plugins are designed to return a Markdown text string.
+## IDE Support
 
-And here's the thing – the order in which you define your content blocks? Yep, it's preserved.
+Since Fabric configuration language is based on HCL, IDE extensions for HCL syntax highlighting will work with Fabric files out of the box.
 
-## Section Blocks
+If you are using Microsoft VSCode, take a look at [Fabric Extension for Visual Studio Code](https://github.com/blackstork-io/vscode-fabric).
 
-Section blocks enable grouping content blocks for enhanced reusability and referencing. They also can contain other section blocks.
+![VSCode Fabric Extension screenshot](./vscode-fabric-screenshot.png)
 
-```
-section "<section-name>" {
-  
-}
 
-document "foobar" {
-  section {
-    ...
-  }
 
-  section "<section-name>" {
-    section {
-      ...
-    }
-    ...
-  }
-}
-```
-
-When specifying a section block at the root level, make sure to include a section name – a unique identifier crucial for referencing this block within your codebase. Section blocks declared outside the document need to be referenced inside the template.
-
-However, if you're defining a section block within the document template, the section name becomes optional.
-
-Embark on the journey of Fabric Blocks, where the dynamic interplay of structure and flexibility adds a sophisticated touch to your configuration landscape.
