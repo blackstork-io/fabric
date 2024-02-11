@@ -2,9 +2,9 @@ package builtin
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
@@ -13,11 +13,7 @@ import (
 func makeInlineDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchInlineData,
-		Args: &hcldec.BlockAttrsSpec{
-			TypeName:    "inline",
-			Required:    true,
-			ElementType: cty.DynamicPseudoType,
-		},
+		Args:     nil,
 	}
 }
 
@@ -54,9 +50,10 @@ func convertInline(v cty.Value) plugin.Data {
 		return plugin.BoolData(v.True())
 	case t.IsMapType() || t.IsObjectType():
 		return convertInlineMap(v)
-	case t.IsListType():
+	case t.IsListType() || t.IsTupleType():
 		return convertInlineList(v)
 	default:
+		slog.Warn("convertInline: failed to match on type", "type", t.GoString(), "value", v.GoString())
 		return nil
 	}
 }
