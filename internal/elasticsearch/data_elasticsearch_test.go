@@ -38,7 +38,7 @@ func TestElasticSearchDataSuite(t *testing.T) {
 func (s *ElasticSearchDataTestSuite) SetupSuite() {
 	s.ctx = context.Background()
 	opts := []testcontainers.ContainerCustomizer{
-		testcontainers.WithImage("docker.elastic.co/elasticsearch/elasticsearch:8.9.0"),
+		testcontainers.WithImage("docker.io/elasticsearch:8.9.0"),
 		elasticsearch.WithPassword("password123"),
 	}
 	container, err := elasticsearch.RunContainer(s.ctx, opts...)
