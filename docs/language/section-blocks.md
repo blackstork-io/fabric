@@ -34,18 +34,15 @@ If a `section` block is defined at the root level of the configuration file, out
 
 If a `section` block is defined within the document template, the section name is optional.
 
-
 ## Supported Arguments
 
 - `title`: (optional) represents the title of the content group. It is a syntactic sugar for a `content` block that renders a title. The title content block takes precedence over any other nested `content` blocks or `section` blocks defined at the same level.
-
 
 ## Supported Nested Blocks
 
 - `meta`: (optional) a block containing metadata for the block.
 - `content`: see [Content Blocks]({{< ref content-blocks.md >}}) for the details.
 - `section`: a block of type `section` can be embedded into another `section` block.
-
 
 ## References
 

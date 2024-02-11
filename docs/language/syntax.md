@@ -10,7 +10,6 @@ This page describes native syntax of the Fabric Configuration Language (FCL). FC
 
 Fabric language syntax has two core components: arguments and blocks.
 
-
 ## Arguments
 
 The arguments are used for assigning a value to a name inside a block:
@@ -22,7 +21,6 @@ The arguments are used for assigning a value to a name inside a block:
 ```
 
 The argument name (`query_string` in the snippet above) can contain letters, digits, underscores (`_`), and hyphens (`-`). The first character of an identifier must not be a digit.
-
 
 ## Blocks
 
@@ -49,7 +47,6 @@ Supported categories of blocks:
 - [Content definitions]({{< ref "content-blocks.md" >}}): `content` block
 - [Content structure]({{< ref "section-blocks.md" >}}): `section` block
 
-
 ## Comments
 
 Fabric language supports three different comment syntaxes:
@@ -60,6 +57,6 @@ Fabric language supports three different comment syntaxes:
 
 We recommend to use `#` single-line comment style in most cases. Future automatic code formatting tools will prioritise `#` comments as idiomatic.
 
-
 ## Character Encoding
+
 Fabric configuration files must be UTF-8 encoded. Fabric allows non-ASCII characters in comments, and string values.

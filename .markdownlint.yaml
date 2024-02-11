@@ -4,5 +4,9 @@ MD007:          # unordered list indentation
   indent: 2
 MD013: false    # do not validate line length
 MD014: false    # allow $ before command output
+MD024: false    # allow duplicate headings, for example, "Example"
 MD029:          # ordered list prefix, use all ones
   style: "one"
+MD033: false    # allow inline HTML
+MD041: false    # the first line is not always H1
+MD025: false    # because it thinks that is there is frontmatter, there should be no H1

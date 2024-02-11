@@ -18,42 +18,40 @@ fabric {
 
 There can be only one `fabric` block defined within the codebase.
 
-
 ### Supported Arguments
 
 - `plugin_versions`: (required) a map that matches namespaced plugin names to the version constraints in SemVer (see Terraform's [version constraint syntax](https://developer.hashicorp.com/terraform/language/expressions/version-constraints#version-constraint-syntax)).
 - `cache_dir`: (optional) a path to a directory on the local file system. The default value is `./.fabric`. If the directory does not exist, it will be created on the first run of `fabric`.
 
-
 ### Supported Nested Blocks
 
 - `plugin_registry` – (optional) a block that defines available plugin registries. The block accepts only one attribute
+
   ```hcl
   plugin_registry {
     cache_dir = "/tmp/plugins/"
   }
   ```
-  - `mirror_dir` – (optional) a path to a directory on the local filesystem with plugin archives.
 
+  - `mirror_dir` – (optional) a path to a directory on the local filesystem with plugin archives.
 
 ### Example
 
 ```hcl
 fabric {
 
-    plugins_registry {
-        mirror_dir = "/tmp/plugins/"
-    }
+  plugins_registry {
+    mirror_dir = "/tmp/plugins/"
+  }
 
-    cache_dir = "./.fabric"
+  cache_dir = "./.fabric"
 
-    plugin_versions = {
-        "blackstork/data.elasticsearch" = "1.2.3"
-        "blackstork/content.openai" = "=11.22.33"
-    }
+  plugin_versions = {
+    "blackstork/data.elasticsearch" = "1.2.3"
+    "blackstork/content.openai" = "=11.22.33"
+  }
 }
 ```
-
 
 ## Plugin Configuration
 
@@ -76,11 +74,9 @@ If `<config-name>` is not provided, the block is treated as a default configurat
 
 If `<config-name>` is set, the config block can be explicitely referenced inside the `content` or `data` block. This is helpful if there is a need to have multiple configurations for the same plugin.
 
-
 ### Supported Arguments
 
 The arguments that are allowed in the configuration block are plugin-specific – every plugin defines the configuration options supported. See [Plugins]({{< ref "plugins.md" >}}) for the details on the plugin configuation paramters.
-
 
 ### Supported Nested Blocks
 
@@ -100,17 +96,16 @@ data csv "events_a" {
 
 document "test-document" {
 
-   data ref {
-     base = data.csv.events_a
-   }
+  data ref {
+    base = data.csv.events_a
+  }
 
-   data csv "events_b" {
-     config {
-       delimiter = ",";
-     }
+  data csv "events_b" {
+    config {
+      delimiter = ",";
+    }
 
-     path = "/tmp/events-b.csv"
-   }
+    path = "/tmp/events-b.csv"
+  }
 }
 ```
-
