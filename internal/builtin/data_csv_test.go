@@ -17,7 +17,7 @@ func Test_makeCSVDataSchema(t *testing.T) {
 	require.NotNil(t, schema, "expected data source csv")
 	assert.NotNil(t, schema.DataFunc)
 	assert.NotNil(t, schema.Args)
-	assert.Nil(t, schema.Config)
+	assert.NotNil(t, schema.Config)
 }
 
 func Test_fetchCSVData(t *testing.T) {
@@ -193,11 +193,13 @@ func Test_fetchCSVData(t *testing.T) {
 				delim = cty.NullVal(cty.String)
 			}
 			args := cty.ObjectVal(map[string]cty.Value{
-				"path":      cty.StringVal(tc.path),
+				"path": cty.StringVal(tc.path),
+			})
+			cfg := cty.ObjectVal(map[string]cty.Value{
 				"delimiter": delim,
 			})
 			ctx := context.Background()
-			data, diags := p.RetrieveData(ctx, "csv", &plugin.RetrieveDataParams{Args: args})
+			data, diags := p.RetrieveData(ctx, "csv", &plugin.RetrieveDataParams{Config: cfg, Args: args})
 			assert.Equal(t, tc.expected, results{data, diags})
 		})
 	}

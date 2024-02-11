@@ -19,16 +19,18 @@ const defaultCSVDelimiter = ','
 func makeCSVDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchCSVData,
+		Config: &hcldec.ObjectSpec{
+			"delimiter": &hcldec.AttrSpec{
+				Name:     "delimiter",
+				Type:     cty.String,
+				Required: false,
+			},
+		},
 		Args: &hcldec.ObjectSpec{
 			"path": &hcldec.AttrSpec{
 				Name:     "path",
 				Type:     cty.String,
 				Required: true,
-			},
-			"delimiter": &hcldec.AttrSpec{
-				Name:     "delimiter",
-				Type:     cty.String,
-				Required: false,
 			},
 		},
 	}
@@ -42,9 +44,12 @@ func fetchCSVData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 			Summary:  "path is required",
 		}}
 	}
-	delim := params.Args.GetAttr("delimiter")
-	if delim.IsNull() {
-		delim = cty.StringVal(string(defaultCSVDelimiter))
+	delim := cty.StringVal(string(defaultCSVDelimiter))
+	if !params.Config.IsNull() {
+		delim = params.Config.GetAttr("delimiter")
+		if delim.IsNull() {
+			delim = cty.StringVal(string(defaultCSVDelimiter))
+		}
 	}
 	if len(delim.AsString()) != 1 {
 		return nil, hcl.Diagnostics{{

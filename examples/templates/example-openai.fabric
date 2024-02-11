@@ -1,5 +1,8 @@
+config data csv {}
+
 document "example-openai" {
     title = "Testing plugins"
+   
     data csv "csv_file" {
         path = "./data.csv"
     }
