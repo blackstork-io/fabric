@@ -37,10 +37,12 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go-version }}
-      - name: Build fabric
-        run: go build -v -o ${{ runner.temp }}/fabric
-      - name: Build plugins
-        run: go build -v -o ${{ runner.temp }}/plugins ./cmd/plugins
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          distribution: goreleaser
+          version: latest
+          args: build --snapshot --clean
 
   golangci-lint:
     runs-on: ubuntu-latest
