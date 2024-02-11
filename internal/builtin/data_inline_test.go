@@ -13,7 +13,7 @@ import (
 func Test_makeInlineDataSchema(t *testing.T) {
 	schema := makeInlineDataSource()
 	assert.Nil(t, schema.Config)
-	assert.NotNil(t, schema.Args)
+	assert.Nil(t, schema.Args)
 	assert.NotNil(t, schema.DataFunc)
 }
 
