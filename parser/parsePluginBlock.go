@@ -190,13 +190,13 @@ func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAtt
 		}
 	} else if plugin.IsRef() {
 		config = refBaseConfig
-	} else {
+	} else if defaultCfg := db.DefaultConfigFor(plugin); defaultCfg != nil {
 		// Apply default configs to non-refs only
-		config = db.Config[definitions.Key{
-			PluginKind: plugin.Kind(),
-			PluginName: plugin.Name(),
-			BlockName:  "",
-		}]
+		config = defaultCfg
+	} else {
+		config = &definitions.ConfigEmpty{
+			MissingItemRange: plugin.Block.Body.MissingItemRange(),
+		}
 	}
 	return
 }

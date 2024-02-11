@@ -15,6 +15,11 @@ type ConfigPtr struct {
 	Ptr *hcl.Attribute
 }
 
+// Exists implements evaluation.Configuration.
+func (c *ConfigPtr) Exists() bool {
+	return c != nil
+}
+
 // ParseConfig implements Configuration.
 func (c *ConfigPtr) ParseConfig(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
 	return c.Cfg.ParseConfig(spec)

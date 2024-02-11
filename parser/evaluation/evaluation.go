@@ -13,6 +13,7 @@ import (
 type Configuration interface {
 	ParseConfig(spec hcldec.Spec) (cty.Value, diagnostics.Diag)
 	Range() hcl.Range
+	Exists() bool
 }
 
 // To act as a plugin invocation (body of the plugin call block)

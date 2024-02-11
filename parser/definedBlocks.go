@@ -69,6 +69,14 @@ func (db *DefinedBlocks) GetConfig(expr hcl.Expression) (cfg *definitions.Config
 	return
 }
 
+func (db *DefinedBlocks) DefaultConfigFor(plugin *definitions.Plugin) (config *definitions.Config) {
+	return db.Config[definitions.Key{
+		PluginKind: plugin.Kind(),
+		PluginName: plugin.Name(),
+		BlockName:  "",
+	}]
+}
+
 func (db *DefinedBlocks) Merge(other *DefinedBlocks) (diags diagnostics.Diag) {
 	for k, v := range other.Config {
 		diags.Append(AddIfMissing(db.Config, k, v))

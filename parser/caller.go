@@ -84,13 +84,11 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 		return
 	}
 
-	// TODO: check that nil interface values are checked like this everywhere
-	needsConfig := !utils.IsNil(data.ConfigSpec)
-	hasConfig := !utils.IsNil(config)
+	acceptsConfig := !utils.IsNil(data.ConfigSpec)
+	hasConfig := config.Exists()
 
 	var configVal cty.Value
-	switch {
-	case needsConfig && hasConfig: // happy path
+	if acceptsConfig {
 		var stdDiag diagnostics.Diag
 		configVal, stdDiag = config.ParseConfig(data.ConfigSpec)
 		if !diags.Extend(stdDiag) {
@@ -105,20 +103,7 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 				}
 			}
 		}
-	case !needsConfig && !hasConfig:
-		// happy path, do nothing
-	case needsConfig && !hasConfig:
-		diags.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "Plugin requires configuration",
-			Detail: fmt.Sprintf("Plugin '%s %s' has no default configuration and "+
-				"no configuration was provided at the plugin invocation. "+
-				"Provide an inline config block or a config attribute",
-				kind, name),
-			Subject: invocation.MissingItemRange().Ptr(),
-			Context: invocation.Range().Ptr(),
-		})
-	case !needsConfig && hasConfig:
+	} else if hasConfig {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
 			Summary:  "Plugin doesn't support configuration",
