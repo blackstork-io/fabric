@@ -131,7 +131,11 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 	}
 
 	pluginArgs, diag := invocation.ParseInvocation(data.InvocationSpec)
-	if !diags.Extend(diag) {
+	diags.Extend(diag)
+	if diag.HasErrors() {
+		return
+	}
+	if data.InvocationSpec != nil {
 		typ := hcldec.ImpliedType(data.InvocationSpec)
 		errs := pluginArgs.Type().TestConformance(typ)
 		if errs != nil {
@@ -146,9 +150,6 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 		}
 	}
 
-	if diag.HasErrors() {
-		return
-	}
 	var result struct {
 		Result any
 		Diags  hcl.Diagnostics

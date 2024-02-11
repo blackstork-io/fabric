@@ -44,13 +44,6 @@ func (ds *DataSource) Validate() hcl.Diagnostics {
 			Detail:   "DataSource function not loaded",
 		})
 	}
-	if ds.Args == nil {
-		diags = append(diags, &hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "Incomplete DataSourceSchema",
-			Detail:   "Missing args schema",
-		})
-	}
 	return diags
 }
 
