@@ -376,4 +376,25 @@ func TestE2ERender(t *testing.T) {
 		[]string{"From data block: val"},
 		[][]diag_test.Assert{},
 	)
+	renderTest(
+		t, "Data with jq interaction",
+		[]string{
+			`
+			document "test" {
+				data inline "foo" {
+				  items = ["a", "b", "c"]
+				  x = 1
+				  y = 2
+				}
+				content text {
+				  query = ".data.inline.foo.items | length"
+				  text = "There are {{ .query_result }} items"
+				}
+			}
+			`,
+		},
+		"test",
+		[]string{"There are 3 items"},
+		[][]diag_test.Assert{},
+	)
 }
