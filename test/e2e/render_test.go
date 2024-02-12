@@ -1,6 +1,4 @@
-//go:build integration
-
-package integration_test
+package e2e_test
 
 import (
 	"fmt"
@@ -12,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/blackstork-io/fabric/cmd"
-	"github.com/blackstork-io/fabric/integration_test/diag_test"
+	"github.com/blackstork-io/fabric/test/e2e/diag_test"
 )
 
 func renderTest(t *testing.T, testName string, files []string, docName string, expectedResult []string, diagAsserts [][]diag_test.Assert) {
@@ -46,7 +44,7 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 	})
 }
 
-func TestRender(t *testing.T) {
+func TestE2ERender(t *testing.T) {
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 		AddSource: true,
 		Level:     slog.LevelWarn,
