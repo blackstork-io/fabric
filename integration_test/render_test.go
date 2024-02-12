@@ -29,7 +29,7 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 			}
 		}
 
-		res, _, diags := cmd.Render(pluginsDir, sourceDir, docName)
+		res, _, diags := cmd.Render("", sourceDir, docName)
 		if len(expectedResult) == 0 {
 			// so nil == []string{}
 			assert.Empty(t, res)
