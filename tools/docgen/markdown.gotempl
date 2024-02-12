@@ -1,0 +1,101 @@
+{{- if eq .Name "blackstork/builtin" -}}
+    # Fabric built-in plugins
+{{- else -}}
+    # Fabric `{{ .Name | shortname }}` plugin
+{{- end }}
+
+This document describes the `{{ .Name | shortname }}` plugin for the Fabric CLI tool. 
+
+## Installation
+
+{{ if eq .Name "blackstork/builtin" -}}
+    The built-in plugins are available by default.
+{{ else -}}
+To install the plugin, add the following to your global fabric configuration:
+
+```hcl
+fabric {
+    plugin_versions = {
+        "{{ .Name }}" = "=> {{ .Version }}"
+    }
+}
+```
+{{ end }}
+
+{{ with .DataSources -}}
+
+## Data sources
+
+{{ if eq .Name "blackstork/builtin" -}}
+    The following data sources are available by default:
+{{ else -}}
+This plugin has the following data sources available:
+{{ end }}
+{{ range $name, $ds := . -}}
+### `{{ $name }}`
+
+{{with $ds.Config -}}
+#### Configuration
+
+```hcl
+config data {{ $name }} {
+{{- range $key, $value := . }}
+    {{ $key }} = {{ $value | attrType }} // {{if $value.Required}}required{{else}}optional{{end}}
+{{- end }}
+}
+```
+{{ end }}
+
+{{with $ds.Args -}}
+#### Usage
+
+```hcl
+data {{ $name }} {
+{{- range $key, $value := . }}
+    {{ $key }} = {{ $value | attrType }} // {{if $value.Required}}required{{else}}optional{{end}}
+{{- end }}
+}
+```
+{{ end }}
+{{ end }}
+{{ end }}
+
+
+{{ with .ContentProviders -}}
+
+## Content providers
+
+{{ if eq .Name "blackstork/builtin" -}}
+    The following content providers are available by default:
+{{ else -}}
+    This plugin has the following content providers available:
+{{ end }}
+{{ range $name, $provider := . -}}
+### `{{ $name }}`
+
+{{with $provider.Config -}}
+#### Configuration
+
+```hcl
+config content {{ $name }} {
+{{- range $key, $value := . }}
+    {{ $key }} = {{ $value | attrType }} // {{if $value.Required}}required{{else}}optional{{end}}
+{{- end }}
+}
+```
+{{ end }}
+
+{{with $provider.Args -}}
+#### Usage
+
+```hcl
+content {{ $name }} {
+{{- range $key, $value := . }}
+    {{ $key }} = {{ $value | attrType }} // {{if $value.Required}}required{{else}}optional{{end}}
+{{- end }}
+}
+```
+{{ end }}
+{{ end }}
+{{ end }}
+
