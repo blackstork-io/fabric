@@ -93,7 +93,7 @@ func (c *Config) GetHCLBlock() *hcl.Block {
 var ctyConfigType = capsuleTypeFor[Config]()
 
 func (c *Config) CtyType() cty.Type {
-	return ctyPluginType
+	return ctyConfigType
 }
 
 func DefineConfig(block *hclsyntax.Block) (config *Config, diags diagnostics.Diag) {

@@ -163,7 +163,7 @@ func ParseDir(dir fs.FS) (*DefinedBlocks, map[string]*hcl.File, diagnostics.Diag
 	parsePE.WaitDoneAndLock()
 
 	// prepending read diags, since they logically happen earlier
-	diags := append(readDiags, parseDiags...)
+	diags := append(readDiags, parseDiags...) //nolint:gocritic
 
 	if len(fileMap) == 0 {
 		diags.Add(

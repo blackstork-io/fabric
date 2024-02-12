@@ -9,9 +9,10 @@ import (
 	"testing"
 	"testing/fstest"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/blackstork-io/fabric/cmd"
 	"github.com/blackstork-io/fabric/integration_test/diag_test"
-	"github.com/stretchr/testify/assert"
 )
 
 func renderTest(t *testing.T, testName string, files []string, docName string, expectedResult []string, diagAsserts [][]diag_test.Assert) {
