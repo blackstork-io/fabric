@@ -20,6 +20,11 @@ type Config struct {
 	value      cty.Value
 }
 
+// Exists implements evaluation.Configuration.
+func (c *Config) Exists() bool {
+	return c != nil
+}
+
 var _ evaluation.Configuration = (*Config)(nil)
 
 // ParseConfig implements Configuration.
