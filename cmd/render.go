@@ -34,7 +34,6 @@ func render(dest io.Writer, docName string) {
 		)
 		return
 	}
-
 	doc, found := result.Blocks.Documents[docName]
 	if !found {
 		diags.Add(
@@ -47,29 +46,20 @@ func render(dest io.Writer, docName string) {
 		)
 		return
 	}
-
-	// TODO: read pluginsDir from config #5
 	var pluginsDir string
-	if cliArgs.pluginsDir != "" {
-		pluginsDir = cliArgs.pluginsDir
+	if result.Blocks.GlobalConfig != nil && result.Blocks.GlobalConfig.PluginRegistry != nil {
+		pluginsDir = result.Blocks.GlobalConfig.PluginRegistry.MirrorDir
+	}
+	var pluginVersions runner.VersionMap
+	if result.Blocks.GlobalConfig != nil {
+		pluginVersions = result.Blocks.GlobalConfig.PluginVersions
 	}
 	runner, stdDiag := runner.Load(
 		runner.WithBuiltIn(
 			builtin.Plugin(version),
 		),
 		runner.WithPluginDir(pluginsDir),
-		// TODO: get versions from the fabric configuration file.
-		// atm, it's hardcoded to use all plugins with the same version as the CLI.
-		runner.WithPluginVersions(runner.VersionMap{
-			"blackstork/elasticsearch": version,
-			"blackstork/github":        version,
-			"blackstork/graphql":       version,
-			"blackstork/openai":        version,
-			"blackstork/opencti":       version,
-			"blackstork/postgresql":    version,
-			"blackstork/sqlite":        version,
-			"blackstork/terraform":     version,
-		}),
+		runner.WithPluginVersions(runner.VersionMap(pluginVersions)),
 	)
 	if diags.Extend(diagnostics.Diag(stdDiag)) {
 		return

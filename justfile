@@ -4,7 +4,7 @@ build:
     goreleaser build --config ./.goreleaser-dev.yaml --single-target --snapshot --clean
 
 test-run:
-    ./dist/fabric render "document.hello" --source-dir ./examples/templates/basic_hello/ -v --plugins-dir ./dist/plugins/
+    ./dist/fabric render "document.hello" --source-dir ./examples/templates/basic_hello/ -v
 
 format:
     go mod tidy

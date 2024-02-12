@@ -1,10 +1,20 @@
+fabric {
+    cache_dir = "./.fabric"
+    plugin_registry {
+        mirror_dir = "dist/plugins"
+    }
+    plugin_versions = {
+        "blackstork/openai" = "0.0.0-dev"
+    }
+}
+
 config data csv {}
 
-document "example-openai" {
+document "example" {
     title = "Testing plugins"
    
     data csv "csv_file" {
-        path = "./data.csv"
+        path = "./examples/templates/openai/data.csv"
     }
     content text {
         text = "Values from the CSV file"
@@ -38,10 +48,10 @@ document "example-openai" {
     }
     content openai_text {
         config {
-            api_key = "<API_KEY>"
+            api_key = "<API-KEY>"
         }
         query = ".data.csv.csv_file.result"
         model = "gpt-3.5-turbo"
-        prompt = "List names of these people"
+        prompt = "Decribe each user in a sentence"
     }
 }

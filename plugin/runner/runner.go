@@ -2,7 +2,10 @@ package runner
 
 import (
 	"fmt"
+	"strings"
+	"unicode"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/hashicorp/hcl/v2"
 
 	"github.com/blackstork-io/fabric/plugin"
@@ -17,10 +20,66 @@ type Runner struct {
 	contentMap map[string]loadedContentProvider
 }
 
+func validatePluginName(name string) hcl.Diagnostics {
+	parts := strings.Split(name, "/")
+	if len(parts) != 2 {
+		return hcl.Diagnostics{{
+			Severity: hcl.DiagError,
+			Summary:  "Invalid plugin name",
+			Detail:   fmt.Sprintf("plugin name '%s' is not in the form '<namespace>/<name>'", name),
+		}}
+	}
+	for _, r := range parts[0] {
+		if !unicode.IsLetter(r) && !unicode.IsDigit(r) && r != '-' {
+			return hcl.Diagnostics{{
+				Severity: hcl.DiagError,
+				Summary:  "Invalid plugin name",
+				Detail:   fmt.Sprintf("plugin name '%s' contains invalid character: '%c'", name, r),
+			}}
+		}
+	}
+	for _, r := range parts[1] {
+		if !unicode.IsLetter(r) && !unicode.IsDigit(r) && r != '-' {
+			return hcl.Diagnostics{{
+				Severity: hcl.DiagError,
+				Summary:  "Invalid plugin name",
+				Detail:   fmt.Sprintf("plugin name '%s' contains invalid character: '%c'", name, r),
+			}}
+		}
+	}
+	return nil
+}
+
+func validatePluginVersionMap(versionMap VersionMap) (diags hcl.Diagnostics) {
+	for name, version := range versionMap {
+		diags = validatePluginName(name).Extend(diags)
+		if version == "" {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Missing plugin version",
+				Detail:   fmt.Sprintf("Missing plugin version for '%s'", name),
+			})
+			continue
+		}
+		_, err := semver.NewConstraint(version)
+		if err != nil {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Invalid plugin version",
+				Detail:   fmt.Sprintf("Invalid version constraint for '%s': %s", name, err),
+			})
+		}
+	}
+	return diags
+}
+
 func Load(o ...Option) (*Runner, hcl.Diagnostics) {
 	opts := defaultOptions
 	for _, opt := range o {
 		opt(&opts)
+	}
+	if diags := validatePluginVersionMap(opts.versionMap); diags.HasErrors() {
+		return nil, diags
 	}
 	loader := makeLoader(opts.pluginDir, opts.builtin, opts.versionMap)
 	if diags := loader.loadAll(); diags.HasErrors() {

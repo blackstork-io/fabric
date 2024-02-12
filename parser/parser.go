@@ -211,6 +211,15 @@ func parseBlockDefinitions(body *hclsyntax.Body) (res *DefinedBlocks, diags diag
 				panic("unable to get the key of the top-level block")
 			}
 			diags.Append(AddIfMissing(res.Config, *key, cfg))
+		case definitions.BlockKindGlobalConfig:
+			globalCfg, dgs := definitions.DefineGlobalConfig(block)
+			if diags.Extend(dgs) {
+				continue
+			}
+			if res.GlobalConfig != nil {
+				diags.Add("Global config declared multiple times", "")
+			}
+			res.GlobalConfig = globalCfg
 		default:
 			diags.Append(definitions.NewNestingDiag(
 				"Top level of fabric document",
@@ -222,6 +231,7 @@ func parseBlockDefinitions(body *hclsyntax.Body) (res *DefinedBlocks, diags diag
 					definitions.BlockKindDocument,
 					definitions.BlockKindSection,
 					definitions.BlockKindConfig,
+					definitions.BlockKindGlobalConfig,
 				}))
 		}
 	}
