@@ -16,9 +16,7 @@ const (
 
 type ClientLoadFn func(opts ...client.Option) client.Client
 
-var DefaultClientLoader ClientLoadFn = func(opts ...client.Option) client.Client {
-	return client.New(opts...)
-}
+var DefaultClientLoader ClientLoadFn = client.New
 
 func Plugin(version string, loader ClientLoadFn) *plugin.Schema {
 	if loader == nil {

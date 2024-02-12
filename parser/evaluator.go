@@ -104,11 +104,11 @@ func (e *Evaluator) EvaluateDocument(d *definitions.Document) (results []string,
 
 	results = make([]string, 0, len(e.contentCalls))
 	for _, call := range e.contentCalls {
-		context, diag := e.evaluateQuery(call)
-		if diags.Extend(diag) {
-			// query failed, but context is always valid
-			// TODO: #28 #29
-		}
+		context, _ := e.evaluateQuery(call)
+		// if diags.Extend(diag) {
+		// query failed, but context is always valid
+		// TODO: #28 #29
+		// }
 		result, diag := e.caller.CallContent(call.PluginName, call.Config, call.Invocation, context)
 		if diags.Extend(diag) {
 			// XXX: What to do if we have errors while executing content blocks?
@@ -249,5 +249,4 @@ func (e *Evaluator) evaluateSection(s *definitions.ParsedSection) {
 			panic("must be exhaustive")
 		}
 	}
-	return
 }

@@ -126,6 +126,7 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 				continue
 			}
 			circularRefDetector.Add(section, block.DefRange().Ptr())
+			//nolint:gocritic
 			defer circularRefDetector.Remove(section, &diags)
 			parsedSubSection, diag := db.ParseSection(subSection)
 			if diags.Extend(diag) {
