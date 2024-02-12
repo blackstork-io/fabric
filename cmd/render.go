@@ -127,7 +127,10 @@ var renderCmd = &cobra.Command{
 		}
 		diagnostics.PrintDiags(os.Stderr, diags, fileMap, cliArgs.colorize)
 		if diags.HasErrors() {
-			return fmt.Errorf("failed to render the document")
+			// Errors have been already displayed
+			rootCmd.SilenceErrors = true
+			rootCmd.SilenceUsage = true
+			return diags
 		}
 		return nil
 	},
