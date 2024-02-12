@@ -2,7 +2,6 @@
 title: What is Fabric?
 menuName: Docs
 type: docs
-menus: main
 weight: 1
 ---
 
