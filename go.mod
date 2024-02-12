@@ -5,6 +5,7 @@ go 1.21.0
 toolchain go1.21.1
 
 require (
+	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/elastic/go-elasticsearch/v8 v8.11.1
 	github.com/golang-cz/devslog v0.0.8
 	github.com/google/go-github/v58 v58.0.0

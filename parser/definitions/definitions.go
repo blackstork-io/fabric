@@ -5,12 +5,13 @@ import (
 )
 
 const (
-	BlockKindDocument = "document"
-	BlockKindConfig   = "config"
-	BlockKindContent  = "content"
-	BlockKindData     = "data"
-	BlockKindMeta     = "meta"
-	BlockKindSection  = "section"
+	BlockKindDocument     = "document"
+	BlockKindConfig       = "config"
+	BlockKindContent      = "content"
+	BlockKindData         = "data"
+	BlockKindMeta         = "meta"
+	BlockKindSection      = "section"
+	BlockKindGlobalConfig = "fabric"
 
 	PluginTypeRef = "ref"
 	AttrRefBase   = "base"

@@ -86,11 +86,6 @@ var rootCmd = &cobra.Command{
 		}
 		cliArgs.sourceDir = rawArgs.sourceDir
 
-		// TODO: make optional after #5 is implemented
-		err = validateDir("plugins dir", rawArgs.pluginsDir)
-		if err != nil {
-			return
-		}
 		cliArgs.pluginsDir = rawArgs.pluginsDir
 
 		cliArgs.colorize = rawArgs.colorize && term.IsTerminal(int(os.Stderr.Fd()))
@@ -188,8 +183,4 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(
 		&rawArgs.pluginsDir, "plugins-dir", "", "override for plugins dir from fabric configuration (required)",
 	)
-	err := rootCmd.MarkPersistentFlagRequired("plugins-dir")
-	if err != nil {
-		panic(err)
-	}
 }

@@ -12,10 +12,11 @@ import (
 // Collection of defined blocks
 
 type DefinedBlocks struct {
-	Config    map[definitions.Key]*definitions.Config
-	Documents map[string]*definitions.Document
-	Sections  map[string]*definitions.Section
-	Plugins   map[definitions.Key]*definitions.Plugin
+	GlobalConfig *definitions.GlobalConfig
+	Config       map[definitions.Key]*definitions.Config
+	Documents    map[string]*definitions.Document
+	Sections     map[string]*definitions.Section
+	Plugins      map[definitions.Key]*definitions.Plugin
 }
 
 func (db *DefinedBlocks) GetSection(expr hcl.Expression) (section *definitions.Section, diags diagnostics.Diag) {
@@ -78,6 +79,12 @@ func (db *DefinedBlocks) DefaultConfigFor(plugin *definitions.Plugin) (config *d
 }
 
 func (db *DefinedBlocks) Merge(other *DefinedBlocks) (diags diagnostics.Diag) {
+	if other.GlobalConfig != nil {
+		if db.GlobalConfig != nil {
+			diags.Add("Global config declared multiple times", "")
+		}
+		db.GlobalConfig = other.GlobalConfig
+	}
 	for k, v := range other.Config {
 		diags.Append(AddIfMissing(db.Config, k, v))
 	}

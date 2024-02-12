@@ -3,7 +3,6 @@ package runner
 import (
 	"fmt"
 	"os"
-	"path"
 
 	"github.com/hashicorp/hcl/v2"
 
@@ -27,7 +26,7 @@ type loadedContentProvider struct {
 }
 
 type loader struct {
-	pluginDir  string
+	resolver   *resolver
 	versionMap VersionMap
 	builtin    []*plugin.Schema
 	pluginMap  map[string]loadedPlugin
@@ -35,19 +34,15 @@ type loader struct {
 	contentMap map[string]loadedContentProvider
 }
 
-func makeLoader(pluginDir string, builtin []*plugin.Schema, pluginMap VersionMap) *loader {
+func makeLoader(mirrorDir string, builtin []*plugin.Schema, pluginMap VersionMap) *loader {
 	return &loader{
-		pluginDir:  pluginDir,
+		resolver:   makeResolver(mirrorDir),
 		versionMap: pluginMap,
 		builtin:    builtin,
 		pluginMap:  make(map[string]loadedPlugin),
 		dataMap:    make(map[string]loadedDataSource),
 		contentMap: make(map[string]loadedContentProvider),
 	}
-}
-
-func (l *loader) pluginLoc(name, version string) string {
-	return path.Join(l.pluginDir, fmt.Sprintf("%s@%s", name, version))
 }
 
 func nopCloser() error {
@@ -147,7 +142,10 @@ func (l *loader) registerPlugin(p *plugin.Schema, closefn func() error) hcl.Diag
 }
 
 func (l *loader) loadBinary(name, version string) hcl.Diagnostics {
-	loc := l.pluginLoc(name, version)
+	loc, diags := l.resolver.resolve(name, version)
+	if diags.HasErrors() {
+		return diags
+	}
 	if info, err := os.Stat(loc); os.IsNotExist(err) {
 		return hcl.Diagnostics{{
 			Severity: hcl.DiagError,
