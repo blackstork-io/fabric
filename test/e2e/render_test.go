@@ -358,4 +358,22 @@ func TestE2ERender(t *testing.T) {
 			{diag_test.IsError, diag_test.SummaryContains("No fabric files found")},
 		},
 	)
+	renderTest(
+		t, "Data block result access",
+		[]string{
+			`
+			document "test-doc" {
+				data inline "name" {
+					attr = "val"
+				}
+				content text {
+					text = "From data block: {{.data.inline.name.attr}}"
+				}
+			}
+			`,
+		},
+		"test-doc",
+		[]string{"From data block: val"},
+		[][]diag_test.Assert{},
+	)
 }

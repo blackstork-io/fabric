@@ -149,11 +149,8 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 			Config: configVal,
 			Args:   pluginArgs,
 		})
-		result.Result = map[string]any{}
 		if data != nil {
-			result.Result = map[string]any{
-				"result": data.Any(),
-			}
+			result.Result = data.Any()
 		}
 		result.Diags = diags
 	case "content":
