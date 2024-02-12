@@ -70,5 +70,5 @@ func UnmarshalBytes(bytes, value any) error {
 	if !ok {
 		return ErrUnmarshalBytes
 	}
-	return json.Unmarshal(data, value) //nolint: wrapcheck
+	return json.Unmarshal(data, value)
 }

@@ -9,7 +9,7 @@ import (
 var NoLimit = (*Limiter)(nil)
 
 // DiskIOLimiter is a shared limiter for all Disk IO tasks.
-var DiskIOLimiter = NewLimiter(4) //nolint: gomnd
+var DiskIOLimiter = NewLimiter(4)
 
 // CPULimiter is a shared limiter for all CPU-bound tasks.
 var CPULimiter = NewLimiter(2 * runtime.NumCPU())

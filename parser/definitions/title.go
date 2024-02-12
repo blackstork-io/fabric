@@ -29,9 +29,7 @@ func (t *TitleInvocation) GetBody() *hclsyntax.Body {
 }
 
 // SetBody implements evaluation.Invocation.
-func (*TitleInvocation) SetBody(*hclsyntax.Body) {
-	return
-}
+func (*TitleInvocation) SetBody(*hclsyntax.Body) {}
 
 var _ evaluation.Invocation = (*TitleInvocation)(nil)
 

@@ -75,6 +75,6 @@ func (d *circularRefDetector) remove(ptr unsafe.Pointer, diags *diagnostics.Diag
 			diag.Detail, rng.Filename, rng.Start.Line, rng.Start.Column,
 		)
 	} else {
-		diag.Detail = diag.Detail + "\n  at <missing location info>"
+		diag.Detail += "\n  at <missing location info>"
 	}
 }

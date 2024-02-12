@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 )
 
-type Diag hcl.Diagnostics //nolint:errname // Diagnostics does implement error interface, but not, itself, an error.
+type Diag hcl.Diagnostics // Diagnostics does implement error interface, but not, itself, an error.
 
 type repeatedError struct{}
 
