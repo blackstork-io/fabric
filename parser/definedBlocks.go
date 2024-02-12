@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
@@ -19,55 +20,81 @@ type DefinedBlocks struct {
 	Plugins      map[definitions.Key]*definitions.Plugin
 }
 
-func (db *DefinedBlocks) GetSection(expr hcl.Expression) (section *definitions.Section, diags diagnostics.Diag) {
-	res, diags := db.Traverse(expr)
-	if diags.HasErrors() {
-		return
-	}
-	section, ok := res.(*definitions.Section)
-	if !ok {
-		diags.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "Invalid path",
-			Detail:   "This path is not referencing a section block",
-			Subject:  expr.Range().Ptr(),
-		})
+func mapGetOrInit[K1, K2 comparable, V any](m map[K1]map[K2]V, key K1) (innerMap map[K2]V) {
+	innerMap, found := m[key]
+	if !found {
+		innerMap = map[K2]V{}
+		m[key] = innerMap
 	}
 	return
 }
 
-func (db *DefinedBlocks) GetPlugin(expr hcl.Expression) (plugin *definitions.Plugin, diags diagnostics.Diag) {
-	res, diags := db.Traverse(expr)
-	if diags.HasErrors() {
-		return
-	}
-	plugin, ok := res.(*definitions.Plugin)
-	if !ok {
-		diags.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "Invalid path",
-			Detail:   "This path is not referencing a plugin block",
-			Subject:  expr.Range().Ptr(),
-		})
+func mapToCty(m map[string]map[string]cty.Value) (res map[string]cty.Value) {
+	res = make(map[string]cty.Value, len(m))
+	for k, v := range m {
+		if len(v) == 0 {
+			continue
+		}
+		res[k] = cty.MapVal(v)
 	}
 	return
 }
 
-func (db *DefinedBlocks) GetConfig(expr hcl.Expression) (cfg *definitions.Config, diags diagnostics.Diag) {
-	res, diags := db.Traverse(expr)
-	if diags.HasErrors() {
-		return
+func PluginMapToCty[V definitions.FabricBlock](plugins map[definitions.Key]V) (content, data cty.Value) {
+	// [plugin_kind][plugin_name][block_name]*definitions.Plugin
+
+	pluginMap := [2]map[string]map[string]cty.Value{
+		{},
+		{},
 	}
-	cfg, ok := res.(*definitions.Config)
-	if !ok {
-		diags.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "Invalid path",
-			Detail:   "This path is not referencing a config block",
-			Subject:  expr.Range().Ptr(),
-		})
+	for k, v := range plugins {
+		var idx int
+		switch k.PluginKind {
+		case definitions.BlockKindContent:
+			idx = 0
+		case definitions.BlockKindData:
+			idx = 1
+		default:
+			panic("must be exhaustive")
+		}
+		blockNameToVal := mapGetOrInit(pluginMap[idx], k.PluginName)
+		blockNameToVal[k.BlockName] = definitions.ToCtyValue(v)
 	}
-	return
+	pluginKindToVal := [2]cty.Value{}
+
+	for idx, pl := range pluginMap {
+		if len(pl) == 0 {
+			continue
+		}
+		pluginKindToVal[idx] = cty.MapVal(mapToCty(pl))
+	}
+	return pluginKindToVal[0], pluginKindToVal[1]
+}
+
+func (db *DefinedBlocks) AsValueMap() map[string]cty.Value {
+	content, data := PluginMapToCty(db.Plugins)
+	cfgContent, cfgData := PluginMapToCty(db.Config)
+	config := cty.MapVal(map[string]cty.Value{
+		definitions.BlockKindContent: cfgContent,
+		definitions.BlockKindData:    cfgData,
+	})
+
+	var sections cty.Value
+	if len(db.Sections) == 0 {
+		sections = cty.MapValEmpty(cty.Map((*definitions.Section)(nil).CtyType()))
+	} else {
+		sect := make(map[string]cty.Value, len(db.Sections))
+		for k, v := range db.Sections {
+			sect[k] = definitions.ToCtyValue(v)
+		}
+		sections = cty.MapVal(sect)
+	}
+	return map[string]cty.Value{
+		definitions.BlockKindContent: content,
+		definitions.BlockKindData:    data,
+		definitions.BlockKindSection: sections,
+		definitions.BlockKindConfig:  config,
+	}
 }
 
 func (db *DefinedBlocks) DefaultConfigFor(plugin *definitions.Plugin) (config *definitions.Config) {

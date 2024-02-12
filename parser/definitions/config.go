@@ -71,10 +71,29 @@ func (c *Config) GetKey() *Key {
 	}
 }
 
+func (c *Config) ApplicableTo(plugin *Plugin) bool {
+	switch len(c.Block.Labels) {
+	case 0:
+		// anonymous config block
+		return true
+	case 2, 3:
+		// named config block
+		return plugin.Kind() == c.Block.Labels[0] && plugin.Name() == c.Block.Labels[1]
+	default:
+		panic("Invalid parsed config block")
+	}
+}
+
 var _ FabricBlock = (*Config)(nil)
 
 func (c *Config) GetHCLBlock() *hcl.Block {
 	return c.Block
+}
+
+var ctyConfigType = capsuleTypeFor[Config]()
+
+func (c *Config) CtyType() cty.Type {
+	return ctyConfigType
 }
 
 func DefineConfig(block *hclsyntax.Block) (config *Config, diags diagnostics.Diag) {

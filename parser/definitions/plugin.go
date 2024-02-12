@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
@@ -85,8 +86,14 @@ func (p *Plugin) GetHCLBlock() *hcl.Block {
 	return p.Block.AsHCLBlock()
 }
 
+var ctyPluginType = capsuleTypeFor[Plugin]()
+
+func (p *Plugin) CtyType() cty.Type {
+	return ctyPluginType
+}
+
 func DefinePlugin(block *hclsyntax.Block, atTopLevel bool) (plugin *Plugin, diags diagnostics.Diag) {
-	nameRequired := atTopLevel || (block.Type == BlockKindData)
+	nameRequired := atTopLevel
 
 	diags.Append(validatePluginKind(block, block.Type, block.TypeRange))
 	diags.Append(validatePluginName(block, 0))

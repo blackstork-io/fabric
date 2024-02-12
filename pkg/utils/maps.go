@@ -12,3 +12,15 @@ func SliceToSet[K comparable](slice []K) map[K]struct{} {
 	}
 	return res
 }
+
+// If key in map - return corresponding value and delete it from map
+func Pop[K comparable, V any](m map[K]V, key K) (val V, found bool) {
+	if m == nil {
+		return
+	}
+	val, found = m[key]
+	if found {
+		delete(m, key)
+	}
+	return
+}

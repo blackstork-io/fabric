@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
@@ -15,8 +16,6 @@ type Section struct {
 	Parsed      bool
 	ParseResult *ParsedSection
 }
-
-var _ FabricBlock = (*Section)(nil)
 
 type ContentPluginOrSection interface {
 	contentPluginOrSection()
@@ -32,10 +31,6 @@ type ParsedSection struct {
 	Meta    *MetaBlock
 	Title   *hclsyntax.Attribute
 	Content []ContentPluginOrSection
-}
-
-func (s *Section) GetHCLBlock() *hcl.Block {
-	return s.Block.AsHCLBlock()
 }
 
 func (s *Section) IsRef() bool {
@@ -55,6 +50,18 @@ func (s *Section) Name() string {
 		return s.Block.Labels[nameIdx]
 	}
 	return ""
+}
+
+var _ FabricBlock = (*Section)(nil)
+
+func (s *Section) GetHCLBlock() *hcl.Block {
+	return s.Block.AsHCLBlock()
+}
+
+var ctySectionType = capsuleTypeFor[Section]()
+
+func (*Section) CtyType() cty.Type {
+	return ctySectionType
 }
 
 func DefineSection(block *hclsyntax.Block, atTopLevel bool) (section *Section, diags diagnostics.Diag) {

@@ -111,25 +111,18 @@ func readFabricFile(dirFs fs.FS, path string) ([]byte, diagnostics.Diag) {
 	return bytes, nil
 }
 
-type DirParseResult struct {
-	Diags   diagnostics.Diag
-	Blocks  *DefinedBlocks
-	FileMap map[string]*hcl.File
-}
-
-func ParseDir(dir fs.FS) DirParseResult {
-	result := DirParseResult{
-		Blocks:  NewDefinedBlocks(),
-		FileMap: map[string]*hcl.File{},
-	}
+func ParseDir(dir fs.FS) (*DefinedBlocks, map[string]*hcl.File, diagnostics.Diag) {
+	blocks := NewDefinedBlocks()
+	fileMap := map[string]*hcl.File{}
+	var parseDiags diagnostics.Diag
 
 	// Collects parsed results
 	parsePE := parexec.New(
 		parexec.CPULimiter,
 		func(res fileParseResult, _ int) (cmd parexec.Command) {
-			result.Diags.Extend(res.Diag)
-			result.Diags.Extend(result.Blocks.Merge(res.blocks))
-			result.FileMap[res.path] = res.file
+			parseDiags.Extend(res.Diag)
+			parseDiags.Extend(blocks.Merge(res.blocks))
+			fileMap[res.path] = res.file
 			return
 		},
 	)
@@ -170,8 +163,16 @@ func ParseDir(dir fs.FS) DirParseResult {
 	parsePE.WaitDoneAndLock()
 
 	// prepending read diags, since they logically happen earlier
-	result.Diags = append(readDiags, result.Diags...)
-	return result
+	diags := append(readDiags, parseDiags...) //nolint:gocritic
+
+	if len(fileMap) == 0 {
+		diags.Add(
+			"No fabric files found",
+			fmt.Sprintf("There are no *.fabric files at '%s'", dir),
+		)
+	}
+
+	return blocks, fileMap, diags
 }
 
 func parseBlockDefinitions(body *hclsyntax.Body) (res *DefinedBlocks, diags diagnostics.Diag) {

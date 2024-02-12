@@ -67,7 +67,7 @@ func TestDiagnostic(t *testing.T) {
 				t.Parallel()
 				assert := assert.New(t)
 
-				obj := new(struct{})
+				obj := new(int)
 				var rng *hcl.Range
 				if tt.addRange {
 					rng = &hcl.Range{
