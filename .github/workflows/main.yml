@@ -7,12 +7,15 @@ on:
   pull_request:
   workflow_dispatch:
 
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
   tests:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -26,6 +29,7 @@ jobs:
       - run: go test -race -v -timeout 10s -short ./...
 
   builds:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     strategy:
       fail-fast: true
       matrix:
@@ -41,6 +45,7 @@ jobs:
         run: go build -v -o ${{ runner.temp }}/fabric
 
   golangci-lint:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,6 +58,7 @@ jobs:
           version: v1.55.2
 
   markdownlint-cli:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
