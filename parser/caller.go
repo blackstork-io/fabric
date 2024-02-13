@@ -17,9 +17,6 @@ import (
 	"github.com/blackstork-io/fabric/plugin/runner"
 )
 
-// Stub implementation of plugin caller
-// TODO: attach to plugin discovery mechanism
-
 type pluginData struct {
 	ConfigSpec     hcldec.Spec
 	InvocationSpec hcldec.Spec
@@ -149,11 +146,8 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 			Config: configVal,
 			Args:   pluginArgs,
 		})
-		result.Result = map[string]any{}
 		if data != nil {
-			result.Result = map[string]any{
-				"result": data.Any(),
-			}
+			result.Result = data.Any()
 		}
 		result.Diags = diags
 	case "content":

@@ -67,7 +67,7 @@ func parseTableContentArgs(params *plugin.ProvideContentParams) (headers, values
 		var (
 			header cty.Value
 			value  cty.Value
-			ok     = false
+			ok     bool
 		)
 		if header, ok = obj["header"]; !ok || header.IsNull() {
 			return nil, nil, fmt.Errorf("missing header in table cell")

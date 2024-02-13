@@ -50,7 +50,6 @@ func (db *DefinedBlocks) ParsePlugin(plugin *definitions.Plugin) (res *definitio
 }
 
 func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *definitions.ParsedPlugin, diags diagnostics.Diag) {
-	// var res evaluation.Plugin
 	res := definitions.ParsedPlugin{
 		PluginName: plugin.Name(),
 		BlockName:  plugin.BlockName(),
@@ -133,8 +132,14 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 				diags.Append(&hcl.Diagnostic{
 					Severity: hcl.DiagWarning,
 					Summary:  "Potential data conflict",
-					Detail:   fmt.Sprintf("This 'data ref' will inherit its name from its base (\"%s\"). Creating another anonymous 'data ref' with the same 'base' would override the current block's execution results. We recommend naming all 'data ref' blocks uniquely", res.BlockName),
-					Subject:  plugin.DefRange().Ptr(),
+					Detail: fmt.Sprintf(
+						"This 'data ref' will inherit its name from its base (%q). "+
+							"Creating another anonymous 'data ref' with the same 'base' would "+
+							"override the current block's execution results. "+
+							"We recommend namingall 'data ref' blocks uniquely",
+						res.BlockName,
+					),
+					Subject: plugin.DefRange().Ptr(),
 				})
 			}
 		}

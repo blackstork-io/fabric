@@ -358,4 +358,43 @@ func TestE2ERender(t *testing.T) {
 			{diag_test.IsError, diag_test.SummaryContains("No fabric files found")},
 		},
 	)
+	renderTest(
+		t, "Data block result access",
+		[]string{
+			`
+			document "test-doc" {
+				data inline "name" {
+					attr = "val"
+				}
+				content text {
+					text = "From data block: {{.data.inline.name.attr}}"
+				}
+			}
+			`,
+		},
+		"test-doc",
+		[]string{"From data block: val"},
+		[][]diag_test.Assert{},
+	)
+	renderTest(
+		t, "Data with jq interaction",
+		[]string{
+			`
+			document "test" {
+				data inline "foo" {
+				  items = ["a", "b", "c"]
+				  x = 1
+				  y = 2
+				}
+				content text {
+				  query = ".data.inline.foo.items | length"
+				  text = "There are {{ .query_result }} items"
+				}
+			}
+			`,
+		},
+		"test",
+		[]string{"There are 3 items"},
+		[][]diag_test.Assert{},
+	)
 }

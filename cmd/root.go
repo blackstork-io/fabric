@@ -20,7 +20,7 @@ import (
 
 const devVersion = "v0.0.0-dev"
 
-// Overriden by goreleaser
+// Overridden by goreleaser.
 var version = devVersion
 
 type logLevels struct {
@@ -179,7 +179,6 @@ func init() {
 	)
 	rootCmd.PersistentFlags().BoolVar(&rawArgs.colorize, "color", true, "enables colorizing the logs and diagnostics (if supported by the terminal and log format)")
 	rootCmd.PersistentFlags().BoolVarP(&rawArgs.verbose, "verbose", "v", false, "a shortcut to --log-level debug")
-	// TODO: after #5 is implemented - make optional
 	rootCmd.PersistentFlags().StringVar(
 		&rawArgs.pluginsDir, "plugins-dir", "", "override for plugins dir from fabric configuration (required)",
 	)
