@@ -180,6 +180,6 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&rawArgs.colorize, "color", true, "enables colorizing the logs and diagnostics (if supported by the terminal and log format)")
 	rootCmd.PersistentFlags().BoolVarP(&rawArgs.verbose, "verbose", "v", false, "a shortcut to --log-level debug")
 	rootCmd.PersistentFlags().StringVar(
-		&rawArgs.pluginsDir, "plugins-dir", "", "override for plugins dir from fabric configuration (required)",
+		&rawArgs.pluginsDir, "plugins-dir", "", "override for plugins dir from fabric configuration",
 	)
 }
