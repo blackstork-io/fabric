@@ -74,7 +74,7 @@ func DefineGlobalConfig(block *hclsyntax.Block) (cfg *GlobalConfig, diags diagno
 		PluginVersions: make(map[string]string),
 	}
 	cacheDir := value.GetAttr("cache_dir")
-	if !cacheDir.IsNull() || cacheDir.AsString() != "" {
+	if !cacheDir.IsNull() && cacheDir.AsString() != "" {
 		cfg.CacheDir = cacheDir.AsString()
 	}
 	pluginRegistry := value.GetAttr("plugin_registry")
