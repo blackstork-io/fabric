@@ -79,7 +79,7 @@ func fetchRandomNumbers(ctx context.Context, params *plugin.RetrieveDataParams) 
 
 	data := make(plugin.ListData, lengthInt)
 	for i := int64(0); i < lengthInt; i++ {
-		n := rand.Int63() % (maxInt - minInt + 1)
+		n := rand.Int63() % (maxInt - minInt + 1) //nolint:G404 // weak rng is ok here
 		data[i] = plugin.NumberData(n + minInt)
 	}
 	return data, nil

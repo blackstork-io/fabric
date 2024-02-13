@@ -11,7 +11,15 @@ run:
 
   # default is true. Enables skipping of directories:
   #   vendor$, third_party$, testdata$, examples$, Godeps$, builtin$
-  skip-dirs-use-default: true
+  skip-dirs-use-default: false
+
+  skip-dirs:
+    - (^|/)vendor($|/)
+    - (^|/)third_party($|/)
+    - (^|/)testdata($|/)
+    - (^|/)examples($|/)
+    - (^|/)Godeps($|/)
+    # - (^|/)builtin($|/) # disable standard builtin regexp, it was hiding builtin plugins
 
 
 # output configuration options
@@ -35,7 +43,6 @@ output:
   # sorts results by: filepath, line and column
   sort-results: false
 
-
 linters-settings:
   dupl:
     threshold: 100
@@ -52,7 +59,7 @@ linters-settings:
     min-occurrences: 2
   staticcheck:
     go: "1.19"
-    checks: [ "all", "-SA1019"]
+    checks: ["all", "-SA1019"]
   gocritic:
     enabled-tags:
       - diagnostic
@@ -79,7 +86,6 @@ linters-settings:
   nolintlint:
     require-explanation: false # don't require an explanation for nolint directives
     require-specific: false # don't require nolint directives to be specific about which linter is being skipped
-  
 
 linters:
   disable-all: true

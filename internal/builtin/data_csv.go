@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"unicode/utf8"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
@@ -36,6 +37,28 @@ func makeCSVDataSource() *plugin.DataSource {
 	}
 }
 
+func getDelim(config cty.Value) (r rune, diags hcl.Diagnostics) {
+	r = defaultCSVDelimiter
+	if config.IsNull() {
+		return
+	}
+	delim := config.GetAttr("delimiter")
+	if delim.IsNull() {
+		return
+	}
+	delimStr := delim.AsString()
+	delimRune, runeLen := utf8.DecodeRuneInString(delimStr)
+	if runeLen == 0 || len(delimStr) != runeLen {
+		diags = hcl.Diagnostics{{
+			Severity: hcl.DiagError,
+			Summary:  "delimiter must be a single character",
+		}}
+		return
+	}
+	r = delimRune
+	return
+}
+
 func fetchCSVData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
 	path := params.Args.GetAttr("path")
 	if path.IsNull() || path.AsString() == "" {
@@ -44,21 +67,11 @@ func fetchCSVData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 			Summary:  "path is required",
 		}}
 	}
-	delim := cty.StringVal(string(defaultCSVDelimiter))
-	if !params.Config.IsNull() {
-		delim = params.Config.GetAttr("delimiter")
-		if delim.IsNull() {
-			delim = cty.StringVal(string(defaultCSVDelimiter))
-		}
+	delim, diags := getDelim(params.Config)
+	if diags != nil {
+		return nil, diags
 	}
-	if len(delim.AsString()) != 1 {
-		return nil, hcl.Diagnostics{{
-			Severity: hcl.DiagError,
-			Summary:  "delimiter must be a single character",
-		}}
-	}
-	delimRune := []rune(delim.AsString())[0]
-	data, err := readCSVFile(ctx, path.AsString(), delimRune)
+	data, err := readCSVFile(ctx, path.AsString(), delim)
 	if err != nil {
 		return nil, hcl.Diagnostics{{
 			Severity: hcl.DiagError,
