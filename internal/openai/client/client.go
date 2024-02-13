@@ -60,6 +60,7 @@ func (c *client) GenerateChatCompletion(ctx context.Context, params *ChatComplet
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		var errRes ErrorResponse
 		if err := json.NewDecoder(res.Body).Decode(&errRes); err != nil {

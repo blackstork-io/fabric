@@ -17,9 +17,6 @@ import (
 	"github.com/blackstork-io/fabric/plugin/runner"
 )
 
-// Stub implementation of plugin caller
-// TODO: attach to plugin discovery mechanism
-
 type pluginData struct {
 	ConfigSpec     hcldec.Spec
 	InvocationSpec hcldec.Spec

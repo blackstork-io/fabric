@@ -56,12 +56,12 @@ func NewClient(loc string) (p *plugin.Schema, closefn func() error, err error) {
 	})
 	rpcClient, err := client.Client()
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create plugin client: %v", err)
+		return nil, nil, fmt.Errorf("failed to create plugin client: %w", err)
 	}
 	raw, err := rpcClient.Dispense(pluginName)
 	if err != nil {
 		rpcClient.Close()
-		return nil, nil, fmt.Errorf("failed to dispense plugin: %v", err)
+		return nil, nil, fmt.Errorf("failed to dispense plugin: %w", err)
 	}
 	plg, ok := raw.(*plugin.Schema)
 	if !ok {

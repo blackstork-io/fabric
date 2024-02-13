@@ -27,7 +27,7 @@ func FindByExtra[T any](diags Diag) *hcl.Diagnostic {
 }
 
 func (d Diag) Error() string {
-	return (hcl.Diagnostics)(d).Error()
+	return hcl.Diagnostics(d).Error()
 }
 
 // Appends diag to diagnostics, returns true if the just-appended diagnostic is an error.

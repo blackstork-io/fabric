@@ -30,8 +30,6 @@ func (b *BlockInvocation) DefRange() hcl.Range {
 }
 
 func hclBodyToVal(body *hclsyntax.Body) (val cty.Value, diags diagnostics.Diag) {
-	// TODO: this makes a full dump of all of the attributes, not abiding by hidden
-	// Think about ways to fix, or whether fix is needed
 	obj := make(map[string]cty.Value, len(body.Attributes)+len(body.Blocks))
 	for name, attr := range body.Attributes {
 		attrVal, diag := attr.Expr.Value(nil)

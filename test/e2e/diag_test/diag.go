@@ -50,7 +50,7 @@ func sliceRemove[T any](s []T, pos int) []T {
 }
 
 func MatchBiject(diags diagnostics.Diag, asserts [][]Assert) bool {
-	dgs := ([]*hcl.Diagnostic)(diags)
+	dgs := []*hcl.Diagnostic(diags)
 	if len(dgs) != len(asserts) {
 		return false
 	}

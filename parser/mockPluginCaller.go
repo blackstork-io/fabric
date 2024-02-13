@@ -9,6 +9,7 @@ import (
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
 type MockCaller struct{}
@@ -18,32 +19,27 @@ func (c *MockCaller) dumpContext(context map[string]any) string {
 }
 
 func (c *MockCaller) dumpConfig(config evaluation.Configuration) string {
+	if utils.IsNil(config) {
+		return "NoConfig"
+	}
 	switch c := config.(type) {
 	case *definitions.ConfigPtr:
-		if c == nil {
-			return "NoConfig"
-		}
 		attrs, _ := c.Cfg.Body.JustAttributes()
 		return litter.Sdump("ConfigPtr", maps.Keys(attrs))
 	case *definitions.Config:
-		if c == nil {
-			return "NoConfig"
-		}
 		attrs, _ := c.Block.Body.JustAttributes()
 		return litter.Sdump("Config", maps.Keys(attrs))
-	case nil:
-		return "NoConfig"
 	default:
 		return "UnknownConfig " + litter.Sdump(c)
 	}
 }
 
 func (c *MockCaller) dumpInvocation(invoke evaluation.Invocation) string {
+	if utils.IsNil(invoke) {
+		return "NoConfig"
+	}
 	switch inv := invoke.(type) {
 	case *evaluation.BlockInvocation:
-		if inv == nil {
-			return "NoConfig"
-		}
 		attrStringed := map[string]string{}
 		attrs, _ := inv.Body.JustAttributes()
 		for k, v := range attrs {
@@ -53,13 +49,8 @@ func (c *MockCaller) dumpInvocation(invoke evaluation.Invocation) string {
 
 		return litter.Sdump("BlockInvocation", attrStringed)
 	case *definitions.TitleInvocation:
-		if inv == nil {
-			return "NoInvocation"
-		}
 		val, _ := inv.Expression.Value(nil)
 		return litter.Sdump("TitleInvocation", val.GoString())
-	case nil:
-		return "NoInvocation"
 	default:
 		return "UnknownInvocation " + litter.Sdump(inv)
 	}

@@ -43,7 +43,7 @@ func Render(pluginsDir string, sourceDir fs.FS, docName string) (results []strin
 	}
 
 	if pluginsDir == "" && blocks.GlobalConfig != nil && blocks.GlobalConfig.PluginRegistry != nil {
-		// use pluginsDir from config, unless overriden by cli arg
+		// use pluginsDir from config, unless overridden by cli arg
 		pluginsDir = blocks.GlobalConfig.PluginRegistry.MirrorDir
 	}
 
@@ -57,7 +57,7 @@ func Render(pluginsDir string, sourceDir fs.FS, docName string) (results []strin
 			builtin.Plugin(version),
 		),
 		runner.WithPluginDir(pluginsDir),
-		runner.WithPluginVersions(runner.VersionMap(pluginVersions)),
+		runner.WithPluginVersions(pluginVersions),
 	)
 	if diags.ExtendHcl(stdDiag) {
 		return

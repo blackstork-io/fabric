@@ -126,9 +126,8 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 				continue
 			}
 			circularRefDetector.Add(section, block.DefRange().Ptr())
-			//nolint:gocritic
-			defer circularRefDetector.Remove(section, &diags)
 			parsedSubSection, diag := db.ParseSection(subSection)
+			circularRefDetector.Remove(section, &diag)
 			if diags.Extend(diag) {
 				continue
 			}
@@ -136,38 +135,40 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 		}
 	}
 
-	if refBase != nil {
-		baseSection, diag := Resolve[*definitions.Section](db, refBase)
-		if diags.Extend(diag) {
-			return
-		}
-		circularRefDetector.Add(section, refBase.Range().Ptr())
-		defer circularRefDetector.Remove(section, &diags)
-		if circularRefDetector.Check(baseSection) {
-			diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "Circular reference detected",
-				Detail:   "Looped back to this block through reference chain:",
-				Subject:  section.Block.DefRange().Ptr(),
-				Extra:    circularRefDetector.ExtraMarker,
-			})
-			return
-		}
-		baseEval, diag := db.ParseSection(baseSection)
-		if diags.Extend(diag) {
-			return
-		}
-
-		// update from base:
-		if res.Title == nil {
-			res.Title = baseEval.Title
-		}
-		if res.Meta == nil {
-			res.Meta = baseEval.Meta
-		}
-		// TODO: make an suggestion-issue: allow adding blocks in refs, order-preserving base attr
-		res.Content = append(res.Content, baseEval.Content...)
+	if refBase == nil {
+		parsed = &res
+		return
 	}
+	// Parse ref
+	baseSection, diag := Resolve[*definitions.Section](db, refBase)
+	if diags.Extend(diag) {
+		return
+	}
+	circularRefDetector.Add(section, refBase.Range().Ptr())
+	defer circularRefDetector.Remove(section, &diags)
+	if circularRefDetector.Check(baseSection) {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Circular reference detected",
+			Detail:   "Looped back to this block through reference chain:",
+			Subject:  section.Block.DefRange().Ptr(),
+			Extra:    circularRefDetector.ExtraMarker,
+		})
+		return
+	}
+	baseEval, diag := db.ParseSection(baseSection)
+	if diags.Extend(diag) {
+		return
+	}
+
+	// update from base:
+	if res.Title == nil {
+		res.Title = baseEval.Title
+	}
+	if res.Meta == nil {
+		res.Meta = baseEval.Meta
+	}
+	res.Content = append(res.Content, baseEval.Content...)
 
 	parsed = &res
 	return
