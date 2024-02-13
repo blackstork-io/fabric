@@ -78,6 +78,30 @@ func ParseDataAny(v any) (Data, error) {
 		return BoolData(v), nil
 	case float64:
 		return NumberData(v), nil
+	case float32:
+		return NumberData(v), nil
+	case uint:
+		return NumberData(v), nil
+	case uint8:
+		return NumberData(v), nil
+	case uint16:
+		return NumberData(v), nil
+	case uint32:
+		return NumberData(v), nil
+	case uint64:
+		return NumberData(v), nil
+	case int:
+		return NumberData(v), nil
+	case int8:
+		return NumberData(v), nil
+	case int16:
+		return NumberData(v), nil
+	case int32:
+		return NumberData(v), nil
+	case int64:
+		return NumberData(v), nil
+	case uintptr:
+		return NumberData(v), nil
 	case string:
 		return StringData(v), nil
 	case []any:
