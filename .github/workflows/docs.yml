@@ -1,0 +1,40 @@
+name: main
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.md'
+  pull_request:
+    paths:
+      - '**.md'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  # https://github.com/igorshubovych/markdownlint-cli
+  markdownlint-cli:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nosborn/github-action-markdown-cli@v3.3.0
+        with:
+          files: '**/*.md'
+          config_file: .markdownlint.yaml
+          dot: true
+
+  # https://github.com/errata-ai/vale-action
+  vale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: errata-ai/vale-action@reviewdog
+        with:
+          fail_on_error: true
+          vale_flags: "--glob='**/*.md'"
+

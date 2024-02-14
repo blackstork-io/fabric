@@ -4,55 +4,56 @@ type: docs
 weight: 60
 ---
 
-# Content Blocks
+# Content blocks
 
-Blocks of type `content` define document segments: text paragraphs, tables, graphs, lists, etc. The order in which `content` blocks are defined determines the order of placement of the generated content in the document.
+`content` blocks define document segments: text paragraphs, tables, graphs, lists, etc. The order of the `content` blocks in the template determines the order of the generated content in the document.
 
 ```hcl
 
 # Root-level definition of the content block
-content <plugin-name> "<block-name>" {
+content <content-provider-name> "<block-name>" {
   ...
 }
 
 document "foobar" {
 
   # In-document definition of the content block
-  content <plugin-name> "<block-name>" {
+  content <content-provider-name> "<block-name>" {
     ...
   }
 
-  content <plugin-name> {
+  content <content-provider-name> {
     ...
   }
 
 }
 ```
 
-If a `content` block is defined at the root level of the configuration file, outside of the `document`, both names – the plugin name and the block name – must be provided. A combination of block type `content`, plugin name and block name serves as a unique identifier of a block within the codebase.
+If the block is defined at the root level of the configuration file, outside of the `document` block, both names – the content provider name and the block name – are required. A combination of block type `content`, content provider name, and block name serves as a unique identifier of a block within the codebase.
 
-If a `content` block is defined within the document, only plugin name is required, while block name is optional.
+If the content block is defined within the document template, only a plugin name is required, while the block name is optional.
 
-A content block is implemented by a content plugin specified by `<plugin-name>` in a block signature. See [Plugins]({{< ref "plugins.md" >}}) for the details on the plugins supported by Fabric.
+A specified content provider is responsible for rendering a content block. See [Plugins]({{< ref "plugins.md" >}}) for the details on the plugins supported by Fabric.
 
-## Supported Arguments
+
+## Supported arguments
 
 The arguments provided in the block are either generic arguments or plugin-specific input parameters.
 
-### Generic Arguments
+### Generic arguments
 
-- `config`: (optional) a reference to a named config block defined outside the document. If provided, it takes precedence over the default configuration for the plugin. See [Plugin Configuration]({{< ref "configs.md#plugin-configuration" >}}) for the details.
-- `query`: (optional) a [JQ](https://jqlang.github.io/jq/manual/) query to be applied to the context object. The results of the query are stored under `query_result` field in the context. See [Context](#context) object for the details.
+- `config`: (optional) a reference to a named configuration block defined outside the document. If provided, it takes precedence over the default configuration for the plugin. See [Plugin Configuration]({{< ref "configs.md#plugin-configuration" >}}) for the details.
+- `query`: (optional) a [JQ](https://jqlang.github.io/jq/manual/) query to be executed against the context object. The results of the query will be placed under `query_result` field in the context. See [Context](#context) object for the details.
 - `render_if_no_query_result`: (optional) a boolean flag that determines if the content block should be rendered when `query` returned no data. Defaults to `true`.
 - `text_when_no_query_result`: (optional) provides the text to be rendered instead of calling the plugin when `render_if_no_query_result` is `true`.
-- `query_input_required`: (optional) a boolean flag that specifies if `query_input` must be explicitely provided when the content block is referenced. `false` by default. See [Query Input Requirement]({{< ref "references.md#query-input-requirement" >}}) for the details.
+- `query_input_required`: (optional) a boolean flag that specifies if `query_input` must be explicitly provided when the content block is referenced. `false` by default. See [Query Input Requirement]({{< ref "references.md#query-input-requirement" >}}) for the details.
 - `query_input`: (optional) a JQ query to be applied to the context object. The results of the query are stored under `query_input` field in the context. See [Query Input Requirement]({{< ref "references.md#query-input-requirement" >}}) for the details.
 
-### Plugin-specific Arguments
+### Plugin-specific arguments
 
 Plugin-specific arguments are defined by a plugin specification. See [Plugins]({{< ref "plugins.md" >}}) for the details on the supported arguments per plugin.
 
-## Supported Nested Blocks
+## Supported nested blocks
 
 - `meta`: (optional) a block containing metadata for the block.
 - `config`: (optional) an inline configuration for the block. If provided, it takes precedence over the `config` argument and default configuration for the plugin.
@@ -63,8 +64,8 @@ When Fabric renders a content block, a corresponding content plugin is called. A
 
 The context object is a JSON dictionary with pre-defined root-level fields:
 
-- `data` contains a map of all resolved data definitions for the document. The JSON path to a specific data point follows the data block signature: `data.<plugin-name>.<block-name>`.
-- `query_result` contains a result of the execution of a JQ query provided in `query` attribute, as requested by `query_input_required` attribute. This is mostly used in `ref` blocks to explicitely provide data to the query in `query` attribute.
+- `data` points to a map of all resolved data definitions for the document. The JSON path to a specific data point follows the data block signature: `data.<plugin-name>.<block-name>`.
+- `query_result` points to a result of the execution of a JQ query provided in `query` attribute, as requested by `query_input_required` attribute. This is mostly used in `ref` blocks to explicitly pre-filter the data for the JQ query set in `query` attribute.
 
 ## References
 
@@ -73,33 +74,40 @@ See [References]({{< ref references.md >}}) for the details about referencing co
 ## Example
 
 ```hcl
-
-config content openai "test_account" {
-  api_key = "openai-api-key"
+config content openai_text "test_account" {
+  api_key = "<OPENAI-KEY>"
 }
 
-document "test-document" {
+document "test-doc" {
 
-   data inline "foo" {
-     d = {
-       items = ["a", "b", "c"]
-     }
-   }
+  data inline "foo" {
+    items = ["aaa", "bbb", "ccc"]
+  }
 
-   content text {
-     # Query contains a JQ query executed against the context
-     query = ".data.inline.foo.d.items | length"
+  content text {
+    # Query contains a JQ query executed against the context
+    query = ".data.inline.foo.items | length"
 
-     # The result of the query is stored in the `query_result` field in the context.
-     # The context is available for the templating engine inside the `content.text` plugin.
-     text = "There are {{ .query_result }} items"
-   }
+    # The result of the query is stored in the `query_result` field in the context.
+    # The context is available for the templating engine inside the `content.text` plugin.
+    text = "There are {{ .query_result }} items"
+  }
 
-   content openai {
-     config = config.content.openai.test_account
-     query = ".data.inline.foo.d"
+  content openai_text {
+    config = config.content.openai_text.test_account
+    query = ".data.inline.foo"
 
-     prompt = "Describe the items provided in the list"
-   }
+    prompt = <<-EOT
+       Write a short story, just a paragraph, about space exploration
+       using the values from the provided items list as character names.
+    EOT
+  }
 }
+```
+
+produces the output
+```
+There are 3 items
+
+In the vast expanse of the universe, three brave astronauts, aaa, bbb, and ccc, embarked on a daring mission of space exploration. As they soared through the galaxies, their unwavering determination and unyielding teamwork propelled them towards uncharted territories, uncovering hidden wonders and pushing the boundaries of human understanding. Together, aaa, bbb, and ccc, etched their names in the stars as pioneers of a new era, forever inspiring generations to dream beyond the confines of Earth.
 ```

@@ -6,9 +6,9 @@ weight: 20
 
 # Configuration
 
-## Global Configuration
+## Global configuration
 
-Configuration block type `fabric` is used to configure Fabric. It can define locations of the local directories and plugin dependencies.
+The `fabric` configuration block defines a global configuration for Fabric. It's used for defining plugin dependencies, the paths to local directories, etc.
 
 ```hcl
 fabric {
@@ -18,69 +18,79 @@ fabric {
 
 There can be only one `fabric` block defined within the codebase.
 
-### Supported Arguments
+### Supported arguments
 
-- `plugin_versions`: (required) a map that matches namespaced plugin names to the version constraints in SemVer (see Terraform's [version constraint syntax](https://developer.hashicorp.com/terraform/language/expressions/version-constraints#version-constraint-syntax)).
-- `cache_dir`: (optional) a path to a directory on the local file system. The default value is `./.fabric`. If the directory does not exist, it will be created on the first run of `fabric`.
+- `plugin_versions`: (required) a map that matches name-spaced plugin names to the version constraints in SemVer (see Terraform [version constraint syntax](https://developer.hashicorp.com/terraform/language/expressions/version-constraints#version-constraint-syntax)).
+- `cache_dir`: (optional) a path to a directory on the local file system. The default value is `.fabric` directory in the current folder. If the directory doesn't exist, Fabric will create it on the first run.
 
-### Supported Nested Blocks
+### Supported nested blocks
 
-- `plugin_registry` – (optional) a block that defines available plugin registries. The block accepts only one attribute
+- `plugin_registry` – (optional) a block that defines available plugin registries. At the moment, the block accepts only one attribute:
 
   ```hcl
   plugin_registry {
-    cache_dir = "/tmp/plugins/"
+    mirror_dir = "<path>"
   }
   ```
 
-  - `mirror_dir` – (optional) a path to a directory on the local filesystem with plugin archives.
+  - `mirror_dir` – (optional) a path to a directory on the local filesystem with plugin binaries.
 
 ### Example
 
 ```hcl
 fabric {
 
-  plugins_registry {
-    mirror_dir = "/tmp/plugins/"
-  }
-
   cache_dir = "./.fabric"
 
+  plugins_registry {
+    mirror_dir = "/tmp/local-mirror/plugins"
+  }
+
   plugin_versions = {
-    "blackstork/data.elasticsearch" = "1.2.3"
-    "blackstork/content.openai" = "=11.22.33"
+    "blackstork/elasticsearch" = "1.2.3"
+    "blackstork/openai" = "=11.22.33"
   }
 }
 ```
 
-## Plugin Configuration
+## Data source and content provider configurations
 
-`config` block defines a configuration for a plugin:
+Fabric plugins can include one or more data sources or content providers.
+
+**Data sources** load local data or integrate with external data stores, platforms, and services.
+
+**Content providers** generate Markdown content that Fabric will include into the document during template rendering. The provider can either render content locally or use an external API.
+
+For example:
+- `blackstork/openai` plugin includes `openai_text` content provider; 
+- `blackstork/github` plugin includes `github_issues` data source.
+
+Data sources and content providers can be configured using `config` block:
 
 ```hcl
 
-config <plugin-type> <plugin-name> {
+config data <data-source-name> "<name>" {
   ...
 }
 
-config <plugin-type> <plugin-name> "<config-name>" {
+config content <content-provider-name> "<name>" {
   ...
 }
 ```
 
-A plugin type matches a block type it powers: `<plugin-type>` is either `content` or `data`. Both plugin type and plugin name are required.
+It's important to use a correct type - `data` or `content` - for data source and content provider configurations respectively. 
 
-If `<config-name>` is not provided, the block is treated as a default configuration for the plugin of a specified type and name. Every time the plugin is executed (while running `content` or `data` blocks), the configuration will be passed to the plugin as one of the arguments.
+If the block is named (`<name>` is provided), the `config` block can be explicitly referenced in a `config` argument inside `content` or `data` blocks. This is helpful if there is a need to have more than one configuration for the same data source / content provider.
 
-If `<config-name>` is set, the config block can be explicitely referenced inside the `content` or `data` block. This is helpful if there is a need to have multiple configurations for the same plugin.
+If `<name>` isn't provided, the configuration acts as a default configuration for a specified data source / content provider.
 
-### Supported Arguments
+### Supported arguments
 
-The arguments that are allowed in the configuration block are plugin-specific – every plugin defines the configuration options supported. See [Plugins]({{< ref "plugins.md" >}}) for the details on the plugin configuation paramters.
+The arguments allowed in the configuration block are specific for a data source / content provider. See [Plugins]({{< ref "plugins.md" >}}) for the details on the configuration parameters supported.
 
-### Supported Nested Blocks
+### Supported nested blocks
 
-Nested blocks are not supported inside the `config` blocks.
+Nested blocks aren't supported inside the `config` blocks.
 
 ### Example
 

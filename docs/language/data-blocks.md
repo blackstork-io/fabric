@@ -4,35 +4,37 @@ type: docs
 weight: 50
 ---
 
-# Data Blocks
+# Data blocks
 
-Blocks of type `data` define data requirements for the document. The data blocks are executed by data plugins.
+`data` blocks define data requirements for the template. In its signature, the block specifies the data source Fabric will fetch the data from.
 
 ```hcl
-data <plugin-name> "<block-name>" {
+data <data-source-name> "<block-name>" {
   ...
 }
 
 document "foobar" {
 
-  data <plugin-name> "<block-name>" {
+  data <data-source-name> "<block-name>" {
     ...
   }
 
 }
 ```
 
-The plugin name and the block name are required, and, together with the block type `data` make a unique identifier for the block. The `data` blocks must be defined on the root-level of the file or of the document.
+Both a data source name and a block name are required. The pair makes an unique identifier for the block.
 
-The data, represented by the block, is accessible under `data.<plugin-name>.<block-name>` path in the context (see [Context]({{< ref "content-blocks.md#context" >}}) for more details).
+The data blocks must be placed either on a root-level of the file or on a root-level of the document.
 
-## Supported Arguments
+When Fabric starts rendering the template, the data sources for the data blocks are executed and the results are placed under the block names in the context (see [Context]({{< ref "content-blocks.md#context" >}}) for more details), available for queries.
+
+## Supported arguments
 
 The arguments provided in the block are either generic arguments or plugin-specific input parameters.
 
-### Generic Arguments
+### Generic arguments
 
-- `config`: (optional) a reference to a named config block defined outside the document. If provided, it takes precedence over the default configuration for the plugin. See [Plugin Configuration]({{< ref "configs.md#plugin-configuration" >}}) for the details.
+- `config`: (optional) a reference to a named configuration block defined outside the document. If provided, it takes precedence over the default configuration for the plugin. See [Plugin Configuration]({{< ref "configs.md#plugin-configuration" >}}) for the details.
 
 ### Plugin-specific Arguments
 

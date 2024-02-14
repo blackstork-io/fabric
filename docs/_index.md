@@ -5,11 +5,11 @@ type: docs
 weight: 1
 ---
 
-# What is Fabric?
+# What's Fabric?
 
 Fabric is an open-source configuration language and a CLI tool that enables the codification and automation of content generation process. The language includes components like documents, data definitions and content blocks.
 
-## Get Started
+## Get started
 
 - [Install]({{< ref "install.md" >}}) — how to install and run Fabric.
 - [Language]({{< ref "language.md" >}}) — Fabric Configuration Language details and main concepts.

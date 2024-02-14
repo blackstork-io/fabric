@@ -11,6 +11,12 @@ bin/*
 *.so
 *.dylib
 
+.DS_Store
+
+# Vale will install modules in `.vale/style` and those should not be in version control
+.vale/styles/*
+!.vale/styles/config
+
 # Test binary, built with `go test -c`
 *.test
 

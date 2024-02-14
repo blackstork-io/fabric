@@ -6,14 +6,23 @@ weight: 80
 
 # References
 
-Fabric laguage allows code reuse through references and arguments override. Only a subset of block types supports references: `data`, `content` and `section` block types.
+Fabric language supports code reuse via block references. Note, only `data`, `content` and `section` blocks with names, defined on a root level of the file, can be referenced.
 
-To include a block defined outside the document, on the root level of a file, into a document, use `ref` label and set `base` argument:
+To include a named block defined on the root level into a document, use `ref` label and `base` argument:
 
 ```hcl
-<block-type> <plugin-name> "<block-name>" {
+content <content-provider> "<block-name>" {
   ...
 }
+
+data <data-source> "<block-name>" {
+  ...
+}
+
+section "<block-name>" {
+  ...
+}
+
 
 document "foo" {
 
@@ -24,27 +33,24 @@ document "foo" {
 }
 ```
 
-A block identifier is a dot-separated list of block type, plugin name and a block name:
+- `<block-type>` is either `content`, `data` or `section`.
+- `<block-identifier>` is a dot-separated identifier for the block to be included. It consists of all labels in the block signature. For example, `content.<content-provider>.<block-name>` or `section.<block-name>`. The block name in the identifier shouldn't be wrapper in double quotes `"`.
 
-```hcl
-<block-type>.<plugin-name>.<block-name>
-```
-
-If the `ref` block is defined at the root level of the file, outside of the `document` definition, the block name is required. If the `ref` block is defined within the document, the block name is optional.
+If the `ref` block is defined on the root level of the file, the block name is required. If it's within the `document` block, the block can be anonymous - the name is optional.
 
 {{< hint warning >}}
-An anonymous `ref` block adops a name of the referenced block. Since the final name of the block is not stated explicitely, unwanted overrides can happen — a block signature must be unique between the blocks defined on the same level.
+An anonymous `ref` block adopts a name of the referenced block. Since the final name of the block isn't stated explicitly, unwanted overrides can happen — a block signature must be unique between the blocks defined on the same level.
 {{< /hint >}}
 
-## Argument Overrides
+## Overriding arguments
 
-The `ref` block definition can include the attribute that would override the attributes provided in the original block. This is very helpful if the block's behaviour needs to be adjusted per document.
+The `ref` block definition can include the attribute that would override the attributes provided in the original block. This is helpful if the block's behaviour needs adjustments per document.
 
-## Query Input Requirement
+## Query input requirement
 
-Content blocks rely on `query` attribute for selecting data needed for rendering (see content blocks' [Generic Arguments]({{< ref "content-blocks.md#generic-arguments" >}})). The JQ query uses the data path which is often document-specific and depends on the name of the data block. This hinders the reusability of the content blocks.
+Content blocks rely on `query` attribute for selecting data needed for rendering (see content blocks' [Generic Arguments]({{< ref "content-blocks.md#generic-arguments" >}})). The JQ query uses the data path which is often document-specific and depends on the name of the data block. This hinders the re-usability of the content blocks.
 
-Fabric supports an explicit way for the content block to require the input data - `query_input` and `query_input_required` attributes. If `query_input_required` is set to `true`, the content block expectes `query_input` attribute to be provided in the `ref` block.
+Fabric supports an explicit way for the content block to require the input data - `query_input` and `query_input_required` attributes. If `query_input_required` set to `true`, the content block expects `query_input` attribute to be provided in the `ref` block.
 
 ## Example
 
