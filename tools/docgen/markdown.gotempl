@@ -5,7 +5,7 @@ type: docs
 ---
 
 {{ if eq .Name "blackstork/builtin" -}}
-# Built-in
+# Built-in data sources and content providers
 {{- else -}}
 # `{{ .Name }}` plugin
 {{- end }}
@@ -73,6 +73,7 @@ The data source doesn't define any parameters in the `data` block.
 {{ end }}
 
 {{- with .ContentProviders }}
+
 ## Content providers
 {{ if eq $plugin.Name "blackstork/builtin" -}}
 {{ else -}}
