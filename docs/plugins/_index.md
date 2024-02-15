@@ -6,21 +6,11 @@ weight: 5
 
 # Plugins
 
-[TBD]
+Fabric relies on plugins to implement data sources and content providers. To utilise a plugin's data sources and content providers, it must be installed by Fabric. The global configuration should specify all required plugins (see [Global configuration]({{< ref "../language/configs.md/#global-configuration" >}}) for the details). Additionally, some data sources and content providers require configuration (for example, API keys, URLs, credentials, etc).
 
-Fabric relies on plugins called providers to interact with cloud providers, SaaS providers, and other APIs.
+A plugin name consists of a namespace (a name of a plugin vendor) and a short name. For example, `blackstork/elasticsearch` plugin implements Elasticsearch client data source and is released by [BlackStork](https://blackstork.io).
 
-Fabric configurations must declare which providers they require so that Fabric can install and use them. Additionally, some providers require configuration (like endpoint URLs or cloud regions) before they can be used.
+## Where to get the plugins
 
-What Providers Do
-Each provider adds a set of resource types and/or data sources that Fabric can manage.
-
-Every resource type is implemented by a provider; without providers, Fabric can't manage any kind of infrastructure.
-
-Most providers configure a specific infrastructure platform (either cloud or self-hosted). Providers can also offer local utilities for tasks like generating random numbers for unique resource names.
-
-
-Where Providers Come From
-Providers are distributed separately from Fabric itself, and each provider has its own release cadence and version numbers.
-
-The Fabric Registry is the main directory of publicly available Fabric providers, and hosts providers for most major infrastructure platforms.
+Plugins are released and distributed independently from Fabric, with their own release cycle and version.
+You can find a list of plugins released by BlackStork at the [Releases page](https://github.com/blackstork-io/fabric/releases) in Fabric GitHub.
