@@ -11,7 +11,7 @@ The command line interface to Fabric is `fabric` CLI tool. It supports two sub-c
 - `fabric data` — executes the data block and prints out prettified JSON to standard output
 - `fabric render` — renders the specified target (a document template) into Markdown and outputs the result to standard output or to a file.
 
-```
+```text
 $ fabric --help
 
 Usage:
