@@ -6,7 +6,7 @@ weight: 10
 
 # Syntax
 
-This page describes native syntax of the Fabric Configuration Language (FCL). FCL is based on [HCL](https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md) (developed by HashiCorp) favored by many other applications for its simplicity, readability and clarity.
+This page describes native syntax of the Fabric Configuration Language (FCL). FCL is based on [HCL](https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md) (HashiCorp Configuration Language) favored by many applications for simplicity, readability, and clarity.
 
 Fabric language syntax has two core components: arguments and blocks.
 
@@ -37,7 +37,7 @@ document "alerts_overview" {
 }
 ```
 
-A block has a type (`document` and `content` in the example above) that defines how many labels can be used in a block signature. A block can have a name (`"alerts_overview"`) or be anonymous (as a `content text` above).
+A block has a type (`document` and `content` in the example above) that defines how many labels can be used in a block signature. A block can have a name (`"alerts_overview"`) or be anonymous (as a `content text` in the snippet above).
 
 Supported categories of blocks:
 
@@ -49,14 +49,14 @@ Supported categories of blocks:
 
 ## Comments
 
-Fabric language supports three different comment syntaxes:
+Fabric language supports three different flavours of comments:
 
 - `#` begins a single-line comment, ending at the end of the line.
 - `//` is an alternative to `#` and also defines a single-line comment
 - `/*` and `*/` are start and end delimiters for a comment that might span over multiple lines.
 
-We recommend to use `#` single-line comment style in most cases. Future automatic code formatting tools will prioritise `#` comments as idiomatic.
+It's recommend to use `#` single-line comment style usually. Future Fabric code formatting tools will prioritise `#` comments as idiomatic.
 
-## Character Encoding
+## Character encoding
 
 Fabric configuration files must be UTF-8 encoded. Fabric allows non-ASCII characters in comments, and string values.
