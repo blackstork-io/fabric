@@ -1,23 +1,21 @@
-{{ $plugin := . }}
 ---
-title: {{ if eq .Name "blackstork/builtin" -}}Built-in plugins{{- else -}}{{ .Name }}{{- end }}
+title: {{ if eq .Name "blackstork/builtin" -}}Built-in{{- else -}}{{ .Name }}{{- end }}
 {{ if eq .Name "blackstork/builtin" -}}weight: 10{{- else -}}weight: 20{{- end }}
 type: docs
 ---
 
 {{ if eq .Name "blackstork/builtin" -}}
-# Built-in plugins
+# Built-in
 {{- else -}}
 # `{{ .Name }}` plugin
 {{- end }}
 
+{{ if eq .Name "blackstork/builtin" -}}
+`fabric` binary includes a set of built-in data sources and content providers, available out-of-the-box.
+{{ else -}}
 ## Installation
 
-{{ if eq .Name "blackstork/builtin" -}}
-The built-in plugins are included in `fabric` and available out of the box.
-{{ else -}}
-
-To install the plugin, add it to `plugin_versions` map in the Fabric global configuration block (see [Global configuration]({{"{{"}}< ref "config.md#global-configuration" >{{"}}"}}) for more details), with a version constraint restricting which available versions of the plugin the codebase is compatible with:
+To install the plugin, add it to `plugin_versions` map in the Fabric global configuration block (see [Global configuration]({{"{{"}}< ref "configs.md#global-configuration" >{{"}}"}}) for more details), with a version constraint restricting which available versions of the plugin the codebase is compatible with:
 
 ```hcl
 fabric {
@@ -27,22 +25,23 @@ fabric {
 }
 ```
 {{ end }}
+{{ $plugin := . -}}
 
 {{ with .DataSources -}}
 ## Data sources
+{{- if eq $plugin.Name "blackstork/builtin" -}}
+{{ else }}
 
-{{ if eq $plugin.Name "blackstork/builtin" -}}
-The following data sources are available from the built-in plugins:
-{{ else -}}
 The plugin has the following data sources available:
-{{ end }}
-{{ range $name, $ds := . -}}
-### `{{ $name }}` data source
+{{- end -}}
+{{ range $name, $ds := . }}
 
-{{with $ds.Config -}}
+### `{{ $name }}`
+
 #### Configuration
 
-The plugin supports following configuration parameters:
+{{ with $ds.Config -}}
+The data source supports the following configuration parameters:
 
 ```hcl
 config data {{ $name }} {
@@ -51,11 +50,14 @@ config data {{ $name }} {
 {{- end }}
 }
 ```
-{{ end }}
-{{with $ds.Args -}}
+{{- else -}}
+The data source doesn't support configuration.
+{{- end }}
+
 #### Usage
 
-Data blocks for the data source support following parameters:
+{{with $ds.Args -}}
+The data source supports the following parameters in the data blocks:
 
 ```hcl
 data {{ $name }} {
@@ -64,23 +66,25 @@ data {{ $name }} {
 {{- end }}
 }
 ```
-{{ end }}
-{{ end }}
+{{- else -}}
+The data source doesn't define any parameters in the `data` block.
+{{- end -}}
+{{ end -}}
 {{ end }}
 
-{{ with .ContentProviders -}}
+{{- with .ContentProviders -}}
 ## Content providers
-
 {{ if eq $plugin.Name "blackstork/builtin" -}}
-The following content providers are available from the built-in plugins:
 {{ else -}}
 The plugin has the following content providers available:
-{{ end }}
-{{ range $name, $provider := . -}}
-### `{{ $name }}` content provider
+{{ end -}}
+{{ range $name, $provider := . }}
+### `{{ $name }}`
+
+#### Configuration
 
 {{with $provider.Config -}}
-#### Configuration
+The content provider supports the following configuration parameters:
 
 ```hcl
 config content {{ $name }} {
@@ -89,10 +93,13 @@ config content {{ $name }} {
 {{- end }}
 }
 ```
+{{ else -}}
+The content provider doesn't support configuration.
 {{ end }}
+#### Usage
 
 {{with $provider.Args -}}
-#### Usage
+The content source supports the following parameters in the content blocks:
 
 ```hcl
 content {{ $name }} {
@@ -101,7 +108,8 @@ content {{ $name }} {
 {{- end }}
 }
 ```
+{{ else }}
+The content provider doesn't define any parameters in the `content` block.
 {{ end }}
-{{ end }}
-{{ end }}
-
+{{- end -}}
+{{- end -}}
