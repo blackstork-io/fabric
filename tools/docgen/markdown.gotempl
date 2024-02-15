@@ -72,7 +72,7 @@ The data source doesn't define any parameters in the `data` block.
 {{ end -}}
 {{ end }}
 
-{{- with .ContentProviders -}}
+{{- with .ContentProviders }}
 ## Content providers
 {{ if eq $plugin.Name "blackstork/builtin" -}}
 {{ else -}}
