@@ -9,7 +9,6 @@ weight: 60
 `content` blocks define document segments: text paragraphs, tables, graphs, lists, etc. The order of the `content` blocks in the template determines the order of the generated content in the document.
 
 ```hcl
-
 # Root-level definition of the content block
 content <content-provider-name> "<block-name>" {
   ...
@@ -29,12 +28,11 @@ document "foobar" {
 }
 ```
 
-If the block is defined at the root level of the configuration file, outside of the `document` block, both names – the content provider name and the block name – are required. A combination of block type `content`, content provider name, and block name serves as a unique identifier of a block within the codebase.
+If the block is defined at the root level of the file, outside of the `document` block, both names – the content provider name and the block name – are required. A combination of block type `content`, content provider name, and block name serves as a unique identifier of a block within the codebase.
 
-If the content block is defined within the document template, only a plugin name is required, while the block name is optional.
+If the content block is defined within the document template, only a content provider name is required and a block name is optional.
 
-A specified content provider is responsible for rendering a content block. See [Plugins]({{< ref "plugins.md" >}}) for the details on the plugins supported by Fabric.
-
+A content block is rendered by a specified content provider. See [Plugins]({{< ref "plugins.md" >}}) for the list of the content providers supported by Fabric.
 
 ## Supported arguments
 
@@ -42,16 +40,16 @@ The arguments provided in the block are either generic arguments or plugin-speci
 
 ### Generic arguments
 
-- `config`: (optional) a reference to a named configuration block defined outside the document. If provided, it takes precedence over the default configuration for the plugin. See [Plugin Configuration]({{< ref "configs.md#plugin-configuration" >}}) for the details.
+- `config`: (optional) a reference to a named configuration block for the data source or a content provider. If provided, it takes precedence over the default configuration. See [Content provider configuration]({{< ref "configs.md#content-provider-configuration" >}}) for the details.
 - `query`: (optional) a [JQ](https://jqlang.github.io/jq/manual/) query to be executed against the context object. The results of the query will be placed under `query_result` field in the context. See [Context](#context) object for the details.
 - `render_if_no_query_result`: (optional) a boolean flag that determines if the content block should be rendered when `query` returned no data. Defaults to `true`.
 - `text_when_no_query_result`: (optional) provides the text to be rendered instead of calling the plugin when `render_if_no_query_result` is `true`.
 - `query_input_required`: (optional) a boolean flag that specifies if `query_input` must be explicitly provided when the content block is referenced. `false` by default. See [Query Input Requirement]({{< ref "references.md#query-input-requirement" >}}) for the details.
 - `query_input`: (optional) a JQ query to be applied to the context object. The results of the query are stored under `query_input` field in the context. See [Query Input Requirement]({{< ref "references.md#query-input-requirement" >}}) for the details.
 
-### Plugin-specific arguments
+### Content provider arguments
 
-Plugin-specific arguments are defined by a plugin specification. See [Plugins]({{< ref "plugins.md" >}}) for the details on the supported arguments per plugin.
+Content provider specific are defined by a plugin specification. See [Plugins]({{< ref "plugins.md" >}}) for the details on the supported arguments per plugin.
 
 ## Supported nested blocks
 
@@ -60,7 +58,7 @@ Plugin-specific arguments are defined by a plugin specification. See [Plugins]({
 
 ## Context
 
-When Fabric renders a content block, a corresponding content plugin is called. Along with [plugin configuration]({{< ref "configs/#plugin-configuration" >}}) and input parameters, a plugin receives the context object with all data available.
+When Fabric renders a content block, a corresponding content plugin is called. Along with the [content provider configuration]({{< ref "configs/#content-provider-configuration" >}}) and input parameters, a plugin receives the context object with all data available.
 
 The context object is a JSON dictionary with pre-defined root-level fields:
 

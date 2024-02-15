@@ -11,7 +11,7 @@ The command line interface to Fabric is `fabric` CLI tool. It supports two sub-c
 - `fabric data` — executes the data block and prints out prettified JSON to standard output
 - `fabric render` — renders the specified target (a document template) into Markdown and outputs the result to standard output or to a file.
 
-```bash
+```
 $ fabric --help
 
 Usage:
@@ -39,4 +39,4 @@ Use "fabric [command] --help" for more information about a command.
 
 ## Source directory
 
-Fabric loads `*.fabric` files from a source directory. By default, a source directory is the current directory  (`.`). To  a different location, set `--source-dir` argument when running `fabric`.
+Fabric loads `*.fabric` files from a source directory. By default, a source directory is the current directory  (`.`). To load Fabric files from a different location, set `--source-dir` argument when running `fabric`.

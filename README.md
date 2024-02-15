@@ -17,14 +17,14 @@ Codifying and automating mission-critical communications with standardized and r
 > [!NOTE]  
 > Fabric is currently in the early stages of development, and there may be some issues. If you have any suggestions, ideas, or encounter bugs, please share them in [Fabric Community slack](https://fabric-community.slack.com/).
 
-Fabric is an open-source configuration language and a CLI tool that enables the codification and automation of the content generation process.
+Fabric is an open-source CLI tool and a configuration language that codifies and automation of the content generation process.
 
 <div align="center">
     <img src=".assets/diagram.svg" alt="The diagram shows a sketch of a Fabric template and rendered document" width="600px"/>
 </div>
 
 Fabric produces Markdown documents from the templates that define data requirements and content structure. The templates are written in Fabric Configuration Language and consist of reusable blocks, powered by plugins.
-Data blocks fetch data from various external sources -- data stores, security solutions, and platforms. The content blocks render the template into Markdown document.
+Data blocks fetch data from various external sources -- data stores, security solutions, and platforms. The content blocks render the template into a Markdown document.
 
 See [Documentation](https://blackstork.io/fabric/docs/) for more details on the Fabric language and Fabric CLI.
 

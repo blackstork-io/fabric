@@ -53,40 +53,27 @@ fabric {
 }
 ```
 
-## Data source and content provider configurations
+## Data source configuration
 
-Fabric plugins can include one or more data sources or content providers.
+A Fabric plugin can include one or more data sources. For example, `blackstork/github` plugin includes `github_issues` data source.
 
-**Data sources** load local data or integrate with external data stores, platforms, and services.
+A data source loads data from a local or an external data store, platform, and service.
 
-**Content providers** generate Markdown content that Fabric will include into the document during template rendering. The provider can either render content locally or use an external API.
-
-For example:
-- `blackstork/openai` plugin includes `openai_text` content provider; 
-- `blackstork/github` plugin includes `github_issues` data source.
-
-Data sources and content providers can be configured using `config` block:
+Data sources are configured using `config` block:
 
 ```hcl
-
 config data <data-source-name> "<name>" {
-  ...
-}
-
-config content <content-provider-name> "<name>" {
   ...
 }
 ```
 
-It's important to use a correct type - `data` or `content` - for data source and content provider configurations respectively. 
+If the block is named (`<name>` is provided), the `config` block can be referenced in a `config` argument inside `data` blocks. This is helpful if there is a need to have more than one configuration for the same data source.
 
-If the block is named (`<name>` is provided), the `config` block can be explicitly referenced in a `config` argument inside `content` or `data` blocks. This is helpful if there is a need to have more than one configuration for the same data source / content provider.
-
-If `<name>` isn't provided, the configuration acts as a default configuration for a specified data source / content provider.
+If `<name>` isn't provided, the configuration acts as a default configuration for a specified data source.
 
 ### Supported arguments
 
-The arguments allowed in the configuration block are specific for a data source / content provider. See [Plugins]({{< ref "plugins.md" >}}) for the details on the configuration parameters supported.
+The arguments allowed in the configuration block depend on the data source. See [Plugins]({{< ref "plugins.md" >}}) for the details on the configuration parameters supported.
 
 ### Supported nested blocks
 
@@ -116,6 +103,48 @@ document "test-document" {
     }
 
     path = "/tmp/events-b.csv"
+  }
+}
+```
+
+## Content provider configuration
+
+A Fabric plugin can include one or more content providers. For example, `blackstork/openai` plugin includes `openai_text` content provider.
+Content providers generate Markdown content that Fabric will include into the rendered document. The provider can either render content locally or use an external API (like OpenAI API).
+
+Content providers can be configured using `config` block:
+
+```hcl
+config content <content-provider-name> "<name>" {
+  ...
+}
+```
+
+If the block is named (`<name>` is provided), the `config` block can be explicitly referenced in a `config` argument inside `content`. This is helpful if there is a need to have more than one configuration for the same content provider.
+
+If `<name>` isn't provided, the configuration acts as a default configuration for a specified content provider.
+
+### Supported arguments
+
+The arguments allowed in the configuration block depend on the content provider. See [Plugins]({{< ref "plugins.md" >}}) for the details on the configuration parameters supported.
+
+### Supported nested blocks
+
+Nested blocks aren't supported inside the `config` blocks.
+
+### Example
+
+```hcl
+config content openai_text {
+  api_key = 'some-openai-api-key'
+
+  system_prompt = 'You are the best at saying Hi!'
+}
+
+document "test-document" {
+
+  content openai_text {
+    prompt = "Say hi!"
   }
 }
 ```

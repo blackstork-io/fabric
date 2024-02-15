@@ -7,7 +7,11 @@ weight: 1
 
 # What's Fabric?
 
-Fabric is an open-source configuration language and a CLI tool that enables the codification and automation of content generation process. The language includes components like documents, data definitions and content blocks.
+Fabric is an open-source CLI tool and a configuration language that codifies and automation of the content generation process.
+
+Fabric Configuration Language (FCL) allows users to define the document data requirements and content structure with human-readable configuration files. The files can be version-controlled, reused, and shared.
+
+`fabric` is a reports-as-code tool that renders templates defined in the FCL files into Markdown documents.
 
 ## Get started
 

@@ -34,7 +34,7 @@ The arguments provided in the block are either generic arguments or plugin-speci
 
 ### Generic arguments
 
-- `config`: (optional) a reference to a named configuration block defined outside the document. If provided, it takes precedence over the default configuration for the plugin. See [Plugin Configuration]({{< ref "configs.md#plugin-configuration" >}}) for the details.
+- `config`: (optional) a reference to a named configuration block for the data source or a content provider. If provided, it takes precedence over the default configuration. See [Data source configuration]({{< ref "configs.md#data-source-configuration" >}}) for the details.
 
 ### Plugin-specific Arguments
 
