@@ -6,7 +6,7 @@ import (
 
 func Plugin(version string) *plugin.Schema {
 	return &plugin.Schema{
-		Name:    "builtin",
+		Name:    "blackstork/builtin",
 		Version: version,
 		DataSources: plugin.DataSources{
 			"csv":    makeCSVDataSource(),

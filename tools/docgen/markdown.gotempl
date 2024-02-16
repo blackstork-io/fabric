@@ -1,0 +1,116 @@
+---
+title: {{ if eq .Name "blackstork/builtin" -}}Built-in{{- else -}}{{ .Name }}{{- end }}
+{{ if eq .Name "blackstork/builtin" -}}weight: 10{{- else -}}weight: 20{{- end }}
+type: docs
+---
+
+{{ if eq .Name "blackstork/builtin" -}}
+# Built-in data sources and content providers
+{{- else -}}
+# `{{ .Name }}` plugin
+{{- end }}
+
+{{ if eq .Name "blackstork/builtin" -}}
+`fabric` binary includes a set of built-in data sources and content providers, available out-of-the-box.
+{{ else -}}
+## Installation
+
+To install the plugin, add it to `plugin_versions` map in the Fabric global configuration block (see [Global configuration]({{"{{"}}< ref "configs.md#global-configuration" >{{"}}"}}) for more details), with a version constraint restricting which available versions of the plugin the codebase is compatible with:
+
+```hcl
+fabric {
+  plugin_versions = {
+    "{{ .Name }}" = "=> {{ .Version }}"
+  }
+}
+```
+{{ end }}
+{{ $plugin := . -}}
+
+{{ with .DataSources -}}
+## Data sources
+{{- if eq $plugin.Name "blackstork/builtin" -}}
+{{ else }}
+
+The plugin has the following data sources available:
+{{- end -}}
+{{ range $name, $ds := . }}
+
+### `{{ $name }}`
+
+#### Configuration
+
+{{ with $ds.Config -}}
+The data source supports the following configuration parameters:
+
+```hcl
+config data {{ $name }} {
+{{- range $key, $value := . }}
+    {{ $key }} = <{{ $value | attrType }}>  # {{if $value.Required}}required{{else}}optional{{end}}
+{{- end }}
+}
+```
+{{- else -}}
+The data source doesn't support configuration.
+{{- end }}
+
+#### Usage
+
+{{with $ds.Args -}}
+The data source supports the following parameters in the data blocks:
+
+```hcl
+data {{ $name }} {
+{{- range $key, $value := . }}
+    {{ $key }} = <{{ $value | attrType }}>  # {{if $value.Required}}required{{else}}optional{{end}}
+{{- end }}
+}
+```
+{{- else -}}
+The data source doesn't define any parameters in the `data` block.
+{{- end -}}
+{{ end -}}
+{{ end }}
+
+{{- with .ContentProviders }}
+
+## Content providers
+{{ if eq $plugin.Name "blackstork/builtin" -}}
+{{ else -}}
+The plugin has the following content providers available:
+{{ end -}}
+{{ range $name, $provider := . }}
+### `{{ $name }}`
+
+#### Configuration
+
+{{with $provider.Config -}}
+The content provider supports the following configuration parameters:
+
+```hcl
+config content {{ $name }} {
+{{- range $key, $value := . }}
+    {{ $key }} = <{{ $value | attrType }}>  # {{if $value.Required}}required{{else}}optional{{end}}
+{{- end }}
+}
+```
+{{ else -}}
+The content provider doesn't support configuration.
+{{ end }}
+#### Usage
+
+{{with $provider.Args -}}
+The content source supports the following parameters in the content blocks:
+
+```hcl
+content {{ $name }} {
+{{- range $key, $value := . }}
+    {{ $key }} = <{{ $value | attrType }}>  # {{if $value.Required}}required{{else}}optional{{end}}
+{{- end }}
+}
+```
+{{ else }}
+The content provider doesn't define any parameters in the `content` block.
+{{ end }}
+{{- end -}}
+{{- end -}}

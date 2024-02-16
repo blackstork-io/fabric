@@ -1,3 +1,4 @@
 GitHub
 Fabric
 boolean
+namespace
