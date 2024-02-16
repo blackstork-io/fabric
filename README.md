@@ -17,7 +17,7 @@ Codifying and automating mission-critical communications with standardized and r
 > [!NOTE]  
 > Fabric is currently in the early stages of development, and there may be some issues. If you have any suggestions, ideas, or encounter bugs, please share them in [Fabric Community slack](https://fabric-community.slack.com/).
 
-Fabric is an open-source CLI tool and a configuration language that codifies and automation of the content generation process.
+Fabric is an open-source CLI tool and a configuration language that codifies and automates of the content generation process.
 
 <div align="center">
     <img src=".assets/diagram.svg" alt="The diagram shows a sketch of a Fabric template and rendered document" width="600px"/>
@@ -32,22 +32,19 @@ See [Documentation](https://blackstork.io/fabric/docs/) for more details on the 
 
 To get started with Fabric, follow these simple steps for installation across various operating systems:
 
-- **download release archives**: choose and download the appropriate release for your operating system (Windows, macOS, or Linux) and architecture (32-bit or 64-bit) in ["Releases" section](https://github.com/blackstork-io/fabric/releases);
-- **unpack the archives**: extract the contents of the downloaded archive to a preferred directory;
-- **run the binary**: run `fabric` binary from the command line to launch Fabric.
+- **download release archives**: choose and download the appropriate release for your operating system (Windows, macOS/Darwin, or Linux) and architecture in ["Releases" section](https://github.com/blackstork-io/fabric/releases);
+- **unpack the archives**: extract the contents of the downloaded archives to a preferred directory;
 
 That's it! You're now ready to use Fabric. For more details on usage and configuration options, refer to the "Usage" paragraph below or [Fabric CLI](https://blackstork.io/fabric/docs/cli) documentation.
-
-
 
 # Usage
 
 The command line interface to Fabric is `fabric` CLI tool. It supports two sub-commands:
 
-- `fabric data` — executes the data block and prints out prettified JSON to standard output.
-- `fabric render` — renders the specified target (a document template) into Markdown and outputs the result to standard output or to a file.
+- `data` — executes the data block and prints out prettified JSON to standard output.
+- `render` — renders the specified target (a document template) into Markdown and outputs the result to standard output or to a file.
 
-```bash
+```text
 $ fabric --help
 
 Usage:
@@ -82,7 +79,7 @@ Visit [https://blackstork.io/fabric/docs/](https://blackstork.io/fabric/docs/) f
 
 # Security
 
-Please report any suspected security vulnerabilities through GitHub's [security advisory reporting](https://github.com/blackstork-io/fabric/security/advisories/new). We take all legitimate reports seriously and will thoroughly investigate.
+Please report any suspected security vulnerabilities through GitHub's [security advisory reporting](https://github.com/blackstork-io/fabric/security/advisories/new). We treat every report with utmost seriousness and will conduct a comprehensive investigation.
 
 We kindly request that you talk to us before making any public disclosures. This ensures that no excessive information is revealed before a patch is ready and users have enough time to upgrade.
 
