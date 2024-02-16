@@ -17,7 +17,7 @@ Codifying and automating mission-critical communications with standardized and r
 > [!NOTE]  
 > Fabric is currently in the early stages of development, and there may be some issues. If you have any suggestions, ideas, or encounter bugs, please share them in [Fabric Community slack](https://fabric-community.slack.com/).
 
-Fabric is an open-source CLI tool and a configuration language that codifies and automates of the content generation process.
+Fabric is an open-source CLI tool and a configuration language that codifies and automates content generation.
 
 <div align="center">
     <img src=".assets/diagram.svg" alt="The diagram shows a sketch of a Fabric template and rendered document" width="600px"/>
@@ -72,6 +72,8 @@ Use "fabric [command] --help" for more information about a command.
 ## Source directory
 
 Fabric loads `*.fabric` files from a source directory. By default, the current directory (`.`) is a source directory. If you wish to specify a different location, use `--source-dir` argument when running `fabric`.
+
+You can find a collection of free Fabric templates in [Fabric Templates](https://github.com/blackstork-io/fabric-templates) repository.
 
 # Documentation
 
