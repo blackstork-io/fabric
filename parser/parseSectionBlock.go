@@ -47,8 +47,14 @@ func (db *DefinedBlocks) ParseSection(section *definitions.Section) (res *defini
 }
 
 func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *definitions.ParsedSection, diags diagnostics.Diag) {
-	res := definitions.ParsedSection{
-		Title: section.Block.Body.Attributes["title"],
+	res := definitions.ParsedSection{}
+	if title := section.Block.Body.Attributes["title"]; title != nil {
+		pluginName := "text"
+		res.Title = &definitions.ParsedPlugin{
+			PluginName: pluginName,
+			Config:     db.DefaultConfig(definitions.BlockKindContent, pluginName),
+			Invocation: definitions.NewTitle(title.Expr),
+		}
 	}
 
 	var origMeta *hcl.Range

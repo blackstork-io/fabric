@@ -29,7 +29,7 @@ var _ ContentPluginOrSection = (*ParsedPlugin)(nil)
 
 type ParsedSection struct {
 	Meta    *MetaBlock
-	Title   *hclsyntax.Attribute
+	Title   *ParsedPlugin
 	Content []ContentPluginOrSection
 }
 

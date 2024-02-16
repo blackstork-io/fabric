@@ -397,4 +397,77 @@ func TestE2ERender(t *testing.T) {
 		[]string{"There are 3 items"},
 		[][]diag_test.Assert{},
 	)
+	renderTest(
+		t, "Document meta",
+		[]string{
+			`
+			document "test" {
+				meta {
+					author = "foo"
+				}
+				content text {
+				  query = ".document.meta.author"
+				  text = "author = {{ .query_result }}"
+				}
+			}
+			`,
+		},
+		"test",
+		[]string{"author = foo"},
+		[][]diag_test.Assert{},
+	)
+	renderTest(
+		t, "Document and content meta",
+		[]string{
+			`
+			document "test" {
+				meta {
+				  author = "foo"
+				}
+				section {
+				  meta {
+					author = "bar"
+				  }
+				  content text {
+					meta {
+					  author = "baz"
+					}
+					query = "(.document.meta.author + .section.meta.author + .content.meta.author)" //
+					text = "author = {{ .query_result }}"
+				  }
+				}
+			  }
+			`,
+		},
+		"test",
+		[]string{"author = foobarbaz"},
+		[][]diag_test.Assert{},
+	)
+	renderTest(
+		t, "Reference rendered blocks",
+		[]string{
+			`
+			document "test" {
+				content text {
+					text = "first result"
+				  }
+				  content text {
+					query = ".document.content[0]"
+					text = "content[0] = {{ .query_result }}"
+				  }
+				  content text {
+					query = ".document.content[1]"
+					text = "content[1] = {{ .query_result }}"
+				  }
+			  }
+			`,
+		},
+		"test",
+		[]string{
+			"first result",
+			"content[0] = first result",
+			"content[1] = content[0] = first result",
+		},
+		[][]diag_test.Assert{},
+	)
 }
