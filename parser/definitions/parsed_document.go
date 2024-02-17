@@ -51,7 +51,6 @@ func (d *ParsedDocument) evalData(ctx context.Context, caller evaluation.DataCal
 			})
 		}
 		pluginNameRes[node.BlockName] = res
-
 	}
 	return
 }

@@ -11,7 +11,7 @@ type DataContext struct {
 	mapOwned bool
 }
 
-// passed-in map must not be modified afterwards
+// Passed-in map must not be modified afterwards.
 func NewDataContext(m plugin.ConvMapData) DataContext {
 	return DataContext{
 		ConvMapData: m,
