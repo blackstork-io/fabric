@@ -1,54 +1,19 @@
 package parser
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 
 	"github.com/blackstork-io/fabric/parser/definitions"
-	evaltree "github.com/blackstork-io/fabric/parser/parsetree"
-	"github.com/blackstork-io/fabric/parser/plugincaller"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/plugin"
 )
 
-// Evaluates a chosen document
-
-type Evaluator struct {
-	caller         plugincaller.PluginCaller
-	topLevelBlocks *DefinedBlocks
-	context        plugin.MapData
-}
-
-func NewEvaluator(caller plugincaller.PluginCaller, blocks *DefinedBlocks) *Evaluator {
-	return &Evaluator{
-		caller:         caller,
-		topLevelBlocks: blocks,
-		context:        plugin.MapData{},
-	}
-}
-
-func (e *Evaluator) EvaluateDocument(d *definitions.Document) (results []string, diags diagnostics.Diag) {
-	node, diags := e.docToEvalTree(d)
-	if diags.HasErrors() {
-		return
-	}
-	results, diag := node.EvalContent(context.TODO(), e.caller)
-	diags.Extend(diag)
-	return
-}
-
-func (e *Evaluator) docToEvalTree(d *definitions.Document) (node *evaltree.DocumentNode, diags diagnostics.Diag) {
-	node = new(evaltree.DocumentNode)
+func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definitions.ParsedDocument, diags diagnostics.Diag) {
+	doc = &definitions.ParsedDocument{}
 	if title := d.Block.Body.Attributes["title"]; title != nil {
-		pluginName := "text"
-		node.AddContent(&definitions.ParsedPlugin{
-			PluginName: pluginName,
-			Config:     e.topLevelBlocks.DefaultConfig(definitions.BlockKindContent, pluginName),
-			Invocation: definitions.NewTitle(title.Expr),
-		})
+		doc.Content = append(doc.Content, definitions.NewTitle(title, db.DefaultConfig))
 	}
 
 	var origMeta *hcl.Range
@@ -60,15 +25,15 @@ func (e *Evaluator) docToEvalTree(d *definitions.Document) (node *evaltree.Docum
 			if diags.Extend(diag) {
 				continue
 			}
-			call, diag := e.topLevelBlocks.ParsePlugin(plugin)
+			call, diag := db.ParsePlugin(plugin)
 			if diags.Extend(diag) {
 				continue
 			}
 			switch block.Type {
 			case definitions.BlockKindContent:
-				node.AddContent(call)
+				doc.Content = append(doc.Content, (*definitions.ParsedContent)(call))
 			case definitions.BlockKindData:
-				node.AddData(call)
+				doc.Data = append(doc.Data, (*definitions.ParsedData)(call))
 			default:
 				panic("must be exhaustive")
 			}
@@ -91,18 +56,18 @@ func (e *Evaluator) docToEvalTree(d *definitions.Document) (node *evaltree.Docum
 			if diags.ExtendHcl(gohcl.DecodeBody(block.Body, nil, &meta)) {
 				continue
 			}
-			node.AddMeta(&meta)
+			doc.Meta = &meta
 			origMeta = block.DefRange().Ptr()
 		case definitions.BlockKindSection:
 			section, diag := definitions.DefineSection(block, false)
 			if diags.Extend(diag) {
 				continue
 			}
-			parsedSection, diag := e.topLevelBlocks.ParseSection(section)
+			parsedSection, diag := db.ParseSection(section)
 			if diags.Extend(diag) {
 				continue
 			}
-			node.AddSection(parsedSection)
+			doc.Content = append(doc.Content, parsedSection)
 		default:
 			diags.Append(definitions.NewNestingDiag(
 				d.Block.Type,
@@ -118,6 +83,5 @@ func (e *Evaluator) docToEvalTree(d *definitions.Document) (node *evaltree.Docum
 			continue
 		}
 	}
-
 	return
 }

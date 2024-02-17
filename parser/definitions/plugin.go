@@ -7,37 +7,15 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
 type Plugin struct {
 	Block *hclsyntax.Block
 
-	// Current plugin name. For unevaluated refs is "ref",
-	// after evaluation will change to the referenced plugin name.
 	Once        sync.Once
 	Parsed      bool
 	ParseResult *ParsedPlugin
-}
-
-// inversion of control: pass caller to plugin (as an interface) to execute it
-// allows us to add more fields to different plugins (content plugin needs query parsed)
-
-type ParsedPlugin struct {
-	PluginName string
-	BlockName  string
-	Meta       *MetaBlock
-	Config     evaluation.Configuration
-	Invocation evaluation.Invocation
-}
-
-func (pe *ParsedPlugin) GetBlockInvocation() *evaluation.BlockInvocation {
-	res, ok := pe.Invocation.(*evaluation.BlockInvocation)
-	if !ok {
-		panic("This Plugin does not store a BlockInvocation!")
-	}
-	return res
 }
 
 func (p *Plugin) DefRange() hcl.Range {

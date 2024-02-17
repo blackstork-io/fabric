@@ -10,7 +10,7 @@ type MetaBlock struct {
 	// TODO: ?store def range defRange hcl.Range
 }
 
-func (m *MetaBlock) AsJQ() plugin.Data {
+func (m *MetaBlock) AsJQData() plugin.Data {
 	tags := make(plugin.ListData, len(m.Tags))
 	for i, tag := range m.Tags {
 		tags[i] = plugin.StringData(tag)

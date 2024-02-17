@@ -11,12 +11,12 @@ import (
 )
 
 // Desugars `title = "foo"` into appropriate `context` invocation.
-type TitleInvocation struct {
+type titleInvocation struct {
 	hcl.Expression
 }
 
 // GetBody implements evaluation.Invocation.
-func (t *TitleInvocation) GetBody() *hclsyntax.Body {
+func (t *titleInvocation) GetBody() *hclsyntax.Body {
 	rng := t.Expression.Range()
 	return &hclsyntax.Body{
 		SrcRange: rng,
@@ -29,19 +29,19 @@ func (t *TitleInvocation) GetBody() *hclsyntax.Body {
 }
 
 // SetBody implements evaluation.Invocation.
-func (*TitleInvocation) SetBody(*hclsyntax.Body) {}
+func (*titleInvocation) SetBody(*hclsyntax.Body) {}
 
-var _ evaluation.Invocation = (*TitleInvocation)(nil)
+var _ evaluation.Invocation = (*titleInvocation)(nil)
 
-func (t *TitleInvocation) DefRange() hcl.Range {
+func (t *titleInvocation) DefRange() hcl.Range {
 	return t.Expression.Range()
 }
 
-func (t *TitleInvocation) MissingItemRange() hcl.Range {
+func (t *titleInvocation) MissingItemRange() hcl.Range {
 	return t.Expression.Range()
 }
 
-func (t *TitleInvocation) ParseInvocation(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
+func (t *titleInvocation) ParseInvocation(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
 	// Titles can only be rendered once, so there's no reason to put `sync.Once` like in proper blocks
 	expr, ok := t.Expression.(hclsyntax.Expression)
 	if !ok {
@@ -73,8 +73,13 @@ func (t *TitleInvocation) ParseInvocation(spec hcldec.Spec) (val cty.Value, diag
 	return
 }
 
-func NewTitle(title hcl.Expression) *TitleInvocation {
-	return &TitleInvocation{
-		Expression: title,
+func NewTitle(title *hclsyntax.Attribute, resolver ConfigResolver) *ParsedContent {
+	pluginName := "text"
+	return &ParsedContent{
+		PluginName: pluginName,
+		Config:     resolver(BlockKindContent, pluginName),
+		Invocation: &titleInvocation{
+			Expression: title.Expr,
+		},
 	}
 }

@@ -17,11 +17,11 @@ func (BoolData) data()   {}
 func (MapData) data()    {}
 func (ListData) data()   {}
 
-func (d NumberData) AsJQ() Data { return d }
-func (d StringData) AsJQ() Data { return d }
-func (d BoolData) AsJQ() Data   { return d }
-func (d MapData) AsJQ() Data    { return d }
-func (d ListData) AsJQ() Data   { return d }
+func (d NumberData) AsJQData() Data { return d }
+func (d StringData) AsJQData() Data { return d }
+func (d BoolData) AsJQData() Data   { return d }
+func (d MapData) AsJQData() Data    { return d }
+func (d ListData) AsJQData() Data   { return d }
 
 type NumberData float64
 
@@ -147,18 +147,18 @@ func ParseDataMapAny(v map[string]any) (MapData, error) {
 }
 
 type ConvertableData interface {
-	AsJQ() Data
+	AsJQData() Data
 }
 
 type ConvMapData map[string]ConvertableData
 
-func (d ConvMapData) AsJQ() Data {
+func (d ConvMapData) AsJQData() Data {
 	dst := make(MapData, len(d))
 	for k, v := range d {
 		if v == nil {
 			dst[k] = nil
 		} else {
-			dst[k] = v.AsJQ()
+			dst[k] = v.AsJQData()
 		}
 	}
 	return dst
@@ -167,7 +167,7 @@ func (d ConvMapData) AsJQ() Data {
 func (d ConvMapData) Any() any {
 	dst := make(map[string]any, len(d))
 	for k, v := range d {
-		dst[k] = v.AsJQ().Any()
+		dst[k] = v.AsJQData().Any()
 	}
 	return dst
 }
@@ -175,10 +175,10 @@ func (d ConvMapData) data() {}
 
 type ConvListData []ConvertableData
 
-func (d ConvListData) AsJQ() Data {
+func (d ConvListData) AsJQData() Data {
 	dst := make(ListData, len(d))
 	for k, v := range d {
-		dst[k] = v.AsJQ()
+		dst[k] = v.AsJQData()
 	}
 	return dst
 }
@@ -186,7 +186,7 @@ func (d ConvListData) AsJQ() Data {
 func (d ConvListData) Any() any {
 	dst := make([]any, len(d))
 	for k, v := range d {
-		dst[k] = v.AsJQ().Any()
+		dst[k] = v.AsJQData().Any()
 	}
 	return dst
 }

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"io/fs"
@@ -64,11 +65,13 @@ func Render(pluginsDir string, sourceDir fs.FS, docName string) (results []strin
 	}
 	defer func() { diags.ExtendHcl(runner.Close()) }()
 
-	eval := parser.NewEvaluator(
-		parser.NewPluginCaller(runner),
-		blocks,
-	)
-	results, diag := eval.EvaluateDocument(doc)
+	pd, diag := blocks.ParseDocument(doc)
+	if diags.Extend(diag) {
+		return
+	}
+	caller := parser.NewPluginCaller(runner)
+
+	results, diag = pd.Render(context.TODO(), caller)
 	if diags.Extend(diag) {
 		return
 	}

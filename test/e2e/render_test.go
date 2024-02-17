@@ -310,7 +310,7 @@ func TestE2ERender(t *testing.T) {
 		[][]diag_test.Assert{},
 	)
 	renderTest(
-		t, "Data ref name warning",
+		t, "Data ref name warning missing",
 		[]string{
 			`
 			data inline "name" {
@@ -327,8 +327,31 @@ func TestE2ERender(t *testing.T) {
 		},
 		"test-doc",
 		[]string{},
+		[][]diag_test.Assert{},
+	)
+	renderTest(
+		t, "Data ref name warning",
+		[]string{
+			`
+			data inline "name" {
+				inline {
+					a = "1"
+				}
+			}
+			document "test-doc" {
+				data ref {
+					base = data.inline.name
+				}
+				data ref {
+					base = data.inline.name
+				}
+			}
+			`,
+		},
+		"test-doc",
+		[]string{},
 		[][]diag_test.Assert{
-			{diag_test.IsWarning, diag_test.SummaryContains("Potential data conflict")},
+			{diag_test.IsWarning, diag_test.SummaryContains("Data conflict")},
 		},
 	)
 	renderTest(
@@ -441,6 +464,57 @@ func TestE2ERender(t *testing.T) {
 		},
 		"test",
 		[]string{"author = foobarbaz"},
+		[][]diag_test.Assert{},
+	)
+	renderTest(
+		t, "Meta scoping and nesting",
+		[]string{
+			`
+			content text get_section_author {
+				query = ".section.meta.author // \"unknown\""
+				text = "author = {{ .query_result }}"
+			}
+			document "test" {
+				content ref {
+					base = content.text.get_section_author
+				}
+				section {
+					content ref {
+						base = content.text.get_section_author
+					}
+					section {
+						meta {
+							author = "foo"
+						}
+						content ref {
+							base = content.text.get_section_author
+						}
+						section {
+							content ref {
+								base = content.text.get_section_author
+							}
+							section {
+								meta {
+									author = "bar"
+								}
+								content ref {
+									base = content.text.get_section_author
+								}
+							}
+						}
+					}
+				}
+			}
+			`,
+		},
+		"test",
+		[]string{
+			"author = unknown",
+			"author = unknown",
+			"author = foo",
+			"author = unknown",
+			"author = bar",
+		},
 		[][]diag_test.Assert{},
 	)
 	renderTest(

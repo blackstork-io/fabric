@@ -11,7 +11,6 @@ import (
 
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/parser/evaluation"
-	"github.com/blackstork-io/fabric/parser/plugincaller"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
@@ -33,7 +32,7 @@ func NewPluginCaller(r *runner.Runner) *Caller {
 	}
 }
 
-var _ plugincaller.PluginCaller = (*Caller)(nil)
+var _ evaluation.PluginCaller = (*Caller)(nil)
 
 func (c *Caller) pluginData(kind, name string) (pluginData, diagnostics.Diag) {
 	switch kind {

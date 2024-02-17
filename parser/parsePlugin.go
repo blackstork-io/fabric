@@ -75,7 +75,7 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 						Subject:  blk.DefRange().Ptr(),
 						Context:  plugin.Block.Range().Ptr(),
 					})
-					return true
+					break
 				}
 				configBlock = blk
 
@@ -88,12 +88,12 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 						Subject:  blk.DefRange().Ptr(),
 						Context:  plugin.Block.Range().Ptr(),
 					})
-					return true
+					break
 				}
 
 				var meta definitions.MetaBlock
 				if diags.ExtendHcl(gohcl.DecodeBody(blk.Body, nil, &meta)) {
-					return true
+					break
 				}
 				res.Meta = &meta
 
@@ -128,20 +128,6 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 		refBaseConfig = baseEval.Config
 		if res.BlockName == "" {
 			res.BlockName = baseEval.BlockName
-			if plugin.Kind() == definitions.BlockKindData {
-				diags.Append(&hcl.Diagnostic{
-					Severity: hcl.DiagWarning,
-					Summary:  "Potential data conflict",
-					Detail: fmt.Sprintf(
-						"This 'data ref' will inherit its name from its base (%q). "+
-							"Creating another anonymous 'data ref' with the same 'base' would "+
-							"override the current block's execution results. "+
-							"We recommend namingall 'data ref' blocks uniquely",
-						res.BlockName,
-					),
-					Subject: plugin.DefRange().Ptr(),
-				})
-			}
 		}
 
 		updateRefBody(invocation.Body, baseEval.GetBlockInvocation().Body)
