@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"regexp"
 
+	"github.com/TylerBrock/colorjson"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
 
@@ -17,7 +17,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 )
 
-var dataTgtRe = regexp.MustCompile(`document\.([^.]+)\.data\.([^.]+)\.([^.]+)`)
+var dataTgtRe = regexp.MustCompile(`(?:document\.([^.]+)\.data\.([^.]+)\.([^.\n]+))|(?:data\.([^.]+)\.([^.]+))`)
 
 func Data(ctx context.Context, blocks *parser.DefinedBlocks, caller *parser.Caller, target string) (result plugin.MapData, diags diagnostics.Diag) {
 	// docName, pluginName, blockName
@@ -26,39 +26,63 @@ func Data(ctx context.Context, blocks *parser.DefinedBlocks, caller *parser.Call
 	if tgt == nil {
 		diags.Add(
 			"Incorrect target",
-			"Target should have the format 'document.<doc-name>.data.<plugin-name>.<block-name>'",
+			"Target should have the format 'document.<doc-name>.data.<plugin-name>.<block-name>' or 'data.<plugin-name>.<block-name>'",
 		)
 		return
 	}
 
-	doc, found := blocks.Documents[tgt[1]]
-	if !found {
-		diags.Add(
-			"Document not found",
-			fmt.Sprintf(
-				"Definition for document named '%s' not found",
-				tgt[1],
-			),
-		)
-		return
-	}
+	var data *definitions.ParsedData
 
-	pd, diag := blocks.ParseDocument(doc)
-	if diags.Extend(diag) {
-		return
-	}
+	if tgt[1] != "" {
+		// document.<doc-name>.data.<plugin-name>.<block-name>
+		doc, found := blocks.Documents[tgt[1]]
+		if !found {
+			diags.Add(
+				"Document not found",
+				fmt.Sprintf(
+					"Definition for document named '%s' not found",
+					tgt[1],
+				),
+			)
+			return
+		}
 
-	idx := slices.IndexFunc(pd.Data, func(data *definitions.ParsedData) bool {
-		return data.PluginName == tgt[2] && data.BlockName == tgt[3]
-	})
-	if idx == -1 {
-		diags.Add(
-			"Data block not found",
-			fmt.Sprintf("Data block '%s.%s' not found", tgt[2], tgt[3]),
-		)
-		return
+		pd, diag := blocks.ParseDocument(doc)
+		if diags.Extend(diag) {
+			return
+		}
+
+		idx := slices.IndexFunc(pd.Data, func(data *definitions.ParsedData) bool {
+			return data.PluginName == tgt[2] && data.BlockName == tgt[3]
+		})
+		if idx == -1 {
+			diags.Add(
+				"Data block not found",
+				fmt.Sprintf("Data block '%s.%s' not found in document '%s'", tgt[2], tgt[3], tgt[1]),
+			)
+			return
+		}
+		data = pd.Data[idx]
+	} else {
+		// data.<plugin-name>.<block-name>
+		defPlugin, found := blocks.Plugins[definitions.Key{
+			PluginKind: definitions.BlockKindData,
+			PluginName: tgt[4],
+			BlockName:  tgt[5],
+		}]
+		if !found {
+			diags.Add(
+				"Data block not found",
+				fmt.Sprintf("Data block '%s.%s' not found in global scope", tgt[4], tgt[5]),
+			)
+			return
+		}
+		res, diag := blocks.ParsePlugin(defPlugin)
+		if diags.Extend(diag) {
+			return
+		}
+		data = (*definitions.ParsedData)(res)
 	}
-	data := pd.Data[idx]
 	res, diag := caller.CallData(ctx, data.PluginName, data.Config, data.Invocation)
 	if diags.Extend(diag) {
 		return
@@ -90,16 +114,21 @@ var dataCmd = &cobra.Command{
 			return
 		}
 
-		bw := bufio.NewWriter(os.Stdout)
-		defer func() {
-			diags.AppendErr(bw.Flush(), "Failed to print the result")
-		}()
-		enc := json.NewEncoder(bw)
-		enc.SetIndent("", "    ")
-		diags.AppendErr(
-			enc.Encode(res.Any()),
-			"Failed to encode the json",
-		)
+		val := res.Any()
+		var ser []byte
+		if cliArgs.colorize {
+			fmt := colorjson.NewFormatter()
+			fmt.Indent = 4
+			ser, err = fmt.Marshal(val)
+		} else {
+			ser, err = json.MarshalIndent(val, "", "    ")
+		}
+		if diags.AppendErr(err, "Failed to serialize data output to json") {
+			return
+		}
+		_, err = os.Stdout.Write(ser)
+
+		diags.AppendErr(err, "Failed to output json data")
 		return
 	},
 	Args: cobra.ExactArgs(1),

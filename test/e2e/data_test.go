@@ -79,4 +79,24 @@ func TestE2EData(t *testing.T) {
 		},
 		[][]diag_test.Assert{},
 	)
+	dataTest(
+		t, "Basic",
+		[]string{
+			`
+			data inline "test" {
+				hello = "world"
+			}
+			document "hello" {
+				content text {
+					text = "hello"
+				}
+			}
+			`,
+		},
+		"data.inline.test",
+		plugin.MapData{
+			"hello": plugin.StringData("world"),
+		},
+		[][]diag_test.Assert{},
+	)
 }
