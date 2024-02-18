@@ -1,6 +1,7 @@
 package e2e_test
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/blackstork-io/fabric/cmd"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/test/e2e/diag_test"
 )
 
@@ -26,8 +28,21 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 				Mode: 0o777,
 			}
 		}
+		eval := cmd.NewEvaluator("")
+		defer func() {
+			eval.Cleanup(nil)
+		}()
 
-		res, _, diags := cmd.Render("", sourceDir, docName)
+		var res []string
+		diags := eval.ParseFabricFiles(sourceDir)
+		if !diags.HasErrors() {
+			if !diags.Extend(eval.LoadRunner()) {
+				var diag diagnostics.Diag
+				res, diag = cmd.Render(context.Background(), eval.Blocks, eval.PluginCaller(), docName)
+				diags.Extend(diag)
+			}
+		}
+
 		if len(expectedResult) == 0 {
 			// so nil == []string{}
 			assert.Empty(t, res)
