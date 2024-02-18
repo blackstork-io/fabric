@@ -58,7 +58,7 @@ func (s *TableGeneratorTestSuite) TestNilQueryResult() {
 		},
 	})
 	s.Equal(&plugin.Content{
-		Markdown: "|User Name|User Age|\n|-|-|\n",
+		Markdown: "|User Name|User Age|\n|---|---|\n",
 	}, content)
 	s.Nil(diags)
 }
@@ -85,7 +85,7 @@ func (s *TableGeneratorTestSuite) TestEmptyQueryResult() {
 		},
 	})
 	s.Equal(&plugin.Content{
-		Markdown: "|User Name|User Age|\n|-|-|\n",
+		Markdown: "|User Name|User Age|\n|---|---|\n",
 	}, content)
 	s.Nil(diags)
 }
@@ -121,7 +121,7 @@ func (s *TableGeneratorTestSuite) TestBasic() {
 		},
 	})
 	s.Equal(&plugin.Content{
-		Markdown: "|User Name|User Age|\n|-|-|\n|John|42|\n|Jane|43|\n",
+		Markdown: "|User Name|User Age|\n|---|---|\n|John|42|\n|Jane|43|\n",
 	}, content)
 	s.Nil(diags)
 }
