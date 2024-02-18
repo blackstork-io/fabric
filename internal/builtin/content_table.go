@@ -135,7 +135,7 @@ func renderTableContent(headers, values []tableCellTmpl, datactx plugin.MapData)
 	buf.WriteByte('\n')
 	buf.WriteByte('|')
 	for range hstr {
-		buf.WriteString("-")
+		buf.WriteString("---")
 		buf.WriteByte('|')
 	}
 	buf.WriteByte('\n')
