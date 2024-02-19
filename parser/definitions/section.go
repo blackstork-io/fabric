@@ -1,13 +1,16 @@
 package definitions
 
 import (
+	"context"
 	"sync"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin"
 )
 
 type Section struct {
@@ -17,20 +20,30 @@ type Section struct {
 	ParseResult *ParsedSection
 }
 
-type ContentPluginOrSection interface {
-	contentPluginOrSection()
-}
-
-func (*ParsedPlugin) contentPluginOrSection() {}
-
-func (*ParsedSection) contentPluginOrSection() {}
-
-var _ ContentPluginOrSection = (*ParsedPlugin)(nil)
-
 type ParsedSection struct {
 	Meta    *MetaBlock
-	Title   *hclsyntax.Attribute
-	Content []ContentPluginOrSection
+	Title   *ParsedContent
+	Content []Renderable
+}
+
+func (s ParsedSection) Render(ctx context.Context, caller evaluation.ContentCaller, dataCtx evaluation.DataContext, result *evaluation.Result) (diags diagnostics.Diag) {
+	if s.Meta != nil {
+		dataCtx.Set(BlockKindSection, plugin.ConvMapData{
+			BlockKindMeta: s.Meta.AsJQData(),
+		})
+	} else {
+		dataCtx.Delete(BlockKindSection)
+	}
+	if title := s.Title; title != nil {
+		diags.Extend(title.Render(ctx, caller, dataCtx.Share(), result))
+	}
+
+	for _, content := range s.Content {
+		diags.Extend(
+			content.Render(ctx, caller, dataCtx.Share(), result),
+		)
+	}
+	return
 }
 
 func (s *Section) IsRef() bool {

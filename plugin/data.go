@@ -8,6 +8,7 @@ import (
 type Data interface {
 	Any() any
 	data()
+	ConvertableData
 }
 
 func (NumberData) data() {}
@@ -15,6 +16,12 @@ func (StringData) data() {}
 func (BoolData) data()   {}
 func (MapData) data()    {}
 func (ListData) data()   {}
+
+func (d NumberData) AsJQData() Data { return d }
+func (d StringData) AsJQData() Data { return d }
+func (d BoolData) AsJQData() Data   { return d }
+func (d MapData) AsJQData() Data    { return d }
+func (d ListData) AsJQData() Data   { return d }
 
 type NumberData float64
 
@@ -105,6 +112,9 @@ func ParseDataAny(v any) (Data, error) {
 	case string:
 		return StringData(v), nil
 	case []any:
+		// TODO: potential bug:
+		// this case would trigger only for []any, not, for example, []string
+		// this can be worked around using reflection
 		dst := make(ListData, len(v))
 		for i, e := range v {
 			d, err := ParseDataAny(e)
@@ -135,3 +145,49 @@ func ParseDataMapAny(v map[string]any) (MapData, error) {
 	}
 	return dst, nil
 }
+
+type ConvertableData interface {
+	AsJQData() Data
+}
+
+type ConvMapData map[string]ConvertableData
+
+func (d ConvMapData) AsJQData() Data {
+	dst := make(MapData, len(d))
+	for k, v := range d {
+		if v == nil {
+			dst[k] = nil
+		} else {
+			dst[k] = v.AsJQData()
+		}
+	}
+	return dst
+}
+
+func (d ConvMapData) Any() any {
+	dst := make(map[string]any, len(d))
+	for k, v := range d {
+		dst[k] = v.AsJQData().Any()
+	}
+	return dst
+}
+func (d ConvMapData) data() {}
+
+type ConvListData []ConvertableData
+
+func (d ConvListData) AsJQData() Data {
+	dst := make(ListData, len(d))
+	for k, v := range d {
+		dst[k] = v.AsJQData()
+	}
+	return dst
+}
+
+func (d ConvListData) Any() any {
+	dst := make([]any, len(d))
+	for k, v := range d {
+		dst[k] = v.AsJQData().Any()
+	}
+	return dst
+}
+func (d ConvListData) data() {}

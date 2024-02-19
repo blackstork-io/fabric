@@ -98,9 +98,13 @@ func (db *DefinedBlocks) AsValueMap() map[string]cty.Value {
 }
 
 func (db *DefinedBlocks) DefaultConfigFor(plugin *definitions.Plugin) (config *definitions.Config) {
+	return db.DefaultConfig(plugin.Kind(), plugin.Name())
+}
+
+func (db *DefinedBlocks) DefaultConfig(pluginKind, pluginName string) (config *definitions.Config) {
 	return db.Config[definitions.Key{
-		PluginKind: plugin.Kind(),
-		PluginName: plugin.Name(),
+		PluginKind: pluginKind,
+		PluginName: pluginName,
 		BlockName:  "",
 	}]
 }

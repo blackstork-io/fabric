@@ -21,10 +21,6 @@ type pluginData struct {
 	ConfigSpec     hcldec.Spec
 	InvocationSpec hcldec.Spec
 }
-type PluginCaller interface {
-	CallContent(name string, config evaluation.Configuration, invocation evaluation.Invocation, context map[string]any) (result string, diag diagnostics.Diag)
-	CallData(name string, config evaluation.Configuration, invocation evaluation.Invocation) (result map[string]any, diag diagnostics.Diag)
-}
 
 type Caller struct {
 	plugins *runner.Runner
@@ -36,7 +32,7 @@ func NewPluginCaller(r *runner.Runner) *Caller {
 	}
 }
 
-var _ PluginCaller = (*Caller)(nil)
+var _ evaluation.PluginCaller = (*Caller)(nil)
 
 func (c *Caller) pluginData(kind, name string) (pluginData, diagnostics.Diag) {
 	switch kind {
@@ -69,15 +65,9 @@ func (c *Caller) pluginData(kind, name string) (pluginData, diagnostics.Diag) {
 	}
 }
 
-func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, invocation evaluation.Invocation, dataCtx map[string]any) (res any, diags diagnostics.Diag) {
+func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evaluation.Configuration, invocation evaluation.Invocation, dataCtx plugin.MapData) (res any, diags diagnostics.Diag) {
 	data, diags := c.pluginData(kind, name)
 	if diags.HasErrors() {
-		return
-	}
-
-	dataCtxAny, err := plugin.ParseDataMapAny(dataCtx)
-	if err != nil {
-		diags.Add("Error while parsing context", err.Error())
 		return
 	}
 
@@ -86,18 +76,16 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 
 	var configVal cty.Value
 	if acceptsConfig {
-		var stdDiag diagnostics.Diag
-		configVal, stdDiag = config.ParseConfig(data.ConfigSpec)
-		if !diags.Extend(stdDiag) {
+		var diag diagnostics.Diag
+		configVal, diag = config.ParseConfig(data.ConfigSpec)
+		if !diags.Extend(diag) {
 			typ := hcldec.ImpliedType(data.ConfigSpec)
 			errs := configVal.Type().TestConformance(typ)
 			if errs != nil {
 				// Attempt a conversion
 				var err error
 				configVal, err = convert.Convert(configVal, typ)
-				if err != nil {
-					diags.AppendErr(err, "Error while serializing config")
-				}
+				diags.AppendErr(err, "Error while serializing config")
 			}
 		}
 	} else if hasConfig {
@@ -114,9 +102,6 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 
 	pluginArgs, diag := invocation.ParseInvocation(data.InvocationSpec)
 	diags.Extend(diag)
-	if diag.HasErrors() {
-		return
-	}
 	if data.InvocationSpec != nil {
 		typ := hcldec.ImpliedType(data.InvocationSpec)
 		errs := pluginArgs.Type().TestConformance(typ)
@@ -124,84 +109,68 @@ func (c *Caller) callPlugin(kind, name string, config evaluation.Configuration, 
 			// Attempt a conversion
 			var err error
 			pluginArgs, err = convert.Convert(pluginArgs, typ)
-			if err != nil {
-				diag.AppendErr(err, "Error while serializing args")
-
-				return nil, diag
-			}
+			diags.AppendErr(err, "Error while serializing args")
 		}
 	}
-
-	var result struct {
-		Result any
-		Diags  hcl.Diagnostics
+	if diags.HasErrors() {
+		return
 	}
+
 	switch kind {
 	case "data":
-		source, diags := c.plugins.DataSource(name)
-		if diags.HasErrors() {
-			return nil, diagnostics.Diag(diags)
+		source, diag := c.plugins.DataSource(name)
+		if diags.ExtendHcl(diag) {
+			return
 		}
-		data, diags := source.Execute(context.Background(), &plugin.RetrieveDataParams{
+		data, diag := source.Execute(ctx, &plugin.RetrieveDataParams{
 			Config: configVal,
 			Args:   pluginArgs,
 		})
-		if data != nil {
-			result.Result = data.Any()
-		}
-		result.Diags = diags
+		res = data
+		diags.ExtendHcl(diag)
 	case "content":
-		provider, diags := c.plugins.ContentProvider(name)
-		if diags.HasErrors() {
-			return nil, diagnostics.Diag(diags)
+		provider, diag := c.plugins.ContentProvider(name)
+		if diags.ExtendHcl(diag) {
+			return
 		}
-		content, diags := provider.Execute(context.Background(), &plugin.ProvideContentParams{
+		content, diag := provider.Execute(ctx, &plugin.ProvideContentParams{
 			Config:      configVal,
 			Args:        pluginArgs,
-			DataContext: dataCtxAny,
+			DataContext: dataCtx,
 		})
-		result.Result = ""
+		res = ""
 		if content != nil {
-			result.Result = content.Markdown
+			res = content.Markdown
 		}
-		result.Diags = diags
+		diags.ExtendHcl(diag)
 	}
-
-	for _, d := range result.Diags {
-		diags = append(diags, d)
-	}
-	res = result.Result
 	return
 }
 
-func (c *Caller) CallContent(name string, config evaluation.Configuration, invocation evaluation.Invocation, context map[string]any) (result string, diag diagnostics.Diag) {
+func (c *Caller) CallContent(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation, dataCtx plugin.MapData) (result string, diag diagnostics.Diag) {
 	var ok bool
 	var res any
-	res, diag = c.callPlugin(definitions.BlockKindContent, name, config, invocation, context)
+	res, diag = c.callPlugin(ctx, definitions.BlockKindContent, name, config, invocation, dataCtx)
+	if diag.HasErrors() {
+		return
+	}
 	result, ok = res.(string)
-	if !diag.HasErrors() && !ok {
-		diag.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "Incorrect result type",
-			Detail:   "Plugin returned incorrect data type. Please contact fabric developers about this issue",
-			Subject:  invocation.DefRange().Ptr(),
-		})
+	if !ok {
+		panic("Incorrect plugin result type")
 	}
 	return
 }
 
-func (c *Caller) CallData(name string, config evaluation.Configuration, invocation evaluation.Invocation) (result map[string]any, diag diagnostics.Diag) {
+func (c *Caller) CallData(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation) (result plugin.MapData, diag diagnostics.Diag) {
 	var ok bool
 	var res any
-	res, diag = c.callPlugin(definitions.BlockKindData, name, config, invocation, nil)
-	result, ok = res.(map[string]any)
-	if !diag.HasErrors() && !ok {
-		diag.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "Incorrect result type",
-			Detail:   "Plugin returned incorrect data type. Please contact fabric developers about this issue",
-			Subject:  invocation.DefRange().Ptr(),
-		})
+	res, diag = c.callPlugin(ctx, definitions.BlockKindData, name, config, invocation, nil)
+	if diag.HasErrors() {
+		return
+	}
+	result, ok = res.(plugin.MapData)
+	if !ok {
+		panic("Incorrect plugin result type")
 	}
 	return
 }

@@ -2,34 +2,20 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"strings"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/spf13/cobra"
 
-	"github.com/blackstork-io/fabric/internal/builtin"
 	"github.com/blackstork-io/fabric/parser"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/plugin/runner"
 )
 
-func Render(pluginsDir string, sourceDir fs.FS, docName string) (results []string, fileMap map[string]*hcl.File, diags diagnostics.Diag) {
-	blocks, fileMap, diags := parser.ParseDir(sourceDir)
-	if diags.HasErrors() {
-		return
-	}
-	if len(fileMap) == 0 {
-		diags.Add(
-			"No correct fabric files found",
-			fmt.Sprintf("There are no *.fabric files at '%s' or all of them have failed to parse", cliArgs.sourceDir),
-		)
-		return
-	}
+func Render(ctx context.Context, blocks *parser.DefinedBlocks, pluginCaller *parser.Caller, docName string) (results []string, diags diagnostics.Diag) {
 	doc, found := blocks.Documents[docName]
 	if !found {
 		diags.Add(
@@ -42,33 +28,12 @@ func Render(pluginsDir string, sourceDir fs.FS, docName string) (results []strin
 		return
 	}
 
-	if pluginsDir == "" && blocks.GlobalConfig != nil && blocks.GlobalConfig.PluginRegistry != nil {
-		// use pluginsDir from config, unless overridden by cli arg
-		pluginsDir = blocks.GlobalConfig.PluginRegistry.MirrorDir
-	}
-
-	var pluginVersions runner.VersionMap
-	if blocks.GlobalConfig != nil {
-		pluginVersions = blocks.GlobalConfig.PluginVersions
-	}
-
-	runner, stdDiag := runner.Load(
-		runner.WithBuiltIn(
-			builtin.Plugin(version),
-		),
-		runner.WithPluginDir(pluginsDir),
-		runner.WithPluginVersions(pluginVersions),
-	)
-	if diags.ExtendHcl(stdDiag) {
+	pd, diag := blocks.ParseDocument(doc)
+	if diags.Extend(diag) {
 		return
 	}
-	defer func() { diags.ExtendHcl(runner.Close()) }()
 
-	eval := parser.NewEvaluator(
-		parser.NewPluginCaller(runner),
-		blocks,
-	)
-	results, diag := eval.EvaluateDocument(doc)
+	results, diag = pd.Render(ctx, pluginCaller)
 	if diags.Extend(diag) {
 		return
 	}
@@ -101,7 +66,7 @@ var renderCmd = &cobra.Command{
 	Short: "Render the document",
 	Long:  `Render the specified document into Markdown and output it either to stdout or to a file`,
 	Args:  cobra.ExactArgs(1),
-	RunE: func(_ *cobra.Command, args []string) (err error) {
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		target := strings.TrimSpace(args[0])
 		const docPrefix = definitions.BlockKindDocument + "."
 		switch {
@@ -111,28 +76,36 @@ var renderCmd = &cobra.Command{
 			return fmt.Errorf("target should have the format '%s<name_of_the_document>'", docPrefix)
 		}
 
-		var dest *os.File
-		if outFile == "" {
-			dest = os.Stdout
-		} else {
+		dest := os.Stdout
+		if outFile != "" {
 			dest, err = os.Create(outFile)
 			if err != nil {
 				return fmt.Errorf("can't create the out-file: %w", err)
 			}
 			defer dest.Close()
 		}
-		res, fileMap, diags := Render(cliArgs.pluginsDir, os.DirFS(cliArgs.sourceDir), target)
-		if !diags.HasErrors() {
-			diags.Extend(writeResults(dest, res))
-		}
-		diagnostics.PrintDiags(os.Stderr, diags, fileMap, cliArgs.colorize)
+
+		var diags diagnostics.Diag
+		eval := NewEvaluator(cliArgs.pluginsDir)
+		defer func() {
+			err = eval.Cleanup(diags)
+		}()
+		diags = eval.ParseFabricFiles(os.DirFS(cliArgs.sourceDir))
 		if diags.HasErrors() {
-			// Errors have been already displayed
-			rootCmd.SilenceErrors = true
-			rootCmd.SilenceUsage = true
-			return diags
+			return
 		}
-		return nil
+		diag := eval.LoadRunner()
+		if diags.Extend(diag) {
+			return
+		}
+		res, diag := Render(cmd.Context(), eval.Blocks, eval.PluginCaller(), target)
+		if diags.Extend(diag) {
+			return
+		}
+		diags.Extend(
+			writeResults(dest, res),
+		)
+		return
 	},
 }
 
