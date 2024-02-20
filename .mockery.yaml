@@ -17,3 +17,15 @@ packages:
     config:
     interfaces:
       Client:
+  github.com/blackstork-io/fabric/internal/hackerone/client:
+    config:
+    interfaces:
+      Client:
+  github.com/blackstork-io/fabric/internal/virustotal/client:
+    config:
+    interfaces:
+      Client:
+  github.com/blackstork-io/fabric/internal/splunk/client:
+    config:
+    interfaces:
+      Client:

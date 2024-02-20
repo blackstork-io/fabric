@@ -15,10 +15,14 @@ import (
 	"github.com/blackstork-io/fabric/internal/elasticsearch"
 	"github.com/blackstork-io/fabric/internal/github"
 	"github.com/blackstork-io/fabric/internal/graphql"
+	"github.com/blackstork-io/fabric/internal/hackerone"
 	"github.com/blackstork-io/fabric/internal/openai"
 	"github.com/blackstork-io/fabric/internal/postgresql"
+	"github.com/blackstork-io/fabric/internal/splunk"
 	"github.com/blackstork-io/fabric/internal/sqlite"
+	"github.com/blackstork-io/fabric/internal/stixview"
 	"github.com/blackstork-io/fabric/internal/terraform"
+	"github.com/blackstork-io/fabric/internal/virustotal"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -52,6 +56,10 @@ func main() {
 		postgresql.Plugin(version),
 		sqlite.Plugin(version),
 		terraform.Plugin(version),
+		hackerone.Plugin(version, nil),
+		virustotal.Plugin(version, nil),
+		splunk.Plugin(version, nil),
+		stixview.Plugin(version),
 	}
 	// generate markdown for each plugin
 	for _, p := range plugins {

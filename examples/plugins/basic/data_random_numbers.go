@@ -22,7 +22,7 @@ const (
 func makeRandomNumbersDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		// Config is optional, we can define the schema for the config that is reusable for this data source
-		Config: &hcldec.ObjectSpec{
+		Config: hcldec.ObjectSpec{
 			"min": &hcldec.AttrSpec{
 				Name:     "min",
 				Required: false,
@@ -35,7 +35,7 @@ func makeRandomNumbersDataSource() *plugin.DataSource {
 			},
 		},
 		// We define the schema for the arguments
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"length": &hcldec.AttrSpec{
 				Name:     "length",
 				Required: true,

@@ -95,6 +95,42 @@ builds:
       - windows
       - darwin
 
+  - id: hackerone
+    main: ./internal/hackerone/cmd
+    binary: "plugins/blackstork/hackerone@{{ .Version }}"
+    flags: "-trimpath"
+    goos:
+      - linux
+      - windows
+      - darwin
+
+  - id: virustotal
+    main: ./internal/virustotal/cmd
+    binary: "plugins/blackstork/virustotal@{{ .Version }}"
+    flags: "-trimpath"
+    goos:
+      - linux
+      - windows
+      - darwin
+
+  - id: splunk
+    main: ./internal/splunk/cmd
+    binary: "plugins/blackstork/splunk@{{ .Version }}"
+    flags: "-trimpath"
+    goos:
+      - linux
+      - windows
+      - darwin
+
+  - id: stixview
+    main: ./internal/stixview/cmd
+    binary: "plugins/blackstork/stixview@{{ .Version }}"
+    flags: "-trimpath"
+    goos:
+      - linux
+      - windows
+      - darwin
+
 archives:
   - id: fabric
     format: tar.gz
@@ -122,6 +158,10 @@ archives:
       - postgresql
       - sqlite
       - terraform
+      - hackerone
+      - virustotal
+      - splunk
+      - stixview
     name_template: >-
       plugins_
       {{- .Os }}_

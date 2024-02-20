@@ -68,3 +68,27 @@ builds:
     binary: "plugins/blackstork/terraform@{{ .Version }}"
     ldflags: "-X main.version={{.Version}}"
     no_unique_dist_dir: true
+
+  - id: hackerone
+    main: ./internal/hackerone/cmd
+    binary: "plugins/blackstork/hackerone@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    no_unique_dist_dir: true
+
+  - id: virustotal
+    main: ./internal/virustotal/cmd
+    binary: "plugins/blackstork/virustotal@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    no_unique_dist_dir: true
+
+  - id: splunk
+    main: ./internal/splunk/cmd
+    binary: "plugins/blackstork/splunk@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    no_unique_dist_dir: true
+
+  - id: stixview
+    main: ./internal/stixview/cmd
+    binary: "plugins/blackstork/stixview@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    no_unique_dist_dir: true
