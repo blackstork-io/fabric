@@ -15,6 +15,7 @@ func Plugin(version string) *plugin.Schema {
 			"inline": makeInlineDataSource(),
 		},
 		ContentProviders: plugin.ContentProviders{
+			"toc":         makeTOCContentProvider(),
 			"text":        makeTextContentProvider(),
 			"image":       makeImageContentProvider(),
 			"list":        makeListContentProvider(),
