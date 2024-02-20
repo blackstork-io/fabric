@@ -3,9 +3,13 @@ package definitions
 import "github.com/blackstork-io/fabric/plugin"
 
 type MetaBlock struct {
-	// XXX: is empty sting enougth or use a proper ptr-nil-if-missing?
-	Author string   `hcl:"author,optional"`
-	Tags   []string `hcl:"tags,optional"`
+	Name        string   `hcl:"name,optional"`
+	Description string   `hcl:"description,optional"`
+	Url         string   `hcl:"url,optional"`
+	License     string   `hcl:"license,optional"`
+	Author      string   `hcl:"author,optional"`
+	Tags        []string `hcl:"tags,optional"`
+	UpdatedAt   string   `hcl:"updated_at,optional"`
 
 	// TODO: ?store def range defRange hcl.Range
 }
