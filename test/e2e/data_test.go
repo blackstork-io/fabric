@@ -34,7 +34,7 @@ func dataTest(t *testing.T, testName string, files []string, target string, expe
 			eval.Cleanup(nil)
 		}()
 
-		var res plugin.MapData
+		var res plugin.Data
 		diags := eval.ParseFabricFiles(sourceDir)
 		if !diags.HasErrors() {
 			if !diags.Extend(eval.LoadRunner()) {

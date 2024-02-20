@@ -22,7 +22,7 @@ document "example" {
         absolute_title_size = 2
     }
     content table {
-        query = ".data.csv.csv_file.result"
+        query = ".data.csv.csv_file"
         columns = [
             {
                 "header" = "ID"
@@ -50,7 +50,7 @@ document "example" {
         config {
             api_key = "<API-KEY>"
         }
-        query = ".data.csv.csv_file.result"
+        query = ".data.csv.csv_file"
         model = "gpt-3.5-turbo"
         prompt = "Decribe each user in a sentence"
     }
