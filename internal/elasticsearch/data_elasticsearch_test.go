@@ -18,8 +18,8 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 )
 
-// ElasticSearchDataTestSuite is a test suite to test integration with real elasticsearch
-type ElasticSearchDataTestSuite struct {
+// IntegrationTestSuite is a test suite to test integration with real elasticsearch
+type IntegrationTestSuite struct {
 	suite.Suite
 	container *elasticsearch.ElasticsearchContainer
 	client    *es.Client
@@ -28,14 +28,14 @@ type ElasticSearchDataTestSuite struct {
 	ctx       context.Context
 }
 
-func TestElasticSearchDataSuite(t *testing.T) {
+func TestIntegrationSuite(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration tests")
 	}
-	suite.Run(t, &ElasticSearchDataTestSuite{})
+	suite.Run(t, &IntegrationTestSuite{})
 }
 
-func (s *ElasticSearchDataTestSuite) SetupSuite() {
+func (s *IntegrationTestSuite) SetupSuite() {
 	s.ctx = context.Background()
 	opts := []testcontainers.ContainerCustomizer{
 		testcontainers.WithImage("docker.io/elasticsearch:8.9.0"),
@@ -68,7 +68,7 @@ func (s *ElasticSearchDataTestSuite) SetupSuite() {
 	s.plugin = Plugin("")
 }
 
-func (s *ElasticSearchDataTestSuite) TearDownSuite() {
+func (s *IntegrationTestSuite) TearDownSuite() {
 	s.Require().NoError(s.container.Terminate(s.ctx), "failed to stop elasticsearch container")
 }
 
@@ -80,7 +80,7 @@ type testDataObject struct {
 	Name   string `json:"name"`
 }
 
-func (s *ElasticSearchDataTestSuite) SetupTest() {
+func (s *IntegrationTestSuite) SetupTest() {
 	file, err := os.ReadFile("testdata/data.json")
 	s.Require().NoError(err, "failed to read data.json")
 	dataList := []testDataObject{}
@@ -104,19 +104,20 @@ func (s *ElasticSearchDataTestSuite) SetupTest() {
 	s.Require().False(res.IsError(), "failed to refresh indices")
 }
 
-func (s *ElasticSearchDataTestSuite) TearDownTest() {
+func (s *IntegrationTestSuite) TearDownTest() {
 	res, err := s.client.Indices.Delete([]string{"test_index"})
 	s.Require().NoError(err, "failed to delete indices")
 	s.Require().False(res.IsError(), "failed to delete indices: %s", res.String())
 }
 
-func (s *ElasticSearchDataTestSuite) TestSearchDefaults() {
+func (s *IntegrationTestSuite) TestSearchDefaults() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"id":           cty.NullVal(cty.String),
 		"index":        cty.StringVal("test_index"),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.NullVal(cty.String),
 		"fields":       cty.NullVal(cty.String),
+		"size":         cty.NullVal(cty.Number),
 	})
 	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{
 		Config: s.cfg,
@@ -173,13 +174,14 @@ func (s *ElasticSearchDataTestSuite) TestSearchDefaults() {
 	  }`, string(raw))
 }
 
-func (s *ElasticSearchDataTestSuite) TestSearchFields() {
+func (s *IntegrationTestSuite) TestSearchFields() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"id":           cty.NullVal(cty.String),
 		"index":        cty.StringVal("test_index"),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.NullVal(cty.String),
 		"fields":       cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")}),
+		"size":         cty.NullVal(cty.Number),
 	})
 	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{
 		Config: s.cfg,
@@ -227,13 +229,14 @@ func (s *ElasticSearchDataTestSuite) TestSearchFields() {
 	  }`, string(raw))
 }
 
-func (s *ElasticSearchDataTestSuite) TestSearchQueryString() {
+func (s *IntegrationTestSuite) TestSearchQueryString() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"id":           cty.NullVal(cty.String),
 		"index":        cty.StringVal("test_index"),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.StringVal("type:foo"),
 		"fields":       cty.NullVal(cty.String),
+		"size":         cty.NullVal(cty.Number),
 	})
 	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{
 		Config: s.cfg,
@@ -278,7 +281,7 @@ func (s *ElasticSearchDataTestSuite) TestSearchQueryString() {
 	  }`, string(raw))
 }
 
-func (s *ElasticSearchDataTestSuite) TestSearchQuery() {
+func (s *IntegrationTestSuite) TestSearchQuery() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"id":    cty.NullVal(cty.String),
 		"index": cty.StringVal("test_index"),
@@ -287,6 +290,7 @@ func (s *ElasticSearchDataTestSuite) TestSearchQuery() {
 		}),
 		"query_string": cty.NullVal(cty.String),
 		"fields":       cty.NullVal(cty.String),
+		"size":         cty.NullVal(cty.Number),
 	})
 	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{
 		Config: s.cfg,
@@ -343,7 +347,47 @@ func (s *ElasticSearchDataTestSuite) TestSearchQuery() {
 	}`, string(raw))
 }
 
-func (s *ElasticSearchDataTestSuite) TestGetByID() {
+func (s *IntegrationTestSuite) TestSearchSize() {
+	args := cty.ObjectVal(map[string]cty.Value{
+		"id":           cty.NullVal(cty.String),
+		"index":        cty.StringVal("test_index"),
+		"query":        cty.NullVal(cty.DynamicPseudoType),
+		"query_string": cty.NullVal(cty.String),
+		"fields":       cty.NullVal(cty.String),
+		"size":         cty.NumberIntVal(1),
+	})
+	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{
+		Config: s.cfg,
+		Args:   args,
+	})
+	s.Require().Nil(diags)
+	m := data.(plugin.MapData)
+	raw, err := json.MarshalIndent(m["hits"], "", "  ")
+	s.Require().NoError(err, "failed to marshal data: %v", err)
+	s.JSONEq(`{
+		"hits": [
+		  {
+			"_id": "54f7a815-eac5-4f7c-a339-5fefd0f54967",
+			"_index": "test_index",
+			"_score": 1,
+			"_source": {
+			  "active": false,
+			  "age": 39,
+			  "id": "54f7a815-eac5-4f7c-a339-5fefd0f54967",
+			  "name": "Davidson",
+			  "type": "foo"
+			}
+		  }
+		],
+		"max_score": 1,
+		"total": {
+		  "relation": "eq",
+		  "value": 3
+		}
+	  }`, string(raw))
+}
+
+func (s *IntegrationTestSuite) TestGetByID() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"id":           cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6"),
 		"index":        cty.StringVal("test_index"),
@@ -376,7 +420,7 @@ func (s *ElasticSearchDataTestSuite) TestGetByID() {
 	}`, string(raw))
 }
 
-func (s *ElasticSearchDataTestSuite) TestGetByIDFields() {
+func (s *IntegrationTestSuite) TestGetByIDFields() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"id":           cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6"),
 		"index":        cty.StringVal("test_index"),
@@ -406,7 +450,7 @@ func (s *ElasticSearchDataTestSuite) TestGetByIDFields() {
 	}`, string(raw))
 }
 
-func (s *ElasticSearchDataTestSuite) TestGetByIDNotFound() {
+func (s *IntegrationTestSuite) TestGetByIDNotFound() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"id":           cty.StringVal("00000000-0000-0000-0000-000000000000"),
 		"index":        cty.StringVal("test_index"),

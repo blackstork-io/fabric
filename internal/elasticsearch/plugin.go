@@ -34,11 +34,17 @@ func makeClient(pcfg cty.Value) (*es.Client, error) {
 		Addresses: []string{defaultBaseURL},
 		Username:  defaultUsername,
 	}
+	if pcfg.IsNull() {
+		return nil, fmt.Errorf("configuration is required")
+	}
 	if baseURL := pcfg.GetAttr("base_url"); !baseURL.IsNull() {
 		cfg.Addresses = []string{baseURL.AsString()}
 	}
 	if cloudID := pcfg.GetAttr("cloud_id"); !cloudID.IsNull() {
 		cfg.CloudID = cloudID.AsString()
+	}
+	if len(cfg.Addresses) == 0 && cfg.CloudID == "" {
+		return nil, fmt.Errorf("either one of base_url or cloud_id is required")
 	}
 	if apiKeyStr := pcfg.GetAttr("api_key_str"); !apiKeyStr.IsNull() {
 		cfg.APIKey = apiKeyStr.AsString()
@@ -122,6 +128,13 @@ func search(fn esapi.Search, args cty.Value) (plugin.Data, error) {
 			return nil, fmt.Errorf("failed to marshal query: %s", err)
 		}
 		opts = append(opts, fn.WithBody(bytes.NewReader(queryRaw)))
+	}
+	if size := args.GetAttr("size"); !size.IsNull() {
+		n, _ := size.AsBigFloat().Int64()
+		if n <= 0 {
+			return nil, fmt.Errorf("size must be greater than 0")
+		}
+		opts = append(opts, fn.WithSize(int(n)))
 	}
 	if fields := args.GetAttr("fields"); !fields.IsNull() {
 		fieldSlice := fields.AsValueSlice()

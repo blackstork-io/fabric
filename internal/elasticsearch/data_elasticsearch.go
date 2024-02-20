@@ -17,7 +17,7 @@ func makeElasticSearchDataSource() *plugin.DataSource {
 			"base_url": &hcldec.AttrSpec{
 				Name:     "base_url",
 				Type:     cty.String,
-				Required: true,
+				Required: false,
 			},
 			"cloud_id": &hcldec.AttrSpec{
 				Name:     "cloud_id",
@@ -55,14 +55,14 @@ func makeElasticSearchDataSource() *plugin.DataSource {
 				Required: false,
 			},
 		},
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"index": &hcldec.AttrSpec{
 				Name:     "index",
 				Type:     cty.String,
 				Required: true,
 			},
 			"id": &hcldec.AttrSpec{
-				Name:     "index",
+				Name:     "id",
 				Type:     cty.String,
 				Required: false,
 			},
@@ -79,6 +79,11 @@ func makeElasticSearchDataSource() *plugin.DataSource {
 			"fields": &hcldec.AttrSpec{
 				Name:     "fields",
 				Type:     cty.List(cty.String),
+				Required: false,
+			},
+			"size": &hcldec.AttrSpec{
+				Name:     "size",
+				Type:     cty.Number,
 				Required: false,
 			},
 		},

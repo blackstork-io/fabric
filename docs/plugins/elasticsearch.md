@@ -32,7 +32,7 @@ The data source supports the following configuration parameters:
 config data elasticsearch {
     api_key = <list of string>  # optional
     api_key_str = <string>  # optional
-    base_url = <string>  # required
+    base_url = <string>  # optional
     basic_auth_password = <string>  # optional
     basic_auth_username = <string>  # optional
     bearer_auth = <string>  # optional
@@ -52,5 +52,6 @@ data elasticsearch {
     index = <string>  # required
     query = <map of dynamic>  # optional
     query_string = <string>  # optional
+    size = <number>  # optional
 }
 ```

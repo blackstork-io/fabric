@@ -19,7 +19,7 @@ type tableCellTmpl = *template.Template
 func makeTableContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genTableContent,
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"columns": &hcldec.AttrSpec{
 				Name: "columns",
 				Type: cty.List(cty.Object(map[string]cty.Type{

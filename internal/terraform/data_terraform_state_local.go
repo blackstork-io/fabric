@@ -14,7 +14,7 @@ import (
 func makeTerraformStateLocalDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		Config: nil,
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"path": &hcldec.AttrSpec{
 				Name:     "path",
 				Type:     cty.String,

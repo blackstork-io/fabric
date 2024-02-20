@@ -28,7 +28,7 @@ const (
 func makeTextContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genTextContent,
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"text": &hcldec.AttrSpec{
 				Name:     "text",
 				Type:     cty.String,

@@ -112,4 +112,4 @@ func DefineConfig(block *hclsyntax.Block) (config *Config, diags diagnostics.Dia
 	return
 }
 
-type ConfigResolver func(pluginKind string, pluginName string) (config *Config)
+type ConfigResolver func(pluginKind, pluginName string) (config *Config)

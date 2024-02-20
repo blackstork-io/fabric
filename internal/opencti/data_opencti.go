@@ -12,7 +12,7 @@ import (
 
 func makeOpenCTIDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
-		Config: &hcldec.ObjectSpec{
+		Config: hcldec.ObjectSpec{
 			"graphql_url": &hcldec.AttrSpec{
 				Name:     "graphql_url",
 				Type:     cty.String,
@@ -24,7 +24,7 @@ func makeOpenCTIDataSource() *plugin.DataSource {
 				Required: false,
 			},
 		},
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"graphql_query": &hcldec.AttrSpec{
 				Name:     "graphql_query",
 				Type:     cty.String,
