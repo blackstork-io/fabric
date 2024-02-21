@@ -9,15 +9,15 @@ fabric {
 }
 
 config data hackerone_reports {
-    api_username = "<api_username>"
-    api_token = "<api_token>"
+    api_username = from_env_variable("HACKERONE_API_USERNAME")
+    api_token = from_env_variable("HACKERONE_API_TOKEN")
 }
 
 document "example" {
     title = "Using hackerone plugin"
    
     data hackerone_reports "my_reports" {
-        program = ["<program_id>"]
+        program = [from_env_variable("HACKERONE_PROGRAM")]
     }
     content text {
         format_as = "title"

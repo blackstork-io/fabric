@@ -55,7 +55,7 @@ func (b *BlockInvocation) ParseInvocation(spec hcldec.Spec) (cty.Value, diagnost
 		res, err := hclBodyToVal(b.Body)
 		return res, err
 	}
-	res, diag := hcldec.Decode(b.Body, spec, nil)
+	res, diag := hcldec.Decode(b.Body, spec, NewEvalContext())
 	return res, diagnostics.Diag(diag)
 }
 
