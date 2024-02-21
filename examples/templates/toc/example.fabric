@@ -1,0 +1,48 @@
+
+document "example" {
+    title = "Using TOC content provider"
+   
+    content text {
+        text = "Sub title 1"
+        format_as = "title"
+        absolute_title_size = 2
+    }
+
+    content text {
+        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor dolore magna."
+    }
+
+    content text {
+        text = "Sub title 2"
+        format_as = "title"
+        absolute_title_size = 2
+    }
+    content text {
+        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor dolore magna."
+    }
+    content text {
+        text = "Sub title 3"
+        format_as = "title"
+        absolute_title_size = 3
+    }
+
+    content text {
+        text = "Sub title 4.1"
+        format_as = "title"
+        absolute_title_size = 4
+    }
+    content text {
+        text = "Sub title 4.2"
+        format_as = "title"
+        absolute_title_size = 4
+    }
+
+    content text {
+        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor dolore magna."
+    }
+    content toc {
+        start_level = 1
+        end_level = 4
+        ordered = true
+    }
+}

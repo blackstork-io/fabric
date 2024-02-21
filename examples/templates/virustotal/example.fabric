@@ -1,0 +1,26 @@
+fabric {
+    cache_dir = "./.fabric"
+    plugin_registry {
+        mirror_dir = "dist/plugins"
+    }
+    plugin_versions = {
+        "blackstork/virustotal" = "0.0.0-dev"
+    }
+}
+
+config data virustotal_api_usage {
+    api_key = "<api_key>"
+}
+
+document "example" {
+    title = "Using virustotal plugin"
+   
+    data virustotal_api_usage "my_usage" {
+        user_id = "<user_id>"
+        start_date = "20240201"
+        end_date = "20240203"
+    }
+    content text {
+        text = "{{.data.virustotal_api_usage.my_usage.daily}}"
+    }
+}

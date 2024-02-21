@@ -19,7 +19,7 @@ import (
 
 var dataTgtRe = regexp.MustCompile(`(?:document\.([^.]+)\.data\.([^.]+)\.([^.\n]+))|(?:data\.([^.]+)\.([^.]+))`)
 
-func Data(ctx context.Context, blocks *parser.DefinedBlocks, caller *parser.Caller, target string) (result plugin.MapData, diags diagnostics.Diag) {
+func Data(ctx context.Context, blocks *parser.DefinedBlocks, caller *parser.Caller, target string) (result plugin.Data, diags diagnostics.Diag) {
 	// docName, pluginName, blockName
 	// target: document.<doc-name>.data.<plugin-name>.<data-name>
 	tgt := dataTgtRe.FindStringSubmatch(target)

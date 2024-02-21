@@ -1,0 +1,31 @@
+fabric {
+    cache_dir = "./.fabric"
+    plugin_registry {
+        mirror_dir = "dist/plugins"
+    }
+    plugin_versions = {
+        "blackstork/hackerone" = "0.0.0-dev"
+    }
+}
+
+config data hackerone_reports {
+    api_username = "<api_username>"
+    api_token = "<api_token>"
+}
+
+document "example" {
+    title = "Using hackerone plugin"
+   
+    data hackerone_reports "my_reports" {
+        program = ["<program_id>"]
+    }
+    content text {
+        format_as = "title"
+        text = "My HackerOne Reports"
+        absolute_title_size = 2
+    }
+    content list {
+        query = "[.data.hackerone_reports.my_reports[].attributes.title]"
+        item_template = "{{.}}"
+    }
+}

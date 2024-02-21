@@ -16,7 +16,7 @@ func makeGreetingContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		// Config is optional, in this case we don't need it
 		// We only define the schema for the arguments
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"name": &hcldec.AttrSpec{
 				Name:     "name",
 				Required: true,

@@ -8,7 +8,7 @@ import (
 )
 
 type DataCaller interface {
-	CallData(ctx context.Context, name string, config Configuration, invocation Invocation) (result plugin.MapData, diag diagnostics.Diag)
+	CallData(ctx context.Context, name string, config Configuration, invocation Invocation) (result plugin.Data, diag diagnostics.Diag)
 }
 
 type ContentCaller interface {

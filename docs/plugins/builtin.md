@@ -161,3 +161,22 @@ content text {
     text = <string>  # required
 }
 ```
+
+### `toc`
+
+#### Configuration
+
+The content provider doesn't support configuration.
+
+#### Usage
+
+The content source supports the following parameters in the content blocks:
+
+```hcl
+content toc {
+    end_level = <number>  # optional
+    ordered = <bool>  # optional
+    scope = <string>  # optional
+    start_level = <number>  # optional
+}
+```

@@ -161,14 +161,14 @@ func (c *Caller) CallContent(ctx context.Context, name string, config evaluation
 	return
 }
 
-func (c *Caller) CallData(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation) (result plugin.MapData, diag diagnostics.Diag) {
+func (c *Caller) CallData(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation) (result plugin.Data, diag diagnostics.Diag) {
 	var ok bool
 	var res any
 	res, diag = c.callPlugin(ctx, definitions.BlockKindData, name, config, invocation, nil)
 	if diag.HasErrors() {
 		return
 	}
-	result, ok = res.(plugin.MapData)
+	result, ok = res.(plugin.Data)
 	if !ok {
 		panic("Incorrect plugin result type")
 	}

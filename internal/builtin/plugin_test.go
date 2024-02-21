@@ -14,6 +14,7 @@ func TestPluginSchema(t *testing.T) {
 	assert.NotNil(t, schema.DataSources["txt"])
 	assert.NotNil(t, schema.DataSources["json"])
 	assert.NotNil(t, schema.DataSources["inline"])
+	assert.NotNil(t, schema.ContentProviders["toc"])
 	assert.NotNil(t, schema.ContentProviders["text"])
 	assert.NotNil(t, schema.ContentProviders["image"])
 	assert.NotNil(t, schema.ContentProviders["list"])
