@@ -12,11 +12,15 @@ import (
 	"github.com/blackstork-io/fabric/internal/elasticsearch"
 	"github.com/blackstork-io/fabric/internal/github"
 	"github.com/blackstork-io/fabric/internal/graphql"
+	"github.com/blackstork-io/fabric/internal/hackerone"
 	"github.com/blackstork-io/fabric/internal/openai"
 	"github.com/blackstork-io/fabric/internal/opencti"
 	"github.com/blackstork-io/fabric/internal/postgresql"
+	"github.com/blackstork-io/fabric/internal/splunk"
 	"github.com/blackstork-io/fabric/internal/sqlite"
+	"github.com/blackstork-io/fabric/internal/stixview"
 	"github.com/blackstork-io/fabric/internal/terraform"
+	"github.com/blackstork-io/fabric/internal/virustotal"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -33,6 +37,10 @@ func TestAllPluginSchemaValidity(t *testing.T) {
 		postgresql.Plugin(ver),
 		sqlite.Plugin(ver),
 		terraform.Plugin(ver),
+		hackerone.Plugin(ver, nil),
+		virustotal.Plugin(ver, nil),
+		stixview.Plugin(ver),
+		splunk.Plugin(ver, nil),
 	}
 	for _, p := range plugins {
 		p := p
