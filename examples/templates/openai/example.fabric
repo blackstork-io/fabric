@@ -48,7 +48,7 @@ document "example" {
     }
     content openai_text {
         config {
-            api_key = "<API-KEY>"
+            api_key = from_env_variable("OPENAI_API_KEY")
         }
         query = ".data.csv.csv_file"
         model = "gpt-3.5-turbo"

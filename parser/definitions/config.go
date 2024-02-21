@@ -31,7 +31,7 @@ var _ evaluation.Configuration = (*Config)(nil)
 func (c *Config) ParseConfig(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
 	c.once.Do(func() {
 		var diag hcl.Diagnostics
-		c.value, diag = hcldec.Decode(c.Body, spec, nil)
+		c.value, diag = hcldec.Decode(c.Body, spec, evaluation.NewEvalContext())
 		if diags.ExtendHcl(diag) {
 			// don't let partially-decoded values live
 			c.value = cty.NilVal
