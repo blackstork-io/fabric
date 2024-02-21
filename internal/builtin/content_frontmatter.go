@@ -27,7 +27,7 @@ var frontMatterAllowedFormats = []string{"yaml", "toml", "json"}
 func makeFrontMatterContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genFrontMatterContent,
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"format": &hcldec.AttrSpec{
 				Name:     "format",
 				Type:     cty.String,

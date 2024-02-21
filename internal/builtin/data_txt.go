@@ -15,7 +15,7 @@ import (
 func makeTXTDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchTXTData,
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"path": &hcldec.AttrSpec{
 				Name:     "path",
 				Type:     cty.String,

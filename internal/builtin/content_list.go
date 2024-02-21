@@ -26,7 +26,7 @@ var listAllowedFormats = []string{"unordered", "ordered", "tasklist"}
 func makeListContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genListContent,
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"item_template": &hcldec.AttrSpec{
 				Name:     "item_template",
 				Type:     cty.String,

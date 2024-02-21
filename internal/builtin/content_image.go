@@ -15,7 +15,7 @@ import (
 func makeImageContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genImageContent,
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"src": &hcldec.AttrSpec{
 				Name:     "src",
 				Type:     cty.String,

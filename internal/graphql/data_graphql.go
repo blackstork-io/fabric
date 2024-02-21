@@ -17,7 +17,7 @@ import (
 
 func makeGraphQLDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
-		Config: &hcldec.ObjectSpec{
+		Config: hcldec.ObjectSpec{
 			"url": &hcldec.AttrSpec{
 				Name:     "url",
 				Type:     cty.String,
@@ -29,9 +29,9 @@ func makeGraphQLDataSource() *plugin.DataSource {
 				Required: false,
 			},
 		},
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"query": &hcldec.AttrSpec{
-				Name:     "path",
+				Name:     "query",
 				Type:     cty.String,
 				Required: true,
 			},

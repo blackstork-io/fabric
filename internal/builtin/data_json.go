@@ -17,7 +17,7 @@ import (
 func makeJSONDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchJSONData,
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"glob": &hcldec.AttrSpec{
 				Name:     "glob",
 				Type:     cty.String,

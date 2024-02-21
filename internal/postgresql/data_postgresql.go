@@ -17,14 +17,14 @@ import (
 
 func makePostgreSQLDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
-		Config: &hcldec.ObjectSpec{
+		Config: hcldec.ObjectSpec{
 			"database_url": &hcldec.AttrSpec{
 				Name:     "database_url",
 				Type:     cty.String,
 				Required: true,
 			},
 		},
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"sql_query": &hcldec.AttrSpec{
 				Name:     "sql_query",
 				Type:     cty.String,

@@ -15,7 +15,7 @@ import (
 
 func makeOpenAITextContentSchema(loader ClientLoadFn) *plugin.ContentProvider {
 	return &plugin.ContentProvider{
-		Config: &hcldec.ObjectSpec{
+		Config: hcldec.ObjectSpec{
 			"system_prompt": &hcldec.AttrSpec{
 				Name:     "system_prompt",
 				Type:     cty.String,
@@ -32,7 +32,7 @@ func makeOpenAITextContentSchema(loader ClientLoadFn) *plugin.ContentProvider {
 				Required: false,
 			},
 		},
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"prompt": &hcldec.AttrSpec{
 				Name:     "prompt",
 				Type:     cty.String,

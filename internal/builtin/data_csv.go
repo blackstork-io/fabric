@@ -20,14 +20,14 @@ const defaultCSVDelimiter = ','
 func makeCSVDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchCSVData,
-		Config: &hcldec.ObjectSpec{
+		Config: hcldec.ObjectSpec{
 			"delimiter": &hcldec.AttrSpec{
 				Name:     "delimiter",
 				Type:     cty.String,
 				Required: false,
 			},
 		},
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"path": &hcldec.AttrSpec{
 				Name:     "path",
 				Type:     cty.String,
