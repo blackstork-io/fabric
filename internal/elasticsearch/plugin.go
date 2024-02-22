@@ -37,7 +37,7 @@ func makeClient(pcfg cty.Value) (*es.Client, error) {
 	if pcfg.IsNull() {
 		return nil, fmt.Errorf("configuration is required")
 	}
-	if baseURL := pcfg.GetAttr("base_url"); !baseURL.IsNull() {
+	if baseURL := pcfg.GetAttr("base_url"); !baseURL.IsNull() && baseURL.AsString() != "" {
 		cfg.Addresses = []string{baseURL.AsString()}
 	}
 	if cloudID := pcfg.GetAttr("cloud_id"); !cloudID.IsNull() {
