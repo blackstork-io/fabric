@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	goplugin "github.com/hashicorp/go-plugin"
+	"google.golang.org/grpc"
 
 	"github.com/blackstork-io/fabric/pkg/sloghclog"
 	"github.com/blackstork-io/fabric/plugin"
@@ -53,6 +54,12 @@ func NewClient(loc string) (p *plugin.Schema, closefn func() error, err error) {
 			sloghclog.AddSource(false),
 			sloghclog.Level(slog.LevelInfo), // debug is too noisy for plugins
 		),
+		GRPCDialOptions: []grpc.DialOption{
+			grpc.WithDefaultCallOptions(
+				grpc.MaxCallRecvMsgSize(defaultMsgSize),
+				grpc.MaxCallSendMsgSize(defaultMsgSize),
+			),
+		},
 	})
 	rpcClient, err := client.Client()
 	if err != nil {

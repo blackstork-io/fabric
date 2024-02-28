@@ -11,6 +11,8 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 )
 
+var defaultMsgSize = 1024 * 1024 * 20
+
 var handshake = goplugin.HandshakeConfig{
 	ProtocolVersion:  1,
 	MagicCookieKey:   "PLUGINS_FOR",
@@ -31,6 +33,7 @@ func (p *grpcPlugin) GRPCServer(broker *goplugin.GRPCBroker, s *grpc.Server) err
 
 func (p *grpcPlugin) GRPCClient(ctx context.Context, broker *goplugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
 	client := NewPluginServiceClient(c)
+
 	res, err := client.GetSchema(ctx, &GetSchemaRequest{})
 	if err != nil {
 		return nil, err
@@ -52,6 +55,13 @@ func (p *grpcPlugin) GRPCClient(ctx context.Context, broker *goplugin.GRPCBroker
 		cg.ContentFunc = p.clientGenerateFunc(name, client)
 	}
 	return schema, nil
+}
+
+func (p *grpcPlugin) callOptions() []grpc.CallOption {
+	return []grpc.CallOption{
+		grpc.MaxCallRecvMsgSize(defaultMsgSize),
+		grpc.MaxCallSendMsgSize(defaultMsgSize),
+	}
 }
 
 func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient) plugin.ProvideContentFunc {
@@ -84,7 +94,7 @@ func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient)
 			Config:      cfgEncoded,
 			Args:        argsEncoded,
 			DataContext: encodeMapData(params.DataContext),
-		})
+		}, p.callOptions()...)
 		if err != nil {
 			return nil, hcl.Diagnostics{{
 				Severity: hcl.DiagError,
@@ -128,7 +138,7 @@ func (p *grpcPlugin) clientDataFunc(name string, client PluginServiceClient) plu
 			Source: name,
 			Config: cfgEncoded,
 			Args:   argsEncoded,
-		})
+		}, p.callOptions()...)
 		if err != nil {
 			return nil, hcl.Diagnostics{{
 				Severity: hcl.DiagError,
