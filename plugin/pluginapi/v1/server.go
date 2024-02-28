@@ -4,6 +4,7 @@ import (
 	context "context"
 
 	goplugin "github.com/hashicorp/go-plugin"
+	"google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 
@@ -16,7 +17,10 @@ func Serve(schema *plugin.Schema) {
 		Plugins: map[string]goplugin.Plugin{
 			schema.Name: &grpcPlugin{schema: schema},
 		},
-		GRPCServer: goplugin.DefaultGRPCServer,
+		GRPCServer: func(opts []grpc.ServerOption) *grpc.Server {
+			opts = append(opts, grpc.MaxRecvMsgSize(defaultMsgSize))
+			return grpc.NewServer(opts...)
+		},
 	})
 }
 
