@@ -35,7 +35,7 @@ func NewEvaluator() *Evaluator {
 	return &Evaluator{
 		Config: &definitions.GlobalConfig{
 			PluginRegistry: &definitions.PluginRegistry{
-				BaseURL:   "http://localhost:8080",
+				BaseURL:   "https://registry.blackstork.io",
 				MirrorDir: "",
 			},
 			CacheDir: ".fabric",
