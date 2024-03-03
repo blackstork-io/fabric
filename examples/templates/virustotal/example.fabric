@@ -1,10 +1,6 @@
 fabric {
-    cache_dir = "./.fabric"
-    plugin_registry {
-        mirror_dir = "dist/plugins"
-    }
     plugin_versions = {
-        "blackstork/virustotal" = "0.0.0-dev"
+        "blackstork/virustotal" = ">= 0.4 < 1.0 || 0.4.0-rev0"
     }
 }
 
@@ -14,7 +10,6 @@ config data virustotal_api_usage {
 
 document "example" {
     title = "Using virustotal plugin"
-   
     data virustotal_api_usage "my_usage" {
         user_id = from_env_variable("VIRUSTOTAL_USER_ID")
         start_date = "20240201"
