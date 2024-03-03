@@ -1,27 +1,45 @@
 package cmd
 
 import (
+	"context"
+	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
+	"path/filepath"
 
 	"github.com/hashicorp/hcl/v2"
 
 	"github.com/blackstork-io/fabric/internal/builtin"
 	"github.com/blackstork-io/fabric/parser"
+	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin/resolver"
 	"github.com/blackstork-io/fabric/plugin/runner"
 )
 
+const (
+	defaultLockFile = ".fabric-lock.json"
+)
+
 type Evaluator struct {
-	PluginsDir string
-	Blocks     *parser.DefinedBlocks
-	Runner     *runner.Runner
-	FileMap    map[string]*hcl.File
+	Config   *definitions.GlobalConfig
+	Blocks   *parser.DefinedBlocks
+	Runner   *runner.Runner
+	LockFile *resolver.LockFile
+	Resolver *resolver.Resolver
+	FileMap  map[string]*hcl.File
 }
 
-func NewEvaluator(pluginsDir string) *Evaluator {
+func NewEvaluator() *Evaluator {
 	return &Evaluator{
-		PluginsDir: pluginsDir,
+		Config: &definitions.GlobalConfig{
+			PluginRegistry: &definitions.PluginRegistry{
+				BaseURL:   "http://localhost:8080",
+				MirrorDir: "",
+			},
+			CacheDir: ".fabric",
+		},
 	}
 }
 
@@ -44,28 +62,59 @@ func (e *Evaluator) ParseFabricFiles(sourceDir fs.FS) (diags diagnostics.Diag) {
 	if diags.HasErrors() {
 		return
 	}
-	if e.PluginsDir == "" && e.Blocks.GlobalConfig != nil && e.Blocks.GlobalConfig.PluginRegistry != nil {
-		// use pluginsDir from config, unless overridden by cli arg
-		e.PluginsDir = e.Blocks.GlobalConfig.PluginRegistry.MirrorDir
+	if e.Blocks.GlobalConfig != nil {
+		e.Config.Merge(e.Blocks.GlobalConfig)
 	}
 	return
 }
 
-func (e *Evaluator) LoadRunner() diagnostics.Diag {
-	var pluginVersions runner.VersionMap
-	if e.Blocks.GlobalConfig != nil {
-		pluginVersions = e.Blocks.GlobalConfig.PluginVersions
+func (e *Evaluator) LoadPluginRunner() diagnostics.Diag {
+	var diag diagnostics.Diag
+	binaryMap, diags := e.Resolver.Resolve(context.Background(), e.LockFile)
+	if diag.ExtendHcl(diags) {
+		return diag
 	}
-	var stdDiag hcl.Diagnostics
+	e.Runner, diags = runner.Load(binaryMap, builtin.Plugin(version), slog.Default())
+	diag.ExtendHcl(diags)
+	return diag
+}
 
-	e.Runner, stdDiag = runner.Load(
-		runner.WithBuiltIn(
-			builtin.Plugin(version),
-		),
-		runner.WithPluginDir(e.PluginsDir),
-		runner.WithPluginVersions(pluginVersions),
+func (e *Evaluator) LoadPluginResolver(includeRemote bool) diagnostics.Diag {
+	pluginDir := filepath.Join(e.Config.CacheDir, "plugins")
+	sources := []resolver.Source{
+		resolver.LocalSource{
+			Path: pluginDir,
+		},
+	}
+	if e.Config.PluginRegistry != nil {
+		if e.Config.PluginRegistry.MirrorDir != "" {
+			sources = append(sources, resolver.LocalSource{
+				Path: e.Config.PluginRegistry.MirrorDir,
+			})
+		}
+		if includeRemote && e.Config.PluginRegistry.BaseURL != "" {
+			sources = append(sources, resolver.RemoteSource{
+				BaseURL:     e.Config.PluginRegistry.BaseURL,
+				DownloadDir: pluginDir,
+				UserAgent:   fmt.Sprintf("fabric/%s", version),
+			})
+		}
+	}
+	var err error
+	e.LockFile, err = resolver.ReadLockFileFrom(defaultLockFile)
+	if err != nil {
+		return diagnostics.Diag{{
+			Severity: hcl.DiagError,
+			Summary:  "Failed to read lock file",
+			Detail:   err.Error(),
+		}}
+	}
+	var diags hcl.Diagnostics
+	e.Resolver, diags = resolver.NewResolver(e.Config.PluginVersions,
+		resolver.WithLogger(slog.Default()),
+		resolver.WithSources(sources...),
 	)
-	return diagnostics.Diag(stdDiag)
+	return diagnostics.Diag(diags)
 }
 
 func (e *Evaluator) PluginCaller() *parser.Caller {

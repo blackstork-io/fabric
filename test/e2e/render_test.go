@@ -28,7 +28,7 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 				Mode: 0o777,
 			}
 		}
-		eval := cmd.NewEvaluator("")
+		eval := cmd.NewEvaluator()
 		defer func() {
 			eval.Cleanup(nil)
 		}()
@@ -36,7 +36,7 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 		var res []string
 		diags := eval.ParseFabricFiles(sourceDir)
 		if !diags.HasErrors() {
-			if !diags.Extend(eval.LoadRunner()) {
+			if !diags.Extend(eval.LoadPluginResolver(false)) && !diags.Extend(eval.LoadPluginRunner()) {
 				var diag diagnostics.Diag
 				res, diag = cmd.Render(context.Background(), eval.Blocks, eval.PluginCaller(), docName)
 				diags.Extend(diag)

@@ -97,7 +97,7 @@ var dataCmd = &cobra.Command{
 	Long:  `Execute the data block and print out prettified JSON to stdout`,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var diags diagnostics.Diag
-		eval := NewEvaluator(cliArgs.pluginsDir)
+		eval := NewEvaluator()
 		defer func() {
 			err = eval.Cleanup(diags)
 		}()
@@ -105,7 +105,10 @@ var dataCmd = &cobra.Command{
 		if diags.HasErrors() {
 			return
 		}
-		if diags.Extend(eval.LoadRunner()) {
+		if diags.Extend(eval.LoadPluginResolver(false)) {
+			return
+		}
+		if diags.Extend(eval.LoadPluginRunner()) {
 			return
 		}
 
