@@ -7,9 +7,6 @@ import (
 )
 
 func decodeHclSpec(src *HclSpec) (hcldec.Spec, error) {
-	if src == nil {
-		return nil, nil
-	}
 	switch {
 	case src == nil || src.GetData() == nil:
 		return nil, nil

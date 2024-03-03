@@ -21,14 +21,10 @@ func decodeCtyType(src *CtyType) (cty.Type, error) {
 	case *CtyType_Tuple:
 		return decodeCtyTupleType(src.Tuple)
 	case *CtyType_DynamicPseudo:
-		return decodeCtyDynamicPseudoType(src.DynamicPseudo)
+		return cty.DynamicPseudoType, nil
 	default:
 		return cty.NilType, fmt.Errorf("unsupported cty type: %T", src)
 	}
-}
-
-func decodeCtyDynamicPseudoType(src *CtyDynamicPseudoType) (cty.Type, error) {
-	return cty.DynamicPseudoType, nil
 }
 
 func decodeCtyPrimitiveType(src *CtyPrimitiveType) (cty.Type, error) {

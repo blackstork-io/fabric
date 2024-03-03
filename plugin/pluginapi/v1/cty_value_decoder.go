@@ -16,23 +16,23 @@ func decodeCtyValue(src *CtyValue) (cty.Value, error) {
 	}
 	switch {
 	case t.IsPrimitiveType() && src.GetPrimitive() != nil:
-		return decodeCtyPrimitiveValue(t, src.GetPrimitive())
+		return decodeCtyPrimitiveValue(src.GetPrimitive())
 	case t.IsListType() && src.GetList() != nil:
-		return decodeCtyListValue(t, src.GetList())
+		return decodeCtyListValue(src.GetList())
 	case t.IsMapType() && src.GetMap() != nil:
-		return decodeCtyMapValue(t, src.GetMap())
+		return decodeCtyMapValue(src.GetMap())
 	case t.IsSetType() && src.GetSet() != nil:
-		return decodeCtySetValue(t, src.GetSet())
+		return decodeCtySetValue(src.GetSet())
 	case t.IsObjectType() && src.GetObject() != nil:
-		return decodeCtyObjectValue(t, src.GetObject())
+		return decodeCtyObjectValue(src.GetObject())
 	case t.IsTupleType() && src.GetTuple() != nil:
-		return decodeCtyTupleValue(t, src.GetTuple())
+		return decodeCtyTupleValue(src.GetTuple())
 	default:
 		return cty.NullVal(t), nil
 	}
 }
 
-func decodeCtyTupleValue(t cty.Type, src *CtyTupleValue) (cty.Value, error) {
+func decodeCtyTupleValue(src *CtyTupleValue) (cty.Value, error) {
 	elements := make([]cty.Value, len(src.GetElements()))
 	var err error
 	for i, elem := range src.GetElements() {
@@ -44,7 +44,7 @@ func decodeCtyTupleValue(t cty.Type, src *CtyTupleValue) (cty.Value, error) {
 	return cty.TupleVal(elements), nil
 }
 
-func decodeCtyObjectValue(t cty.Type, src *CtyObjectValue) (cty.Value, error) {
+func decodeCtyObjectValue(src *CtyObjectValue) (cty.Value, error) {
 	attrs := make(map[string]cty.Value, len(src.GetAttrs()))
 	var err error
 	for k, v := range src.GetAttrs() {
@@ -56,7 +56,7 @@ func decodeCtyObjectValue(t cty.Type, src *CtyObjectValue) (cty.Value, error) {
 	return cty.ObjectVal(attrs), nil
 }
 
-func decodeCtySetValue(t cty.Type, src *CtySetValue) (cty.Value, error) {
+func decodeCtySetValue(src *CtySetValue) (cty.Value, error) {
 	elements := make([]cty.Value, len(src.GetElements()))
 	var err error
 	for i, elem := range src.GetElements() {
@@ -68,7 +68,7 @@ func decodeCtySetValue(t cty.Type, src *CtySetValue) (cty.Value, error) {
 	return cty.SetVal(elements), nil
 }
 
-func decodeCtyMapValue(t cty.Type, src *CtyMapValue) (cty.Value, error) {
+func decodeCtyMapValue(src *CtyMapValue) (cty.Value, error) {
 	elements := make(map[string]cty.Value, len(src.GetElements()))
 	var err error
 	for k, v := range src.GetElements() {
@@ -80,7 +80,7 @@ func decodeCtyMapValue(t cty.Type, src *CtyMapValue) (cty.Value, error) {
 	return cty.MapVal(elements), nil
 }
 
-func decodeCtyListValue(t cty.Type, src *CtyListValue) (cty.Value, error) {
+func decodeCtyListValue(src *CtyListValue) (cty.Value, error) {
 	elements := make([]cty.Value, len(src.GetElements()))
 	var err error
 	for i, elem := range src.GetElements() {
@@ -92,7 +92,7 @@ func decodeCtyListValue(t cty.Type, src *CtyListValue) (cty.Value, error) {
 	return cty.ListVal(elements), nil
 }
 
-func decodeCtyPrimitiveValue(t cty.Type, src *CtyPrimitiveValue) (cty.Value, error) {
+func decodeCtyPrimitiveValue(src *CtyPrimitiveValue) (cty.Value, error) {
 	switch data := src.GetData().(type) {
 	case *CtyPrimitiveValue_Bln:
 		return cty.BoolVal(data.Bln), nil

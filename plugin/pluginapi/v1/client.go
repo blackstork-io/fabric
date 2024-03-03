@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os/exec"
-	"path/filepath"
-	"strings"
 
 	goplugin "github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
@@ -14,41 +12,21 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 )
 
-func parsePluginInfo(path string) (name, version string, err error) {
-	nameVer := filepath.Base(path)
-	ext := filepath.Ext(path)
-
-	parts := strings.SplitN(
-		nameVer[:len(nameVer)-len(ext)],
-		"@", 2,
-	)
-	if len(parts) != 2 {
-		err = fmt.Errorf("plugin at '%s' must have a file name '<plugin_name>@<plugin_version>[.exe]'", path)
-		return
-	}
-	name = parts[0]
-	version = parts[1]
-	return
-}
-
-func NewClient(loc string) (p *plugin.Schema, closefn func() error, err error) {
-	pluginName, _, err := parsePluginInfo(loc)
-	if err != nil {
-		return
-	}
-	slog.Info("Loading plugin", "filename", loc)
+func NewClient(name, binaryPath string, logger *slog.Logger) (p *plugin.Schema, closefn func() error, err error) {
 	client := goplugin.NewClient(&goplugin.ClientConfig{
 		HandshakeConfig: handshake,
 		Plugins: map[string]goplugin.Plugin{
-			pluginName: &grpcPlugin{},
+			name: &grpcPlugin{
+				logger: logger,
+			},
 		},
-		Cmd: exec.Command(loc),
+		Cmd: exec.Command(binaryPath),
 		AllowedProtocols: []goplugin.Protocol{
 			goplugin.ProtocolGRPC,
 		},
 		Logger: sloghclog.Adapt(
-			slog.Default(),
-			sloghclog.Name("plugin."+pluginName),
+			logger,
+			sloghclog.Name("plugin."+name),
 			// disable code location reporting, it's always going to be incorrect
 			// for remote plugin logs
 			sloghclog.AddSource(false),
@@ -65,7 +43,7 @@ func NewClient(loc string) (p *plugin.Schema, closefn func() error, err error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create plugin client: %w", err)
 	}
-	raw, err := rpcClient.Dispense(pluginName)
+	raw, err := rpcClient.Dispense(name)
 	if err != nil {
 		rpcClient.Close()
 		return nil, nil, fmt.Errorf("failed to dispense plugin: %w", err)
