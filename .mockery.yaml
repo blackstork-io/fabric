@@ -29,3 +29,7 @@ packages:
     config:
     interfaces:
       Client:
+  github.com/blackstork-io/fabric/plugin/resolver:
+    config:
+    interfaces:
+      Source:
