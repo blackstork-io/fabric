@@ -31,5 +31,10 @@ packages:
       Client:
   github.com/blackstork-io/fabric/plugin/resolver:
     config:
+      inpackage: true
+      dir: "./plugin/resolver"
+      mockname: "mock{{.InterfaceName}}"
+      outpkg: "{{.PackageName}}"
+      filename: "mock_{{.InterfaceName | snakecase}}_test.go"
     interfaces:
       Source:

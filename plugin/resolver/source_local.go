@@ -32,7 +32,7 @@ type LocalSource struct {
 // Lookup returns the versions found of the plugin with the given name.
 func (source LocalSource) Lookup(ctx context.Context, name Name) ([]Version, error) {
 	if source.Path == "" {
-		return nil, nil
+		return nil, fmt.Errorf("no path provided for local source")
 	}
 	pluginDir := filepath.Join(source.Path, name.Namespace())
 	entries, err := os.ReadDir(pluginDir)
@@ -50,14 +50,15 @@ func (source LocalSource) Lookup(ctx context.Context, name Name) ([]Version, err
 		if len(parts) != 2 {
 			continue
 		}
+		if parts[0] != name.Short() {
+			continue
+		}
 		parts[1] = strings.TrimSuffix(parts[1], ".exe")
 		version, err := semver.NewVersion(parts[1])
 		if err != nil {
 			continue
 		}
-		if parts[0] == name.Short() {
-			matches = append(matches, Version{version})
-		}
+		matches = append(matches, Version{version})
 	}
 	return matches, nil
 }

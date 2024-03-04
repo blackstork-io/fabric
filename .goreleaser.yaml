@@ -6,8 +6,6 @@ project_name: fabric
 env:
   - CGO_ENABLED=0
 
-snapshot:
-  name_template: "0.8.0"
 before:
   hooks:
     - go mod tidy
