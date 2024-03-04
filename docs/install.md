@@ -1,14 +1,14 @@
 ---
 title: Install
 type: docs
-weight: 2
+weight: 10
 ---
 
 # Install
 
 ## GitHub releases
 
-The archives of compiled binaries for Fabric and Fabric plugins are available for Windows, macOS, and Linux at the project's ["Releases"](https://github.com/blackstork-io/fabric/releases) page.
+The archives of compiled binaries for Fabric and Fabric plugins are available for Windows, macOS, and Linux at the ["Releases"](https://github.com/blackstork-io/fabric/releases) page.
 
 To get started with Fabric:
 

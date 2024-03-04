@@ -25,15 +25,17 @@ There can be only one `fabric` block defined within the codebase.
 
 ### Supported nested blocks
 
-- `plugin_registry` – (optional) a block that defines available plugin registries. At the moment, the block accepts only one attribute:
+- `plugin_registry`: (optional) a block that defines available plugin registries. At the moment, the block accepts only one attribute:
 
   ```hcl
   plugin_registry {
+    base_url = "<url>"
     mirror_dir = "<path>"
   }
   ```
 
-  - `mirror_dir` – (optional) a path to a directory on the local filesystem with plugin binaries.
+  - `base_url`: (optional) a base URL of the plugin registry. Default value: `https://registry.blackstork.io`
+  - `mirror_dir`: (optional) a path to a directory on the local filesystem with plugin binaries.
 
 ### Example
 

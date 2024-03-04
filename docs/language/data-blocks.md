@@ -52,7 +52,6 @@ See [References]({{< ref references.md >}}) for the details about referencing da
 ## Example
 
 ```hcl
-
 config data csv {
   delimiter = ";"
 }

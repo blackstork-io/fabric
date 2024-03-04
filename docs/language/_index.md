@@ -1,7 +1,7 @@
 ---
 title: Language
 type: docs
-weight: 2
+weight: 40
 ---
 
 # Fabric configuration language

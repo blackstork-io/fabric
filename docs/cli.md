@@ -1,15 +1,18 @@
 ---
 title: Fabric CLI
 type: docs
-weight: 4
+weight: 20
 ---
 
 # Fabric CLI
 
-The command line interface to Fabric is `fabric` CLI tool. It supports two sub-commands:
+The command line interface to Fabric is `fabric` CLI tool. The core sub-commands are:
 
-- `fabric data` — executes the data block and prints out prettified JSON to standard output
-- `fabric render` — renders the specified target (a document template) into Markdown and outputs the result to standard output or to a file.
+- `install` — installs all required plugins, listed in the [global configuration]({{< ref "language/configs.md#global-configuration" >}}).
+- `data` — executes the data block and prints out prettified JSON to standard output.
+- `render` — renders the specified target (a document template) and prints out the result to standard output or to a file.
+
+To get more details, run `fabric --help`:
 
 ```text
 $ fabric --help
@@ -39,4 +42,4 @@ Use "fabric [command] --help" for more information about a command.
 
 ## Source directory
 
-Fabric loads `*.fabric` files from a source directory. By default, a source directory is the current directory  (`.`). To load Fabric files from a different location, set `--source-dir` argument when running `fabric`.
+Fabric loads `*.fabric` files from a source directory. By default, a source directory is the current directory (`.`) but it's possible to set `--source-dir` argument when running `fabric` to load files from a different location.

@@ -1,7 +1,7 @@
 ---
 title: Plugins
 type: docs
-weight: 5
+weight: 60
 ---
 
 # Plugins
