@@ -24,13 +24,13 @@ func mockFileDir(t *testing.T, files []mockFile) string {
 	tmpDir := t.TempDir()
 	for _, file := range files {
 		if file.isDir {
-			err := os.MkdirAll(filepath.Join(tmpDir, file.path), 0755)
+			err := os.MkdirAll(filepath.Join(tmpDir, file.path), 0o755)
 			require.NoError(t, err)
 			continue
 		}
-		err := os.MkdirAll(filepath.Dir(filepath.Join(tmpDir, file.path)), 0755)
+		err := os.MkdirAll(filepath.Dir(filepath.Join(tmpDir, file.path)), 0o755)
 		require.NoError(t, err)
-		err = os.WriteFile(filepath.Join(tmpDir, file.path), []byte(file.content), 0644)
+		err = os.WriteFile(filepath.Join(tmpDir, file.path), []byte(file.content), 0o644)
 		require.NoError(t, err)
 	}
 	return tmpDir

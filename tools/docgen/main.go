@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/blackstork-io/fabric/internal/builtin"
-	"github.com/blackstork-io/fabric/internal/elasticsearch"
+	"github.com/blackstork-io/fabric/internal/elastic"
 	"github.com/blackstork-io/fabric/internal/github"
 	"github.com/blackstork-io/fabric/internal/graphql"
 	"github.com/blackstork-io/fabric/internal/hackerone"
@@ -49,7 +49,7 @@ func main() {
 	// load all plugins
 	plugins := []*plugin.Schema{
 		builtin.Plugin(version),
-		elasticsearch.Plugin(version),
+		elastic.Plugin(version),
 		github.Plugin(version, nil),
 		graphql.Plugin(version),
 		openai.Plugin(version, nil),

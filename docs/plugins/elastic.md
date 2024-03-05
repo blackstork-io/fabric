@@ -1,10 +1,10 @@
 ---
-title: blackstork/elasticsearch
+title: blackstork/elastic
 weight: 20
 type: docs
 ---
 
-# `blackstork/elasticsearch` plugin
+# `blackstork/elastic` plugin
 
 ## Installation
 
@@ -13,7 +13,7 @@ To install the plugin, add it to `plugin_versions` map in the Fabric global conf
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/elasticsearch" = "=> v0.0.0-dev"
+    "blackstork/elastic" = "=> v0.0.0-dev"
   }
 }
 ```

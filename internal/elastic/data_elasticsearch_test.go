@@ -1,4 +1,4 @@
-package elasticsearch
+package elastic
 
 import (
 	"bytes"
@@ -116,6 +116,8 @@ func (s *IntegrationTestSuite) TestSearchDefaults() {
 		"index":        cty.StringVal("test_index"),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.NullVal(cty.String),
+		"only_hits":    cty.NullVal(cty.Bool),
+		"aggs":         cty.NullVal(cty.DynamicPseudoType),
 		"fields":       cty.NullVal(cty.String),
 		"size":         cty.NullVal(cty.Number),
 	})
@@ -124,11 +126,10 @@ func (s *IntegrationTestSuite) TestSearchDefaults() {
 		Args:   args,
 	})
 	s.Require().Nil(diags)
-	m := data.(plugin.MapData)
-	raw, err := json.MarshalIndent(m["hits"], "", "  ")
+	m := data.(plugin.ListData)
+	raw, err := json.MarshalIndent(m, "", "  ")
 	s.Require().NoError(err, "failed to marshal data: %v", err)
-	s.JSONEq(`{
-		"hits": [
+	s.JSONEq(`[
 		  {
 			"_id": "54f7a815-eac5-4f7c-a339-5fefd0f54967",
 			"_index": "test_index",
@@ -165,13 +166,7 @@ func (s *IntegrationTestSuite) TestSearchDefaults() {
 			  "type": "foo"
 			}
 		  }
-		],
-		"max_score": 1,
-		"total": {
-		  "relation": "eq",
-		  "value": 3
-		}
-	  }`, string(raw))
+		]`, string(raw))
 }
 
 func (s *IntegrationTestSuite) TestSearchFields() {
@@ -180,6 +175,8 @@ func (s *IntegrationTestSuite) TestSearchFields() {
 		"index":        cty.StringVal("test_index"),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.NullVal(cty.String),
+		"only_hits":    cty.BoolVal(false),
+		"aggs":         cty.NullVal(cty.DynamicPseudoType),
 		"fields":       cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")}),
 		"size":         cty.NullVal(cty.Number),
 	})
@@ -235,6 +232,8 @@ func (s *IntegrationTestSuite) TestSearchQueryString() {
 		"index":        cty.StringVal("test_index"),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.StringVal("type:foo"),
+		"only_hits":    cty.BoolVal(false),
+		"aggs":         cty.NullVal(cty.DynamicPseudoType),
 		"fields":       cty.NullVal(cty.String),
 		"size":         cty.NullVal(cty.Number),
 	})
@@ -289,6 +288,8 @@ func (s *IntegrationTestSuite) TestSearchQuery() {
 			"match_all": cty.MapValEmpty(cty.DynamicPseudoType),
 		}),
 		"query_string": cty.NullVal(cty.String),
+		"only_hits":    cty.BoolVal(false),
+		"aggs":         cty.NullVal(cty.DynamicPseudoType),
 		"fields":       cty.NullVal(cty.String),
 		"size":         cty.NullVal(cty.Number),
 	})
@@ -353,6 +354,8 @@ func (s *IntegrationTestSuite) TestSearchSize() {
 		"index":        cty.StringVal("test_index"),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.NullVal(cty.String),
+		"only_hits":    cty.BoolVal(false),
+		"aggs":         cty.NullVal(cty.DynamicPseudoType),
 		"fields":       cty.NullVal(cty.String),
 		"size":         cty.NumberIntVal(1),
 	})
@@ -393,6 +396,8 @@ func (s *IntegrationTestSuite) TestGetByID() {
 		"index":        cty.StringVal("test_index"),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.NullVal(cty.String),
+		"only_hits":    cty.BoolVal(false),
+		"aggs":         cty.NullVal(cty.DynamicPseudoType),
 		"fields":       cty.NullVal(cty.String),
 	})
 	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{
@@ -426,6 +431,8 @@ func (s *IntegrationTestSuite) TestGetByIDFields() {
 		"index":        cty.StringVal("test_index"),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.NullVal(cty.String),
+		"only_hits":    cty.BoolVal(false),
+		"aggs":         cty.NullVal(cty.DynamicPseudoType),
 		"fields":       cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")}),
 	})
 	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{
@@ -456,6 +463,8 @@ func (s *IntegrationTestSuite) TestGetByIDNotFound() {
 		"index":        cty.StringVal("test_index"),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.NullVal(cty.String),
+		"only_hits":    cty.BoolVal(false),
+		"aggs":         cty.NullVal(cty.DynamicPseudoType),
 		"fields":       cty.NullVal(cty.String),
 	})
 	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{

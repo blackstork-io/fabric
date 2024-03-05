@@ -1,4 +1,4 @@
-package elasticsearch
+package elastic
 
 import (
 	"context"
@@ -76,6 +76,16 @@ func makeElasticSearchDataSource() *plugin.DataSource {
 				Type:     cty.Map(cty.DynamicPseudoType),
 				Required: false,
 			},
+			"aggs": &hcldec.AttrSpec{
+				Name:     "aggs",
+				Type:     cty.Map(cty.DynamicPseudoType),
+				Required: false,
+			},
+			"only_hits": &hcldec.AttrSpec{
+				Name:     "only_hits",
+				Type:     cty.Bool,
+				Required: false,
+			},
 			"fields": &hcldec.AttrSpec{
 				Name:     "fields",
 				Type:     cty.List(cty.String),
@@ -99,6 +109,23 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 			Detail:   err.Error(),
 		}}
 	}
+	var diags hcl.Diagnostics
+	if (params.Args.GetAttr("only_hits").IsNull() || params.Args.GetAttr("only_hits").True()) &&
+		!params.Args.GetAttr("aggs").IsNull() {
+		if params.Args.GetAttr("query").IsNull() && params.Args.GetAttr("query_string").IsNull() {
+			return nil, hcl.Diagnostics{{
+				Severity: hcl.DiagError,
+				Summary:  "Invalid arguments",
+				Detail:   "Aggregations are not supported without a query or query_string",
+			}}
+		}
+		diags = diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagWarning,
+			Summary:  "Aggregations are not supported",
+			Detail:   "Aggregations are not supported when only_hits is true",
+		})
+	}
+
 	id := params.Args.GetAttr("id")
 	var data plugin.Data
 	if !id.IsNull() {
@@ -107,11 +134,11 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 		data, err = search(client.Search, params.Args)
 	}
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diags.Extend(hcl.Diagnostics{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to get data",
 			Detail:   err.Error(),
-		}}
+		}})
 	}
-	return data, nil
+	return data, diags
 }

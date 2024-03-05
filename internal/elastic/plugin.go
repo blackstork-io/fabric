@@ -1,4 +1,4 @@
-package elasticsearch
+package elastic
 
 import (
 	"bytes"
@@ -21,7 +21,7 @@ const (
 
 func Plugin(version string) *plugin.Schema {
 	return &plugin.Schema{
-		Name:    "blackstork/elasticsearch",
+		Name:    "blackstork/elastic",
 		Version: version,
 		DataSources: plugin.DataSources{
 			"elasticsearch": makeElasticSearchDataSource(),
@@ -106,6 +106,9 @@ func getByID(fn esapi.Get, args cty.Value) (plugin.Data, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal search result: %s", err)
 	}
+	if onlyHits := args.GetAttr("only_hits"); onlyHits.IsNull() || onlyHits.True() {
+		return extractHits(data)
+	}
 	return data, nil
 }
 
@@ -120,14 +123,19 @@ func search(fn esapi.Search, args cty.Value) (plugin.Data, error) {
 	if queryString := args.GetAttr("query_string"); !queryString.IsNull() {
 		opts = append(opts, fn.WithQuery(queryString.AsString()))
 	}
+	body := map[string]any{}
 	if query := args.GetAttr("query"); !query.IsNull() {
-		queryRaw, err := json.Marshal(map[string]any{
-			"query": query.AsValueMap(),
-		})
+		body["query"] = query.AsValueMap()
+	}
+	if aggs := args.GetAttr("aggs"); !aggs.IsNull() {
+		body["aggs"] = aggs.AsValueMap()
+	}
+	if len(body) > 0 {
+		rawBody, err := json.Marshal(body)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal query: %s", err)
 		}
-		opts = append(opts, fn.WithBody(bytes.NewReader(queryRaw)))
+		opts = append(opts, fn.WithBody(bytes.NewReader(rawBody)))
 	}
 	if size := args.GetAttr("size"); !size.IsNull() {
 		n, _ := size.AsBigFloat().Int64()
@@ -144,7 +152,6 @@ func search(fn esapi.Search, args cty.Value) (plugin.Data, error) {
 		}
 		opts = append(opts, fn.WithSource(fieldStrings...))
 	}
-
 	res, err := fn(opts...)
 	if err != nil {
 		return nil, err
@@ -159,5 +166,24 @@ func search(fn esapi.Search, args cty.Value) (plugin.Data, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal search result: %s", err)
 	}
+	if onlyHits := args.GetAttr("only_hits"); onlyHits.IsNull() || onlyHits.True() {
+		return extractHits(data)
+	}
 	return data, nil
+}
+
+func extractHits(data plugin.Data) (plugin.Data, error) {
+	m, ok := data.(plugin.MapData)
+	if !ok {
+		return nil, fmt.Errorf("unexpected search result type: %T", data)
+	}
+	data, ok = m["hits"]
+	if !ok {
+		return nil, fmt.Errorf("unexpected search result type: %T", data)
+	}
+	m, ok = data.(plugin.MapData)
+	if !ok {
+		return nil, fmt.Errorf("unexpected search result type: %T", data)
+	}
+	return m["hits"], nil
 }
