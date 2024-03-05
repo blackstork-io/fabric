@@ -20,6 +20,8 @@ import (
 
 const (
 	maxDownloadSize = 50 * 1024 * 1024 // 50MB
+	downloadTimeout = 5 * time.Minute
+	regAPITimeout   = 10 * time.Second
 )
 
 // RemoteSource is a plugin source that looks up plugins from a remote registry.
@@ -115,7 +117,7 @@ func (source RemoteSource) fetchVersions(ctx context.Context, name Name) ([]regV
 		return nil, err
 	}
 	req.Header.Set("Accept", "application/json")
-	resp, err := source.call(req, 10*time.Second)
+	resp, err := source.call(req, regAPITimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +155,7 @@ func (source RemoteSource) fetchDownloadInfo(ctx context.Context, name Name, ver
 		return nil, err
 	}
 	req.Header.Set("Accept", "application/json")
-	resp, err := source.call(req, 10*time.Second)
+	resp, err := source.call(req, regAPITimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +175,7 @@ func (source RemoteSource) fetchChecksums(ctx context.Context, name Name, versio
 		return nil, err
 	}
 	req.Header.Set("Accept", "application/json")
-	resp, err := source.call(req, 10*time.Second)
+	resp, err := source.call(req, regAPITimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +205,7 @@ func (source RemoteSource) download(ctx context.Context, name Name, version Vers
 		return nil, fmt.Errorf("failed to create download request: %w", err)
 	}
 	req.Header.Set("Accept", "application/octet-stream")
-	resp, err := source.call(req, 5*time.Minute)
+	resp, err := source.call(req, downloadTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download plugin: %w", err)
 	}
