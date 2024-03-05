@@ -68,9 +68,9 @@ func (e *Evaluator) ParseFabricFiles(sourceDir fs.FS) (diags diagnostics.Diag) {
 	return
 }
 
-func (e *Evaluator) LoadPluginRunner() diagnostics.Diag {
+func (e *Evaluator) LoadPluginRunner(ctx context.Context) diagnostics.Diag {
 	var diag diagnostics.Diag
-	binaryMap, diags := e.Resolver.Resolve(context.Background(), e.LockFile)
+	binaryMap, diags := e.Resolver.Resolve(ctx, e.LockFile)
 	if diag.ExtendHcl(diags) {
 		return diag
 	}

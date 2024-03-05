@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -29,7 +28,7 @@ var installCmd = &cobra.Command{
 		if diags.Extend(eval.LoadPluginResolver(true)) {
 			return
 		}
-		lockFile, stdDiags := eval.Resolver.Install(context.Background(), eval.LockFile, installUpgrade)
+		lockFile, stdDiags := eval.Resolver.Install(cmd.Context(), eval.LockFile, installUpgrade)
 		if diags.ExtendHcl(stdDiags) {
 			return
 		}

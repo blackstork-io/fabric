@@ -36,10 +36,11 @@ func dataTest(t *testing.T, testName string, files []string, target string, expe
 
 		var res plugin.Data
 		diags := eval.ParseFabricFiles(sourceDir)
+		ctx := context.Background()
 		if !diags.HasErrors() {
-			if !diags.Extend(eval.LoadPluginResolver(false)) && !diags.Extend(eval.LoadPluginRunner()) {
+			if !diags.Extend(eval.LoadPluginResolver(false)) && !diags.Extend(eval.LoadPluginRunner(ctx)) {
 				var diag diagnostics.Diag
-				res, diag = cmd.Data(context.Background(), eval.Blocks, eval.PluginCaller(), target)
+				res, diag = cmd.Data(ctx, eval.Blocks, eval.PluginCaller(), target)
 				diags.Extend(diag)
 			}
 		}

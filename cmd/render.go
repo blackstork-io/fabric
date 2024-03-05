@@ -97,7 +97,7 @@ var renderCmd = &cobra.Command{
 		if diags.Extend(eval.LoadPluginResolver(false)) {
 			return
 		}
-		if diags.Extend(eval.LoadPluginRunner()) {
+		if diags.Extend(eval.LoadPluginRunner(cmd.Context())) {
 			return
 		}
 		res, diag := Render(cmd.Context(), eval.Blocks, eval.PluginCaller(), target)

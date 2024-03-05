@@ -108,7 +108,7 @@ var dataCmd = &cobra.Command{
 		if diags.Extend(eval.LoadPluginResolver(false)) {
 			return
 		}
-		if diags.Extend(eval.LoadPluginRunner()) {
+		if diags.Extend(eval.LoadPluginRunner(cmd.Context())) {
 			return
 		}
 
