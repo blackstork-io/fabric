@@ -6,6 +6,11 @@ project_name: fabric
 env:
   - CGO_ENABLED=0
 
+before:
+  hooks:
+    - go mod tidy
+    - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}}
+
 builds:
   # CLI
 
@@ -22,110 +27,147 @@ builds:
       - darwin
 
   # Plugins
+  # TODO: generate this list with custom script or use Premium goreleaser to template it
 
-  - id: elasticsearch
+  - id: plugin_elasticsearch
     main: ./internal/elasticsearch/cmd
-    binary: "plugins/blackstork/elasticsearch@{{ .Version }}"
+    binary: "elasticsearch@{{ .Version }}"
     flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
     goos:
       - linux
       - windows
       - darwin
-
-  - id: github
+  
+  - id: plugin_github
     main: ./internal/github/cmd
-    binary: "plugins/blackstork/github@{{ .Version }}"
+    binary: "github@{{ .Version }}"
     flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
     goos:
       - linux
       - windows
       - darwin
 
-  - id: graphql
+  - id: plugin_graphql
     main: ./internal/graphql/cmd
-    binary: "plugins/blackstork/graphql@{{ .Version }}"
+    binary: "graphql@{{ .Version }}"
     flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
     goos:
       - linux
       - windows
       - darwin
 
-  - id: openai
+  - id: plugin_openai
     main: ./internal/openai/cmd
-    binary: "plugins/blackstork/openai@{{ .Version }}"
+    binary: "openai@{{ .Version }}"
     flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
     goos:
       - linux
       - windows
       - darwin
 
-  - id: opencti
+  - id: plugin_opencti
     main: ./internal/opencti/cmd
-    binary: "plugins/blackstork/opencti@{{ .Version }}"
+    binary: "opencti@{{ .Version }}"
     flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
     goos:
       - linux
       - windows
       - darwin
 
-  - id: postgresql
+  - id: plugin_postgresql
     main: ./internal/postgresql/cmd
-    binary: "plugins/blackstork/postgresql@{{ .Version }}"
+    binary: "postgresql@{{ .Version }}"
     flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
     goos:
       - linux
       - windows
       - darwin
 
-  - id: sqlite
+  - id: plugin_sqlite
     main: ./internal/sqlite/cmd
-    binary: "plugins/blackstork/sqlite@{{ .Version }}"
+    binary: "sqlite@{{ .Version }}"
     flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
     goos:
       - linux
       - windows
       - darwin
 
-  - id: terraform
+  - id: plugin_terraform
     main: ./internal/terraform/cmd
-    binary: "plugins/blackstork/terraform@{{ .Version }}"
+    binary: "terraform@{{ .Version }}"
     flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
     goos:
       - linux
       - windows
       - darwin
 
-  - id: hackerone
+  - id: plugin_hackerone
     main: ./internal/hackerone/cmd
-    binary: "plugins/blackstork/hackerone@{{ .Version }}"
+    binary: "hackerone@{{ .Version }}"
     flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
     goos:
       - linux
       - windows
       - darwin
 
-  - id: virustotal
+  - id: plugin_virustotal
     main: ./internal/virustotal/cmd
-    binary: "plugins/blackstork/virustotal@{{ .Version }}"
+    binary: "virustotal@{{ .Version }}"
     flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
     goos:
       - linux
       - windows
       - darwin
 
-  - id: splunk
+  - id: plugin_splunk
     main: ./internal/splunk/cmd
-    binary: "plugins/blackstork/splunk@{{ .Version }}"
+    binary: "splunk@{{ .Version }}"
     flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
     goos:
       - linux
       - windows
       - darwin
 
-  - id: stixview
+  - id: plugin_stixview
     main: ./internal/stixview/cmd
-    binary: "plugins/blackstork/stixview@{{ .Version }}"
+    binary: "stixview@{{ .Version }}"
     flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
     goos:
       - linux
       - windows
@@ -147,31 +189,152 @@ archives:
       - goos: windows
         format: zip
 
-  - id: plugins
+  # Plugins
+  # TODO: generate this list with custom script or use Premium goreleaser to template it
+
+  - id: plugin_elasticsearch
     format: tar.gz
     builds:
-      - elasticsearch
-      - github
-      - graphql
-      - openai
-      - opencti
-      - postgresql
-      - sqlite
-      - terraform
-      - hackerone
-      - virustotal
-      - splunk
-      - stixview
+      - plugin_elasticsearch
     name_template: >-
-      plugins_
+      plugin_elasticsearch_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
-    format_overrides:
-      - goos: windows
-        format: zip
+
+  - id: plugin_github
+    format: tar.gz
+    builds:
+      - plugin_github
+    name_template: >-
+      plugin_github_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+  - id: plugin_graphql
+    format: tar.gz
+    builds:
+      - plugin_graphql
+    name_template: >-
+      plugin_graphql_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+  - id: plugin_openai
+    format: tar.gz
+    builds:
+      - plugin_openai
+    name_template: >-
+      plugin_openai_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+  - id: plugin_opencti
+    format: tar.gz
+    builds:
+      - plugin_opencti
+    name_template: >-
+      plugin_opencti_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+  - id: plugin_postgresql
+    format: tar.gz
+    builds:
+      - plugin_postgresql
+    name_template: >-
+      plugin_postgresql_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+  - id: plugin_sqlite
+    format: tar.gz
+    builds:
+      - plugin_sqlite
+    name_template: >-
+      plugin_sqlite_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+  - id: plugin_terraform
+    format: tar.gz
+    builds:
+      - plugin_terraform
+    name_template: >-
+      plugin_terraform_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+  - id: plugin_hackerone
+    format: tar.gz
+    builds:
+      - plugin_hackerone
+    name_template: >-
+      plugin_hackerone_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+  - id: plugin_virustotal
+    format: tar.gz
+    builds:
+      - plugin_virustotal
+    name_template: >-
+      plugin_virustotal_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+  - id: plugin_splunk
+    format: tar.gz
+    builds:
+      - plugin_splunk
+    name_template: >-
+      plugin_splunk_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+  - id: plugin_stixview
+    format: tar.gz
+    builds:
+      - plugin_stixview
+    name_template: >-
+      plugin_stixview_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
 
 changelog:
   sort: asc
@@ -179,3 +342,7 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
+release:
+  extra_files:
+    - glob: ./.tmp/plugins.json
+  prerelease: auto

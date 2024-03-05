@@ -1,20 +1,14 @@
 fabric {
-    cache_dir = "./.fabric"
-    plugin_registry {
-        mirror_dir = "dist/plugins"
-    }
     plugin_versions = {
-        "blackstork/openai" = "0.0.0-dev"
+        "blackstork/openai" = ">= 0.4 < 1.0 || 0.4.0-rev0"
     }
 }
-
-config data csv {}
 
 document "example" {
     title = "Testing plugins"
    
     data csv "csv_file" {
-        path = "./examples/templates/openai/data.csv"
+        path = "./data.csv"
     }
     content text {
         text = "Values from the CSV file"

@@ -1,10 +1,6 @@
 fabric {
-    cache_dir = "./.fabric"
-    plugin_registry {
-        mirror_dir = "dist/plugins"
-    }
     plugin_versions = {
-        "blackstork/hackerone" = "0.0.0-dev"
+        "blackstork/hackerone" = ">= 0.4 < 1.0 || 0.4.0-rev0"
     }
 }
 
@@ -15,7 +11,6 @@ config data hackerone_reports {
 
 document "example" {
     title = "Using hackerone plugin"
-   
     data hackerone_reports "my_reports" {
         program = [from_env_variable("HACKERONE_PROGRAM")]
     }

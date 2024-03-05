@@ -21,18 +21,14 @@ func encodeCtyType(src cty.Type) (*CtyType, error) {
 	case src.IsTupleType():
 		return encodeCtyTupleType(src)
 	case src.Equals(cty.DynamicPseudoType):
-		return encodeCtyDynamicPseudoType(src)
+		return &CtyType{
+			Data: &CtyType_DynamicPseudo{
+				DynamicPseudo: &CtyDynamicPseudoType{},
+			},
+		}, nil
 	default:
 		return nil, fmt.Errorf("unsupported cty type: %s", src.FriendlyName())
 	}
-}
-
-func encodeCtyDynamicPseudoType(src cty.Type) (*CtyType, error) {
-	return &CtyType{
-		Data: &CtyType_DynamicPseudo{
-			DynamicPseudo: &CtyDynamicPseudoType{},
-		},
-	}, nil
 }
 
 func encodeCtyPrimitiveType(src cty.Type) (*CtyType, error) {

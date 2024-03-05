@@ -87,8 +87,6 @@ var rootCmd = &cobra.Command{
 		}
 		cliArgs.sourceDir = rawArgs.sourceDir
 
-		cliArgs.pluginsDir = rawArgs.pluginsDir
-
 		cliArgs.colorize = rawArgs.colorize && term.IsTerminal(int(os.Stderr.Fd()))
 
 		var level slog.Level
@@ -157,18 +155,16 @@ func Execute() {
 }
 
 var cliArgs = struct {
-	sourceDir  string
-	pluginsDir string
-	colorize   bool
+	sourceDir string
+	colorize  bool
 }{}
 
 var rawArgs = struct {
-	sourceDir  string
-	logOutput  string
-	logLevel   string
-	pluginsDir string
-	verbose    bool
-	colorize   bool
+	sourceDir string
+	logOutput string
+	logLevel  string
+	verbose   bool
+	colorize  bool
 }{}
 
 func init() {
@@ -180,7 +176,4 @@ func init() {
 	)
 	rootCmd.PersistentFlags().BoolVar(&rawArgs.colorize, "color", true, "enables colorizing the logs and diagnostics (if supported by the terminal and log format)")
 	rootCmd.PersistentFlags().BoolVarP(&rawArgs.verbose, "verbose", "v", false, "a shortcut to --log-level debug")
-	rootCmd.PersistentFlags().StringVar(
-		&rawArgs.pluginsDir, "plugins-dir", "", "override for plugins dir from fabric configuration",
-	)
 }

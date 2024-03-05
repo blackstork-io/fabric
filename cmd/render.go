@@ -86,7 +86,7 @@ var renderCmd = &cobra.Command{
 		}
 
 		var diags diagnostics.Diag
-		eval := NewEvaluator(cliArgs.pluginsDir)
+		eval := NewEvaluator()
 		defer func() {
 			err = eval.Cleanup(diags)
 		}()
@@ -94,8 +94,10 @@ var renderCmd = &cobra.Command{
 		if diags.HasErrors() {
 			return
 		}
-		diag := eval.LoadRunner()
-		if diags.Extend(diag) {
+		if diags.Extend(eval.LoadPluginResolver(false)) {
+			return
+		}
+		if diags.Extend(eval.LoadPluginRunner(cmd.Context())) {
 			return
 		}
 		res, diag := Render(cmd.Context(), eval.Blocks, eval.PluginCaller(), target)

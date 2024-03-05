@@ -3,6 +3,8 @@ package pluginapiv1
 import (
 	context "context"
 	"fmt"
+	"log/slog"
+	"time"
 
 	goplugin "github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/hcl/v2"
@@ -21,6 +23,7 @@ var handshake = goplugin.HandshakeConfig{
 
 type grpcPlugin struct {
 	goplugin.Plugin
+	logger *slog.Logger
 	schema *plugin.Schema
 }
 
@@ -33,7 +36,6 @@ func (p *grpcPlugin) GRPCServer(broker *goplugin.GRPCBroker, s *grpc.Server) err
 
 func (p *grpcPlugin) GRPCClient(ctx context.Context, broker *goplugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
 	client := NewPluginServiceClient(c)
-
 	res, err := client.GetSchema(ctx, &GetSchemaRequest{})
 	if err != nil {
 		return nil, err
@@ -66,6 +68,10 @@ func (p *grpcPlugin) callOptions() []grpc.CallOption {
 
 func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient) plugin.ProvideContentFunc {
 	return func(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.Content, hcl.Diagnostics) {
+		p.logger.Debug("Calling content provider", "name", name)
+		defer func(start time.Time) {
+			p.logger.Debug("Called content provider", "name", name, "took", time.Since(start))
+		}(time.Now())
 		if params == nil {
 			return nil, hcl.Diagnostics{{
 				Severity: hcl.DiagError,
@@ -110,6 +116,10 @@ func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient)
 
 func (p *grpcPlugin) clientDataFunc(name string, client PluginServiceClient) plugin.RetrieveDataFunc {
 	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+		p.logger.Debug("Calling data source", "name", name)
+		defer func(start time.Time) {
+			p.logger.Debug("Called data source", "name", name, "took", time.Since(start))
+		}(time.Now())
 		if params == nil {
 			return nil, hcl.Diagnostics{{
 				Severity: hcl.DiagError,
