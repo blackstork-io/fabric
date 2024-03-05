@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blackstork-io/fabric/internal/builtin"
-	"github.com/blackstork-io/fabric/internal/elasticsearch"
+	"github.com/blackstork-io/fabric/internal/elastic"
 	"github.com/blackstork-io/fabric/internal/github"
 	"github.com/blackstork-io/fabric/internal/graphql"
 	"github.com/blackstork-io/fabric/internal/hackerone"
@@ -29,7 +29,7 @@ func TestAllPluginSchemaValidity(t *testing.T) {
 	ver := "1.2.3"
 	plugins := []*plugin.Schema{
 		builtin.Plugin(ver),
-		elasticsearch.Plugin(ver),
+		elastic.Plugin(ver),
 		github.Plugin(ver, nil),
 		graphql.Plugin(ver),
 		openai.Plugin(ver, nil),

@@ -29,9 +29,9 @@ builds:
   # Plugins
   # TODO: generate this list with custom script or use Premium goreleaser to template it
 
-  - id: plugin_elasticsearch
-    main: ./internal/elasticsearch/cmd
-    binary: "elasticsearch@{{ .Version }}"
+  - id: plugin_elastic
+    main: ./internal/elastic/cmd
+    binary: "plugins/blackstork/elastic@{{ .Version }}"
     flags: "-trimpath"
     hooks:
       post:
@@ -192,12 +192,12 @@ archives:
   # Plugins
   # TODO: generate this list with custom script or use Premium goreleaser to template it
 
-  - id: plugin_elasticsearch
+  - id: plugin_elastic
     format: tar.gz
     builds:
-      - plugin_elasticsearch
+      - plugin_elastic
     name_template: >-
-      plugin_elasticsearch_
+      plugin_elastic_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386

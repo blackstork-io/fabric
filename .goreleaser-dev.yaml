@@ -21,9 +21,9 @@ builds:
 
   # Plugins
 
-  - id: elasticsearch
-    main: ./internal/elasticsearch/cmd
-    binary: "plugins/blackstork/elasticsearch@{{ .Version }}"
+  - id: elastic
+    main: ./internal/elastic/cmd
+    binary: "plugins/blackstork/elastic@{{ .Version }}"
     ldflags: "-X main.version={{.Version}}"
     no_unique_dist_dir: true
 
