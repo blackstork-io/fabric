@@ -11,6 +11,7 @@ import (
 
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/parser/evaluation"
+	"github.com/blackstork-io/fabric/parser/lint"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
@@ -118,6 +119,10 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 
 	switch kind {
 	case "data":
+		if lint.IsLinting(ctx) {
+			res = plugin.MapData{}
+			return
+		}
 		source, diag := c.plugins.DataSource(name)
 		if diags.ExtendHcl(diag) {
 			return
@@ -129,6 +134,10 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 		res = data
 		diags.ExtendHcl(diag)
 	case "content":
+		if lint.IsLinting(ctx) {
+			res = ""
+			return
+		}
 		provider, diag := c.plugins.ContentProvider(name)
 		if diags.ExtendHcl(diag) {
 			return
