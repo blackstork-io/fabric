@@ -9,18 +9,19 @@ weight: 60
 `content` blocks define document segments: text paragraphs, tables, graphs, lists, etc. The order of the `content` blocks in the template determines the order of the generated content in the document.
 
 ```hcl
-# Root-level definition of the content block
+# Root-level definition of a content block
 content <content-provider-name> "<block-name>" {
   ...
 }
 
 document "foobar" {
 
-  # In-document definition of the content block
+  # In-document named definition of a content block
   content <content-provider-name> "<block-name>" {
     ...
   }
 
+  # In-document anonymous definition of a content block
   content <content-provider-name> {
     ...
   }

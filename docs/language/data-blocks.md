@@ -9,12 +9,14 @@ weight: 50
 `data` blocks define data requirements for the template. In its signature, the block specifies the data source Fabric will fetch the data from.
 
 ```hcl
+# Root-level definition of a data block
 data <data-source-name> "<block-name>" {
   ...
 }
 
 document "foobar" {
 
+  # In-document definition of a data block
   data <data-source-name> "<block-name>" {
     ...
   }
