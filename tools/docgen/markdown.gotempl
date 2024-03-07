@@ -1,6 +1,8 @@
 ---
 title: {{ if eq .Name "blackstork/builtin" -}}Built-in{{- else -}}{{ .Name }}{{- end }}
 {{ if eq .Name "blackstork/builtin" -}}weight: 10{{- else -}}weight: 20{{- end }}
+plugin:
+  version: "{{ .Version }}
 type: docs
 ---
 

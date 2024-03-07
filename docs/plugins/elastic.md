@@ -47,9 +47,11 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data elasticsearch {
+    aggs = <map of dynamic>  # optional
     fields = <list of string>  # optional
     id = <string>  # optional
     index = <string>  # required
+    only_hits = <bool>  # optional
     query = <map of dynamic>  # optional
     query_string = <string>  # optional
     size = <number>  # optional
