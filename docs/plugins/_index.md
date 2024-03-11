@@ -2,6 +2,7 @@
 title: Plugins
 type: docs
 weight: 60
+hideChildren: true
 ---
 
 # Plugins
@@ -14,3 +15,7 @@ A plugin name consists of a namespace (a name of a plugin vendor) and a short na
 
 Plugin releases are independent from Fabric releases. Plugins are distributed independently and have their own release cycle and version.
 You can find a list of plugins released by BlackStork at the [Releases page](https://github.com/blackstork-io/fabric/releases) in Fabric GitHub.
+
+## Available plugins
+
+{{< plugins >}}

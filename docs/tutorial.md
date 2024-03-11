@@ -76,7 +76,7 @@ content text {
 }
 ```
 
-See [the documentation]({{< ref "plugins/builtin#text" >}}) for the details about the arguments supported in `text` content blocks.
+See [the documentation]({{< ref "plugins/builtin/content-providers/text" >}}) for the details about the arguments supported by `text` content provider.
 {{< /hint >}}
 
 The rendered output should now include the document title:
@@ -90,7 +90,7 @@ Hello, Fabric!
 
 ## Data blocks
 
-A core feature of Fabric configuration language is the ability to define data requirements inside the templates with the [data blocks]({{< ref "language/data-blocks.md" >}}). The easiest way is to use [`inline`]({{< ref "plugins/builtin#inline" >}}) data source that supports free-form data structures.
+A core feature of Fabric configuration language is the ability to define data requirements inside the templates with the [data blocks]({{< ref "language/data-blocks.md" >}}). The easiest way is to use [`inline`]({{< ref "plugins/builtin/data-sources/inline" >}}) data source that supports free-form data structures.
 
 Note, you must define `data` blocks on the root level of `document` block.
 
@@ -151,7 +151,7 @@ In certain scenarios, providing the exact text or a template string for the cont
 
 Before we can use it, we must add the plugin as a dependency and install it.
 
-Update the list of plugin dependencies by adding a fully qualified name `blackstork/openai` for the [OpenAI plugin]({{< ref "plugins/openai.md" >}}) to `plugin_versions` dict in the [global configuration block]({{< ref "language/configs.md#global-configuration" >}}). The plugin also requires a [version constraint](https://semver.org/).
+Update the list of plugin dependencies by adding a fully qualified name `blackstork/openai` for the [OpenAI plugin]({{< ref "plugins/openai" >}}) to `plugin_versions` dict in the [global configuration block]({{< ref "language/configs.md#global-configuration" >}}). The plugin also requires a [version constraint](https://semver.org/).
 
 Add the following code to `hello.fabric` file:
 
@@ -209,7 +209,7 @@ document "greeting" {
 Here, a JQ query `"{planet: .data.inline.solar_system.planets[-1]}` performs two operations: it fetches the last item in the list (`Neptune`) and returns a new JSON object `{"planet": "Neptune"}`. This object is stored under `query_result` field in the context. Combined with the `prompt` string, `query_result` value creates a user prompt for OpenAI API. 
 
 {{< hint note >}}
-If you would like to specify a system prompt for OpenAI API, you can set it up in the configuration for `openai_text` provider. See the provider's [documentation]({{< ref "plugins/openai.md#openai_text" >}}) for more configuration options.
+If you would like to specify a system prompt for OpenAI API, you can set it up in the configuration for `openai_text` provider. See the provider's [documentation]({{< ref "plugins/openai/content-providers/openai_text" >}}) for more configuration options.
 {{< /hint >}}
 
 The full content of `hello.fabric` file should look like this:

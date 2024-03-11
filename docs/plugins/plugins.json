@@ -1,0 +1,383 @@
+[
+  {
+    "name": "blackstork/builtin",
+    "resources": [
+      {
+        "name": "csv",
+        "type": "data-source",
+        "config_params": [
+          "delimiter"
+        ],
+        "arguments": [
+          "path"
+        ]
+      },
+      {
+        "name": "txt",
+        "type": "data-source",
+        "arguments": [
+          "path"
+        ]
+      },
+      {
+        "name": "json",
+        "type": "data-source",
+        "arguments": [
+          "glob"
+        ]
+      },
+      {
+        "name": "inline",
+        "type": "data-source"
+      },
+      {
+        "name": "list",
+        "type": "content-provider",
+        "arguments": [
+          "item_template",
+          "format"
+        ]
+      },
+      {
+        "name": "table",
+        "type": "content-provider",
+        "arguments": [
+          "columns"
+        ]
+      },
+      {
+        "name": "frontmatter",
+        "type": "content-provider",
+        "arguments": [
+          "format",
+          "content"
+        ]
+      },
+      {
+        "name": "toc",
+        "type": "content-provider",
+        "arguments": [
+          "end_level",
+          "ordered",
+          "scope",
+          "start_level"
+        ]
+      },
+      {
+        "name": "text",
+        "type": "content-provider",
+        "arguments": [
+          "text",
+          "format_as",
+          "absolute_title_size",
+          "code_language"
+        ]
+      },
+      {
+        "name": "image",
+        "type": "content-provider",
+        "arguments": [
+          "src",
+          "alt"
+        ]
+      }
+    ],
+    "shortname": "builtin",
+    "version": "v0.0.0-dev"
+  },
+  {
+    "name": "blackstork/elastic",
+    "resources": [
+      {
+        "name": "elasticsearch",
+        "type": "data-source",
+        "config_params": [
+          "bearer_auth",
+          "ca_certs",
+          "base_url",
+          "cloud_id",
+          "api_key_str",
+          "api_key",
+          "basic_auth_username",
+          "basic_auth_password"
+        ],
+        "arguments": [
+          "fields",
+          "size",
+          "index",
+          "id",
+          "query_string",
+          "query",
+          "aggs",
+          "only_hits"
+        ]
+      }
+    ],
+    "shortname": "elastic",
+    "version": "v0.0.0-dev"
+  },
+  {
+    "name": "blackstork/github",
+    "resources": [
+      {
+        "name": "github_issues",
+        "type": "data-source",
+        "config_params": [
+          "github_token"
+        ],
+        "arguments": [
+          "milestone",
+          "state",
+          "creator",
+          "labels",
+          "sort",
+          "since",
+          "limit",
+          "repository",
+          "mentioned",
+          "direction",
+          "assignee"
+        ]
+      }
+    ],
+    "shortname": "github",
+    "version": "v0.0.0-dev"
+  },
+  {
+    "name": "blackstork/graphql",
+    "resources": [
+      {
+        "name": "graphql",
+        "type": "data-source",
+        "config_params": [
+          "url",
+          "auth_token"
+        ],
+        "arguments": [
+          "query"
+        ]
+      }
+    ],
+    "shortname": "graphql",
+    "version": "v0.0.0-dev"
+  },
+  {
+    "name": "blackstork/openai",
+    "resources": [
+      {
+        "name": "openai_text",
+        "type": "content-provider",
+        "config_params": [
+          "system_prompt",
+          "api_key",
+          "organization_id"
+        ],
+        "arguments": [
+          "prompt",
+          "model"
+        ]
+      }
+    ],
+    "shortname": "openai",
+    "version": "v0.0.0-dev"
+  },
+  {
+    "name": "blackstork/opencti",
+    "resources": [
+      {
+        "name": "opencti",
+        "type": "data-source",
+        "config_params": [
+          "graphql_url",
+          "auth_token"
+        ],
+        "arguments": [
+          "graphql_query"
+        ]
+      }
+    ],
+    "shortname": "opencti",
+    "version": "v0.0.0-dev"
+  },
+  {
+    "name": "blackstork/postgresql",
+    "resources": [
+      {
+        "name": "postgresql",
+        "type": "data-source",
+        "config_params": [
+          "database_url"
+        ],
+        "arguments": [
+          "sql_args",
+          "sql_query"
+        ]
+      }
+    ],
+    "shortname": "postgresql",
+    "version": "v0.0.0-dev"
+  },
+  {
+    "name": "blackstork/sqlite",
+    "resources": [
+      {
+        "name": "sqlite",
+        "type": "data-source",
+        "config_params": [
+          "database_uri"
+        ],
+        "arguments": [
+          "sql_query",
+          "sql_args"
+        ]
+      }
+    ],
+    "shortname": "sqlite",
+    "version": "v0.0.0-dev"
+  },
+  {
+    "name": "blackstork/terraform",
+    "resources": [
+      {
+        "name": "terraform_state_local",
+        "type": "data-source",
+        "arguments": [
+          "path"
+        ]
+      }
+    ],
+    "shortname": "terraform",
+    "version": "v0.0.0-dev"
+  },
+  {
+    "name": "blackstork/hackerone",
+    "resources": [
+      {
+        "name": "hackerone_reports",
+        "type": "data-source",
+        "config_params": [
+          "api_username",
+          "api_token"
+        ],
+        "arguments": [
+          "last_activity_at__lt",
+          "last_public_activity_at__lt",
+          "weakness_id",
+          "severity",
+          "disclosed_at__gt",
+          "bounty_awarded_at__lt",
+          "swag_awarded_at__gt",
+          "swag_awarded_at__null",
+          "program",
+          "assignee",
+          "created_at__gt",
+          "reporter_agreed_on_going_public",
+          "last_report_activity_at__lt",
+          "first_program_activity_at__lt",
+          "keyword",
+          "reporter",
+          "closed_at__gt",
+          "bounty_awarded_at__gt",
+          "bounty_awarded_at__null",
+          "closed_at__null",
+          "swag_awarded_at__lt",
+          "sort",
+          "inbox_ids",
+          "triaged_at__gt",
+          "closed_at__lt",
+          "last_public_activity_at__gt",
+          "custom_fields",
+          "size",
+          "hacker_published",
+          "triaged_at__null",
+          "first_program_activity_at__gt",
+          "last_program_activity_at__null",
+          "page_number",
+          "created_at__lt",
+          "disclosed_at__null",
+          "last_program_activity_at__lt",
+          "last_report_activity_at__gt",
+          "last_program_activity_at__gt",
+          "triaged_at__lt",
+          "disclosed_at__lt",
+          "first_program_activity_at__null",
+          "last_activity_at__gt",
+          "state",
+          "id",
+          "submitted_at__gt",
+          "submitted_at__lt"
+        ]
+      }
+    ],
+    "shortname": "hackerone",
+    "version": "v0.0.0-dev"
+  },
+  {
+    "name": "blackstork/virustotal",
+    "resources": [
+      {
+        "name": "virustotal_api_usage",
+        "type": "data-source",
+        "config_params": [
+          "api_key"
+        ],
+        "arguments": [
+          "user_id",
+          "group_id",
+          "start_date",
+          "end_date"
+        ]
+      }
+    ],
+    "shortname": "virustotal",
+    "version": "v0.0.0-dev"
+  },
+  {
+    "name": "blackstork/splunk",
+    "resources": [
+      {
+        "name": "splunk_search",
+        "type": "data-source",
+        "config_params": [
+          "auth_token",
+          "host",
+          "deployment_name"
+        ],
+        "arguments": [
+          "search_query",
+          "max_count",
+          "status_buckets",
+          "rf",
+          "earliest_time",
+          "latest_time"
+        ]
+      }
+    ],
+    "shortname": "splunk",
+    "version": "v0.0.0-dev"
+  },
+  {
+    "name": "blackstork/stixview",
+    "resources": [
+      {
+        "name": "stixview",
+        "type": "content-provider",
+        "arguments": [
+          "height",
+          "gist_id",
+          "caption",
+          "show_sidebar",
+          "show_marking_nodes",
+          "show_idrefs",
+          "stix_url",
+          "show_footer",
+          "show_tlp_as_tags",
+          "show_labels",
+          "width"
+        ]
+      }
+    ],
+    "shortname": "stixview",
+    "version": "v0.0.0-dev"
+  }
+]

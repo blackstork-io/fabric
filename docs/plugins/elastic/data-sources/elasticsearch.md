@@ -1,30 +1,37 @@
 ---
-title: blackstork/elastic
-weight: 20
+title: elasticsearch
+plugin:
+  name: blackstork/elastic
+  description: ""
+  tags: []
+  version: "v0.0.0-dev"
+  source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/elastic/"
+resource:
+  type: data-source
 type: docs
 ---
 
-# `blackstork/elastic` plugin
+{{< breadcrumbs 2 >}}
+
+{{< plugin-resource-header "blackstork/elastic" "elastic" "v0.0.0-dev" "elasticsearch" "data source" >}}
 
 ## Installation
 
-To install the plugin, add it to `plugin_versions` map in the Fabric global configuration block (see [Global configuration]({{< ref "configs.md#global-configuration" >}}) for more details), with a version constraint restricting which available versions of the plugin the codebase is compatible with:
+To use `elasticsearch` data source, you must install the plugin `blackstork/elastic`.
+
+To install the plugin, add the full plugin name to the `plugin_versions` map in the Fabric global configuration block (see [Global configuration]({{< ref "configs.md#global-configuration" >}}) for more details), as shown below:
 
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/elastic" = "=> v0.0.0-dev"
+    "blackstork/elastic" = ">= v0.0.0-dev"
   }
 }
 ```
 
-## Data sources
+Note the version constraint set for the plugin.
 
-The plugin has the following data sources available:
-
-### `elasticsearch`
-
-#### Configuration
+## Configuration
 
 The data source supports the following configuration parameters:
 
@@ -41,7 +48,7 @@ config data elasticsearch {
 }
 ```
 
-#### Usage
+## Usage
 
 The data source supports the following parameters in the data blocks:
 

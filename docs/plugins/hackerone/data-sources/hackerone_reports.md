@@ -1,30 +1,37 @@
 ---
-title: blackstork/hackerone
-weight: 20
+title: hackerone_reports
+plugin:
+  name: blackstork/hackerone
+  description: ""
+  tags: []
+  version: "v0.0.0-dev"
+  source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/hackerone/"
+resource:
+  type: data-source
 type: docs
 ---
 
-# `blackstork/hackerone` plugin
+{{< breadcrumbs 2 >}}
+
+{{< plugin-resource-header "blackstork/hackerone" "hackerone" "v0.0.0-dev" "hackerone_reports" "data source" >}}
 
 ## Installation
 
-To install the plugin, add it to `plugin_versions` map in the Fabric global configuration block (see [Global configuration]({{< ref "configs.md#global-configuration" >}}) for more details), with a version constraint restricting which available versions of the plugin the codebase is compatible with:
+To use `hackerone_reports` data source, you must install the plugin `blackstork/hackerone`.
+
+To install the plugin, add the full plugin name to the `plugin_versions` map in the Fabric global configuration block (see [Global configuration]({{< ref "configs.md#global-configuration" >}}) for more details), as shown below:
 
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/hackerone" = "=> v0.0.0-dev"
+    "blackstork/hackerone" = ">= v0.0.0-dev"
   }
 }
 ```
 
-## Data sources
+Note the version constraint set for the plugin.
 
-The plugin has the following data sources available:
-
-### `hackerone_reports`
-
-#### Configuration
+## Configuration
 
 The data source supports the following configuration parameters:
 
@@ -35,7 +42,7 @@ config data hackerone_reports {
 }
 ```
 
-#### Usage
+## Usage
 
 The data source supports the following parameters in the data blocks:
 

@@ -1,10 +1,16 @@
 ---
-title: blackstork/terraform
+title: blackstork/postgresql
 weight: 20
+plugin:
+  name: blackstork/postgresql
+  description: ""
+  tags: []
+  version: "v0.0.0-dev"
+  source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/postgresql/"
 type: docs
 ---
 
-# `blackstork/terraform` plugin
+{{< plugin-header "blackstork/postgresql" "postgresql" "v0.0.0-dev" >}}
 
 ## Installation
 
@@ -13,27 +19,11 @@ To install the plugin, add it to `plugin_versions` map in the Fabric global conf
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/terraform" = "=> v0.0.0-dev"
+    "blackstork/postgresql" = ">= v0.0.0-dev"
   }
 }
 ```
 
 ## Data sources
 
-The plugin has the following data sources available:
-
-### `terraform_state_local`
-
-#### Configuration
-
-The data source doesn't support configuration.
-
-#### Usage
-
-The data source supports the following parameters in the data blocks:
-
-```hcl
-data terraform_state_local {
-    path = <string>  # required
-}
-```
+- [`postgresql`]({{< relref "./data-sources/postgresql" >}})
