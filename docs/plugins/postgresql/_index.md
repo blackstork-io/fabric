@@ -24,6 +24,7 @@ fabric {
 }
 ```
 
+
 ## Data sources
 
-- [`postgresql`]({{< relref "./data-sources/postgresql" >}})
+{{< plugin-resources "postgresql" "data-source" >}}

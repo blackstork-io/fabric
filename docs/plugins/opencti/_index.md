@@ -24,6 +24,7 @@ fabric {
 }
 ```
 
+
 ## Data sources
 
-- [`opencti`]({{< relref "./data-sources/opencti" >}})
+{{< plugin-resources "opencti" "data-source" >}}

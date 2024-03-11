@@ -24,6 +24,7 @@ fabric {
 }
 ```
 
+
 ## Data sources
 
-- [`hackerone_reports`]({{< relref "./data-sources/hackerone_reports" >}})
+{{< plugin-resources "hackerone" "data-source" >}}

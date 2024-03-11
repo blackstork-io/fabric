@@ -24,6 +24,7 @@ fabric {
 }
 ```
 
+
 ## Data sources
 
-- [`sqlite`]({{< relref "./data-sources/sqlite" >}})
+{{< plugin-resources "sqlite" "data-source" >}}

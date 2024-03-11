@@ -24,6 +24,7 @@ fabric {
 }
 ```
 
+
 ## Data sources
 
-- [`github_issues`]({{< relref "./data-sources/github_issues" >}})
+{{< plugin-resources "github" "data-source" >}}

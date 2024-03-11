@@ -24,6 +24,7 @@ fabric {
 }
 ```
 
+
 ## Data sources
 
-- [`virustotal_api_usage`]({{< relref "./data-sources/virustotal_api_usage" >}})
+{{< plugin-resources "virustotal" "data-source" >}}

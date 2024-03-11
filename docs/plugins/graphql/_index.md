@@ -24,6 +24,7 @@ fabric {
 }
 ```
 
+
 ## Data sources
 
-- [`graphql`]({{< relref "./data-sources/graphql" >}})
+{{< plugin-resources "graphql" "data-source" >}}

@@ -27,18 +27,17 @@ fabric {
 }
 ```
 {{ end }}
+
 {{ $plugin := . -}}
 
 {{ with .DataSources -}}
 ## Data sources
-{{ range $name, $dataSource := . }}
-- [`{{ $name }}`]({{"{{"}}< relref "./data-sources/{{ $name }}" >{{"}}"}})
-{{ end -}}
+
+{{"{{"}}< plugin-resources "{{ shortname $plugin.Name }}" "data-source" >{{"}}"}}
 {{ end }}
 
 {{- with .ContentProviders }}
 ## Content providers
-{{ range $name, $contentProvider := . }}
-- [`{{ $name }}`]({{"{{"}}< relref "./content-providers/{{ $name }}" >{{"}}"}})
-{{- end -}}
+
+{{"{{"}}< plugin-resources "{{ shortname $plugin.Name }}" "content-provider" >{{"}}"}}
 {{- end -}}

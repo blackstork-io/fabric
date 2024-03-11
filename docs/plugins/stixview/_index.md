@@ -25,6 +25,7 @@ fabric {
 ```
 
 
+
 ## Content providers
 
-- [`stixview`]({{< relref "./content-providers/stixview" >}})
+{{< plugin-resources "stixview" "content-provider" >}}

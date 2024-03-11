@@ -24,6 +24,7 @@ fabric {
 }
 ```
 
+
 ## Data sources
 
-- [`elasticsearch`]({{< relref "./data-sources/elasticsearch" >}})
+{{< plugin-resources "elastic" "data-source" >}}

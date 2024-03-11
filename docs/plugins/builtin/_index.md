@@ -14,21 +14,11 @@ type: docs
 
 `fabric` binary includes a set of built-in data sources and content providers, available out-of-the-box.
 
+
 ## Data sources
 
-- [`csv`]({{< relref "./data-sources/csv" >}})
-
-- [`inline`]({{< relref "./data-sources/inline" >}})
-
-- [`json`]({{< relref "./data-sources/json" >}})
-
-- [`txt`]({{< relref "./data-sources/txt" >}})
+{{< plugin-resources "builtin" "data-source" >}}
 
 ## Content providers
 
-- [`frontmatter`]({{< relref "./content-providers/frontmatter" >}})
-- [`image`]({{< relref "./content-providers/image" >}})
-- [`list`]({{< relref "./content-providers/list" >}})
-- [`table`]({{< relref "./content-providers/table" >}})
-- [`text`]({{< relref "./content-providers/text" >}})
-- [`toc`]({{< relref "./content-providers/toc" >}})
+{{< plugin-resources "builtin" "content-provider" >}}

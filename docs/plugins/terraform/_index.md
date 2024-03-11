@@ -24,6 +24,7 @@ fabric {
 }
 ```
 
+
 ## Data sources
 
-- [`terraform_state_local`]({{< relref "./data-sources/terraform_state_local" >}})
+{{< plugin-resources "terraform" "data-source" >}}

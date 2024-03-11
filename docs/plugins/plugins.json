@@ -3,6 +3,17 @@
     "name": "blackstork/builtin",
     "resources": [
       {
+        "name": "json",
+        "type": "data-source",
+        "arguments": [
+          "glob"
+        ]
+      },
+      {
+        "name": "inline",
+        "type": "data-source"
+      },
+      {
         "name": "csv",
         "type": "data-source",
         "config_params": [
@@ -20,15 +31,32 @@
         ]
       },
       {
-        "name": "json",
-        "type": "data-source",
+        "name": "toc",
+        "type": "content-provider",
         "arguments": [
-          "glob"
+          "start_level",
+          "end_level",
+          "ordered",
+          "scope"
         ]
       },
       {
-        "name": "inline",
-        "type": "data-source"
+        "name": "text",
+        "type": "content-provider",
+        "arguments": [
+          "text",
+          "format_as",
+          "absolute_title_size",
+          "code_language"
+        ]
+      },
+      {
+        "name": "image",
+        "type": "content-provider",
+        "arguments": [
+          "src",
+          "alt"
+        ]
       },
       {
         "name": "list",
@@ -52,34 +80,6 @@
           "format",
           "content"
         ]
-      },
-      {
-        "name": "toc",
-        "type": "content-provider",
-        "arguments": [
-          "end_level",
-          "ordered",
-          "scope",
-          "start_level"
-        ]
-      },
-      {
-        "name": "text",
-        "type": "content-provider",
-        "arguments": [
-          "text",
-          "format_as",
-          "absolute_title_size",
-          "code_language"
-        ]
-      },
-      {
-        "name": "image",
-        "type": "content-provider",
-        "arguments": [
-          "src",
-          "alt"
-        ]
       }
     ],
     "shortname": "builtin",
@@ -92,24 +92,24 @@
         "name": "elasticsearch",
         "type": "data-source",
         "config_params": [
+          "basic_auth_username",
+          "basic_auth_password",
           "bearer_auth",
           "ca_certs",
           "base_url",
           "cloud_id",
           "api_key_str",
-          "api_key",
-          "basic_auth_username",
-          "basic_auth_password"
+          "api_key"
         ],
         "arguments": [
-          "fields",
-          "size",
-          "index",
-          "id",
           "query_string",
           "query",
           "aggs",
-          "only_hits"
+          "only_hits",
+          "fields",
+          "size",
+          "index",
+          "id"
         ]
       }
     ],
@@ -126,17 +126,17 @@
           "github_token"
         ],
         "arguments": [
+          "limit",
           "milestone",
           "state",
           "creator",
+          "mentioned",
           "labels",
           "sort",
-          "since",
-          "limit",
-          "repository",
-          "mentioned",
           "direction",
-          "assignee"
+          "repository",
+          "assignee",
+          "since"
         ]
       }
     ],
@@ -188,8 +188,8 @@
         "name": "opencti",
         "type": "data-source",
         "config_params": [
-          "graphql_url",
-          "auth_token"
+          "auth_token",
+          "graphql_url"
         ],
         "arguments": [
           "graphql_query"
@@ -209,8 +209,8 @@
           "database_url"
         ],
         "arguments": [
-          "sql_args",
-          "sql_query"
+          "sql_query",
+          "sql_args"
         ]
       }
     ],
@@ -260,52 +260,52 @@
           "api_token"
         ],
         "arguments": [
-          "last_activity_at__lt",
-          "last_public_activity_at__lt",
-          "weakness_id",
-          "severity",
-          "disclosed_at__gt",
-          "bounty_awarded_at__lt",
-          "swag_awarded_at__gt",
-          "swag_awarded_at__null",
-          "program",
-          "assignee",
+          "hacker_published",
           "created_at__gt",
-          "reporter_agreed_on_going_public",
-          "last_report_activity_at__lt",
-          "first_program_activity_at__lt",
-          "keyword",
-          "reporter",
-          "closed_at__gt",
-          "bounty_awarded_at__gt",
-          "bounty_awarded_at__null",
           "closed_at__null",
+          "bounty_awarded_at__null",
+          "last_program_activity_at__null",
+          "last_program_activity_at__lt",
+          "program",
+          "reporter",
+          "triaged_at__lt",
           "swag_awarded_at__lt",
-          "sort",
-          "inbox_ids",
-          "triaged_at__gt",
-          "closed_at__lt",
+          "last_report_activity_at__gt",
+          "assignee",
+          "closed_at__gt",
           "last_public_activity_at__gt",
           "custom_fields",
-          "size",
-          "hacker_published",
-          "triaged_at__null",
-          "first_program_activity_at__gt",
-          "last_program_activity_at__null",
-          "page_number",
-          "created_at__lt",
-          "disclosed_at__null",
-          "last_program_activity_at__lt",
-          "last_report_activity_at__gt",
-          "last_program_activity_at__gt",
-          "triaged_at__lt",
-          "disclosed_at__lt",
-          "first_program_activity_at__null",
-          "last_activity_at__gt",
-          "state",
-          "id",
           "submitted_at__gt",
-          "submitted_at__lt"
+          "triaged_at__gt",
+          "last_report_activity_at__lt",
+          "last_program_activity_at__gt",
+          "reporter_agreed_on_going_public",
+          "last_public_activity_at__lt",
+          "page_number",
+          "sort",
+          "id",
+          "severity",
+          "disclosed_at__null",
+          "last_activity_at__gt",
+          "last_activity_at__lt",
+          "keyword",
+          "size",
+          "inbox_ids",
+          "created_at__lt",
+          "closed_at__lt",
+          "first_program_activity_at__gt",
+          "state",
+          "weakness_id",
+          "submitted_at__lt",
+          "first_program_activity_at__lt",
+          "first_program_activity_at__null",
+          "swag_awarded_at__gt",
+          "swag_awarded_at__null",
+          "triaged_at__null",
+          "disclosed_at__gt",
+          "disclosed_at__lt",
+          "bounty_awarded_at__gt",
+          "bounty_awarded_at__lt"
         ]
       }
     ],
@@ -344,12 +344,12 @@
           "deployment_name"
         ],
         "arguments": [
+          "earliest_time",
+          "latest_time",
           "search_query",
           "max_count",
           "status_buckets",
-          "rf",
-          "earliest_time",
-          "latest_time"
+          "rf"
         ]
       }
     ],
@@ -363,17 +363,17 @@
         "name": "stixview",
         "type": "content-provider",
         "arguments": [
-          "height",
-          "gist_id",
+          "stix_url",
           "caption",
           "show_sidebar",
-          "show_marking_nodes",
-          "show_idrefs",
-          "stix_url",
-          "show_footer",
           "show_tlp_as_tags",
+          "width",
+          "height",
+          "gist_id",
+          "show_footer",
+          "show_marking_nodes",
           "show_labels",
-          "width"
+          "show_idrefs"
         ]
       }
     ],

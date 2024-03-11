@@ -25,6 +25,7 @@ fabric {
 ```
 
 
+
 ## Content providers
 
-- [`openai_text`]({{< relref "./content-providers/openai_text" >}})
+{{< plugin-resources "openai" "content-provider" >}}

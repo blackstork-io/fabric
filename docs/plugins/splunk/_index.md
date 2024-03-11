@@ -24,6 +24,7 @@ fabric {
 }
 ```
 
+
 ## Data sources
 
-- [`splunk_search`]({{< relref "./data-sources/splunk_search" >}})
+{{< plugin-resources "splunk" "data-source" >}}
