@@ -15,9 +15,9 @@ To follow the tutorial, you will need:
 - Fabric CLI [installed]({{< ref "install.md" >}}) and `fabric` CLI command available
 - (optional) OpenAI API token
 
-Throughout this tutorial, the command examples are executed in macOS Sonoma, in `zsh` shell.
+Throughout this tutorial, the command examples were executed in macOS Sonoma, in `zsh` shell.
 
-## Hello, Fabric!
+## Hello, Fabric
 
 Let's start with a simple "Hello, Fabric!" template to make sure everything is set up correctly.
 
@@ -41,7 +41,7 @@ To render the document, make sure Fabric can find `hello.fabric` file, by execut
 fabric render document.greeting
 ```
 
-If everything was set up correctly, the output should look like this:
+If everything was installed correctly, the output should look like this:
 
 ```shell
 $ fabric render document.greeting
@@ -149,7 +149,7 @@ In certain scenarios, providing the exact text or a template string for the cont
 
 ### Installation
 
-Before we can use it, we must add the plugin as a dependency and install it.
+Before we can use it, we must add `blackstork/openai` plugin as a dependency and install it.
 
 Update the list of plugin dependencies by adding a fully qualified name `blackstork/openai` for the [OpenAI plugin]({{< ref "plugins/openai" >}}) to `plugin_versions` dict in the [global configuration block]({{< ref "language/configs.md#global-configuration" >}}). The plugin also requires a [version constraint](https://semver.org/).
 
@@ -206,7 +206,7 @@ document "greeting" {
 }
 ```
 
-Here, a JQ query `"{planet: .data.inline.solar_system.planets[-1]}` performs two operations: it fetches the last item in the list (`Neptune`) and returns a new JSON object `{"planet": "Neptune"}`. This object is stored under `query_result` field in the context. Combined with the `prompt` string, `query_result` value creates a user prompt for OpenAI API. 
+Here, a JQ query `"{planet: .data.inline.solar_system.planets[-1]}` performs two operations: it fetches the last item in the list (`Neptune`) and returns a new JSON object `{"planet": "Neptune"}`. This object is stored under `query_result` field in the context. Combined with the `prompt` string, `query_result` value creates a user prompt for OpenAI API.
 
 {{< hint note >}}
 If you would like to specify a system prompt for OpenAI API, you can set it up in the configuration for `openai_text` provider. See the provider's [documentation]({{< ref "plugins/openai/content-providers/openai_text" >}}) for more configuration options.
@@ -276,4 +276,3 @@ Congratulations! By completing this tutorial, you've gained a solid understandin
 Take a look at the open-source templates the community built in [Fabric Templates](https://github.com/blackstork-io/fabric-templates) GitHub repository – you can reuse the whole documents or specific blocks in your own templates!
 
 If you have any questions, share them in the [Fabric Community Slack](https://fabric-community.slack.com/) and we will be glad to help!
-
