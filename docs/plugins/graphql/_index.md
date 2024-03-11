@@ -5,12 +5,12 @@ plugin:
   name: blackstork/graphql
   description: ""
   tags: []
-  version: "v0.0.0-dev"
+  version: "v0.4.0"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/graphql/"
 type: docs
 ---
 
-{{< plugin-header "blackstork/graphql" "graphql" "v0.0.0-dev" >}}
+{{< plugin-header "blackstork/graphql" "graphql" "v0.4.0" >}}
 
 ## Installation
 
@@ -19,7 +19,7 @@ To install the plugin, add it to `plugin_versions` map in the Fabric global conf
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/graphql" = ">= v0.0.0-dev"
+    "blackstork/graphql" = ">= v0.4.0"
   }
 }
 ```

@@ -34,10 +34,10 @@
         "name": "toc",
         "type": "content-provider",
         "arguments": [
-          "ordered",
-          "scope",
           "start_level",
-          "end_level"
+          "end_level",
+          "ordered",
+          "scope"
         ]
       },
       {
@@ -83,7 +83,7 @@
       }
     ],
     "shortname": "builtin",
-    "version": "v0.0.0-dev"
+    "version": "v0.4.0"
   },
   {
     "name": "blackstork/elastic",
@@ -92,29 +92,29 @@
         "name": "elasticsearch",
         "type": "data-source",
         "config_params": [
+          "basic_auth_username",
+          "basic_auth_password",
+          "bearer_auth",
           "ca_certs",
           "base_url",
           "cloud_id",
           "api_key_str",
-          "api_key",
-          "basic_auth_username",
-          "basic_auth_password",
-          "bearer_auth"
+          "api_key"
         ],
         "arguments": [
+          "index",
           "id",
           "query_string",
           "query",
           "aggs",
           "only_hits",
           "fields",
-          "size",
-          "index"
+          "size"
         ]
       }
     ],
     "shortname": "elastic",
-    "version": "v0.0.0-dev"
+    "version": "v0.4.0"
   },
   {
     "name": "blackstork/github",
@@ -126,22 +126,22 @@
           "github_token"
         ],
         "arguments": [
-          "repository",
-          "state",
-          "assignee",
-          "mentioned",
-          "sort",
-          "since",
-          "milestone",
-          "creator",
           "labels",
           "direction",
-          "limit"
+          "since",
+          "limit",
+          "repository",
+          "assignee",
+          "creator",
+          "mentioned",
+          "milestone",
+          "state",
+          "sort"
         ]
       }
     ],
     "shortname": "github",
-    "version": "v0.0.0-dev"
+    "version": "v0.4.0"
   },
   {
     "name": "blackstork/graphql",
@@ -159,7 +159,7 @@
       }
     ],
     "shortname": "graphql",
-    "version": "v0.0.0-dev"
+    "version": "v0.4.0"
   },
   {
     "name": "blackstork/openai",
@@ -173,13 +173,13 @@
           "organization_id"
         ],
         "arguments": [
-          "prompt",
-          "model"
+          "model",
+          "prompt"
         ]
       }
     ],
     "shortname": "openai",
-    "version": "v0.0.0-dev"
+    "version": "v0.4.0"
   },
   {
     "name": "blackstork/opencti",
@@ -197,7 +197,7 @@
       }
     ],
     "shortname": "opencti",
-    "version": "v0.0.0-dev"
+    "version": "v0.4.0"
   },
   {
     "name": "blackstork/postgresql",
@@ -215,7 +215,7 @@
       }
     ],
     "shortname": "postgresql",
-    "version": "v0.0.0-dev"
+    "version": "v0.4.0"
   },
   {
     "name": "blackstork/sqlite",
@@ -233,7 +233,7 @@
       }
     ],
     "shortname": "sqlite",
-    "version": "v0.0.0-dev"
+    "version": "v0.4.0"
   },
   {
     "name": "blackstork/terraform",
@@ -247,7 +247,7 @@
       }
     ],
     "shortname": "terraform",
-    "version": "v0.0.0-dev"
+    "version": "v0.4.0"
   },
   {
     "name": "blackstork/hackerone",
@@ -260,57 +260,57 @@
           "api_token"
         ],
         "arguments": [
-          "created_at__gt",
-          "disclosed_at__null",
-          "id",
           "hacker_published",
-          "submitted_at__gt",
-          "disclosed_at__gt",
-          "disclosed_at__lt",
-          "bounty_awarded_at__gt",
-          "first_program_activity_at__lt",
-          "custom_fields",
-          "program",
           "created_at__lt",
-          "severity",
           "submitted_at__lt",
-          "closed_at__lt",
-          "bounty_awarded_at__lt",
+          "bounty_awarded_at__gt",
           "swag_awarded_at__lt",
           "last_program_activity_at__gt",
-          "sort",
-          "reporter",
-          "weakness_id",
-          "triaged_at__gt",
-          "closed_at__gt",
-          "swag_awarded_at__gt",
-          "last_report_activity_at__lt",
-          "last_activity_at__lt",
           "page_number",
-          "state",
-          "last_public_activity_at__gt",
-          "triaged_at__lt",
-          "last_report_activity_at__gt",
-          "first_program_activity_at__null",
-          "last_public_activity_at__lt",
-          "size",
-          "assignee",
-          "last_program_activity_at__null",
-          "last_activity_at__gt",
-          "inbox_ids",
+          "submitted_at__gt",
+          "triaged_at__gt",
           "triaged_at__null",
-          "first_program_activity_at__gt",
-          "reporter_agreed_on_going_public",
-          "bounty_awarded_at__null",
+          "disclosed_at__lt",
+          "first_program_activity_at__lt",
           "last_program_activity_at__lt",
-          "keyword",
+          "last_public_activity_at__gt",
+          "created_at__gt",
+          "last_report_activity_at__gt",
+          "closed_at__lt",
           "closed_at__null",
-          "swag_awarded_at__null"
+          "disclosed_at__gt",
+          "bounty_awarded_at__null",
+          "last_activity_at__gt",
+          "keyword",
+          "triaged_at__lt",
+          "assignee",
+          "severity",
+          "last_report_activity_at__lt",
+          "first_program_activity_at__gt",
+          "last_activity_at__lt",
+          "size",
+          "weakness_id",
+          "disclosed_at__null",
+          "bounty_awarded_at__lt",
+          "swag_awarded_at__gt",
+          "swag_awarded_at__null",
+          "id",
+          "inbox_ids",
+          "reporter",
+          "closed_at__gt",
+          "reporter_agreed_on_going_public",
+          "first_program_activity_at__null",
+          "last_program_activity_at__null",
+          "custom_fields",
+          "sort",
+          "state",
+          "last_public_activity_at__lt",
+          "program"
         ]
       }
     ],
     "shortname": "hackerone",
-    "version": "v0.0.0-dev"
+    "version": "v0.4.0"
   },
   {
     "name": "blackstork/virustotal",
@@ -322,15 +322,15 @@
           "api_key"
         ],
         "arguments": [
-          "start_date",
-          "end_date",
           "user_id",
-          "group_id"
+          "group_id",
+          "start_date",
+          "end_date"
         ]
       }
     ],
     "shortname": "virustotal",
-    "version": "v0.0.0-dev"
+    "version": "v0.4.0"
   },
   {
     "name": "blackstork/splunk",
@@ -344,17 +344,17 @@
           "deployment_name"
         ],
         "arguments": [
-          "earliest_time",
           "latest_time",
           "search_query",
           "max_count",
           "status_buckets",
-          "rf"
+          "rf",
+          "earliest_time"
         ]
       }
     ],
     "shortname": "splunk",
-    "version": "v0.0.0-dev"
+    "version": "v0.4.0"
   },
   {
     "name": "blackstork/stixview",
@@ -363,21 +363,21 @@
         "name": "stixview",
         "type": "content-provider",
         "arguments": [
-          "show_sidebar",
-          "show_tlp_as_tags",
-          "width",
-          "height",
           "gist_id",
           "caption",
-          "show_footer",
+          "show_sidebar",
+          "show_tlp_as_tags",
           "show_marking_nodes",
           "show_labels",
+          "stix_url",
+          "show_footer",
           "show_idrefs",
-          "stix_url"
+          "width",
+          "height"
         ]
       }
     ],
     "shortname": "stixview",
-    "version": "v0.0.0-dev"
+    "version": "v0.4.0"
   }
 ]

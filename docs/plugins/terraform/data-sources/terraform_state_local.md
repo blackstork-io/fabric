@@ -4,7 +4,7 @@ plugin:
   name: blackstork/terraform
   description: ""
   tags: []
-  version: "v0.0.0-dev"
+  version: "v0.4.0"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/terraform/"
 resource:
   type: data-source
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/terraform" "terraform" "v0.0.0-dev" "terraform_state_local" "data source" >}}
+{{< plugin-resource-header "blackstork/terraform" "terraform" "v0.4.0" "terraform_state_local" "data source" >}}
 
 ## Installation
 
@@ -24,7 +24,7 @@ To install the plugin, add the full plugin name to the `plugin_versions` map in 
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/terraform" = ">= v0.0.0-dev"
+    "blackstork/terraform" = ">= v0.4.0"
   }
 }
 ```

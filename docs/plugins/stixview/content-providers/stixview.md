@@ -4,7 +4,7 @@ plugin:
   name: blackstork/stixview
   description: ""
   tags: []
-  version: "v0.0.0-dev"
+  version: "v0.4.0"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/stixview/"
 resource:
   type: content-provider
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/stixview" "stixview" "v0.0.0-dev" "stixview" "content provider" >}}
+{{< plugin-resource-header "blackstork/stixview" "stixview" "v0.4.0" "stixview" "content provider" >}}
 
 ## Installation
 
@@ -24,7 +24,7 @@ To install the plugin, add the full plugin name to the `plugin_versions` map in 
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/stixview" = ">= v0.0.0-dev"
+    "blackstork/stixview" = ">= v0.4.0"
   }
 }
 ```

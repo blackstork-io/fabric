@@ -5,12 +5,12 @@ plugin:
   name: blackstork/builtin
   description: ""
   tags: []
-  version: "v0.0.0-dev"
+  version: "v0.4.0"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
 type: docs
 ---
 
-{{< plugin-header "blackstork/builtin" "builtin" "v0.0.0-dev" >}}
+{{< plugin-header "blackstork/builtin" "builtin" "v0.4.0" >}}
 
 `fabric` binary includes a set of built-in data sources and content providers, available out-of-the-box.
 

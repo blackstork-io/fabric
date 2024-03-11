@@ -5,12 +5,12 @@ plugin:
   name: blackstork/elastic
   description: ""
   tags: []
-  version: "v0.0.0-dev"
+  version: "v0.4.0"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/elastic/"
 type: docs
 ---
 
-{{< plugin-header "blackstork/elastic" "elastic" "v0.0.0-dev" >}}
+{{< plugin-header "blackstork/elastic" "elastic" "v0.4.0" >}}
 
 ## Installation
 
@@ -19,7 +19,7 @@ To install the plugin, add it to `plugin_versions` map in the Fabric global conf
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/elastic" = ">= v0.0.0-dev"
+    "blackstork/elastic" = ">= v0.4.0"
   }
 }
 ```
