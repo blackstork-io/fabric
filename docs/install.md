@@ -14,7 +14,7 @@ Fabric binaries for Windows, macOS, and Linux are available at ["Releases"](http
 
 To install Fabric:
 
-- **download a release archive**: choose and download Fabric release archive appropriate for your operating system (Windows, macOS/Darwin, or Linux) and architecture from ["Releases" section](https://github.com/blackstork-io/fabric/releases);
+- **download a release archive**: choose and download Fabric release archive appropriate for your operating system (Windows, macOS/Darwin, or Linux) and architecture from ["Releases"](https://github.com/blackstork-io/fabric/releases) page;
 - **unpack**: extract the contents of the downloaded release archive into a preferred directory;
 
 For example, the steps for macOS (arm64) are:
@@ -69,7 +69,6 @@ The plugins are downloaded and installed in `./fabric` folder or in the location
 It's not necessary to install any plugins if you are only using built-in [data sources]({{< ref "plugins/builtin/_index.md#data-sources" >}}) and [content providers]({{< ref "plugins/builtin/_index.md#content-providers" >}}) in your templates
 
 {{</ hint >}}
-
 
 ## Next step
 

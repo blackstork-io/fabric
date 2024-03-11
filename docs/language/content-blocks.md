@@ -6,7 +6,7 @@ weight: 60
 
 # Content blocks
 
-`content` blocks define document segments: text paragraphs, tables, graphs, lists, etc. The block signature insludes the name of the content provider that will execute the content block. Fabric supports many [content pproviders]({{< ref "content-providers.md" >}}) through its [plugin ecosystem]({{< ref "plugins.md" >}}).
+`content` blocks define document segments: text paragraphs, tables, graphs, lists, etc. The block signature includes the name of the content provider that will execute the content block. Fabric supports many [content pproviders]({{< ref "content-providers.md" >}}) through its [plugin ecosystem]({{< ref "plugins.md" >}}).
 
 ```hcl
 # Root-level definition of a content block
