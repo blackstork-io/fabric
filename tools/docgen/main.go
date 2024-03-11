@@ -321,7 +321,7 @@ func init() {
 		"attrType": templateAttrTypeFunc,
 	}).Parse(dataSourceTemplValue))
 	pluginTempl = template.Must(template.New("plugin").Funcs(template.FuncMap{
-		"attrType": templateAttrTypeFunc,
+		"attrType":  templateAttrTypeFunc,
 		"shortname": shortname,
 	}).Parse(pluginTemplValue))
 }
