@@ -2,15 +2,16 @@
 title: Tutorial
 type: docs
 weight: 30
+code_blocks_no_wrap: true
 ---
 
 # Tutorial
 
-This tutorial will give you everything you need to use Fabric and [Fabric Configuration Language]({{< ref "language" >}}) (FCL) to generate documents. We'll walk through creating a simple template, adding data blocks, filtering and mutating data, installing plugins, and rendering text using external providers.
+This tutorial provides comprehensive guidance on using Fabric and the [Fabric Configuration Language]({{< ref "language" >}}) (FCL) for document generation. We'll systematically cover creating a basic template, incorporating data blocks, applying data filtering and mutation, installing plugins, and rendering text with external content providers.
 
 ## Prerequisites
 
-To follow the tutorial, you will need:
+To effectively follow this tutorial, ensure you have the following:
 
 - Fabric CLI [installed]({{< ref "install.md" >}}) and `fabric` CLI command available
 - (optional) OpenAI API token
@@ -19,7 +20,7 @@ Throughout this tutorial, the command examples were executed in macOS Sonoma, in
 
 ## Hello, Fabric
 
-Let's start with a simple "Hello, Fabric!" template to make sure everything is set up correctly.
+Let's start with a straightforward "Hello, Fabric!" template to confirm that everything is configured correctly.
 
 Create a new `hello.fabric` file and define a simple template:
 
@@ -33,15 +34,15 @@ document "greeting" {
 }
 ```
 
-Here, `document.greeting` block defines a template with a single anonymous content block with "Hello, Fabric!" text.
+In this code snippet, the `document.greeting` block defines a template with a single anonymous content block containing the text "Hello, Fabric!"
 
-To render the document, make sure Fabric can find `hello.fabric` file, by executing `fabric` in the same directory or providing `–source-dir`, and run:
+To render the document, ensure that Fabric can locate the `hello.fabric` file. Execute `fabric` command in the same directory (or explicitly provide `--source-dir` CLI argument):
 
 ```shell
 fabric render document.greeting
 ```
 
-If everything was installed correctly, the output should look like this:
+The output should resemble the following:
 
 ```shell
 $ fabric render document.greeting
@@ -50,11 +51,11 @@ Hello, Fabric!
 
 ## Document title
 
-The documents usually have titles. `document` block supports `title` argument - a simple way to set a title for a document.
+Documents typically include titles, and the document block supports the `title` argument as a straightforward method to set a title for a document.
 
-Add a title to `document.greeting` template using `title` argument:
+Enhance the `document.greeting` template by adding a title using the `title` argument:
 
-```shell
+```hcl
 document "greeting" {
 
   title = "The Greeting"
@@ -90,11 +91,11 @@ Hello, Fabric!
 
 ## Data blocks
 
-A core feature of Fabric configuration language is the ability to define data requirements inside the templates with the [data blocks]({{< ref "language/data-blocks.md" >}}). The easiest way is to use [`inline`]({{< ref "plugins/builtin/data-sources/inline" >}}) data source that supports free-form data structures.
+A core feature of the Fabric configuration language is the ability to define data requirements inside templates with the [data blocks]({{< ref "language/data-blocks.md" >}}). The easiest way is to use [`inline`]({{< ref "plugins/builtin/data-sources/inline" >}}) data source that supports free-form data structures.
 
-Note, you must define `data` blocks on the root level of `document` block.
+Note, you must define `data` blocks on the root level of the `document` block.
 
-Change the template in `hello.fabric` file to include a `data` block and another `content.text` block:
+Modify the template in the `hello.fabric` file to include a `data` block and another `content.text` block:
 
 ```hcl
 document "greeting" {
@@ -117,22 +118,20 @@ document "greeting" {
     query = ".data.inline.solar_system.planets | length"
 
     text = <<-EOT
-      There are {{ .query_result }} planets and {{ .data.inline.solar_system.moons_count }} moons
-      in our solar system.
+      There are {{ .query_result }} planets and {{ .data.inline.solar_system.moons_count }} moons in our solar system.
     EOT
   }
 
 }
 ```
 
-The content blocks can access and transform the data available with [JQ query](https://jqlang.github.io/jq/manual/) in the [`query`]({{< ref "language/content-blocks.md#generic-arguments" >}}) argument. It's applied to [the context object]({{< ref "language/content-blocks.md#context" >}}) during the evaluation of the block, and the result is stored in the context object under `query_result` field.
+The content blocks can access and transform the data available with [JQ query](https://jqlang.github.io/jq/manual/) in the [`query`]({{< ref "language/content-blocks.md#generic-arguments" >}}) argument. It's applied to [the context object]({{< ref "language/content-blocks.md#context" >}}) during the evaluation of the block, and the result is stored in the context object under the `query_result` field.
 
 As you can see, `text` argument value in the new content block is a template string – `content.text` blocks support [Go templates](https://pkg.go.dev/text/template) out-of-the-box. The templates can access the context object, so it's easy to include `query_result` or `moons_count` values from the context.
 
 The rendered output should now include the new sentence:
 
 ```shell
-
 $ fabric render document.greeting
 # The Greeting
 
@@ -141,45 +140,72 @@ Hello, Fabric!
 There are 8 planets and 146 moons in our solar system.
 ```
 
-## External content providers
+## Content providers
 
-Fabric also integrates with external APIs for content generation. For example, it's possible to use the OpenAI API to generate text dynamically with prompts.
+Fabric seamlessly integrates with external APIs for content generation. An excellent example is the utilization of the OpenAI API to dynamically generate text through prompts.
 
-In certain scenarios, providing the exact text or a template string for the content block might be difficult or impossible. In such cases, leveraging generative AI for summarization proves beneficial, enabling users to create context-aware text dynamically.
+In scenarios where providing the exact text or a template string for the content block proves challenging or impossible, leveraging generative AI for summarization becomes invaluable. This enables users to dynamically create context-aware text.
+
+In this tutorial, we will utilize the [`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}}) content provider, allowing us to generate text with the OpenAI Language Model (LLM).
 
 ### Installation
 
-Before we can use it, we must add `blackstork/openai` plugin as a dependency and install it.
+Before using [`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}}) content provider, it's necessary to add [`blackstork/openai`]({{< ref "plugins/openai" >}}) plugin as a dependency and install it.
 
-Update the list of plugin dependencies by adding a fully qualified name `blackstork/openai` for the [OpenAI plugin]({{< ref "plugins/openai" >}}) to `plugin_versions` dict in the [global configuration block]({{< ref "language/configs.md#global-configuration" >}}). The plugin also requires a [version constraint](https://semver.org/).
-
-Add the following code to `hello.fabric` file:
+To achieve this, update the `hello.fabric` file to resemble the following:
 
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/openai" = ">= 0.4"
+    "blackstork/openai" = ">= 0.4.0"
   }
+}
+
+document "greeting" {
+
+  data inline "solar_system" {
+    planets = [
+      "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"
+    ]
+
+    moons_count = 146
+  }
+
+  title = "The Greeting"
+
+  content text {
+    text = "Hello, Fabric!"
+  }
+
+  content text {
+    query = ".data.inline.solar_system.planets | length"
+
+    text = <<-EOT
+      There are {{ .query_result }} planets and {{ .data.inline.solar_system.moons_count }} moons in our solar system.
+    EOT
+  }
+
 }
 ```
 
-With `hello.fabric` updated, it's easy to install all required plugins with `fabric install` command:
+Here, we added a fully qualified name plugin name `blackstork/openai` to the list of dependencies in the `plugin_versions` argument in [the global configuration]({{< ref "language/configs.md#global-configuration" >}}).
+
+With the `hello.fabric` file updated, you can install all required plugins with the `fabric install` command:
 
 ```shell
 $ fabric install
-
-TBD
+Mar 11 19:20:10.769 INF Searching plugin name=blackstork/openai constraints=">=v0.4.0"
+Mar 11 19:20:10.787 INF Installing plugin name=blackstork/openai version=0.4.0
+$
 ```
 
-If the command succeeded, Fabric fetched `blackstork/openai` plugin release from the Fabric plugin registry and installed it in `./.fabric/plugins` folder.
+Fabric fetched the `blackstork/openai` plugin release from the plugin registry and installed it in the `./.fabric/` folder.
 
 ### Configuration
 
-`blackstork/openai` plugin contains `openai_text` content provider that uses OpenAI [Chat Completions API](https://platform.openai.com/docs/guides/text-generation/chat-completions-api) for text generation.
+[`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}}) content provider requires an OpenAI API key. The key can be set in the provider's configuration block. It's recommended to store credentials and API keys separately from Fabric code, and using the `from_env_variable` function to read the key from the `OPENAI_API_KEY` environment variable.
 
-`openai_text` content provider requires an OpenAI API key, which can be set in the provider's configuration block. It's a good practice to store the credentials and API keys separate from the code, so we can use `from_env_variable` function to read the key from environment variable `OPENAI_API_KEY`.
-
-`config` block for `openai_text` content provider would look like this:
+The `config` block for the `openai_text` content provider would look like this:
 
 ```hcl
 config content openai_text {
@@ -187,9 +213,11 @@ config content openai_text {
 }
 ```
 
+Add this block to `hello.fabric` file.
+
 ### Usage
 
-Now we can define a simple content block powered by `openai_text` content provider (see the full version of the code below):
+Lets define the content block that uses `openai_text` content provider:
 
 ```hcl
 ...
@@ -206,13 +234,13 @@ document "greeting" {
 }
 ```
 
-Here, a JQ query `"{planet: .data.inline.solar_system.planets[-1]}` performs two operations: it fetches the last item in the list (`Neptune`) and returns a new JSON object `{"planet": "Neptune"}`. This object is stored under `query_result` field in the context. Combined with the `prompt` string, `query_result` value creates a user prompt for OpenAI API.
+A JQ query `"{planet: .data.inline.solar_system.planets[-1]}` in `query` argument fetches the last item from the list (`Neptune`) and creates a new JSON object `{"planet": "Neptune"}`. This object is stored under `query_result` field in the context. `openai_text` content provider combines the `prompt` string with the `query_result` value to create a user prompt for OpenAI API.
 
 {{< hint note >}}
 If you would like to specify a system prompt for OpenAI API, you can set it up in the configuration for `openai_text` provider. See the provider's [documentation]({{< ref "plugins/openai/content-providers/openai_text" >}}) for more configuration options.
 {{< /hint >}}
 
-The full content of `hello.fabric` file should look like this:
+The complete content of the `hello.fabric` file should look like this:
 
 ```hcl
 fabric {
@@ -245,8 +273,7 @@ document "greeting" {
     query = ".data.inline.solar_system.planets | length"
 
     text = <<-EOT
-      There are {{ .query_result }} planets and {{ .data.inline.solar_system.moons_count }} moons
-      in our solar system.
+      There are {{ .query_result }} planets and {{ .data.inline.solar_system.moons_count }} moons in our solar system.
     EOT
   }
 
@@ -258,7 +285,7 @@ document "greeting" {
 }
 ```
 
-To render the document, `OPENAI_API_KEY` environment variable must be set. A simple way to do that, is to set it for per execution:
+To render the document, `OPENAI_API_KEY` environment variable must be set. A simple way to do that, is to set it for each execution:
 
 ```shell
 $ OPENAI_API_KEY="<key-value>" fabric render document.greeting
@@ -269,10 +296,32 @@ $ OPENAI_API_KEY="<key-value>" fabric render document.greeting
 Remember to replace `<key-value>` in the CLI command with your OpenAI API key value.
 {{< /hint >}}
 
-# What's next
+The results of the render should look similar to the following:
 
-Congratulations! By completing this tutorial, you've gained a solid understanding of Fabric and {{< dfn "FCL" >}} core principles.
+```bash
+$ OPENAI_API_KEY="<key-value>" ./fabric render document.greeting
+Mar 11 20:39:17.834 INF Loading plugin name=blackstork/openai path=.fabric/plugins/blackstork/openai@0.4.0
+# The Greeting
 
-Take a look at the open-source templates the community built in [Fabric Templates](https://github.com/blackstork-io/fabric-templates) GitHub repository – you can reuse the whole documents or specific blocks in your own templates!
+Hello, Fabric!
 
-If you have any questions, share them in the [Fabric Community Slack](https://fabric-community.slack.com/) and we will be glad to help!
+There are 8 planets and 146 moons in our solar system.
+
+Neptune is the eighth planet from the Sun in our solar system and is the coldest planet. It has average temperatures of minus 353 degrees Fahrenheit (minus 214 degrees Celsius).
+```
+
+## Markdown rendering
+
+Fabric produces Markdown documents that are compatible with various Markdown editors, allowing rendering in formats such as HTML or PDF. It's also possible to copy-paste rich text into the word processors like Microsoft Word or Google Docs.
+
+An excellent choice for macOS users is [MacDown](https://macdown.uranusjr.com/), an open-source Markdown editor.
+
+![Rendered template in the MacDown Markdown editor](/images/the-greeting.png "The document in MacDown editor")
+
+# Next steps
+
+Congratulations! By completing this tutorial, you've gained a solid understanding of Fabric and its core principles.
+
+Explore the open-source templates in the [Fabric Templates](https://github.com/blackstork-io/fabric-templates) GitHub repository. You can reuse entire documents or specific blocks in your own templates!
+
+If you have any questions, feel free to ask in the [Fabric Community Slack](https://fabric-community.slack.com/) and we'll be glad to assist you!

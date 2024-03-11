@@ -6,13 +6,13 @@ weight: 10
 
 # Syntax
 
-This page describes native syntax of the Fabric Configuration Language (FCL). FCL is based on [HCL](https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md) (HashiCorp Configuration Language) favored by many applications for simplicity, readability, and clarity.
+This page describes the native syntax of the Fabric Configuration Language (FCL). Leveraging the foundation laid by the [HashiCorp Configuration Language](https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md) (HCL), FCL aligns itself with a syntax favored by numerous applications for its simplicity, readability, and clarity.
 
-Fabric language syntax has two core components: arguments and blocks.
+The syntax of the Fabric language revolves around two fundamental components: arguments and blocks. These elements constitute the building blocks for crafting configurations within the Fabric Configuration Language.
 
 ## Arguments
 
-The arguments are used for assigning a value to a name inside a block:
+The arguments play a crucial role in assigning values to names within a block. An example of using arguments is as follows:
 
 ```hcl
 ... {
@@ -20,11 +20,11 @@ The arguments are used for assigning a value to a name inside a block:
 }
 ```
 
-The argument name (`query_string` in the snippet above) can contain letters, digits, underscores (`_`), and hyphens (`-`). The first character of an identifier must not be a digit.
+The argument name, `query_string` in the snippet above, is allowed to contain letters, digits, underscores (`_`), and hyphens (`-`). However, the first character of an identifier must not be a digit.
 
 ## Blocks
 
-A block is a container that defines a configuration, a data requirement or a content structure.
+In the Fabric Configuration Language (FCL), a block serves as a versatile container defining configurations, data requirements, or content structures. An example is provided below:
 
 ```hcl
 document "alerts_overview" {
@@ -37,7 +37,7 @@ document "alerts_overview" {
 }
 ```
 
-A block has a type (`document` and `content` in the example above) that defines how many labels can be used in a block signature. A block can have a name (`"alerts_overview"`) or be anonymous (as a `content text` in the snippet above).
+A block is characterized by a type (`document` and `content` in the example above), dictating the number of labels permissible in a block signature. Additionally, a block can either bear a name (for example, "`alerts_overview`") or remain anonymous, as seen in the case of content text in the provided snippet. This flexibility in block composition contributes to the expressive and modular nature of FCL configurations.
 
 Supported categories of blocks:
 
@@ -60,3 +60,7 @@ It's recommend to use `#` single-line comment style usually. Future Fabric code 
 ## Character encoding
 
 Fabric configuration files must be UTF-8 encoded. Fabric allows non-ASCII characters in comments, and string values.
+
+## Next steps
+
+See [Configuration]({{< ref "configs.md" >}}) documentation to learn how to configure Fabric and Fabric plugins.
