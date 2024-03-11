@@ -10,7 +10,7 @@ The command line interface to Fabric is `fabric` CLI tool.
 
 The core sub-commands are:
 
-- `install` — installs all required plugins, listed in the [global configuration]({{< ref "language/configs.md#global-configuration" >}}). See [plugin installation docs]({{< ref "install.md#installing-fabric-plugins" >}}) for more details.
+- `install` — installs all required plugins, listed in the [global configuration]({{< ref "language/configs.md#global-configuration" >}}). See [plugin installation docs]({{< ref "install.md#installing-plugins" >}}) for more details.
 - `data` — executes the data block and prints out prettified JSON to standard output.
 - `render` — renders the specified target (a document template) and prints out the result to standard output or to a file.
 

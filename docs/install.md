@@ -2,6 +2,7 @@
 title: Install
 type: docs
 weight: 10
+code_blocks_no_wrap: true
 ---
 
 # Install
@@ -24,8 +25,7 @@ For example, the steps for macOS (arm64) are:
 mkdir fabric-bin
 
 # Download the latest release of Fabric
-wget https://github.com/blackstork-io/fabric/releases/latest/download/fabric_darwin_arm64.tar.gz \
-    -O ./fabric_darwin_arm64.tar.gz
+wget https://github.com/blackstork-io/fabric/releases/latest/download/fabric_darwin_arm64.tar.gz -O ./fabric_darwin_arm64.tar.gz
 
 # Unpack Fabric release archive into `fabric-bin` folder
 tar -xvzf ./fabric_darwin_arm64.tar.gz -C ./fabric-bin
@@ -34,7 +34,7 @@ tar -xvzf ./fabric_darwin_arm64.tar.gz -C ./fabric-bin
 ./fabric-bin/fabric --help
 ```
 
-## Installing Fabric plugins
+## Installing plugins
 
 Fabric relies on [the plugins]({{< ref "plugins.md" >}}) for implementing the integrations with various data sources, platforms, and services. Before the plugins can be used during the template rendering, they must be installed. Fabric's sub-command `install` can install the plugins automatically from the registry (`https://registry.blackstork.io`).
 
