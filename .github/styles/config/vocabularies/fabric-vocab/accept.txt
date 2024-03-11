@@ -1,4 +1,8 @@
-GitHub
 Fabric
+GitHub
 boolean
 namespace
+Sonoma
+API
+LLM
+Splunk

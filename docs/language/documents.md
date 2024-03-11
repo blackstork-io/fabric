@@ -10,14 +10,16 @@ Document blocks are the most important element of the Fabric configuration. `doc
 
 ```hcl
 document "<document-name>" {
+
+  title = "<document title>"
+
   ...
 }
 ```
 
-A block type `document` and a document name are used as an unique identifier for the document template within the codebase.
-The document blocks must be on a root level of the configuration file and can not be inside other blocks.
+A block type `document` and a document name are an unique identifier for the document template within the codebase. The document blocks must defined be on a root level of the configuration file and can not be inside other blocks.
 
-The `document` block is a structure that groups the data definitions, the section, and the content blocks together.
+The `document` block is a structure that groups the data definitions, the sections, and the content blocks together, and describes the document to be rendered.
 
 ## Supported arguments
 
@@ -29,3 +31,7 @@ The `document` block is a structure that groups the data definitions, the sectio
 - `data`: see [Data Blocks]({{< ref data-blocks.md >}}) for the details.
 - `content`: see [Content Blocks]({{< ref content-blocks.md >}}) for the details.
 - `section`: see [Section Blocks]({{< ref section-blocks.md >}}) for the details.
+
+## Next steps
+
+See [Data Blocks]({{< ref "data-blocks.md" >}}) documentation to learn how to define data requirements in the templates.

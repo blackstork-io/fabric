@@ -1,0 +1,383 @@
+[
+  {
+    "name": "blackstork/builtin",
+    "resources": [
+      {
+        "name": "csv",
+        "type": "data-source",
+        "config_params": [
+          "delimiter"
+        ],
+        "arguments": [
+          "path"
+        ]
+      },
+      {
+        "name": "txt",
+        "type": "data-source",
+        "arguments": [
+          "path"
+        ]
+      },
+      {
+        "name": "json",
+        "type": "data-source",
+        "arguments": [
+          "glob"
+        ]
+      },
+      {
+        "name": "inline",
+        "type": "data-source"
+      },
+      {
+        "name": "toc",
+        "type": "content-provider",
+        "arguments": [
+          "start_level",
+          "end_level",
+          "ordered",
+          "scope"
+        ]
+      },
+      {
+        "name": "text",
+        "type": "content-provider",
+        "arguments": [
+          "absolute_title_size",
+          "code_language",
+          "text",
+          "format_as"
+        ]
+      },
+      {
+        "name": "image",
+        "type": "content-provider",
+        "arguments": [
+          "src",
+          "alt"
+        ]
+      },
+      {
+        "name": "list",
+        "type": "content-provider",
+        "arguments": [
+          "item_template",
+          "format"
+        ]
+      },
+      {
+        "name": "table",
+        "type": "content-provider",
+        "arguments": [
+          "columns"
+        ]
+      },
+      {
+        "name": "frontmatter",
+        "type": "content-provider",
+        "arguments": [
+          "format",
+          "content"
+        ]
+      }
+    ],
+    "shortname": "builtin",
+    "version": "v0.4.0"
+  },
+  {
+    "name": "blackstork/elastic",
+    "resources": [
+      {
+        "name": "elasticsearch",
+        "type": "data-source",
+        "config_params": [
+          "basic_auth_username",
+          "basic_auth_password",
+          "bearer_auth",
+          "ca_certs",
+          "base_url",
+          "cloud_id",
+          "api_key_str",
+          "api_key"
+        ],
+        "arguments": [
+          "index",
+          "id",
+          "query_string",
+          "query",
+          "aggs",
+          "only_hits",
+          "fields",
+          "size"
+        ]
+      }
+    ],
+    "shortname": "elastic",
+    "version": "v0.4.0"
+  },
+  {
+    "name": "blackstork/github",
+    "resources": [
+      {
+        "name": "github_issues",
+        "type": "data-source",
+        "config_params": [
+          "github_token"
+        ],
+        "arguments": [
+          "labels",
+          "direction",
+          "since",
+          "limit",
+          "repository",
+          "assignee",
+          "creator",
+          "mentioned",
+          "milestone",
+          "state",
+          "sort"
+        ]
+      }
+    ],
+    "shortname": "github",
+    "version": "v0.4.0"
+  },
+  {
+    "name": "blackstork/graphql",
+    "resources": [
+      {
+        "name": "graphql",
+        "type": "data-source",
+        "config_params": [
+          "url",
+          "auth_token"
+        ],
+        "arguments": [
+          "query"
+        ]
+      }
+    ],
+    "shortname": "graphql",
+    "version": "v0.4.0"
+  },
+  {
+    "name": "blackstork/openai",
+    "resources": [
+      {
+        "name": "openai_text",
+        "type": "content-provider",
+        "config_params": [
+          "system_prompt",
+          "api_key",
+          "organization_id"
+        ],
+        "arguments": [
+          "model",
+          "prompt"
+        ]
+      }
+    ],
+    "shortname": "openai",
+    "version": "v0.4.0"
+  },
+  {
+    "name": "blackstork/opencti",
+    "resources": [
+      {
+        "name": "opencti",
+        "type": "data-source",
+        "config_params": [
+          "graphql_url",
+          "auth_token"
+        ],
+        "arguments": [
+          "graphql_query"
+        ]
+      }
+    ],
+    "shortname": "opencti",
+    "version": "v0.4.0"
+  },
+  {
+    "name": "blackstork/postgresql",
+    "resources": [
+      {
+        "name": "postgresql",
+        "type": "data-source",
+        "config_params": [
+          "database_url"
+        ],
+        "arguments": [
+          "sql_query",
+          "sql_args"
+        ]
+      }
+    ],
+    "shortname": "postgresql",
+    "version": "v0.4.0"
+  },
+  {
+    "name": "blackstork/sqlite",
+    "resources": [
+      {
+        "name": "sqlite",
+        "type": "data-source",
+        "config_params": [
+          "database_uri"
+        ],
+        "arguments": [
+          "sql_query",
+          "sql_args"
+        ]
+      }
+    ],
+    "shortname": "sqlite",
+    "version": "v0.4.0"
+  },
+  {
+    "name": "blackstork/terraform",
+    "resources": [
+      {
+        "name": "terraform_state_local",
+        "type": "data-source",
+        "arguments": [
+          "path"
+        ]
+      }
+    ],
+    "shortname": "terraform",
+    "version": "v0.4.0"
+  },
+  {
+    "name": "blackstork/hackerone",
+    "resources": [
+      {
+        "name": "hackerone_reports",
+        "type": "data-source",
+        "config_params": [
+          "api_username",
+          "api_token"
+        ],
+        "arguments": [
+          "hacker_published",
+          "created_at__lt",
+          "submitted_at__lt",
+          "bounty_awarded_at__gt",
+          "swag_awarded_at__lt",
+          "last_program_activity_at__gt",
+          "page_number",
+          "submitted_at__gt",
+          "triaged_at__gt",
+          "triaged_at__null",
+          "disclosed_at__lt",
+          "first_program_activity_at__lt",
+          "last_program_activity_at__lt",
+          "last_public_activity_at__gt",
+          "created_at__gt",
+          "last_report_activity_at__gt",
+          "closed_at__lt",
+          "closed_at__null",
+          "disclosed_at__gt",
+          "bounty_awarded_at__null",
+          "last_activity_at__gt",
+          "keyword",
+          "triaged_at__lt",
+          "assignee",
+          "severity",
+          "last_report_activity_at__lt",
+          "first_program_activity_at__gt",
+          "last_activity_at__lt",
+          "size",
+          "weakness_id",
+          "disclosed_at__null",
+          "bounty_awarded_at__lt",
+          "swag_awarded_at__gt",
+          "swag_awarded_at__null",
+          "id",
+          "inbox_ids",
+          "reporter",
+          "closed_at__gt",
+          "reporter_agreed_on_going_public",
+          "first_program_activity_at__null",
+          "last_program_activity_at__null",
+          "custom_fields",
+          "sort",
+          "state",
+          "last_public_activity_at__lt",
+          "program"
+        ]
+      }
+    ],
+    "shortname": "hackerone",
+    "version": "v0.4.0"
+  },
+  {
+    "name": "blackstork/virustotal",
+    "resources": [
+      {
+        "name": "virustotal_api_usage",
+        "type": "data-source",
+        "config_params": [
+          "api_key"
+        ],
+        "arguments": [
+          "user_id",
+          "group_id",
+          "start_date",
+          "end_date"
+        ]
+      }
+    ],
+    "shortname": "virustotal",
+    "version": "v0.4.0"
+  },
+  {
+    "name": "blackstork/splunk",
+    "resources": [
+      {
+        "name": "splunk_search",
+        "type": "data-source",
+        "config_params": [
+          "auth_token",
+          "host",
+          "deployment_name"
+        ],
+        "arguments": [
+          "latest_time",
+          "search_query",
+          "max_count",
+          "status_buckets",
+          "rf",
+          "earliest_time"
+        ]
+      }
+    ],
+    "shortname": "splunk",
+    "version": "v0.4.0"
+  },
+  {
+    "name": "blackstork/stixview",
+    "resources": [
+      {
+        "name": "stixview",
+        "type": "content-provider",
+        "arguments": [
+          "gist_id",
+          "caption",
+          "show_sidebar",
+          "show_tlp_as_tags",
+          "show_marking_nodes",
+          "show_labels",
+          "stix_url",
+          "show_footer",
+          "show_idrefs",
+          "width",
+          "height"
+        ]
+      }
+    ],
+    "shortname": "stixview",
+    "version": "v0.4.0"
+  }
+]

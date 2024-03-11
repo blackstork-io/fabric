@@ -16,6 +16,9 @@ Fabric Configuration Language (FCL) allows users to define the document data req
 ## Get started
 
 - [Install]({{< ref "install.md" >}}) — how to install and run Fabric.
-- [Language]({{< ref "language.md" >}}) — Fabric Configuration Language details and main concepts.
 - [Fabric CLI]({{< ref "cli.md" >}}) — Fabric CLI usage details.
+- [Tutorial]({{< ref "tutorial.md" >}}) — an extensive tutorial for starting with Fabric.
+- [Language]({{< ref "language.md" >}}) — Fabric Configuration Language details and main concepts.
+- [Data Sources]({{< ref "data-sources.md" >}}) — the data sources supported.
+- [Content Providers]({{< ref "content-providers.md" >}}) — the content providers supported.
 - [Plugins]({{< ref "plugins.md" >}}) — the documentation for the plugins Fabric supports.

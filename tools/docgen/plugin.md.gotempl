@@ -1,0 +1,43 @@
+---
+title: {{ if eq .Name "blackstork/builtin" -}}Built-in{{- else -}}{{ .Name }}{{- end }}
+{{ if eq .Name "blackstork/builtin" -}}weight: 10{{- else -}}weight: 20{{- end }}
+plugin:
+  name: {{ .Name }}
+  description: ""
+  tags: []
+  version: "{{ .Version }}"
+  source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/{{ shortname .Name }}/"
+type: docs
+---
+
+{{"{{"}}< plugin-header "{{ .Name }}" "{{ shortname .Name }}" "{{ .Version }}" >{{"}}"}}
+
+{{ if eq .Name "blackstork/builtin" -}}
+`fabric` binary includes a set of built-in data sources and content providers, available out-of-the-box.
+{{ else -}}
+## Installation
+
+To install the plugin, add it to `plugin_versions` map in the Fabric global configuration block (see [Global configuration]({{"{{"}}< ref "configs.md#global-configuration" >{{"}}"}}) for more details), with a version constraint restricting which available versions of the plugin the codebase is compatible with:
+
+```hcl
+fabric {
+  plugin_versions = {
+    "{{ .Name }}" = ">= {{ .Version }}"
+  }
+}
+```
+{{ end }}
+
+{{ $plugin := . -}}
+
+{{ with .DataSources -}}
+## Data sources
+
+{{"{{"}}< plugin-resources "{{ shortname $plugin.Name }}" "data-source" >{{"}}"}}
+{{ end }}
+
+{{- with .ContentProviders }}
+## Content providers
+
+{{"{{"}}< plugin-resources "{{ shortname $plugin.Name }}" "content-provider" >{{"}}"}}
+{{- end -}}

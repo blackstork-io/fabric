@@ -8,7 +8,7 @@ weight: 20
 
 ## Global configuration
 
-The `fabric` configuration block defines a global configuration for Fabric. It's used for defining plugin dependencies, the paths to local directories, etc.
+The `fabric` configuration block serves as the global configuration for Fabric, offering a centralized space for defining essential aspects such as plugin dependencies and local directory paths.
 
 ```hcl
 fabric {
@@ -16,24 +16,26 @@ fabric {
 }
 ```
 
-There can be only one `fabric` block defined within the codebase.
+Within the codebase, only one `fabric` block can be defined.
 
 ### Supported arguments
 
-- `plugin_versions`: (required) a map that matches name-spaced plugin names to the version constraints in SemVer (see Terraform [version constraint syntax](https://developer.hashicorp.com/terraform/language/expressions/version-constraints#version-constraint-syntax)).
-- `cache_dir`: (optional) a path to a directory on the local file system. The default value is `.fabric` directory in the current folder. If the directory doesn't exist, Fabric will create it on the first run.
+- `plugin_versions`: (required) a map that aligns namespaced plugin names with version constraints in SemVer (refer to Terraform [version constraint syntax](https://developer.hashicorp.com/terraform/language/expressions/version-constraints#version-constraint-syntax)).
+- `cache_dir`: (optional) a path to a directory on the local file system. The default value is `.fabric` directory in the current folder. If the directory doesn't exist, Fabric creates it upon the first run.
 
 ### Supported nested blocks
 
-- `plugin_registry` – (optional) a block that defines available plugin registries. At the moment, the block accepts only one attribute:
+- `plugin_registry`: (optional) a block defines available plugin registries and can include the following arguments:
 
   ```hcl
   plugin_registry {
+    base_url = "<url>"
     mirror_dir = "<path>"
   }
   ```
 
-  - `mirror_dir` – (optional) a path to a directory on the local filesystem with plugin binaries.
+  - `base_url`: (optional) the base URL of the plugin registry. Default value: `https://registry.blackstork.io`
+  - `mirror_dir`: (optional) the path to a directory on the local filesystem containing plugin binaries.
 
 ### Example
 
@@ -47,7 +49,7 @@ fabric {
   }
 
   plugin_versions = {
-    "blackstork/elasticsearch" = "1.2.3"
+    "blackstork/elastic" = "1.2.3"
     "blackstork/openai" = "=11.22.33"
   }
 }
@@ -57,9 +59,9 @@ fabric {
 
 A Fabric plugin can include one or more data sources. For example, `blackstork/github` plugin includes `github_issues` data source.
 
-A data source loads data from a local or an external data store, platform, and service.
+A data source within Fabric serves the purpose of loading data from either a local or an external data store, platform, or service.
 
-Data sources are configured using `config` block:
+Configuration for data sources is accomplished through the use of the `config` block:
 
 ```hcl
 config data <data-source-name> "<name>" {
@@ -148,3 +150,7 @@ document "test-document" {
   }
 }
 ```
+
+## Next steps
+
+See [Documents]({{< ref "documents.md" >}}) to learn how to build document templates in Fabric configuration language.
