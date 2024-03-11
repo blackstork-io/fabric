@@ -1,0 +1,68 @@
+---
+title: {{ .name }} 
+plugin:
+  name: {{ .plugin.Name }}
+  description: ""
+  tags: []
+  version: "{{ .plugin.Version }}"
+  source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/{{ .plugin_shortname }}/"
+resource:
+  type: content-provider
+type: docs
+---
+
+{{"{{"}}< breadcrumbs 2 >{{"}}"}}
+
+{{"{{"}}< plugin-resource-header "{{ .plugin.Name }}" "{{ .plugin_shortname }}" "{{ .plugin.Version }}" "{{ .name }}" "content provider" >{{"}}"}}
+
+{{ if eq .plugin.Name "blackstork/builtin" -}}
+The content provider is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
+{{ else -}}
+## Installation
+
+To use `{{ .name }}` content provider, you must install the plugin `{{ .plugin.Name }}`.
+
+To install the plugin, add the full plugin name to the `plugin_versions` map in the Fabric global configuration block (see [Global configuration]({{"{{"}}< ref "configs.md#global-configuration" >{{"}}"}}) for more details), as shown below:
+
+```hcl
+fabric {
+  plugin_versions = {
+    "{{ .plugin.Name }}" = ">= {{ .plugin.Version }}"
+  }
+}
+```
+
+Note the version constraint set for the plugin.
+{{ end }}
+
+#### Configuration
+
+{{ $ctx := . -}}
+{{with .content_provider.Config -}}
+The content provider supports the following configuration parameters:
+
+```hcl
+config content {{ $ctx.name }} {
+{{- range $key, $value := . }}
+    {{ $key }} = <{{ $value | attrType }}>  # {{if $value.Required}}required{{else}}optional{{end}}
+{{- end }}
+}
+```
+{{ else -}}
+The content provider doesn't support any configuration parameters.
+{{ end }}
+#### Usage
+
+{{with .content_provider.Args -}}
+The content provider supports the following execution parameters:
+
+```hcl
+content {{ $ctx.name }} {
+{{- range $key, $value := . }}
+    {{ $key }} = <{{ $value | attrType }}>  # {{if $value.Required}}required{{else}}optional{{end}}
+{{- end }}
+}
+```
+{{ else }}
+The content provider doesn't define any execution parameters.
+{{ end }}
