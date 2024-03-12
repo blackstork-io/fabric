@@ -14,7 +14,7 @@ Codifying and automating mission-critical communications with standardized and r
 
 </div>
 
-**Fabric** is an open-source Command Line Interface (CLI) tool coupled with a configuration language designed to encode and automate content generation for cyber-security and compliance.
+**Fabric** is an open-source Command-Line Interface (CLI) tool with a configuration language designed to encode and automate content generation for cyber security and compliance.
 
 <div align="center">
     <img src=".github/diagram.png" alt="The diagram illustrates a Fabric template and the corresponding rendered document" width="700px"/>
@@ -67,7 +67,7 @@ Before the plugins can be used during the template rendering, they must be insta
 
 To install the plugins:
 
-- **add all necessary plugins into the global configuration**: [the global configuration](https://blackstork.io/fabric/docs/language/configs/#global-configuration) has a list of plugins dependencies in `plugin_versions` map. Add the plugins you would like to install in the map with a preferred version constraint.
+- **add all necessary plugins into the global configuration**: [the global configuration](https://blackstork.io/fabric/docs/language/configs/#global-configuration) has a list of plugins dependencies in `plugin_versions` map. Add the plugins you want to install in the map with a preferred version constraint.
 
   ```hcl
   fabric {
@@ -91,8 +91,6 @@ To install the plugins:
 
 The plugins are downloaded and installed in `./fabric` folder.
 
-{{< hint note >}}
-
 > [!NOTE]  
 > It's not necessary to install any plugins if you are only using built-in [data sources](https://blackstork.io/fabric/docs/plugins/builtin/#data-sources) and [content providers](https://blackstork.io/fabric/docs/plugins/builtin/#content-providers) in your templates
 
@@ -104,7 +102,7 @@ The core sub-commands are:
 
 - `install` — installs all required plugins.
 - `data` — executes the data block and prints out prettified JSON to standard output.
-- `render` — renders the specified target (a document template) and prints out the result to standard output or to a file.
+- `render` — renders the specified target (a document template) and prints out the result to standard output or a file.
 
 To get more details, run `fabric --help`:
 
@@ -134,7 +132,7 @@ Use "fabric [command] --help" for more information about a command.
 
 # Templates
 
-You can find a collection of free Fabric templates in [Fabric Templates](https://github.com/blackstork-io/fabric-templates) repository.
+You can find free Fabric templates in [Fabric Templates](https://github.com/blackstork-io/fabric-templates) repository.
 
 # Documentation
 
@@ -142,9 +140,9 @@ Visit [https://blackstork.io/fabric/docs/](https://blackstork.io/fabric/docs/) f
 
 # Security
 
-If you suspect any security vulnerabilities within Fabric, please promptly report them using GitHub's [security advisory reporting](https://github.com/blackstork-io/fabric/security/advisories/new). Every report is treated with the utmost seriousness, and we commit to conducting a thorough investigation.
+If you suspect any vulnerabilities within Fabric, please promptly report them using GitHub's [security advisory reporting](https://github.com/blackstork-io/fabric/security/advisories/new). We treat every report with the utmost seriousness and commit to conducting a thorough investigation.
 
-We kindly request that you engage in a conversation with us before making any public disclosures. This precautionary step ensures that no excessive information is divulged prematurely, allowing us to prepare a patch. Additionally, it provides users with enough time to upgrade and enhance their system security.
+We kindly request that you converse with us before making any public disclosures. This precautionary step ensures that no excessive information is divulged prematurely, allowing us to prepare a patch. Additionally, it gives users enough time to upgrade and enhance their system security.
 
 # License
 
