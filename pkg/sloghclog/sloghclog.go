@@ -78,7 +78,7 @@ func levelToSlog(level hclog.Level) slog.Level {
 func levelToHclog(level slog.Level) (res hclog.Level) {
 	res = hclog.Level(level/4 + 3)
 	if res == hclog.NoLevel {
-		res -= 1
+		res--
 	}
 	return res
 }
