@@ -1,4 +1,4 @@
-package parexec
+package utils
 
 // Sets slice[idx] = val, growing the slice if needed, and returns the updated slice.
 func SetAt[T any](slice []T, idx int, val T) []T {
@@ -14,4 +14,12 @@ func SetAt[T any](slice []T, idx int, val T) []T {
 		slice[idx] = val
 	}
 	return slice
+}
+
+func FnMap[I, O any](fn func(I) O, s []I) []O {
+	out := make([]O, len(s))
+	for i, v := range s {
+		out[i] = fn(v)
+	}
+	return out
 }

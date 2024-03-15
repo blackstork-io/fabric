@@ -1,12 +1,11 @@
-package parexec_test
+package utils
 
 import (
 	"slices"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/blackstork-io/fabric/pkg/parexec"
 )
 
 func TestSetAt(t *testing.T) {
@@ -46,7 +45,7 @@ func TestSetAt(t *testing.T) {
 			t.Parallel()
 			assert := assert.New(t)
 			orig := slices.Clone(tc.slice)
-			res := parexec.SetAt(tc.slice, tc.idx, tc.val)
+			res := SetAt(tc.slice, tc.idx, tc.val)
 
 			assert.Len(res, max(len(orig), tc.idx+1))
 
@@ -63,4 +62,12 @@ func TestSetAt(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFnMap(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	assert.Equal([]string{"1", "2", "3"}, FnMap(strconv.Itoa, []int{1, 2, 3}))
+	assert.Equal([]string{}, FnMap(strconv.Itoa, []int{}))
 }

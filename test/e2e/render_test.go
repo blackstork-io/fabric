@@ -1,7 +1,6 @@
 package e2e_test
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/blackstork-io/fabric/cmd"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/fabctx"
 	"github.com/blackstork-io/fabric/test/e2e/diag_test"
 )
 
@@ -35,7 +35,7 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 
 		var res []string
 		diags := eval.ParseFabricFiles(sourceDir)
-		ctx := context.Background()
+		ctx := fabctx.New(fabctx.NoSignals)
 		if !diags.HasErrors() {
 			if !diags.Extend(eval.LoadPluginResolver(false)) && !diags.Extend(eval.LoadPluginRunner(ctx)) {
 				var diag diagnostics.Diag
@@ -54,9 +54,7 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 				res,
 			)
 		}
-		if !diag_test.MatchBiject(diags, diagAsserts) {
-			assert.Fail(t, "Diagnostics do not match", diags)
-		}
+		diag_test.CompareDiags(t, diags, diagAsserts)
 	})
 }
 

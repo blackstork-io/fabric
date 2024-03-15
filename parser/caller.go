@@ -12,6 +12,7 @@ import (
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/fabctx"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/runner"
@@ -118,6 +119,10 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 
 	switch kind {
 	case "data":
+		if fabctx.Get(ctx).IsLinting() {
+			res = plugin.MapData{}
+			return
+		}
 		source, diag := c.plugins.DataSource(name)
 		if diags.ExtendHcl(diag) {
 			return
@@ -129,6 +134,10 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 		res = data
 		diags.ExtendHcl(diag)
 	case "content":
+		if fabctx.Get(ctx).IsLinting() {
+			res = ""
+			return
+		}
 		provider, diag := c.plugins.ContentProvider(name)
 		if diags.ExtendHcl(diag) {
 			return
