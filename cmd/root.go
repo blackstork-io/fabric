@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
-	"github.com/blackstork-io/fabric/fabctx"
+	"github.com/blackstork-io/fabric/pkg/fabctx"
 	"github.com/blackstork-io/fabric/pkg/utils"
 )
 

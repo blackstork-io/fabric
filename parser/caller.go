@@ -9,7 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
 
-	"github.com/blackstork-io/fabric/fabctx"
+	"github.com/blackstork-io/fabric/pkg/fabctx"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"

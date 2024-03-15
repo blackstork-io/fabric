@@ -8,7 +8,7 @@ import (
 	"testing/fstest"
 
 	"github.com/blackstork-io/fabric/cmd"
-	"github.com/blackstork-io/fabric/fabctx"
+	"github.com/blackstork-io/fabric/pkg/fabctx"
 	"github.com/blackstork-io/fabric/test/e2e/diag_test"
 )
 

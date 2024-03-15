@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/blackstork-io/fabric/fabctx"
+	"github.com/blackstork-io/fabric/pkg/fabctx"
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
