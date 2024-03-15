@@ -1,11 +1,15 @@
 package diag_test
 
 import (
+	"fmt"
 	"strings"
+	"testing"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
 type (
@@ -49,7 +53,34 @@ func sliceRemove[T any](s []T, pos int) []T {
 	return s[:len(s)-1]
 }
 
-func MatchBiject(diags diagnostics.Diag, asserts [][]Assert) bool {
+func dumpDiag(diag *hcl.Diagnostic) string {
+	var sev string
+	switch diag.Severity {
+	case hcl.DiagError:
+		sev = "hcl.DiagError"
+	case hcl.DiagWarning:
+		sev = "hcl.DiagWarning"
+	default:
+		sev = fmt.Sprintf("hcl.DiagInvalid(%d)", diag.Severity)
+	}
+	return fmt.Sprintf("Severity: %s; Summary: %q; Detail: %q", sev, diag.Summary, diag.Detail)
+}
+
+func dumpDiags(diags diagnostics.Diag) string {
+	if len(diags) == 0 {
+		return "no diagnostics"
+	}
+	return strings.Join(utils.FnMap(dumpDiag, diags), "\n")
+}
+
+func CompareDiags(t *testing.T, diags diagnostics.Diag, asserts [][]Assert) {
+	t.Helper()
+	if !matchBiject(diags, asserts) {
+		assert.Fail(t, "Diagnostics do not match", dumpDiags(diags))
+	}
+}
+
+func matchBiject(diags diagnostics.Diag, asserts [][]Assert) bool {
 	dgs := []*hcl.Diagnostic(diags)
 	if len(dgs) != len(asserts) {
 		return false

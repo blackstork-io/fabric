@@ -1,20 +1,18 @@
 package e2e_test
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"os"
 	"testing"
 	"testing/fstest"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/blackstork-io/fabric/cmd"
+	"github.com/blackstork-io/fabric/fabctx"
 	"github.com/blackstork-io/fabric/test/e2e/diag_test"
 )
 
-func lintTest(t *testing.T, testName string, files []string, diagAsserts [][]diag_test.Assert) {
+func lintTest(t *testing.T, fullLint bool, testName string, files []string, diagAsserts [][]diag_test.Assert) {
 	t.Helper()
 	t.Run(testName, func(t *testing.T) {
 		t.Parallel()
@@ -27,24 +25,28 @@ func lintTest(t *testing.T, testName string, files []string, diagAsserts [][]dia
 				Mode: 0o777,
 			}
 		}
+		ctx := fabctx.New(fabctx.NoSignals)
+		ctx = fabctx.WithLinting(ctx)
+
 		eval := cmd.NewEvaluator()
 		defer func() {
 			eval.Cleanup(nil)
 		}()
 
-		diags := eval.ParseFabricFiles(sourceDir)
-		ctx := context.Background()
-		if !diags.HasErrors() {
-			if !diags.Extend(eval.LoadPluginResolver(false)) && !diags.Extend(eval.LoadPluginRunner(ctx)) {
-				diag := cmd.Lint(ctx, eval.Blocks, eval.PluginCaller())
-				diags.Extend(diag)
-			}
-		}
+		diags := cmd.Lint(ctx, eval, sourceDir, fullLint)
 
-		if !diag_test.MatchBiject(diags, diagAsserts) {
-			assert.Fail(t, "Diagnostics do not match", diags)
-		}
+		diag_test.CompareDiags(t, diags, diagAsserts)
 	})
+}
+
+func fullLintTest(t *testing.T, testName string, files []string, diagAsserts [][]diag_test.Assert) {
+	t.Helper()
+	lintTest(t, true, testName, files, diagAsserts)
+}
+
+func limitedLintTest(t *testing.T, testName string, files []string, diagAsserts [][]diag_test.Assert) {
+	t.Helper()
+	lintTest(t, false, testName, files, diagAsserts)
 }
 
 func TestE2ELint(t *testing.T) {
@@ -54,7 +56,7 @@ func TestE2ELint(t *testing.T) {
 	})))
 
 	t.Parallel()
-	lintTest(
+	fullLintTest(
 		t, "Ref loop",
 		[]string{
 			`
@@ -86,7 +88,7 @@ func TestE2ELint(t *testing.T) {
 			{diag_test.IsError, diag_test.SummaryContains("Circular reference detected")},
 		},
 	)
-	lintTest(
+	fullLintTest(
 		t, "Data ref name warning",
 		[]string{
 			`
@@ -107,6 +109,75 @@ func TestE2ELint(t *testing.T) {
 		},
 		[][]diag_test.Assert{
 			{diag_test.IsWarning, diag_test.SummaryContains("Data conflict")},
+		},
+	)
+
+	limitedLintTest(
+		t, "Unknown plugins are fine in limited lint",
+		[]string{
+			`
+			document "doc1" {
+				data made_up_data_source "name1" {
+
+				}
+			}
+			document "doc2" {
+				content made_up_content_provider "name2" {
+
+				}
+			}
+			`,
+		},
+		[][]diag_test.Assert{},
+	)
+	fullLintTest(
+		t, "Unknown plugins generate diags in full lint",
+		[]string{
+			`
+			document "doc1" {
+				data made_up_data_source "name1" {
+
+				}
+			}
+			document "doc2" {
+				content made_up_content_provider "name2" {
+
+				}
+			}
+			`,
+		},
+		[][]diag_test.Assert{
+			{diag_test.IsError, diag_test.SummaryContains("Missing data source")},
+			{diag_test.IsError, diag_test.SummaryContains("Missing content provider")},
+		},
+	)
+	limitedLintTest(
+		t, "Unknown config is fine in limited lint",
+		[]string{
+			`
+			document "doc1" {
+				data inline "name1" {
+					config {}
+				}
+			}
+			`,
+		},
+		[][]diag_test.Assert{},
+	)
+
+	fullLintTest(
+		t, "Unknown config generate diags in full lint",
+		[]string{
+			`
+			document "doc1" {
+				data inline "name1" {
+					config {}
+				}
+			}
+			`,
+		},
+		[][]diag_test.Assert{
+			{diag_test.IsWarning, diag_test.DetailContains("support configuration")},
 		},
 	)
 }

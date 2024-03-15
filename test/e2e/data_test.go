@@ -46,9 +46,7 @@ func dataTest(t *testing.T, testName string, files []string, target string, expe
 		}
 
 		assert.Equal(t, expectedResult, res)
-		if !diag_test.MatchBiject(diags, diagAsserts) {
-			assert.Fail(t, "Diagnostics do not match", diags)
-		}
+		diag_test.CompareDiags(t, diags, diagAsserts)
 	})
 }
 

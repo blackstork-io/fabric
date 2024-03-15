@@ -2,24 +2,57 @@ package cmd
 
 import (
 	"context"
+	"io/fs"
 	"os"
 
 	"github.com/spf13/cobra"
 
-	"github.com/blackstork-io/fabric/parser"
-	"github.com/blackstork-io/fabric/parser/lint"
+	"github.com/blackstork-io/fabric/fabctx"
+	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin"
 )
 
-func Lint(ctx context.Context, blocks *parser.DefinedBlocks, pluginCaller *parser.Caller) (diags diagnostics.Diag) {
-	ctx = lint.MakeLintContext(ctx)
-	for _, doc := range blocks.Documents {
-		pd, diag := blocks.ParseDocument(doc)
+type noopPluginCaller struct{}
+
+// CallContent implements evaluation.PluginCaller.
+func (n *noopPluginCaller) CallContent(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation, context plugin.MapData) (result string, diag diagnostics.Diag) {
+	return "", nil
+}
+
+// CallData implements evaluation.PluginCaller.
+func (n *noopPluginCaller) CallData(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation) (result plugin.Data, diag diagnostics.Diag) {
+	return plugin.MapData{}, nil
+}
+
+var _ evaluation.PluginCaller = (*noopPluginCaller)(nil)
+
+func Lint(ctx context.Context, eval *Evaluator, sourceDir fs.FS, fullLint bool) (diags diagnostics.Diag) {
+	diags = eval.ParseFabricFiles(sourceDir)
+	if diags.HasErrors() {
+		return
+	}
+
+	var caller evaluation.PluginCaller
+	if fullLint {
+		if diags.Extend(eval.LoadPluginResolver(false)) {
+			return
+		}
+		if diags.Extend(eval.LoadPluginRunner(ctx)) {
+			return
+		}
+		caller = eval.PluginCaller()
+	} else {
+		caller = &noopPluginCaller{}
+	}
+
+	for _, doc := range eval.Blocks.Documents {
+		pd, diag := eval.Blocks.ParseDocument(doc)
 		if diags.Extend(diag) {
 			continue
 		}
 
-		_, diag = pd.Render(ctx, pluginCaller)
+		_, diag = pd.Render(ctx, caller)
 		diags.Extend(diag)
 	}
 	return
@@ -27,30 +60,28 @@ func Lint(ctx context.Context, blocks *parser.DefinedBlocks, pluginCaller *parse
 
 var lintCmd = &cobra.Command{
 	Use:   "lint",
-	Short: "Evaluate *.fabric files and report mistakes",
+	Short: "Evaluate *.fabric files for syntax mistakes",
 	Long:  `Doesn't call plugins, only checks the *.fabric templates for correctness`,
 	RunE: func(cmd *cobra.Command, _ []string) (err error) {
+		ctx := fabctx.Get(cmd.Context())
+		ctx = fabctx.WithLinting(ctx)
+
 		var diags diagnostics.Diag
+
 		eval := NewEvaluator()
 		defer func() {
 			err = eval.Cleanup(diags)
 		}()
-		diags = eval.ParseFabricFiles(os.DirFS(cliArgs.sourceDir))
-		if diags.HasErrors() {
-			return
-		}
-		if diags.Extend(eval.LoadPluginResolver(false)) {
-			return
-		}
-		if diags.Extend(eval.LoadPluginRunner(cmd.Context())) {
-			return
-		}
-		diags.Extend(Lint(cmd.Context(), eval.Blocks, eval.PluginCaller()))
+
+		diags = Lint(ctx, eval, os.DirFS(cliArgs.sourceDir), fullLint)
+
 		return
 	},
-	Args: cobra.ExactArgs(1),
 }
+var fullLint bool
 
 func init() {
+	lintCmd.Flags().BoolVar(&fullLint, "full", false, "Lint plugin bodies (requires plugins to be installed)")
+
 	rootCmd.AddCommand(lintCmd)
 }

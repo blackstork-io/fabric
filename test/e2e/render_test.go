@@ -54,9 +54,7 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 				res,
 			)
 		}
-		if !diag_test.MatchBiject(diags, diagAsserts) {
-			assert.Fail(t, "Diagnostics do not match", diags)
-		}
+		diag_test.CompareDiags(t, diags, diagAsserts)
 	})
 }
 

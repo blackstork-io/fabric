@@ -9,9 +9,9 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
 
+	"github.com/blackstork-io/fabric/fabctx"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/parser/evaluation"
-	"github.com/blackstork-io/fabric/parser/lint"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
@@ -119,7 +119,7 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 
 	switch kind {
 	case "data":
-		if lint.IsLinting(ctx) {
+		if fabctx.Get(ctx).IsLinting() {
 			res = plugin.MapData{}
 			return
 		}
@@ -134,7 +134,7 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 		res = data
 		diags.ExtendHcl(diag)
 	case "content":
-		if lint.IsLinting(ctx) {
+		if fabctx.Get(ctx).IsLinting() {
 			res = ""
 			return
 		}
