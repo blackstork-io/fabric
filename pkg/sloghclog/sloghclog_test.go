@@ -22,27 +22,29 @@ func replaceTime(groups []string, a slog.Attr) slog.Attr {
 	return a
 }
 
-func Test_convertLevel(t *testing.T) {
+func Test_levelConversion(t *testing.T) {
 	t.Parallel()
 	// levelTrace should continue slog level system, but below the debug
 	assert.Less(t, LevelTrace, slog.LevelDebug)
 	assert.Equal(t, slog.LevelInfo-slog.LevelDebug, slog.LevelDebug-LevelTrace)
 
 	tests := []struct {
-		src hclog.Level
-		tgt slog.Level
+		hclog hclog.Level
+		slog  slog.Level
 	}{
 		{hclog.Trace, LevelTrace},
 		{hclog.Debug, slog.LevelDebug},
 		{hclog.Info, slog.LevelInfo},
-		{hclog.NoLevel, slog.LevelInfo},
 		{hclog.DefaultLevel, slog.LevelInfo},
 		{hclog.Warn, slog.LevelWarn},
 		{hclog.Error, slog.LevelError},
 	}
 	for _, tt := range tests {
-		assert.Equal(t, tt.tgt, convertLevel(tt.src))
+		assert.Equal(t, tt.slog, levelToSlog(tt.hclog))
+		assert.Equal(t, tt.hclog, levelToHclog(tt.slog))
 	}
+	assert.Equal(t, slog.LevelInfo, levelToSlog(hclog.NoLevel))
+	assert.NotEqual(t, hclog.NoLevel, levelToHclog(slog.Level(-12)))
 }
 
 func Test_isLevel(t *testing.T) {
@@ -85,7 +87,7 @@ func Test_levelRespected(t *testing.T) {
 				a = Adapt(logger, Level(adapterLevel))
 			}
 			for _, msgLevel := range []hclog.Level{hclog.Debug, hclog.Info} {
-				slogMsgLevel := convertLevel(msgLevel)
+				slogMsgLevel := levelToSlog(msgLevel)
 				a.Log(msgLevel, "test")
 				msg := readBuf(buf)
 				if logLevel <= slogMsgLevel && adapterLevel <= slogMsgLevel {
@@ -131,7 +133,7 @@ func Test_levelSettable(t *testing.T) {
 		for _, adapterLevel := range []hclog.Level{hclog.Trace, hclog.Debug, hclog.Info} {
 			a.SetLevel(adapterLevel)
 			for _, msgLevel := range []hclog.Level{hclog.Trace, hclog.Debug, hclog.Info} {
-				slogMsgLevel := convertLevel(msgLevel)
+				slogMsgLevel := levelToSlog(msgLevel)
 				a.Log(msgLevel, "test")
 				msg := readBuf(buf)
 				if logLevel <= slogMsgLevel && adapterLevel <= msgLevel {

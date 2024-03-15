@@ -68,11 +68,19 @@ func Level(level slog.Leveler) adapterOption {
 	})
 }
 
-func convertLevel(level hclog.Level) slog.Level {
+func levelToSlog(level hclog.Level) slog.Level {
 	if level == hclog.NoLevel {
 		return slog.LevelInfo
 	}
 	return slog.Level((level - 3) * 4)
+}
+
+func levelToHclog(level slog.Level) (res hclog.Level) {
+	res = hclog.Level(level/4 + 3)
+	if res == hclog.NoLevel {
+		res -= 1
+	}
+	return res
 }
 
 // Args are alternating key, val pairs
@@ -88,7 +96,7 @@ func (a *adapter) enabled(level slog.Level) bool {
 }
 
 func (a *adapter) log(level hclog.Level, msg string, args ...interface{}) {
-	lvl := convertLevel(level)
+	lvl := levelToSlog(level)
 	if !a.enabled(lvl) {
 		return
 	}
@@ -242,8 +250,13 @@ func (a *adapter) SetLevel(level hclog.Level) {
 	}
 	setter, ok := a.leveler.(settableLeveler)
 	if ok {
-		setter.Set(convertLevel(level))
+		setter.Set(levelToSlog(level))
 	}
+}
+
+// Returns the current level
+func (a *adapter) GetLevel() hclog.Level {
+	return levelToHclog(a.leveler.Level())
 }
 
 // Return a value that conforms to the stdlib log.Logger interface
@@ -260,7 +273,7 @@ func (a *adapter) StandardLogger(opts *hclog.StandardLoggerOptions) *log.Logger 
 func (a *adapter) StandardWriter(opts *hclog.StandardLoggerOptions) io.Writer {
 	return &stdlogAdapter{
 		log:   a,
-		level: convertLevel(opts.ForceLevel),
+		level: levelToSlog(opts.ForceLevel),
 	}
 }
 
