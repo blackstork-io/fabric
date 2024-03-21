@@ -31,7 +31,7 @@ builds:
 
   - id: plugin_elastic
     main: ./internal/elastic/cmd
-    binary: "plugins/blackstork/elastic@{{ .Version }}"
+    binary: "elastic@{{ .Version }}"
     flags: "-trimpath"
     hooks:
       post:
