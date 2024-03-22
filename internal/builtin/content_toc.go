@@ -49,7 +49,8 @@ func makeTOCContentProvider() *plugin.ContentProvider {
 				Required: false,
 			},
 		},
-		ContentFunc: genTOC,
+		InvocationOrder: plugin.InvocationOrderEnd,
+		ContentFunc:     genTOC,
 	}
 }
 
@@ -152,6 +153,10 @@ func genTOC(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.C
 
 	return &plugin.Content{
 		Markdown: titles.render(0, args.ordered),
+		Location: &plugin.Location{
+			Index:  0,
+			Effect: plugin.LocationEffectBefore,
+		},
 	}, nil
 }
 
@@ -209,16 +214,18 @@ func parseContentTitles(data plugin.Data, startLvl, endLvl int) (tocNodeList, er
 	}
 	var result tocNodeList
 	for _, item := range list {
-		line, ok := item.(plugin.StringData)
+		elem, ok := item.(plugin.MapData)
 		if !ok {
 			return nil, fmt.Errorf("expected a string")
 		}
-		if strings.HasPrefix(string(line), "#") {
-			level := strings.Count(string(line), "#")
+		content := plugin.ParseContentData(elem)
+		line := strings.TrimSpace(content.Markdown)
+		if strings.HasPrefix(line, "#") {
+			level := strings.Count(line, "#")
 			if level < startLvl || level > endLvl {
 				continue
 			}
-			title := strings.TrimSpace(string(line)[level:])
+			title := strings.TrimSpace(line[level:])
 			result = result.add(tocNode{level: level, title: title})
 		}
 	}

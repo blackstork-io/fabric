@@ -1,7 +1,11 @@
 
 document "example" {
     title = "Using TOC content provider"
-   
+    content toc {
+        start_level = 1
+        end_level = 4
+        ordered = true
+    }
     content text {
         text = "Sub title 1"
         format_as = "title"
@@ -17,6 +21,7 @@ document "example" {
         format_as = "title"
         absolute_title_size = 2
     }
+    
     content text {
         text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor dolore magna."
     }
@@ -40,9 +45,5 @@ document "example" {
     content text {
         text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor dolore magna."
     }
-    content toc {
-        start_level = 1
-        end_level = 4
-        ordered = true
-    }
+   
 }

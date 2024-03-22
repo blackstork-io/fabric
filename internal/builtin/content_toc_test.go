@@ -44,12 +44,24 @@ func (s *TOCContentTestSuite) TestSimple() {
 		DataContext: plugin.MapData{
 			"document": plugin.MapData{
 				"content": plugin.ListData{
-					plugin.StringData("# Header 1"),
-					plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
-					plugin.StringData("## Header 2"),
-					plugin.StringData("Vestibulum nec odio."),
-					plugin.StringData("### Header 3"),
-					plugin.StringData("Integer sit amet."),
+					plugin.MapData{
+						"markdown": plugin.StringData("# Header 1"),
+					},
+					plugin.MapData{
+						"markdown": plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
+					},
+					plugin.MapData{
+						"markdown": plugin.StringData("## Header 2"),
+					},
+					plugin.MapData{
+						"markdown": plugin.StringData("Vestibulum nec odio."),
+					},
+					plugin.MapData{
+						"markdown": plugin.StringData("### Header 3"),
+					},
+					plugin.MapData{
+						"markdown": plugin.StringData("Integer sit amet."),
+					},
 				},
 			},
 		},
@@ -75,16 +87,36 @@ func (s *TOCContentTestSuite) TestAdvanced() {
 		DataContext: plugin.MapData{
 			"document": plugin.MapData{
 				"content": plugin.ListData{
-					plugin.StringData("# Header 1"),
-					plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
-					plugin.StringData("## Header 2"),
-					plugin.StringData("Vestibulum nec odio."),
-					plugin.StringData("### Header 3"),
-					plugin.StringData("Integer sit amet."),
-					plugin.StringData("## Header 4"),
-					plugin.StringData("Vestibulum nec odio."),
-					plugin.StringData("## Header 5"),
-					plugin.StringData("Vestibulum nec odio."),
+					plugin.MapData{
+						"markdown": plugin.StringData("# Header 1"),
+					},
+					plugin.MapData{
+						"markdown": plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
+					},
+					plugin.MapData{
+						"markdown": plugin.StringData("## Header 2"),
+					},
+					plugin.MapData{
+						"markdown": plugin.StringData("Vestibulum nec odio."),
+					},
+					plugin.MapData{
+						"markdown": plugin.StringData("### Header 3"),
+					},
+					plugin.MapData{
+						"markdown": plugin.StringData("Integer sit amet."),
+					},
+					plugin.MapData{
+						"markdown": plugin.StringData("## Header 4"),
+					},
+					plugin.MapData{
+						"markdown": plugin.StringData("Vestibulum nec odio."),
+					},
+					plugin.MapData{
+						"markdown": plugin.StringData("## Header 5"),
+					},
+					plugin.MapData{
+						"markdown": plugin.StringData("Vestibulum nec odio."),
+					},
 				},
 			},
 		},
