@@ -1,0 +1,31 @@
+
+document "example" {
+    title = "Using Text content provider"
+  
+    content text {
+        text = "Title 1"
+        format_as = "title"
+    }
+
+    content text {
+        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor dolore magna."
+    }
+
+    content text {
+        text = "Sub title 2"
+        format_as = "title"
+    }
+    
+    content text {
+        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor dolore magna."
+    }
+    content text {
+        text = "Sub title 3"
+        format_as = "title"
+    }
+
+    content text {
+        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor dolore magna."
+    }
+   
+}

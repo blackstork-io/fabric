@@ -76,7 +76,7 @@ func genTextContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 	}
 	absoluteTitleSize := params.Args.GetAttr("absolute_title_size")
 	if absoluteTitleSize.IsNull() {
-		absoluteTitleSize = cty.NumberIntVal(textDefaultAbsoluteTitleSize)
+		absoluteTitleSize = cty.NumberIntVal(findDefaultTitleSize(params.DataContext))
 	}
 	titleSize, _ := absoluteTitleSize.AsBigFloat().Int64()
 	if titleSize < textMinAbsoluteTitleSize || titleSize > textMaxAbsoluteTitleSize {
@@ -120,6 +120,36 @@ func genTextContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 	return &plugin.Content{
 		Markdown: md,
 	}, nil
+}
+
+func findDefaultTitleSize(datactx plugin.MapData) int64 {
+	doc, ok := datactx["document"]
+	if !ok {
+		return textDefaultAbsoluteTitleSize
+	}
+	content, ok := doc.(plugin.MapData)["content"]
+	if !ok {
+		return textDefaultAbsoluteTitleSize
+	}
+	list, ok := content.(plugin.ListData)
+	if !ok {
+		return textDefaultAbsoluteTitleSize
+	}
+	n := textMinAbsoluteTitleSize
+	for _, elem := range list {
+		content := plugin.ParseContentData(elem.(plugin.MapData))
+		if content == nil {
+			continue
+		}
+		md := strings.TrimSpace(content.Markdown)
+		if strings.HasPrefix(md, "#") {
+			n++
+		}
+	}
+	if n > textMaxAbsoluteTitleSize {
+		n = textMaxAbsoluteTitleSize
+	}
+	return n
 }
 
 func genTextContentText(text string, datactx plugin.MapData) (string, error) {

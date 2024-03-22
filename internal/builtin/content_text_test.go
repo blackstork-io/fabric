@@ -13,7 +13,7 @@ import (
 
 type TextGeneratorTestSuite struct {
 	suite.Suite
-	plugin *plugin.Schema
+	schema *plugin.ContentProvider
 }
 
 func TestTextGeneratorSuite(t *testing.T) {
@@ -21,23 +21,18 @@ func TestTextGeneratorSuite(t *testing.T) {
 }
 
 func (s *TextGeneratorTestSuite) SetupSuite() {
-	s.plugin = &plugin.Schema{
-		ContentProviders: plugin.ContentProviders{
-			"text": makeTextContentProvider(),
-		},
-	}
+	s.schema = makeTextContentProvider()
 }
 
 func (s *TextGeneratorTestSuite) TestSchema() {
-	schema := makeTextContentProvider()
-	s.Nil(schema.Config)
-	s.NotNil(schema.Args)
-	s.NotNil(schema.ContentFunc)
+	s.Nil(s.schema.Config)
+	s.NotNil(s.schema.Args)
+	s.NotNil(s.schema.ContentFunc)
 }
 
 func (s *TextGeneratorTestSuite) TestMissingText() {
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"text":                cty.NullVal(cty.String),
 			"format_as":           cty.NullVal(cty.String),
@@ -58,7 +53,7 @@ func (s *TextGeneratorTestSuite) TestMissingText() {
 
 func (s *TextGeneratorTestSuite) TestBasic() {
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"text":                cty.StringVal("Hello {{.name}}!"),
 			"format_as":           cty.NullVal(cty.String),
@@ -77,7 +72,7 @@ func (s *TextGeneratorTestSuite) TestBasic() {
 
 func (s *TextGeneratorTestSuite) TestNoTemplate() {
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"text":                cty.StringVal("Hello World!"),
 			"format_as":           cty.NullVal(cty.String),
@@ -94,7 +89,7 @@ func (s *TextGeneratorTestSuite) TestNoTemplate() {
 
 func (s *TextGeneratorTestSuite) TestTitleDefault() {
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"text":                cty.StringVal("Hello {{.name}}!"),
 			"format_as":           cty.StringVal("title"),
@@ -113,7 +108,7 @@ func (s *TextGeneratorTestSuite) TestTitleDefault() {
 
 func (s *TextGeneratorTestSuite) TestTitleWithTextMultiline() {
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"text":                cty.StringVal("Hello\n{{.name}}\nfor you!"),
 			"format_as":           cty.StringVal("title"),
@@ -132,7 +127,7 @@ func (s *TextGeneratorTestSuite) TestTitleWithTextMultiline() {
 
 func (s *TextGeneratorTestSuite) TestTitleWithSize() {
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"text":                cty.StringVal("Hello {{.name}}!"),
 			"format_as":           cty.StringVal("title"),
@@ -151,7 +146,7 @@ func (s *TextGeneratorTestSuite) TestTitleWithSize() {
 
 func (s *TextGeneratorTestSuite) TestTitleWithSizeTooSmall() {
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"text":                cty.StringVal("Hello {{.name}}!"),
 			"format_as":           cty.StringVal("title"),
@@ -172,7 +167,7 @@ func (s *TextGeneratorTestSuite) TestTitleWithSizeTooSmall() {
 
 func (s *TextGeneratorTestSuite) TestTitleWithSizeTooBig() {
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"text":                cty.StringVal("Hello {{.name}}!"),
 			"format_as":           cty.StringVal("title"),
@@ -193,7 +188,7 @@ func (s *TextGeneratorTestSuite) TestTitleWithSizeTooBig() {
 
 func (s *TextGeneratorTestSuite) TestCallInvalidFormat() {
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"text":                cty.StringVal("Hello World!"),
 			"format_as":           cty.StringVal("unknown"),
@@ -212,7 +207,7 @@ func (s *TextGeneratorTestSuite) TestCallInvalidFormat() {
 
 func (s *TextGeneratorTestSuite) TestCallInvalidTemplate() {
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"text":                cty.StringVal("Hello {{.name}!"),
 			"format_as":           cty.NullVal(cty.String),
@@ -233,7 +228,7 @@ func (s *TextGeneratorTestSuite) TestCallInvalidTemplate() {
 
 func (s *TextGeneratorTestSuite) TestCallCodeDefault() {
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"text":                cty.StringVal(`Hello {{.name}}!`),
 			"format_as":           cty.StringVal("code"),
@@ -252,7 +247,7 @@ func (s *TextGeneratorTestSuite) TestCallCodeDefault() {
 
 func (s *TextGeneratorTestSuite) TestCallCodeWithLanguage() {
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"text":                cty.StringVal(`{"hello": "{{.name}}"}`),
 			"format_as":           cty.StringVal("code"),
@@ -271,7 +266,7 @@ func (s *TextGeneratorTestSuite) TestCallCodeWithLanguage() {
 
 func (s *TextGeneratorTestSuite) TestCallBlockquote() {
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"text":                cty.StringVal(`Hello {{.name}}!`),
 			"format_as":           cty.StringVal("blockquote"),
@@ -290,7 +285,7 @@ func (s *TextGeneratorTestSuite) TestCallBlockquote() {
 
 func (s *TextGeneratorTestSuite) TestCallBlockquoteMultiline() {
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"text":                cty.StringVal("Hello\n{{.name}}\nfor you!"),
 			"format_as":           cty.StringVal("blockquote"),
@@ -309,7 +304,7 @@ func (s *TextGeneratorTestSuite) TestCallBlockquoteMultiline() {
 
 func (s *TextGeneratorTestSuite) TestCallBlockquoteMultilineDoubleNewline() {
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"text":                cty.StringVal("Hello\n{{.name}}\n\nfor you!"),
 			"format_as":           cty.StringVal("blockquote"),
