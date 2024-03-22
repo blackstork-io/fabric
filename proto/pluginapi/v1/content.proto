@@ -2,6 +2,19 @@ syntax = "proto3";
 
 package pluginapi.v1;
 
+
+enum LocationEffect {
+    LOCATION_EFFECT_UNSPECIFIED = 0;
+    LOCATION_EFFECT_BEFORE      = 1;
+    LOCATION_EFFECT_AFTER       = 2;
+}
+
+message Location {
+    uint32         index  = 1;
+    LocationEffect effect = 2;
+}
+
 message Content {
-    string markdown = 1;
+    string    markdown  = 1;
+    Location  location  = 2;
 }

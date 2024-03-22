@@ -147,26 +147,32 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 			Args:        pluginArgs,
 			DataContext: dataCtx,
 		})
-		res = ""
-		if content != nil {
-			res = content.Markdown
-		}
+		res = content
 		diags.ExtendHcl(diag)
 	}
 	return
 }
 
-func (c *Caller) CallContent(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation, dataCtx plugin.MapData) (result string, diag diagnostics.Diag) {
+func (c *Caller) CallContent(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation, dataCtx plugin.MapData) (result *plugin.Content, diag diagnostics.Diag) {
 	var ok bool
 	var res any
 	res, diag = c.callPlugin(ctx, definitions.BlockKindContent, name, config, invocation, dataCtx)
 	if diag.HasErrors() {
 		return
 	}
-	result, ok = res.(string)
+	result, ok = res.(*plugin.Content)
 	if !ok {
 		panic("Incorrect plugin result type")
 	}
+	return
+}
+
+func (c *Caller) ContentInvocationOrder(ctx context.Context, name string) (order plugin.InvocationOrder, diag diagnostics.Diag) {
+	content, hclDiag := c.plugins.ContentProvider(name)
+	if hclDiag.HasErrors() {
+		return plugin.InvocationOrderUnspecified, diagnostics.Diag(hclDiag)
+	}
+	order = content.InvocationOrder
 	return
 }
 

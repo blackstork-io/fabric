@@ -26,10 +26,30 @@ func (cp ContentProviders) Validate() hcl.Diagnostics {
 	return diags
 }
 
+type InvocationOrder int
+
+const (
+	InvocationOrderUnspecified InvocationOrder = iota
+	InvocationOrderBegin
+	InvocationOrderEnd
+)
+
+func (order InvocationOrder) Weight() int {
+	switch order {
+	case InvocationOrderBegin:
+		return 0
+	case InvocationOrderEnd:
+		return 2
+	default:
+		return 1
+	}
+}
+
 type ContentProvider struct {
-	ContentFunc ProvideContentFunc
-	Args        hcldec.Spec
-	Config      hcldec.Spec
+	ContentFunc     ProvideContentFunc
+	Args            hcldec.Spec
+	Config          hcldec.Spec
+	InvocationOrder InvocationOrder
 }
 
 func (cg *ContentProvider) Validate() hcl.Diagnostics {

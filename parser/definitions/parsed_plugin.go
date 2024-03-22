@@ -36,6 +36,10 @@ type (
 	ParsedData    ParsedPlugin
 )
 
+func (c *ParsedContent) Name() string {
+	return c.PluginName
+}
+
 // Render implements Renderable.
 func (c *ParsedContent) Render(ctx context.Context, caller evaluation.ContentCaller, dataCtx evaluation.DataContext, result *evaluation.Result) (diags diagnostics.Diag) {
 	if c.Meta != nil {
@@ -120,5 +124,6 @@ func runQuery(query string, dataCtx *evaluation.DataContext) (result plugin.Data
 }
 
 type Renderable interface {
+	Name() string
 	Render(ctx context.Context, caller evaluation.ContentCaller, dataCtx evaluation.DataContext, result *evaluation.Result) diagnostics.Diag
 }

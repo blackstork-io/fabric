@@ -87,5 +87,14 @@ func (p *Schema) ProvideContent(ctx context.Context, name string, params *Provid
 			Detail:   "Content provider '" + name + "' not found in schema",
 		}}
 	}
-	return provider.Execute(ctx, params)
+	content, diags := provider.Execute(ctx, params)
+	if diags.HasErrors() {
+		return nil, diags
+	}
+	content.meta = &ContentMeta{
+		Provider: name,
+		Plugin:   p.Name,
+		Version:  p.Version,
+	}
+	return content, diags
 }

@@ -2,6 +2,7 @@ package definitions
 
 import (
 	"context"
+	"slices"
 
 	"github.com/hashicorp/hcl/v2"
 
@@ -72,7 +73,11 @@ func (d *ParsedDocument) Render(ctx context.Context, caller evaluation.PluginCal
 		BlockKindData:     dataResult,
 		BlockKindDocument: document,
 	})
-
+	slices.SortStableFunc(d.Content, func(a, b Renderable) int {
+		ao, _ := caller.ContentInvocationOrder(ctx, a.Name())
+		bo, _ := caller.ContentInvocationOrder(ctx, b.Name())
+		return ao.Weight() - bo.Weight()
+	})
 	for _, content := range d.Content {
 		diags.Extend(
 			content.Render(ctx, caller, dataCtx.Share(), &res),

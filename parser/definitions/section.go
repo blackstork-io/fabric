@@ -26,6 +26,10 @@ type ParsedSection struct {
 	Content []Renderable
 }
 
+func (s ParsedSection) Name() string {
+	return ""
+}
+
 func (s ParsedSection) Render(ctx context.Context, caller evaluation.ContentCaller, dataCtx evaluation.DataContext, result *evaluation.Result) (diags diagnostics.Diag) {
 	if s.Meta != nil {
 		dataCtx.Set(BlockKindSection, plugin.ConvMapData{
@@ -37,7 +41,6 @@ func (s ParsedSection) Render(ctx context.Context, caller evaluation.ContentCall
 	if title := s.Title; title != nil {
 		diags.Extend(title.Render(ctx, caller, dataCtx.Share(), result))
 	}
-
 	for _, content := range s.Content {
 		diags.Extend(
 			content.Render(ctx, caller, dataCtx.Share(), result),
