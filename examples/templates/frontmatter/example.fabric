@@ -1,0 +1,34 @@
+
+document "example" {
+    title = "Using FrontMatter content provider"
+
+    content frontmatter {
+        format = "yaml"
+        content = {
+            some = "value"
+            other = "value2"
+        }
+    }
+
+    content text {
+        text = "Sub title 1"
+        format_as = "title"
+        absolute_title_size = 2
+    }
+
+    content text {
+        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor dolore magna."
+    }
+
+    content text {
+        text = "Sub title 2"
+        format_as = "title"
+        absolute_title_size = 2
+    }
+    
+    content text {
+        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor dolore magna."
+    }
+    
+   
+}

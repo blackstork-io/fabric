@@ -61,6 +61,10 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 	}
 	return &plugin.Content{
 		Markdown: result,
+		Location: &plugin.Location{
+			Index:  0,
+			Effect: plugin.LocationEffectBefore,
+		},
 	}, nil
 }
 
