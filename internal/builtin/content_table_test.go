@@ -13,7 +13,7 @@ import (
 
 type TableGeneratorTestSuite struct {
 	suite.Suite
-	plugin *plugin.Schema
+	schema *plugin.ContentProvider
 }
 
 func TestTableGeneratorTestSuite(t *testing.T) {
@@ -21,19 +21,14 @@ func TestTableGeneratorTestSuite(t *testing.T) {
 }
 
 func (s *TableGeneratorTestSuite) SetupSuite() {
-	s.plugin = &plugin.Schema{
-		ContentProviders: plugin.ContentProviders{
-			"table": makeTableContentProvider(),
-		},
-	}
+	s.schema = makeTableContentProvider()
 }
 
 func (s *TableGeneratorTestSuite) TestSchema() {
-	schema := s.plugin.ContentProviders["table"]
-	s.NotNil(schema)
-	s.Nil(schema.Config)
-	s.NotNil(schema.Args)
-	s.NotNil(schema.ContentFunc)
+	s.NotNil(s.schema)
+	s.Nil(s.schema.Config)
+	s.NotNil(s.schema.Args)
+	s.NotNil(s.schema.ContentFunc)
 }
 
 func (s *TableGeneratorTestSuite) TestNilQueryResult() {
@@ -50,7 +45,7 @@ func (s *TableGeneratorTestSuite) TestNilQueryResult() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "table", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix":   plugin.StringData("User"),
@@ -77,7 +72,7 @@ func (s *TableGeneratorTestSuite) TestEmptyQueryResult() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "table", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix":   plugin.StringData("User"),
@@ -104,7 +99,7 @@ func (s *TableGeneratorTestSuite) TestBasic() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "table", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
@@ -138,7 +133,7 @@ func (s *TableGeneratorTestSuite) TestMissingHeader() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "table", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
@@ -176,7 +171,7 @@ func (s *TableGeneratorTestSuite) TestNilHeader() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "table", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
@@ -214,7 +209,7 @@ func (s *TableGeneratorTestSuite) TestNilValue() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "table", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
@@ -243,7 +238,7 @@ func (s *TableGeneratorTestSuite) TestNilColumns() {
 		"columns": cty.NullVal(cty.List(cty.Object(map[string]cty.Type{}))),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "table", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
@@ -272,7 +267,7 @@ func (s *TableGeneratorTestSuite) TestEmptyColumns() {
 		"columns": cty.ListValEmpty(cty.Object(map[string]cty.Type{})),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "table", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
@@ -310,7 +305,7 @@ func (s *TableGeneratorTestSuite) TestInvalidHeaderTemplate() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "table", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
@@ -348,7 +343,7 @@ func (s *TableGeneratorTestSuite) TestInvalidValueTemplate() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "table", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),

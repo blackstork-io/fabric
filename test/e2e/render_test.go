@@ -295,10 +295,10 @@ func TestE2ERender(t *testing.T) {
 			"# sect1",
 			"s1",
 			"some_text",
-			"# sect2",
+			"## sect2",
 			"some_text",
 			"s2",
-			"# sect3",
+			"### sect3",
 			"s3",
 			"some_text",
 			"s3 extra",
@@ -540,11 +540,11 @@ func TestE2ERender(t *testing.T) {
 					text = "first result"
 				  }
 				  content text {
-					query = ".document.content[0]"
+					query = ".document.content[0].markdown"
 					text = "content[0] = {{ .query_result }}"
 				  }
 				  content text {
-					query = ".document.content[1]"
+					query = ".document.content[1].markdown"
 					text = "content[1] = {{ .query_result }}"
 				  }
 			  }

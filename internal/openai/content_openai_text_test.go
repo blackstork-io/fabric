@@ -16,7 +16,7 @@ import (
 
 type OpenAITextContentTestSuite struct {
 	suite.Suite
-	schema *plugin.Schema
+	schema *plugin.ContentProvider
 	cli    *client_mocks.Client
 }
 
@@ -25,7 +25,7 @@ func TestOpenAITextContentSuite(t *testing.T) {
 }
 
 func (s *OpenAITextContentTestSuite) SetupSuite() {
-	s.schema = Plugin("", func(opts ...client.Option) client.Client {
+	s.schema = makeOpenAITextContentSchema(func(opts ...client.Option) client.Client {
 		return s.cli
 	})
 }
@@ -39,11 +39,10 @@ func (s *OpenAITextContentTestSuite) TearDownTest() {
 }
 
 func (s *OpenAITextContentTestSuite) TestSchema() {
-	provider := s.schema.ContentProviders["openai_text"]
-	s.Require().NotNil(provider)
-	s.NotNil(provider.Args)
-	s.NotNil(provider.ContentFunc)
-	s.NotNil(provider.Config)
+	s.Require().NotNil(s.schema)
+	s.NotNil(s.schema.Args)
+	s.NotNil(s.schema.ContentFunc)
+	s.NotNil(s.schema.Config)
 }
 
 func (s *OpenAITextContentTestSuite) TestBasic() {
@@ -68,7 +67,7 @@ func (s *OpenAITextContentTestSuite) TestBasic() {
 		},
 	}, nil)
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "openai_text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
 			"model":  cty.NullVal(cty.String),
@@ -112,7 +111,7 @@ func (s *OpenAITextContentTestSuite) TestAdvanced() {
 		},
 	}, nil)
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "openai_text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
 			"model":  cty.StringVal("model_123"),
@@ -136,7 +135,7 @@ func (s *OpenAITextContentTestSuite) TestAdvanced() {
 
 func (s *OpenAITextContentTestSuite) TestMissingPrompt() {
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "openai_text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.NullVal(cty.String),
 			"model":  cty.NullVal(cty.String),
@@ -158,7 +157,7 @@ func (s *OpenAITextContentTestSuite) TestMissingPrompt() {
 
 func (s *OpenAITextContentTestSuite) TestMissingAPIKey() {
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "openai_text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
 			"model":  cty.NullVal(cty.String),
@@ -184,7 +183,7 @@ func (s *OpenAITextContentTestSuite) TestFailingClient() {
 		Message: "error_message",
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "openai_text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
 			"model":  cty.NullVal(cty.String),
@@ -208,7 +207,7 @@ func (s *OpenAITextContentTestSuite) TestCancellation() {
 	s.cli.On("GenerateChatCompletion", mock.Anything, mock.Anything).Return(nil, context.Canceled)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	content, diags := s.schema.ProvideContent(ctx, "openai_text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
 			"model":  cty.NullVal(cty.String),
@@ -235,7 +234,7 @@ func (s *OpenAITextContentTestSuite) TestErrorEncoding() {
 	}
 	s.cli.On("GenerateChatCompletion", mock.Anything, mock.Anything).Return(nil, want)
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "openai_text", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
 			"model":  cty.NullVal(cty.String),

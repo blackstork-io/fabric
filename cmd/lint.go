@@ -16,8 +16,12 @@ import (
 type noopPluginCaller struct{}
 
 // CallContent implements evaluation.PluginCaller.
-func (n *noopPluginCaller) CallContent(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation, context plugin.MapData) (result string, diag diagnostics.Diag) {
-	return "", nil
+func (n *noopPluginCaller) CallContent(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation, context plugin.MapData) (result *plugin.Content, diag diagnostics.Diag) {
+	return nil, nil
+}
+
+func (n *noopPluginCaller) ContentInvocationOrder(ctx context.Context, name string) (order plugin.InvocationOrder, diag diagnostics.Diag) {
+	return plugin.InvocationOrderUnspecified, nil
 }
 
 // CallData implements evaluation.PluginCaller.

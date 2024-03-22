@@ -13,7 +13,7 @@ import (
 
 type ListGeneratorTestSuite struct {
 	suite.Suite
-	plugin *plugin.Schema
+	schema *plugin.ContentProvider
 }
 
 func TestListGeneratorTestSuite(t *testing.T) {
@@ -21,19 +21,14 @@ func TestListGeneratorTestSuite(t *testing.T) {
 }
 
 func (s *ListGeneratorTestSuite) SetupSuite() {
-	s.plugin = &plugin.Schema{
-		ContentProviders: plugin.ContentProviders{
-			"list": makeListContentProvider(),
-		},
-	}
+	s.schema = makeListContentProvider()
 }
 
 func (s *ListGeneratorTestSuite) TestSchema() {
-	schema := s.plugin.ContentProviders["list"]
-	s.NotNil(schema)
-	s.Nil(schema.Config)
-	s.NotNil(schema.Args)
-	s.NotNil(schema.ContentFunc)
+	s.NotNil(s.schema)
+	s.Nil(s.schema.Config)
+	s.NotNil(s.schema.Args)
+	s.NotNil(s.schema.ContentFunc)
 }
 
 func (s *ListGeneratorTestSuite) TestNilQueryResult() {
@@ -42,7 +37,7 @@ func (s *ListGeneratorTestSuite) TestNilQueryResult() {
 		"format":        cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "list", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args:        args,
 		DataContext: plugin.MapData{},
 	})
@@ -60,7 +55,7 @@ func (s *ListGeneratorTestSuite) TestNonArrayQueryResult() {
 		"format":        cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "list", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.StringData("not_an_array"),
@@ -80,7 +75,7 @@ func (s *ListGeneratorTestSuite) TestUnordered() {
 		"format":        cty.StringVal("unordered"),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "list", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{
@@ -101,7 +96,7 @@ func (s *ListGeneratorTestSuite) TestOrdered() {
 		"format":        cty.StringVal("ordered"),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "list", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{
@@ -122,7 +117,7 @@ func (s *ListGeneratorTestSuite) TestTaskList() {
 		"format":        cty.StringVal("tasklist"),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "list", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{
@@ -143,7 +138,7 @@ func (s *ListGeneratorTestSuite) TestBasic() {
 		"format":        cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "list", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{
@@ -164,7 +159,7 @@ func (s *ListGeneratorTestSuite) TestAdvanced() {
 		"format":        cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "list", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{
@@ -191,7 +186,7 @@ func (s *ListGeneratorTestSuite) TestEmptyQueryResult() {
 		"format":        cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "list", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{},
@@ -209,7 +204,7 @@ func (s *ListGeneratorTestSuite) TestMissingItemTemplate() {
 		"format":        cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "list", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{},
@@ -229,7 +224,7 @@ func (s *ListGeneratorTestSuite) TestInvalidFormat() {
 		"format":        cty.StringVal("invalid"),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "list", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{},
@@ -249,7 +244,7 @@ func (s *ListGeneratorTestSuite) TestMissingDataContext() {
 		"format":        cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "list", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
 	s.Nil(content)
