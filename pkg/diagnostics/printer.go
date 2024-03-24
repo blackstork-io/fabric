@@ -36,9 +36,10 @@ func PrintDiags(output *os.File, diags Diag, fileMap map[string]*hcl.File, color
 	diagWriter := hcl.NewDiagnosticTextWriter(bufWr, fileMap, uint(width), colorize)
 
 	for _, diag := range diags {
-		if _, isRepeated := hcl.DiagnosticExtra[repeatedError](diag); isRepeated {
+		if _, isHidden := hcl.DiagnosticExtra[hiddenErrorIface](diag); isHidden {
 			continue
 		}
+		// TODO: catch traceback diag here and format it properly
 		err := diagWriter.WriteDiagnostic(diag)
 		if err != nil {
 			slog.Error("Failed to write diagnostics", "err", err)

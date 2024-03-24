@@ -65,7 +65,7 @@ func (d *circularRefDetector) remove(ptr unsafe.Pointer, diags *diagnostics.Diag
 		return
 	}
 
-	diag := diagnostics.FindByExtra[extraMarker](*diags)
+	diag, _ := diagnostics.FindByExtra[extraMarker](*diags)
 	if diag == nil {
 		return
 	}
