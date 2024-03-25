@@ -41,7 +41,7 @@ func (c *ParsedContent) Name() string {
 }
 
 // Render implements Renderable.
-func (c *ParsedContent) Render(ctx context.Context, caller evaluation.ContentCaller, dataCtx evaluation.DataContext, result *evaluation.Result) (diags diagnostics.Diag) {
+func (c *ParsedContent) Render(ctx context.Context, caller evaluation.ContentCaller, dataCtx evaluation.DataContext, result *evaluation.Result, contentID uint32) (diags diagnostics.Diag) {
 	if c.Meta != nil {
 		dataCtx.Set(BlockKindContent, plugin.ConvMapData{
 			BlockKindMeta: c.Meta.AsJQData(),
@@ -49,7 +49,6 @@ func (c *ParsedContent) Render(ctx context.Context, caller evaluation.ContentCal
 	} else {
 		dataCtx.Delete(BlockKindContent)
 	}
-
 	diags.Extend(c.EvalQuery(&dataCtx))
 	// TODO: #28 #29
 	if diags.HasErrors() {
@@ -57,12 +56,24 @@ func (c *ParsedContent) Render(ctx context.Context, caller evaluation.ContentCal
 	}
 
 	resultStr, diag := caller.CallContent(ctx, c.PluginName, c.Config, c.Invocation, dataCtx.AsJQData().(plugin.MapData))
-	if diags.Extend(diag) {
+	if diags.Extend(diag) || resultStr == nil {
 		// XXX: What to do if we have errors while executing content blocks?
 		// just skipping the value for now...
 		return
 	}
-	result.Append(resultStr)
+	if resultStr.Location == nil {
+		resultStr.Location = &plugin.Location{
+			Index: contentID,
+		}
+	}
+	err := result.Add(resultStr.Content, resultStr.Location)
+	if err != nil {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Failed to add content to the result",
+			Detail:   err.Error(),
+		})
+	}
 	return
 }
 
@@ -125,5 +136,5 @@ func runQuery(query string, dataCtx *evaluation.DataContext) (result plugin.Data
 
 type Renderable interface {
 	Name() string
-	Render(ctx context.Context, caller evaluation.ContentCaller, dataCtx evaluation.DataContext, result *evaluation.Result) diagnostics.Diag
+	Render(ctx context.Context, caller evaluation.ContentCaller, dataCtx evaluation.DataContext, result *evaluation.Result, contentID uint32) diagnostics.Diag
 }

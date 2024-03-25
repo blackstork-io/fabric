@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -33,7 +34,7 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 			eval.Cleanup(nil)
 		}()
 
-		var res []string
+		var res string
 		diags := eval.ParseFabricFiles(sourceDir)
 		ctx := fabctx.New(fabctx.NoSignals)
 		if !diags.HasErrors() {
@@ -50,7 +51,7 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 		} else {
 			assert.EqualValues(
 				t,
-				expectedResult,
+				strings.Join(expectedResult, "\n\n"),
 				res,
 			)
 		}
@@ -72,14 +73,14 @@ func TestE2ERender(t *testing.T) {
 			document "hello" {
 				title = "Welcome"
 				content text {
-					text = "Hello from fabric"
+					value = "Hello from fabric"
 				}
 			}
 
 			document "goodbye" {
 				title = "Goodbye"
 				content text {
-					text = "Goodbye from fabric"
+					value = "Goodbye from fabric"
 				}
 			}
 			`,
@@ -103,7 +104,7 @@ func TestE2ERender(t *testing.T) {
 			}
 
 			content text "external_block" {
-				text = "Hello from ref"
+				value = "Hello from ref"
 			}
 			`,
 		},
@@ -127,7 +128,7 @@ func TestE2ERender(t *testing.T) {
 			`,
 			`
 			content text "external_block" {
-				text = "Hello from ref"
+				value = "Hello from ref"
 			}
 			`,
 		},
@@ -148,14 +149,13 @@ func TestE2ERender(t *testing.T) {
 				}
 			}
 
-			content text "actual_block" {
-				text = "Hello from ref chain"
+			content blockquote "actual_block" {
+				value = "Hello from ref chain"
 			}
 			`,
 			`
 			content ref "add_format_as" {
-				base = content.text.actual_block
-				format_as = "blockquote"
+				base = content.blockquote.actual_block
 			}
 			`,
 		},
@@ -189,7 +189,7 @@ func TestE2ERender(t *testing.T) {
 			}
 
 			content text "actual_block" {
-				text = "Near refloop"
+				value = "Near refloop"
 			}
 			`,
 		},
@@ -240,7 +240,7 @@ func TestE2ERender(t *testing.T) {
 			`
 			section "sect4" {
 				content text {
-					text = "final section"
+					value = "final section"
 				}
 			}
 			document "test-doc" {
@@ -253,7 +253,7 @@ func TestE2ERender(t *testing.T) {
 			section "sect1" {
 				title = "sect1"
 				content text {
-					text = "s1"
+					value = "s1"
 				}
 				content ref {
 					base = content.text.some_text
@@ -264,18 +264,18 @@ func TestE2ERender(t *testing.T) {
 						base = content.text.some_text
 					}
 					content text {
-						text = "s2"
+						value = "s2"
 					}
 					section {
 						title = "sect3"
 						content text {
-							text = "s3"
+							value = "s3"
 						}
 						content ref {
 							base = content.text.some_text
 						}
 						content text {
-							text = "s3 extra"
+							value = "s3 extra"
 						}
 						section ref {
 							base = section.sect4
@@ -285,20 +285,20 @@ func TestE2ERender(t *testing.T) {
 			}
 
 			content text "some_text" {
-				text = "some_text"
+				value = "some_text"
 			}
 
 			`,
 		},
 		"test-doc",
 		[]string{
-			"# sect1",
+			"## sect1",
 			"s1",
 			"some_text",
-			"## sect2",
+			"### sect2",
 			"some_text",
 			"s2",
-			"### sect3",
+			"#### sect3",
 			"s3",
 			"some_text",
 			"s3 extra",
@@ -312,7 +312,7 @@ func TestE2ERender(t *testing.T) {
 			`
 			document "test-doc" {
 				content text {
-					text = "${2+2}"
+					value = "${2+2}"
 				}
 			}
 			`,
@@ -373,7 +373,7 @@ func TestE2ERender(t *testing.T) {
 		[]string{
 			`
 			content text "name" {
-				text = "txt"
+				value = "txt"
 			}
 			document "test-doc" {
 				content ref {
@@ -404,7 +404,7 @@ func TestE2ERender(t *testing.T) {
 					attr = "val"
 				}
 				content text {
-					text = "From data block: {{.data.inline.name.attr}}"
+					value = "From data block: {{.data.inline.name.attr}}"
 				}
 			}
 			`,
@@ -425,7 +425,7 @@ func TestE2ERender(t *testing.T) {
 				}
 				content text {
 				  query = ".data.inline.foo.items | length"
-				  text = "There are {{ .query_result }} items"
+				  value = "There are {{ .query_result }} items"
 				}
 			}
 			`,
@@ -444,7 +444,7 @@ func TestE2ERender(t *testing.T) {
 				}
 				content text {
 				  query = ".document.meta.author"
-				  text = "author = {{ .query_result }}"
+				  value = "author = {{ .query_result }}"
 				}
 			}
 			`,
@@ -470,7 +470,7 @@ func TestE2ERender(t *testing.T) {
 					  author = "baz"
 					}
 					query = "(.document.meta.author + .section.meta.author + .content.meta.author)" //
-					text = "author = {{ .query_result }}"
+					value = "author = {{ .query_result }}"
 				  }
 				}
 			  }
@@ -486,7 +486,7 @@ func TestE2ERender(t *testing.T) {
 			`
 			content text get_section_author {
 				query = ".section.meta.author // \"unknown\""
-				text = "author = {{ .query_result }}"
+				value = "author = {{ .query_result }}"
 			}
 			document "test" {
 				content ref {
@@ -537,15 +537,15 @@ func TestE2ERender(t *testing.T) {
 			`
 			document "test" {
 				content text {
-					text = "first result"
+					value = "first result"
 				  }
 				  content text {
-					query = ".document.content[0].markdown"
-					text = "content[0] = {{ .query_result }}"
+					query = ".document.content.children[0].markdown"
+					value = "content[0] = {{ .query_result }}"
 				  }
 				  content text {
-					query = ".document.content[1].markdown"
-					text = "content[1] = {{ .query_result }}"
+					query = ".document.content.children[1].markdown"
+					value = "content[1] = {{ .query_result }}"
 				  }
 			  }
 			`,

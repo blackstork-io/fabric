@@ -28,7 +28,7 @@ func makeGreetingContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func renderGreetingMessage(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.Content, hcl.Diagnostics) {
+func renderGreetingMessage(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
 	name := params.Config.GetAttr("name")
 	if name.IsNull() || name.AsString() == "" {
 		return nil, hcl.Diagnostics{{
@@ -37,7 +37,9 @@ func renderGreetingMessage(ctx context.Context, params *plugin.ProvideContentPar
 			Detail:   "name is required",
 		}}
 	}
-	return &plugin.Content{
-		Markdown: fmt.Sprintf("Hello, %s!", name.AsString()),
+	return &plugin.ContentResult{
+		Content: &plugin.ContentElement{
+			Markdown: fmt.Sprintf("Hello, %s!", name.AsString()),
+		},
 	}, nil
 }

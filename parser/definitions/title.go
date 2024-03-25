@@ -55,14 +55,14 @@ func (t *titleInvocation) ParseInvocation(spec hcldec.Spec) (val cty.Value, diag
 	}
 	body := t.GetBody()
 	body.Attributes = hclsyntax.Attributes{
-		"text": &hclsyntax.Attribute{
-			Name: "text",
+		"value": &hclsyntax.Attribute{
+			Name: "value",
 			Expr: expr,
 		},
-		"format_as": &hclsyntax.Attribute{
-			Name: "format_as",
+		"relative_size": &hclsyntax.Attribute{
+			Name: "relative_size",
 			Expr: &hclsyntax.LiteralValueExpr{
-				Val:      cty.StringVal("title"),
+				Val:      cty.NumberIntVal(-1),
 				SrcRange: t.Expression.Range(),
 			},
 		},
@@ -74,7 +74,7 @@ func (t *titleInvocation) ParseInvocation(spec hcldec.Spec) (val cty.Value, diag
 }
 
 func NewTitle(title *hclsyntax.Attribute, resolver ConfigResolver) *ParsedContent {
-	pluginName := "text"
+	pluginName := "title"
 	return &ParsedContent{
 		PluginName: pluginName,
 		Config:     resolver(BlockKindContent, pluginName),

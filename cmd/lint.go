@@ -16,7 +16,7 @@ import (
 type noopPluginCaller struct{}
 
 // CallContent implements evaluation.PluginCaller.
-func (n *noopPluginCaller) CallContent(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation, context plugin.MapData) (result *plugin.Content, diag diagnostics.Diag) {
+func (n *noopPluginCaller) CallContent(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation, context plugin.MapData) (result *plugin.ContentResult, diag diagnostics.Diag) {
 	return nil, nil
 }
 

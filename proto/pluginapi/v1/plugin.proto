@@ -36,10 +36,11 @@ message ProvideContentRequest {
     CtyValue     args         = 2;
     CtyValue     config       = 3;
     MapData      data_context = 4;
+    uint32       content_id   = 5;
 }
 
 message ProvideContentResponse {
-    Content             content     = 1;
+    ContentResult       result      = 1;
     repeated Diagnostic diagnostics = 2;
 }
 

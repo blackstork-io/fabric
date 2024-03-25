@@ -37,11 +37,11 @@ func (s *ListGeneratorTestSuite) TestNilQueryResult() {
 		"format":        cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args:        args,
 		DataContext: plugin.MapData{},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to render template",
@@ -55,13 +55,13 @@ func (s *ListGeneratorTestSuite) TestNonArrayQueryResult() {
 		"format":        cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.StringData("not_an_array"),
 		},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to render template",
@@ -75,7 +75,7 @@ func (s *ListGeneratorTestSuite) TestUnordered() {
 		"format":        cty.StringVal("unordered"),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{
@@ -84,9 +84,7 @@ func (s *ListGeneratorTestSuite) TestUnordered() {
 			},
 		},
 	})
-	s.Equal(&plugin.Content{
-		Markdown: "* foo bar\n* foo baz\n",
-	}, content)
+	s.Equal("* foo bar\n* foo baz\n", result.Content.Print())
 	s.Empty(diags)
 }
 
@@ -96,7 +94,7 @@ func (s *ListGeneratorTestSuite) TestOrdered() {
 		"format":        cty.StringVal("ordered"),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{
@@ -105,9 +103,7 @@ func (s *ListGeneratorTestSuite) TestOrdered() {
 			},
 		},
 	})
-	s.Equal(&plugin.Content{
-		Markdown: "1. foo bar\n2. foo baz\n",
-	}, content)
+	s.Equal("1. foo bar\n2. foo baz\n", result.Content.Print())
 	s.Empty(diags)
 }
 
@@ -117,7 +113,7 @@ func (s *ListGeneratorTestSuite) TestTaskList() {
 		"format":        cty.StringVal("tasklist"),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{
@@ -126,9 +122,7 @@ func (s *ListGeneratorTestSuite) TestTaskList() {
 			},
 		},
 	})
-	s.Equal(&plugin.Content{
-		Markdown: "* [ ] foo bar\n* [ ] foo baz\n",
-	}, content)
+	s.Equal("* [ ] foo bar\n* [ ] foo baz\n", result.Content.Print())
 	s.Empty(diags)
 }
 
@@ -138,7 +132,7 @@ func (s *ListGeneratorTestSuite) TestBasic() {
 		"format":        cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{
@@ -147,9 +141,7 @@ func (s *ListGeneratorTestSuite) TestBasic() {
 			},
 		},
 	})
-	s.Equal(&plugin.Content{
-		Markdown: "* foo bar\n* foo baz\n",
-	}, content)
+	s.Equal("* foo bar\n* foo baz\n", result.Content.Print())
 	s.Empty(diags)
 }
 
@@ -159,7 +151,7 @@ func (s *ListGeneratorTestSuite) TestAdvanced() {
 		"format":        cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{
@@ -174,9 +166,7 @@ func (s *ListGeneratorTestSuite) TestAdvanced() {
 			},
 		},
 	})
-	s.Equal(&plugin.Content{
-		Markdown: "* foo bar1 baz1\n* foo bar2 baz2\n",
-	}, content)
+	s.Equal("* foo bar1 baz1\n* foo bar2 baz2\n", result.Content.Print())
 	s.Empty(diags)
 }
 
@@ -186,15 +176,13 @@ func (s *ListGeneratorTestSuite) TestEmptyQueryResult() {
 		"format":        cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{},
 		},
 	})
-	s.Equal(&plugin.Content{
-		Markdown: "",
-	}, content)
+	s.Equal("", result.Content.Print())
 	s.Empty(diags)
 }
 
@@ -204,13 +192,13 @@ func (s *ListGeneratorTestSuite) TestMissingItemTemplate() {
 		"format":        cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{},
 		},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse template",
@@ -224,13 +212,13 @@ func (s *ListGeneratorTestSuite) TestInvalidFormat() {
 		"format":        cty.StringVal("invalid"),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.ListData{},
 		},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse template",
@@ -244,10 +232,10 @@ func (s *ListGeneratorTestSuite) TestMissingDataContext() {
 		"format":        cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to render template",

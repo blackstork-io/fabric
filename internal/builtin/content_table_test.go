@@ -45,16 +45,14 @@ func (s *TableGeneratorTestSuite) TestNilQueryResult() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix":   plugin.StringData("User"),
 			"query_result": nil,
 		},
 	})
-	s.Equal(&plugin.Content{
-		Markdown: "|User Name|User Age|\n|---|---|\n",
-	}, content)
+	s.Equal("|User Name|User Age|\n|---|---|\n", result.Content.Print())
 	s.Nil(diags)
 }
 
@@ -72,16 +70,14 @@ func (s *TableGeneratorTestSuite) TestEmptyQueryResult() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix":   plugin.StringData("User"),
 			"query_result": plugin.ListData{},
 		},
 	})
-	s.Equal(&plugin.Content{
-		Markdown: "|User Name|User Age|\n|---|---|\n",
-	}, content)
+	s.Equal("|User Name|User Age|\n|---|---|\n", result.Content.Print())
 	s.Nil(diags)
 }
 
@@ -99,7 +95,7 @@ func (s *TableGeneratorTestSuite) TestBasic() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
@@ -115,9 +111,7 @@ func (s *TableGeneratorTestSuite) TestBasic() {
 			},
 		},
 	})
-	s.Equal(&plugin.Content{
-		Markdown: "|User Name|User Age|\n|---|---|\n|John|42|\n|Jane|43|\n",
-	}, content)
+	s.Equal("|User Name|User Age|\n|---|---|\n|John|42|\n|Jane|43|\n", result.Content.Print())
 	s.Nil(diags)
 }
 
@@ -133,7 +127,7 @@ func (s *TableGeneratorTestSuite) TestMissingHeader() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
@@ -149,7 +143,7 @@ func (s *TableGeneratorTestSuite) TestMissingHeader() {
 			},
 		},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
@@ -171,7 +165,7 @@ func (s *TableGeneratorTestSuite) TestNilHeader() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
@@ -187,7 +181,7 @@ func (s *TableGeneratorTestSuite) TestNilHeader() {
 			},
 		},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
@@ -209,7 +203,7 @@ func (s *TableGeneratorTestSuite) TestNilValue() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
@@ -225,7 +219,7 @@ func (s *TableGeneratorTestSuite) TestNilValue() {
 			},
 		},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
@@ -238,7 +232,7 @@ func (s *TableGeneratorTestSuite) TestNilColumns() {
 		"columns": cty.NullVal(cty.List(cty.Object(map[string]cty.Type{}))),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
@@ -254,7 +248,7 @@ func (s *TableGeneratorTestSuite) TestNilColumns() {
 			},
 		},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
@@ -267,7 +261,7 @@ func (s *TableGeneratorTestSuite) TestEmptyColumns() {
 		"columns": cty.ListValEmpty(cty.Object(map[string]cty.Type{})),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
@@ -283,7 +277,7 @@ func (s *TableGeneratorTestSuite) TestEmptyColumns() {
 			},
 		},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
@@ -305,7 +299,7 @@ func (s *TableGeneratorTestSuite) TestInvalidHeaderTemplate() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
@@ -321,7 +315,7 @@ func (s *TableGeneratorTestSuite) TestInvalidHeaderTemplate() {
 			},
 		},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
@@ -343,7 +337,7 @@ func (s *TableGeneratorTestSuite) TestInvalidValueTemplate() {
 		}),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
@@ -359,7 +353,7 @@ func (s *TableGeneratorTestSuite) TestInvalidValueTemplate() {
 			},
 		},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",

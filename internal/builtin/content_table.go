@@ -32,7 +32,7 @@ func makeTableContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.Content, hcl.Diagnostics) {
+func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
 	headers, values, err := parseTableContentArgs(params)
 	if err != nil {
 		return nil, hcl.Diagnostics{{
@@ -49,8 +49,10 @@ func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (
 			Detail:   err.Error(),
 		}}
 	}
-	return &plugin.Content{
-		Markdown: result,
+	return &plugin.ContentResult{
+		Content: &plugin.ContentElement{
+			Markdown: result,
+		},
 	}, nil
 }
 

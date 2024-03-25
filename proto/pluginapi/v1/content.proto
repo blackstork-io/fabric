@@ -14,7 +14,25 @@ message Location {
     LocationEffect effect = 2;
 }
 
-message Content {
-    string    markdown  = 1;
-    Location  location  = 2;
+message ContentResult {
+    Content  content  = 1;
+    Location location = 2;
 }
+
+message Content {
+    oneof value {
+        ContentElement  element = 1;
+        ContentSection  section = 2;
+        ContentEmpty    empty   = 3;
+    };
+}
+
+message ContentSection {
+    repeated Content children = 1;
+}
+
+message ContentElement {
+    string      markdown = 1;
+}
+
+message ContentEmpty {}

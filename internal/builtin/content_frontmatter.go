@@ -42,7 +42,7 @@ func makeFrontMatterContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.Content, hcl.Diagnostics) {
+func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
 	format, m, err := parseFrontMatterArgs(params.Args, params.DataContext)
 	if err != nil {
 		return nil, hcl.Diagnostics{{
@@ -59,10 +59,12 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 			Detail:   err.Error(),
 		}}
 	}
-	return &plugin.Content{
-		Markdown: result,
+	return &plugin.ContentResult{
+		Content: &plugin.ContentElement{
+			Markdown: result,
+		},
 		Location: &plugin.Location{
-			Index:  0,
+			Index:  1,
 			Effect: plugin.LocationEffectBefore,
 		},
 	}, nil

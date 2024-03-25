@@ -71,7 +71,7 @@ func (cg *ContentProvider) Validate() hcl.Diagnostics {
 	return diags
 }
 
-func (cg *ContentProvider) Execute(ctx context.Context, params *ProvideContentParams) (*Content, hcl.Diagnostics) {
+func (cg *ContentProvider) Execute(ctx context.Context, params *ProvideContentParams) (*ContentResult, hcl.Diagnostics) {
 	if cg == nil {
 		return nil, hcl.Diagnostics{{
 			Severity: hcl.DiagError,
@@ -92,6 +92,7 @@ type ProvideContentParams struct {
 	Config      cty.Value
 	Args        cty.Value
 	DataContext MapData
+	ContentID   uint32
 }
 
-type ProvideContentFunc func(ctx context.Context, params *ProvideContentParams) (*Content, hcl.Diagnostics)
+type ProvideContentFunc func(ctx context.Context, params *ProvideContentParams) (*ContentResult, hcl.Diagnostics)

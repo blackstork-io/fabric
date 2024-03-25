@@ -10,10 +10,8 @@ document "example" {
     data csv "csv_file" {
         path = "./data.csv"
     }
-    content text {
-        text = "Values from the CSV file"
-        format_as = "title"
-        absolute_title_size = 2
+    content title {
+        value = "Values from the CSV file"
     }
     content table {
         query = ".data.csv.csv_file"

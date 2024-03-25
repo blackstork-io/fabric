@@ -12,7 +12,7 @@ type DataCaller interface {
 }
 
 type ContentCaller interface {
-	CallContent(ctx context.Context, name string, config Configuration, invocation Invocation, context plugin.MapData) (result *plugin.Content, diag diagnostics.Diag)
+	CallContent(ctx context.Context, name string, config Configuration, invocation Invocation, context plugin.MapData) (result *plugin.ContentResult, diag diagnostics.Diag)
 	ContentInvocationOrder(ctx context.Context, name string) (order plugin.InvocationOrder, diag diagnostics.Diag)
 }
 

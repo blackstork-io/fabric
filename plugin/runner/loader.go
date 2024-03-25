@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -102,8 +103,15 @@ func (l *loader) registerContentProvider(name string, schema *plugin.Schema, cp 
 		}}
 	}
 	l.contentMap[name] = loadedContentProvider{
-		plugin:          schema,
-		ContentProvider: cp,
+		plugin: schema,
+		ContentProvider: &plugin.ContentProvider{
+			Config: cp.Config,
+			Args:   cp.Args,
+			ContentFunc: func(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
+				return schema.ProvideContent(ctx, name, params)
+			},
+			InvocationOrder: cp.InvocationOrder,
+		},
 	}
 	return nil
 }

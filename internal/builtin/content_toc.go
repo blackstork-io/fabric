@@ -20,10 +20,9 @@ const (
 	defaultTOCStartLevel = 1
 	defaultTOCEndLevel   = 3
 	defaultTOCOrdered    = false
-	defaultTOCScope      = "document"
 )
 
-var availableTOCScopes = []string{"document", "section"}
+var availableTOCScopes = []string{"document", "section", "auto"}
 
 func makeTOCContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
@@ -89,7 +88,7 @@ func parseTOCArgs(args cty.Value) (*tocArgs, error) {
 	}
 	scope := args.GetAttr("scope")
 	if scope.IsNull() {
-		scope = cty.StringVal(defaultTOCScope)
+		scope = cty.StringVal("auto")
 	} else if !slices.Contains(availableTOCScopes, scope.AsString()) {
 		return nil, fmt.Errorf("scope should be one of %s", strings.Join(availableTOCScopes, ", "))
 	}
@@ -103,7 +102,7 @@ func parseTOCArgs(args cty.Value) (*tocArgs, error) {
 	}, nil
 }
 
-func genTOC(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.Content, hcl.Diagnostics) {
+func genTOC(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
 	args, err := parseTOCArgs(params.Args)
 	if err != nil {
 		return nil, hcl.Diagnostics{{
@@ -112,37 +111,7 @@ func genTOC(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.C
 			Detail:   err.Error(),
 		}}
 	}
-	var scopedCtx plugin.Data
-	if args.scope == "section" {
-		section, ok := params.DataContext["section"]
-		if !ok {
-			return nil, hcl.Diagnostics{{
-				Severity: hcl.DiagError,
-				Summary:  "No section context",
-				Detail:   "No section context found",
-			}}
-		}
-		scopedCtx = section
-	} else {
-		doc, ok := params.DataContext["document"]
-		if !ok {
-			return nil, hcl.Diagnostics{{
-				Severity: hcl.DiagError,
-				Summary:  "No document context",
-				Detail:   "No document context found",
-			}}
-		}
-		scopedCtx = doc
-	}
-	content, ok := scopedCtx.(plugin.MapData)["content"]
-	if !ok {
-		return nil, hcl.Diagnostics{{
-			Severity: hcl.DiagError,
-			Summary:  "No content context",
-			Detail:   "No content context found",
-		}}
-	}
-	titles, err := parseContentTitles(content, args.startLevel, args.endLevel)
+	titles, err := parseContentTitles(params.DataContext, args.startLevel, args.endLevel, args.scope)
 	if err != nil {
 		return nil, hcl.Diagnostics{{
 			Severity: hcl.DiagError,
@@ -151,11 +120,9 @@ func genTOC(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.C
 		}}
 	}
 
-	return &plugin.Content{
-		Markdown: titles.render(0, args.ordered),
-		Location: &plugin.Location{
-			Index:  0,
-			Effect: plugin.LocationEffectBefore,
+	return &plugin.ContentResult{
+		Content: &plugin.ContentElement{
+			Markdown: titles.render(0, args.ordered),
 		},
 	}, nil
 }
@@ -192,7 +159,6 @@ func (l tocNodeList) add(node tocNode) tocNodeList {
 	if len(l) == 0 {
 		return append(l, node)
 	}
-
 	last := l[len(l)-1]
 	if last.level < node.level {
 		last.children = last.children.add(node)
@@ -207,19 +173,43 @@ func anchorize(s string) string {
 	return strings.ToLower(strings.ReplaceAll(s, " ", "-"))
 }
 
-func parseContentTitles(data plugin.Data, startLvl, endLvl int) (tocNodeList, error) {
-	list, ok := data.(plugin.ListData)
-	if !ok {
-		return nil, fmt.Errorf("expected a list of content titles")
+func extractTitles(section *plugin.ContentSection) []string {
+	var titles []string
+	for _, content := range section.Children {
+		switch content := content.(type) {
+		case *plugin.ContentSection:
+			titles = append(titles, extractTitles(content)...)
+		case *plugin.ContentElement:
+			meta := content.Meta()
+			if meta == nil || meta.Plugin != Name || meta.Provider != "title" {
+				continue
+			}
+			titles = append(titles, content.Markdown)
+		}
+	}
+	return titles
+}
+
+func parseContentTitles(data plugin.MapData, startLvl, endLvl int, scope string) (tocNodeList, error) {
+	document, section := parseScope(data)
+	var list []string
+	if scope == "auto" {
+		if section != nil {
+			scope = "section"
+		} else {
+			scope = "document"
+		}
+	}
+	if scope == "document" {
+		list = extractTitles(document)
+	} else if scope == "section" && section != nil {
+		list = extractTitles(section)
+	} else {
+		return nil, fmt.Errorf("no content to parse")
 	}
 	var result tocNodeList
 	for _, item := range list {
-		elem, ok := item.(plugin.MapData)
-		if !ok {
-			return nil, fmt.Errorf("expected a string")
-		}
-		content := plugin.ParseContentData(elem)
-		line := strings.TrimSpace(content.Markdown)
+		line := strings.TrimSpace(item)
 		if strings.HasPrefix(line, "#") {
 			level := strings.Count(line, "#")
 			if level < startLvl || level > endLvl {

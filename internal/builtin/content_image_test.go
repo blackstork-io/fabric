@@ -71,12 +71,10 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceValid() {
 		"alt": cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
-	s.Equal(&plugin.Content{
-		Markdown: "![](https://example.com/image.png)",
-	}, content)
+	s.Equal("![](https://example.com/image.png)", result.Content.Print())
 	s.Empty(diags)
 }
 
@@ -86,11 +84,9 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceValidWithAlt() {
 		"alt": cty.StringVal("alt text"),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
-	s.Equal(&plugin.Content{
-		Markdown: "![alt text](https://example.com/image.png)",
-	}, content)
+	s.Equal("![alt text](https://example.com/image.png)", result.Content.Print())
 	s.Empty(diags)
 }
