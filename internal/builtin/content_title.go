@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	minAbsoluteTitleSize     = int64(1)
-	maxAbsoluteTitleSize     = int64(6)
-	defaultAbsoluteTitleSize = int64(1)
+	minAbsoluteTitleSize     = int64(0)
+	maxAbsoluteTitleSize     = int64(5)
+	defaultAbsoluteTitleSize = int64(0)
 )
 
 func makeTitleContentProvider() *plugin.ContentProvider {
@@ -83,7 +83,7 @@ func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (
 	}
 	// remove all newlines
 	text = strings.ReplaceAll(text, "\n", " ")
-	text = strings.Repeat("#", int(titleSize)) + " " + text
+	text = strings.Repeat("#", int(titleSize)+1) + " " + text
 	return &plugin.ContentResult{
 		Content: &plugin.ContentElement{
 			Markdown: text,

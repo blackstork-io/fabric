@@ -15,10 +15,10 @@ import (
 )
 
 const (
-	minTOCLevel          = 1
-	maxTOCLevel          = 6
-	defaultTOCStartLevel = 1
-	defaultTOCEndLevel   = 3
+	minTOCLevel          = 0
+	maxTOCLevel          = 5
+	defaultTOCStartLevel = 0
+	defaultTOCEndLevel   = 2
 	defaultTOCOrdered    = false
 )
 
@@ -211,11 +211,11 @@ func parseContentTitles(data plugin.MapData, startLvl, endLvl int, scope string)
 	for _, item := range list {
 		line := strings.TrimSpace(item)
 		if strings.HasPrefix(line, "#") {
-			level := strings.Count(line, "#")
+			level := strings.Count(line, "#") - 1
 			if level < startLvl || level > endLvl {
 				continue
 			}
-			title := strings.TrimSpace(line[level:])
+			title := strings.TrimSpace(line[level+1:])
 			result = result.add(tocNode{level: level, title: title})
 		}
 	}

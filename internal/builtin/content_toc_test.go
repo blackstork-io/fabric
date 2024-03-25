@@ -99,8 +99,8 @@ func (s *TOCContentTestSuite) TestAdvanced() {
 	}
 	res, diags := schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
-			"start_level": cty.NumberIntVal(2),
-			"end_level":   cty.NumberIntVal(3),
+			"start_level": cty.NumberIntVal(1),
+			"end_level":   cty.NumberIntVal(2),
 			"ordered":     cty.True,
 			"scope":       cty.StringVal("document"),
 		}),

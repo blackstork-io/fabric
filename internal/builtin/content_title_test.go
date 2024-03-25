@@ -87,7 +87,7 @@ func (s *TitleTestSuite) TestWithSize() {
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"value":         cty.StringVal("Hello {{.name}}!"),
-			"absolute_size": cty.NumberIntVal(3),
+			"absolute_size": cty.NumberIntVal(2),
 			"relative_size": cty.NullVal(cty.Number),
 		}),
 		DataContext: plugin.MapData{
@@ -113,7 +113,7 @@ func (s *TitleTestSuite) TestWithSizeTooBig() {
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
-		Detail:   "absolute_size must be between 1 and 6",
+		Detail:   "absolute_size must be between 0 and 5",
 	}}, diags)
 	s.Nil(result)
 }
