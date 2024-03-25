@@ -2,6 +2,7 @@ package definitions
 
 import (
 	"context"
+	"slices"
 	"sync"
 
 	"github.com/hashicorp/hcl/v2"
@@ -26,21 +27,52 @@ type ParsedSection struct {
 	Content []Renderable
 }
 
-func (s ParsedSection) Render(ctx context.Context, caller evaluation.ContentCaller, dataCtx evaluation.DataContext, result *evaluation.Result) (diags diagnostics.Diag) {
-	if s.Meta != nil {
-		dataCtx.Set(BlockKindSection, plugin.ConvMapData{
-			BlockKindMeta: s.Meta.AsJQData(),
-		})
-	} else {
-		dataCtx.Delete(BlockKindSection)
-	}
-	if title := s.Title; title != nil {
-		diags.Extend(title.Render(ctx, caller, dataCtx.Share(), result))
-	}
+func (s ParsedSection) Name() string {
+	return ""
+}
 
-	for _, content := range s.Content {
+func (s ParsedSection) Render(ctx context.Context, caller evaluation.ContentCaller, dataCtx evaluation.DataContext, result *evaluation.Result, contentID uint32) (diags diagnostics.Diag) {
+	var meta plugin.ConvertableData
+	if s.Meta != nil {
+		meta = s.Meta.AsJQData()
+	}
+	section := new(plugin.ContentSection)
+	result.Add(section, &plugin.Location{
+		Index: contentID,
+	})
+	if title := s.Title; title != nil {
+		empty := new(plugin.ContentEmpty)
+		section.Add(empty, nil)
+		dataCtx.Set(BlockKindSection, plugin.ConvMapData{
+			BlockKindContent: section,
+			BlockKindMeta:    meta,
+		})
+		diags.Extend(title.Render(ctx, caller, dataCtx.Share(), section, empty.ID()))
+	}
+	posMap := make(map[int]uint32)
+	for i := range s.Content {
+		empty := new(plugin.ContentEmpty)
+		section.Add(empty, nil)
+		posMap[i] = empty.ID()
+	}
+	execList := make([]int, 0, len(s.Content))
+	for i := range s.Content {
+		execList = append(execList, i)
+	}
+	slices.SortStableFunc(execList, func(a, b int) int {
+		ao, _ := caller.ContentInvocationOrder(ctx, s.Content[a].Name())
+		bo, _ := caller.ContentInvocationOrder(ctx, s.Content[b].Name())
+		return ao.Weight() - bo.Weight()
+	})
+
+	for _, idx := range execList {
+		content := s.Content[idx]
+		dataCtx.Set(BlockKindSection, plugin.ConvMapData{
+			BlockKindContent: section,
+			BlockKindMeta:    meta,
+		})
 		diags.Extend(
-			content.Render(ctx, caller, dataCtx.Share(), result),
+			content.Render(ctx, caller, dataCtx.Share(), section, posMap[idx]),
 		)
 	}
 	return

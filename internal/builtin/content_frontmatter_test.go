@@ -123,7 +123,7 @@ func (s *FrontMatterGeneratorTestSuite) TestWithContent() {
 		"format": cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
+	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
 	})
 	s.Equal("---\n"+
@@ -136,7 +136,7 @@ func (s *FrontMatterGeneratorTestSuite) TestWithContent() {
 		"waldo:\n"+
 		"    - fred\n"+
 		"    - plugh\n"+
-		"---\n", content.Markdown)
+		"---\n", result.Content.Print())
 	s.Nil(diags)
 }
 
@@ -146,7 +146,7 @@ func (s *FrontMatterGeneratorTestSuite) TestWithQueryResult() {
 		"format":  cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
+	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.MapData{
@@ -174,7 +174,7 @@ func (s *FrontMatterGeneratorTestSuite) TestWithQueryResult() {
 		"waldo:\n"+
 		"    - fred\n"+
 		"    - plugh\n"+
-		"---\n", content.Markdown)
+		"---\n", result.Content.Print())
 	s.Nil(diags)
 }
 
@@ -184,7 +184,7 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatYaml() {
 		"format":  cty.StringVal("yaml"),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
+	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.MapData{
@@ -212,7 +212,7 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatYaml() {
 		"waldo:\n"+
 		"    - fred\n"+
 		"    - plugh\n"+
-		"---\n", content.Markdown)
+		"---\n", result.Content.Print())
 	s.Nil(diags)
 }
 
@@ -222,7 +222,7 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatTOML() {
 		"format":  cty.StringVal("toml"),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
+	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.MapData{
@@ -248,7 +248,7 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatTOML() {
 		"[quux]\n"+
 		"corge = 'grault'\n"+
 		"garply = false\n"+
-		"+++\n", content.Markdown)
+		"+++\n", result.Content.Print())
 	s.Nil(diags)
 }
 
@@ -258,7 +258,7 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatJSON() {
 		"format":  cty.StringVal("json"),
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
+	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.MapData{
@@ -288,6 +288,6 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatJSON() {
 		"    \"fred\",\n"+
 		"    \"plugh\"\n"+
 		"  ]\n"+
-		"}\n", content.Markdown)
+		"}\n", result.Content.Print())
 	s.Nil(diags)
 }

@@ -2,6 +2,7 @@ package definitions
 
 import (
 	"context"
+	"slices"
 
 	"github.com/hashicorp/hcl/v2"
 
@@ -55,14 +56,14 @@ func (d *ParsedDocument) evalData(ctx context.Context, caller evaluation.DataCal
 	return
 }
 
-func (d *ParsedDocument) Render(ctx context.Context, caller evaluation.PluginCaller) (result []string, diags diagnostics.Diag) {
+func (d *ParsedDocument) Render(ctx context.Context, caller evaluation.PluginCaller) (result string, diags diagnostics.Diag) {
 	dataResult, diags := d.evalData(ctx, caller)
 	if diags.HasErrors() {
 		return
 	}
-	var res evaluation.Result
+	res := new(evaluation.Result)
 	document := plugin.ConvMapData{
-		BlockKindContent: &res,
+		BlockKindContent: res,
 	}
 	if d.Meta != nil {
 		document[BlockKindMeta] = d.Meta.AsJQData()
@@ -72,12 +73,29 @@ func (d *ParsedDocument) Render(ctx context.Context, caller evaluation.PluginCal
 		BlockKindData:     dataResult,
 		BlockKindDocument: document,
 	})
-
-	for _, content := range d.Content {
+	posMap := make(map[int]uint32)
+	for i := range d.Content {
+		empty := new(plugin.ContentEmpty)
+		res.Add(empty, nil)
+		posMap[i] = empty.ID()
+	}
+	execList := make([]int, 0, len(d.Content))
+	for i := range d.Content {
+		execList = append(execList, i)
+	}
+	slices.SortStableFunc(execList, func(a, b int) int {
+		ao, _ := caller.ContentInvocationOrder(ctx, d.Content[a].Name())
+		bo, _ := caller.ContentInvocationOrder(ctx, d.Content[b].Name())
+		return ao.Weight() - bo.Weight()
+	})
+	for _, idx := range execList {
+		content := d.Content[idx]
+		dataCtx.Delete(BlockKindSection)
 		diags.Extend(
-			content.Render(ctx, caller, dataCtx.Share(), &res),
+			content.Render(ctx, caller, dataCtx.Share(), res, posMap[idx]),
 		)
 	}
-	result = res.AsGoType()
+	res.Compact()
+	result = res.Print()
 	return
 }

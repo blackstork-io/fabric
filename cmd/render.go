@@ -15,7 +15,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
-func Render(ctx context.Context, blocks *parser.DefinedBlocks, pluginCaller *parser.Caller, docName string) (results []string, diags diagnostics.Diag) {
+func Render(ctx context.Context, blocks *parser.DefinedBlocks, pluginCaller *parser.Caller, docName string) (results string, diags diagnostics.Diag) {
 	doc, found := blocks.Documents[docName]
 	if !found {
 		diags.Add(
@@ -40,20 +40,13 @@ func Render(ctx context.Context, blocks *parser.DefinedBlocks, pluginCaller *par
 	return
 }
 
-func writeResults(dest io.Writer, results []string) (diags diagnostics.Diag) {
+func writeResults(dest io.Writer, results string) (diags diagnostics.Diag) {
 	if len(results) == 0 {
 		diags.Add("Empty output", "No content was produced")
 		return
 	}
 	w := bufio.NewWriter(dest)
-
-	// bufio.Writer preserves the first encountered error,
-	// so we're only cheking it once at flush
-	_, _ = w.WriteString(results[0])
-	for _, result := range results[1:] {
-		_, _ = w.WriteString("\n\n")
-		_, _ = w.WriteString(result)
-	}
+	w.WriteString(results)
 	_ = w.WriteByte('\n')
 	err := w.Flush()
 	diags.AppendErr(err, "Error while outputing result")

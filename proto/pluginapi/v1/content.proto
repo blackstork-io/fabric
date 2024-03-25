@@ -2,6 +2,37 @@ syntax = "proto3";
 
 package pluginapi.v1;
 
-message Content {
-    string markdown = 1;
+
+enum LocationEffect {
+    LOCATION_EFFECT_UNSPECIFIED = 0;
+    LOCATION_EFFECT_BEFORE      = 1;
+    LOCATION_EFFECT_AFTER       = 2;
 }
+
+message Location {
+    uint32         index  = 1;
+    LocationEffect effect = 2;
+}
+
+message ContentResult {
+    Content  content  = 1;
+    Location location = 2;
+}
+
+message Content {
+    oneof value {
+        ContentElement  element = 1;
+        ContentSection  section = 2;
+        ContentEmpty    empty   = 3;
+    };
+}
+
+message ContentSection {
+    repeated Content children = 1;
+}
+
+message ContentElement {
+    string      markdown = 1;
+}
+
+message ContentEmpty {}

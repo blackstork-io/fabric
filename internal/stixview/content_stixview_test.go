@@ -53,7 +53,7 @@ func (s *StixViewTestSuite) TestGistID() {
 		`<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`,
 		`<div data-stix-gist-id="123">`,
 		`</div>`,
-	}, "\n"), res.Markdown)
+	}, "\n"), res.Content.Print())
 }
 
 func (s *StixViewTestSuite) TestStixURL() {
@@ -78,7 +78,7 @@ func (s *StixViewTestSuite) TestStixURL() {
 		`<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`,
 		`<div data-stix-url="https://example.com/stix.json">`,
 		`</div>`,
-	}, "\n"), res.Markdown)
+	}, "\n"), res.Content.Print())
 }
 
 func (s *StixViewTestSuite) TestAllArgs() {
@@ -103,7 +103,7 @@ func (s *StixViewTestSuite) TestAllArgs() {
 		`<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`,
 		`<div data-stix-gist-id="123" data-show-sidebar=true data-show-footer=true data-show-tlp-as-tags=true data-caption="test caption" data-show-marking-nodes=true data-show-labels=true data-show-idrefs=true data-graph-width=400 data-graph-height=300>`,
 		`</div>`,
-	}, "\n"), res.Markdown)
+	}, "\n"), res.Content.Print())
 }
 
 func (s *StixViewTestSuite) TestQueryResult() {
@@ -130,8 +130,8 @@ func (s *StixViewTestSuite) TestQueryResult() {
 		},
 	})
 	s.Len(diags, 0)
-	s.Contains(res.Markdown, `<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`)
-	s.Contains(res.Markdown, `<div id="graph-`)
-	s.Contains(res.Markdown, `window.stixview.init(`)
-	s.Contains(res.Markdown, `"objects":  [{"key":"value"}]}`)
+	s.Contains(res.Content.Print(), `<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`)
+	s.Contains(res.Content.Print(), `<div id="graph-`)
+	s.Contains(res.Content.Print(), `window.stixview.init(`)
+	s.Contains(res.Content.Print(), `"objects":  [{"key":"value"}]}`)
 }

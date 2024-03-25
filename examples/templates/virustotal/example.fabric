@@ -16,6 +16,6 @@ document "example" {
         end_date = "20240203"
     }
     content text {
-        text = "{{.data.virustotal_api_usage.my_usage.daily}}"
+        value = "{{.data.virustotal_api_usage.my_usage.daily}}"
     }
 }

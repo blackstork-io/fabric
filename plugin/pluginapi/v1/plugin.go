@@ -67,7 +67,7 @@ func (p *grpcPlugin) callOptions() []grpc.CallOption {
 }
 
 func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient) plugin.ProvideContentFunc {
-	return func(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.Content, hcl.Diagnostics) {
+	return func(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
 		p.logger.Debug("Calling content provider", "name", name)
 		defer func(start time.Time) {
 			p.logger.Debug("Called content provider", "name", name, "took", time.Since(start))
@@ -100,6 +100,7 @@ func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient)
 			Config:      cfgEncoded,
 			Args:        argsEncoded,
 			DataContext: encodeMapData(params.DataContext),
+			ContentId:   params.ContentID,
 		}, p.callOptions()...)
 		if err != nil {
 			return nil, hcl.Diagnostics{{
@@ -108,9 +109,9 @@ func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient)
 				Detail:   err.Error(),
 			}}
 		}
-		content := decodeContent(res.Content)
+		result := decodeContentResult(res.Result)
 		diags := decodeDiagnosticList(res.Diagnostics)
-		return content, diags
+		return result, diags
 	}
 }
 

@@ -34,6 +34,10 @@ func (s *TOCContentTestSuite) TestSchema() {
 func (s *TOCContentTestSuite) TestSimple() {
 	schema := makeTOCContentProvider()
 	ctx := context.Background()
+	titleMeta := plugin.MapData{
+		"provider": plugin.StringData("title"),
+		"plugin":   plugin.StringData("blackstork/builtin"),
+	}
 	res, diags := schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"start_level": cty.NullVal(cty.Number),
@@ -43,13 +47,37 @@ func (s *TOCContentTestSuite) TestSimple() {
 		}),
 		DataContext: plugin.MapData{
 			"document": plugin.MapData{
-				"content": plugin.ListData{
-					plugin.StringData("# Header 1"),
-					plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
-					plugin.StringData("## Header 2"),
-					plugin.StringData("Vestibulum nec odio."),
-					plugin.StringData("### Header 3"),
-					plugin.StringData("Integer sit amet."),
+				"content": plugin.MapData{
+					"type": plugin.StringData("section"),
+					"children": plugin.ListData{
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("# Header 1"),
+							"meta":     titleMeta,
+						},
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
+						},
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("## Header 2"),
+							"meta":     titleMeta,
+						},
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("Vestibulum nec odio."),
+						},
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("### Header 3"),
+							"meta":     titleMeta,
+						},
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("Integer sit amet."),
+						},
+					},
 				},
 			},
 		},
@@ -59,32 +87,76 @@ func (s *TOCContentTestSuite) TestSimple() {
 		"- [Header 1](#header-1)",
 		"   - [Header 2](#header-2)",
 		"      - [Header 3](#header-3)",
-	}, "\n")+"\n", res.Markdown)
+	}, "\n")+"\n", res.Content.Print())
 }
 
 func (s *TOCContentTestSuite) TestAdvanced() {
 	schema := makeTOCContentProvider()
 	ctx := context.Background()
+	titleMeta := plugin.MapData{
+		"provider": plugin.StringData("title"),
+		"plugin":   plugin.StringData("blackstork/builtin"),
+	}
 	res, diags := schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
-			"start_level": cty.NumberIntVal(2),
-			"end_level":   cty.NumberIntVal(3),
+			"start_level": cty.NumberIntVal(1),
+			"end_level":   cty.NumberIntVal(2),
 			"ordered":     cty.True,
 			"scope":       cty.StringVal("document"),
 		}),
+
 		DataContext: plugin.MapData{
 			"document": plugin.MapData{
-				"content": plugin.ListData{
-					plugin.StringData("# Header 1"),
-					plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
-					plugin.StringData("## Header 2"),
-					plugin.StringData("Vestibulum nec odio."),
-					plugin.StringData("### Header 3"),
-					plugin.StringData("Integer sit amet."),
-					plugin.StringData("## Header 4"),
-					plugin.StringData("Vestibulum nec odio."),
-					plugin.StringData("## Header 5"),
-					plugin.StringData("Vestibulum nec odio."),
+				"content": plugin.MapData{
+					"type": plugin.StringData("section"),
+					"children": plugin.ListData{
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("# Header 1"),
+							"meta":     titleMeta,
+						},
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
+							"meta":     titleMeta,
+						},
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("## Header 2"),
+							"meta":     titleMeta,
+						},
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("Vestibulum nec odio."),
+						},
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("### Header 3"),
+							"meta":     titleMeta,
+						},
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("Integer sit amet."),
+						},
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("## Header 4"),
+							"meta":     titleMeta,
+						},
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("Vestibulum nec odio."),
+						},
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("## Header 5"),
+							"meta":     titleMeta,
+						},
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("Vestibulum nec odio."),
+						},
+					},
 				},
 			},
 		},
@@ -95,5 +167,5 @@ func (s *TOCContentTestSuite) TestAdvanced() {
 		"   1. [Header 3](#header-3)",
 		"2. [Header 4](#header-4)",
 		"3. [Header 5](#header-5)",
-	}, "\n")+"\n", res.Markdown)
+	}, "\n")+"\n", res.Content.Print())
 }

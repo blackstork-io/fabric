@@ -77,7 +77,19 @@ func decodeContentProviderSchema(src *ContentProviderSchema) (*plugin.ContentPro
 		return nil, err
 	}
 	return &plugin.ContentProvider{
-		Args:   args,
-		Config: config,
+		Args:            args,
+		Config:          config,
+		InvocationOrder: decodeInvocationOrder(src.InvocationOrder),
 	}, nil
+}
+
+func decodeInvocationOrder(src InvocationOrder) plugin.InvocationOrder {
+	switch src {
+	case InvocationOrder_INVOCATION_ORDER_BEGIN:
+		return plugin.InvocationOrderBegin
+	case InvocationOrder_INVOCATION_ORDER_END:
+		return plugin.InvocationOrderEnd
+	default:
+		return plugin.InvocationOrderUnspecified
+	}
 }

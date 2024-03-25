@@ -30,7 +30,7 @@ func makeImageContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.Content, hcl.Diagnostics) {
+func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
 	src := params.Args.GetAttr("src")
 	if src.IsNull() || src.AsString() == "" {
 		return nil, hcl.Diagnostics{{
@@ -45,7 +45,9 @@ func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (
 	}
 	srcStr := strings.TrimSpace(strings.ReplaceAll(src.AsString(), "\n", ""))
 	altStr := strings.TrimSpace(strings.ReplaceAll(alt.AsString(), "\n", ""))
-	return &plugin.Content{
-		Markdown: fmt.Sprintf("![%s](%s)", altStr, srcStr),
+	return &plugin.ContentResult{
+		Content: &plugin.ContentElement{
+			Markdown: fmt.Sprintf("![%s](%s)", altStr, srcStr),
+		},
 	}, nil
 }

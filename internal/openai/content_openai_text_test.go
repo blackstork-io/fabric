@@ -16,7 +16,7 @@ import (
 
 type OpenAITextContentTestSuite struct {
 	suite.Suite
-	schema *plugin.Schema
+	schema *plugin.ContentProvider
 	cli    *client_mocks.Client
 }
 
@@ -25,7 +25,7 @@ func TestOpenAITextContentSuite(t *testing.T) {
 }
 
 func (s *OpenAITextContentTestSuite) SetupSuite() {
-	s.schema = Plugin("", func(opts ...client.Option) client.Client {
+	s.schema = makeOpenAITextContentSchema(func(opts ...client.Option) client.Client {
 		return s.cli
 	})
 }
@@ -39,11 +39,10 @@ func (s *OpenAITextContentTestSuite) TearDownTest() {
 }
 
 func (s *OpenAITextContentTestSuite) TestSchema() {
-	provider := s.schema.ContentProviders["openai_text"]
-	s.Require().NotNil(provider)
-	s.NotNil(provider.Args)
-	s.NotNil(provider.ContentFunc)
-	s.NotNil(provider.Config)
+	s.Require().NotNil(s.schema)
+	s.NotNil(s.schema.Args)
+	s.NotNil(s.schema.ContentFunc)
+	s.NotNil(s.schema.Config)
 }
 
 func (s *OpenAITextContentTestSuite) TestBasic() {
@@ -68,7 +67,7 @@ func (s *OpenAITextContentTestSuite) TestBasic() {
 		},
 	}, nil)
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "openai_text", &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
 			"model":  cty.NullVal(cty.String),
@@ -81,9 +80,7 @@ func (s *OpenAITextContentTestSuite) TestBasic() {
 		DataContext: plugin.MapData{},
 	})
 	s.Nil(diags)
-	s.Equal(&plugin.Content{
-		Markdown: "Once upon a time.",
-	}, content)
+	s.Equal("Once upon a time.", result.Content.Print())
 }
 
 func (s *OpenAITextContentTestSuite) TestAdvanced() {
@@ -112,7 +109,7 @@ func (s *OpenAITextContentTestSuite) TestAdvanced() {
 		},
 	}, nil)
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "openai_text", &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
 			"model":  cty.StringVal("model_123"),
@@ -129,14 +126,12 @@ func (s *OpenAITextContentTestSuite) TestAdvanced() {
 		},
 	})
 	s.Nil(diags)
-	s.Equal(&plugin.Content{
-		Markdown: "Once upon a time.",
-	}, content)
+	s.Equal("Once upon a time.", result.Content.Print())
 }
 
 func (s *OpenAITextContentTestSuite) TestMissingPrompt() {
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "openai_text", &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.NullVal(cty.String),
 			"model":  cty.NullVal(cty.String),
@@ -148,7 +143,7 @@ func (s *OpenAITextContentTestSuite) TestMissingPrompt() {
 		}),
 		DataContext: plugin.MapData{},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to generate text",
@@ -158,7 +153,7 @@ func (s *OpenAITextContentTestSuite) TestMissingPrompt() {
 
 func (s *OpenAITextContentTestSuite) TestMissingAPIKey() {
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "openai_text", &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
 			"model":  cty.NullVal(cty.String),
@@ -170,7 +165,7 @@ func (s *OpenAITextContentTestSuite) TestMissingAPIKey() {
 		}),
 		DataContext: plugin.MapData{},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to create client",
@@ -184,7 +179,7 @@ func (s *OpenAITextContentTestSuite) TestFailingClient() {
 		Message: "error_message",
 	})
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "openai_text", &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
 			"model":  cty.NullVal(cty.String),
@@ -196,7 +191,7 @@ func (s *OpenAITextContentTestSuite) TestFailingClient() {
 		}),
 		DataContext: plugin.MapData{},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to generate text",
@@ -208,7 +203,7 @@ func (s *OpenAITextContentTestSuite) TestCancellation() {
 	s.cli.On("GenerateChatCompletion", mock.Anything, mock.Anything).Return(nil, context.Canceled)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	content, diags := s.schema.ProvideContent(ctx, "openai_text", &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
 			"model":  cty.NullVal(cty.String),
@@ -220,7 +215,7 @@ func (s *OpenAITextContentTestSuite) TestCancellation() {
 		}),
 		DataContext: plugin.MapData{},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to generate text",
@@ -235,7 +230,7 @@ func (s *OpenAITextContentTestSuite) TestErrorEncoding() {
 	}
 	s.cli.On("GenerateChatCompletion", mock.Anything, mock.Anything).Return(nil, want)
 	ctx := context.Background()
-	content, diags := s.schema.ProvideContent(ctx, "openai_text", &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"prompt": cty.StringVal("Tell me a story"),
 			"model":  cty.NullVal(cty.String),
@@ -247,7 +242,7 @@ func (s *OpenAITextContentTestSuite) TestErrorEncoding() {
 		}),
 		DataContext: plugin.MapData{},
 	})
-	s.Nil(content)
+	s.Nil(result)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to generate text",
