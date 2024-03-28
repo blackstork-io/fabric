@@ -35,7 +35,7 @@ func Data(ctx context.Context, blocks *parser.DefinedBlocks, caller *parser.Call
 
 	if tgt[1] != "" {
 		// document.<doc-name>.data.<plugin-name>.<block-name>
-		doc, found := blocks.Documents[tgt[1]]
+		doc, found := blocks.Documents.Map[tgt[1]]
 		if !found {
 			diags.Add(
 				"Document not found",

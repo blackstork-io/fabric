@@ -5,14 +5,20 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/parser/blocks/internal/tree"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
 // Document and section are very similar conceptually.
 type Document struct {
+	tree.NodeSigil
 	Block *hclsyntax.Block
 	Name  string
 	Meta  *MetaBlock
+}
+
+func (d *Document) FriendlyName() string {
+	return "document"
 }
 
 var _ FabricBlock = (*Document)(nil)
@@ -25,6 +31,10 @@ var ctyDocumentType = capsuleTypeFor[Document]()
 
 func (d *Document) CtyType() cty.Type {
 	return ctyDocumentType
+}
+
+func (d *Document) AsCtyValue() cty.Value {
+	return cty.CapsuleVal(d.CtyType(), d)
 }
 
 func DefineDocument(block *hclsyntax.Block) (doc *Document, diags diagnostics.Diag) {

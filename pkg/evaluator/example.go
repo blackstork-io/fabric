@@ -5,8 +5,11 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/ext/customdecode"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/function"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
@@ -80,7 +83,35 @@ func (e eval) Render(docPath string) (res string, diags diagnostics.Diag) {
 	if diags.ExtendHcl(diag) {
 		return
 	}
-	val, diag := Extract[*hclsyntax.Block](expr, e.evalCtx)
+	evalCtx := e.sharedEval.evalCtx.NewChild()
+
+	// variables like cur_doc, etc
+
+	// wrong to set it here, just an example
+	evalCtx.Functions = map[string]function.Function{
+		"get": function.New(&function.Spec{
+			Params: []function.Parameter{
+				{
+					Name:        "path",
+					Description: "path to a block",
+					Type:        customdecode.ExpressionClosureType,
+				},
+			},
+			Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
+				closure := customdecode.ExpressionClosureFromVal(args[0])
+				// XXX: do the traversal on this thingy
+				// closure.Expression
+				// Must fully resolve (arbitrary exprs only in indexes)
+				// while evaluating all unknowns with
+				// closure.EvalContext
+				_ = closure
+				return cty.NilVal, nil
+				// return evalWithLocals(vars, closure)
+			},
+		}),
+	}
+
+	// val, diag := Extract[*hclsyntax.Block](expr, e.evalCtx)
 }
 
 func (e eval) RenderDocument(doc *hclsyntax.Block) (res string, diags diagnostics.Diag) {

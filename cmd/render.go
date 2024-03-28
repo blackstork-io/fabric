@@ -16,7 +16,7 @@ import (
 )
 
 func Render(ctx context.Context, blocks *parser.DefinedBlocks, pluginCaller *parser.Caller, docName string) (results []string, diags diagnostics.Diag) {
-	doc, found := blocks.Documents[docName]
+	doc, found := blocks.Documents.Map[docName]
 	if !found {
 		diags.Add(
 			"Document not found",

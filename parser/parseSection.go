@@ -92,7 +92,7 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 		}
 		switch block.Type {
 		case definitions.BlockKindContent:
-			plugin, diag := definitions.DefinePlugin(block, false)
+			plugin, diag := definitions.DefineContentPlugin(block, false)
 			if diags.Extend(diag) {
 				continue
 			}

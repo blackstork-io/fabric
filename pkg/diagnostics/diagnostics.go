@@ -62,13 +62,21 @@ func (d *Diag) Add(summary, detail string) {
 
 // Appends all diags to diagnostics, returns true if the just-appended diagnostics contain an error.
 func (d *Diag) Extend(diags Diag) (haveAddedErrors bool) {
-	*d = append(*d, diags...)
+	if *d == nil {
+		*d = diags
+	} else {
+		*d = append(*d, diags...)
+	}
 	return diags.HasErrors()
 }
 
 // Appends all diags to diagnostics, returns true if the just-appended diagnostics contain an error.
 func (d *Diag) ExtendHcl(diags hcl.Diagnostics) (haveAddedErrors bool) {
-	*d = append(*d, diags...)
+	if *d == nil {
+		*d = Diag(diags)
+	} else {
+		*d = append(*d, diags...)
+	}
 	return diags.HasErrors()
 }
 
