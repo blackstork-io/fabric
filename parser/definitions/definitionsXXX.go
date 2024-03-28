@@ -23,6 +23,7 @@ const (
 )
 
 type FabricBlock interface {
+	// tree.Node
 	GetHCLBlock() *hcl.Block
 	CtyType() cty.Type
 }

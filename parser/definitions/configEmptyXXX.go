@@ -1,8 +1,6 @@
 package definitions
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -36,7 +34,7 @@ func (c *ConfigEmpty) ParseConfig(spec hcldec.Spec) (val cty.Value, diags diagno
 	var diag hcl.Diagnostics
 	val, diag = hcldec.Decode(emptyBody, spec, nil)
 	for _, d := range diag {
-		d.Summary = fmt.Sprintf("Missing required configuration: %s", d.Summary)
+		d.Summary = "Missing required configuration: " + d.Summary
 	}
 	return val, diagnostics.Diag(diag)
 }

@@ -11,7 +11,7 @@ import (
 
 // To act as a plugin configuration struct must implement this interface.
 type Configuration interface {
-	ParseConfig(spec hcldec.Spec) (cty.Value, diagnostics.Diag)
+	GetBody() hcl.Body
 	Range() hcl.Range
 	Exists() bool
 }

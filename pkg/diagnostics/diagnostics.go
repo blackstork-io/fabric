@@ -8,22 +8,34 @@ import (
 
 type Diag hcl.Diagnostics // Diagnostics does implement error interface, but not, itself, an error.
 
-type repeatedError struct{}
+// Marks error as hidden if placed or embedded in hcl.Diagnostic.Extra.
+// Hidden errors won't be displayed to the user
+type HiddenError struct{}
+
+func (HiddenError) isHiddenError() hiddenErrorSigil {
+	return hiddenErrorSigil{}
+}
+
+type hiddenErrorSigil struct{}
+
+type hiddenErrorIface interface {
+	isHiddenError() hiddenErrorSigil
+}
 
 // Invisible to user error, typically used to signal that the initial block evaluation
 // has failed (and already has reported its errors to user).
 var RepeatedError = &hcl.Diagnostic{
 	Severity: hcl.DiagError,
-	Extra:    repeatedError{},
+	Extra:    HiddenError{},
 }
 
-func FindByExtra[T any](diags Diag) *hcl.Diagnostic {
-	for _, diag := range diags {
-		if _, found := hcl.DiagnosticExtra[T](diag); found {
-			return diag
+func FindByExtra[T any](diags Diag) (diag *hcl.Diagnostic, extra T) {
+	for _, dg := range diags {
+		if extra, found := hcl.DiagnosticExtra[T](dg); found {
+			return diag, extra
 		}
 	}
-	return nil
+	return
 }
 
 func (d Diag) Error() string {
@@ -50,13 +62,21 @@ func (d *Diag) Add(summary, detail string) {
 
 // Appends all diags to diagnostics, returns true if the just-appended diagnostics contain an error.
 func (d *Diag) Extend(diags Diag) (haveAddedErrors bool) {
-	*d = append(*d, diags...)
+	if *d == nil {
+		*d = diags
+	} else {
+		*d = append(*d, diags...)
+	}
 	return diags.HasErrors()
 }
 
 // Appends all diags to diagnostics, returns true if the just-appended diagnostics contain an error.
 func (d *Diag) ExtendHcl(diags hcl.Diagnostics) (haveAddedErrors bool) {
-	*d = append(*d, diags...)
+	if *d == nil {
+		*d = Diag(diags)
+	} else {
+		*d = append(*d, diags...)
+	}
 	return diags.HasErrors()
 }
 

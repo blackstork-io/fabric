@@ -8,12 +8,14 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/parser/blocks/internal/tree"
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
 type Section struct {
+	tree.NodeSigil
 	Block       *hclsyntax.Block
 	Once        sync.Once
 	Parsed      bool
@@ -75,6 +77,14 @@ var ctySectionType = capsuleTypeFor[Section]()
 
 func (*Section) CtyType() cty.Type {
 	return ctySectionType
+}
+
+func (s *Section) AsCtyValue() cty.Value {
+	return cty.CapsuleVal(s.CtyType(), s)
+}
+
+func (*Section) FriendlyName() string {
+	return "section"
 }
 
 func DefineSection(block *hclsyntax.Block, atTopLevel bool) (section *Section, diags diagnostics.Diag) {
