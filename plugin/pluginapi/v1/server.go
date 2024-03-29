@@ -68,13 +68,14 @@ func (srv *grpcServer) ProvideContent(ctx context.Context, req *ProvideContentRe
 		return nil, status.Errorf(codes.InvalidArgument, "failed to decode args: %v", err)
 	}
 	datactx := decodeMapData(req.GetDataContext())
-	content, diags := srv.schema.ProvideContent(ctx, provider, &plugin.ProvideContentParams{
+	result, diags := srv.schema.ProvideContent(ctx, provider, &plugin.ProvideContentParams{
 		Config:      cfg,
 		Args:        args,
 		DataContext: datactx,
+		ContentID:   req.GetContentId(),
 	})
 	return &ProvideContentResponse{
-		Content:     encodeContent(content),
+		Result:      encodeContentResult(result),
 		Diagnostics: encodeDiagnosticList(diags),
 	}, nil
 }

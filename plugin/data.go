@@ -167,6 +167,10 @@ func (d ConvMapData) AsJQData() Data {
 func (d ConvMapData) Any() any {
 	dst := make(map[string]any, len(d))
 	for k, v := range d {
+		if v == nil {
+			dst[k] = nil
+			continue
+		}
 		dst[k] = v.AsJQData().Any()
 	}
 	return dst

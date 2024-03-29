@@ -49,7 +49,7 @@ func makeOpenAITextContentSchema(loader ClientLoadFn) *plugin.ContentProvider {
 }
 
 func genOpenAIText(loader ClientLoadFn) plugin.ProvideContentFunc {
-	return func(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.Content, hcl.Diagnostics) {
+	return func(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
 		cli, err := makeClient(loader, params.Config)
 		if err != nil {
 			return nil, hcl.Diagnostics{{
@@ -66,8 +66,10 @@ func genOpenAIText(loader ClientLoadFn) plugin.ProvideContentFunc {
 				Detail:   err.Error(),
 			}}
 		}
-		return &plugin.Content{
-			Markdown: result,
+		return &plugin.ContentResult{
+			Content: &plugin.ContentElement{
+				Markdown: result,
+			},
 		}, nil
 	}
 }

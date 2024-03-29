@@ -1,5 +1,5 @@
 ---
-title: text 
+title: code 
 plugin:
   name: blackstork/builtin
   description: ""
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.0" "text" "content provider" >}}
+{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.0" "code" "content provider" >}}
 
 The content provider is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 
@@ -27,7 +27,8 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content text {
+content code {
+    language = <string>  # optional
     value = <string>  # required
 }
 ```

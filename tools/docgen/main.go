@@ -62,7 +62,7 @@ func generateDataSourceDocs(log *slog.Logger, p *plugin.Schema, outputDir string
 	dataSourcesDir := filepath.Join(outputDir, "data-sources")
 
 	// Create a directory for plugin's data sources if it doesn't exist
-	err := os.MkdirAll(dataSourcesDir, 0766)
+	err := os.MkdirAll(dataSourcesDir, 0o766)
 	if err != nil {
 		log.Error("Can't create a directory", "path", dataSourcesDir)
 		panic(err)
@@ -86,7 +86,7 @@ func generateContentProviderDocs(log *slog.Logger, p *plugin.Schema, outputDir s
 	contentProvidersDir := filepath.Join(outputDir, "content-providers")
 
 	// Create a directory for plugin's content providers if it doesn't exist
-	err := os.MkdirAll(contentProvidersDir, 0766)
+	err := os.MkdirAll(contentProvidersDir, 0o766)
 	if err != nil {
 		log.Error("Can't create a directory", "path", contentProvidersDir)
 		panic(err)
@@ -106,7 +106,6 @@ func generateContentProviderDocs(log *slog.Logger, p *plugin.Schema, outputDir s
 }
 
 func marshalDataSource(name string, ds *plugin.DataSource) PluginResourceMeta {
-
 	var configParams []string
 	configSpec, ok := ds.Config.(hcldec.ObjectSpec)
 	if ok && configSpec != nil {
@@ -131,7 +130,6 @@ func marshalDataSource(name string, ds *plugin.DataSource) PluginResourceMeta {
 }
 
 func marshalContentProvider(name string, p *plugin.ContentProvider) PluginResourceMeta {
-
 	var configParams []string
 	configSpec, ok := p.Config.(hcldec.ObjectSpec)
 	if ok && configSpec != nil {
@@ -228,7 +226,7 @@ func main() {
 		pluginOutputDir := filepath.Join(outputDir, pluginShortname)
 
 		// Create a plugin directory if it doesn't exist
-		err := os.MkdirAll(pluginOutputDir, 0766)
+		err := os.MkdirAll(pluginOutputDir, 0o766)
 		if err != nil {
 			log.Error("Can't create a plugin directory", "path", pluginOutputDir)
 			panic(err)
@@ -271,7 +269,7 @@ func renderContentProviderDoc(pluginSchema *plugin.Schema, contentProviderName s
 	}
 	defer f.Close()
 
-	var templContext = map[string]any{
+	templContext := map[string]any{
 		"plugin":           pluginSchema,
 		"plugin_shortname": shortname(pluginSchema.Name),
 		"name":             contentProviderName,
@@ -287,7 +285,7 @@ func renderDataSourceDoc(pluginSchema *plugin.Schema, dataSourceName string, dat
 	}
 	defer f.Close()
 
-	var templContext = map[string]any{
+	templContext := map[string]any{
 		"plugin":           pluginSchema,
 		"plugin_shortname": shortname(pluginSchema.Name),
 		"name":             dataSourceName,

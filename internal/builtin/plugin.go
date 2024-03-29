@@ -4,9 +4,11 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 )
 
+const Name = "blackstork/builtin"
+
 func Plugin(version string) *plugin.Schema {
 	return &plugin.Schema{
-		Name:    "blackstork/builtin",
+		Name:    Name,
 		Version: version,
 		DataSources: plugin.DataSources{
 			"csv":    makeCSVDataSource(),
@@ -17,6 +19,9 @@ func Plugin(version string) *plugin.Schema {
 		ContentProviders: plugin.ContentProviders{
 			"toc":         makeTOCContentProvider(),
 			"text":        makeTextContentProvider(),
+			"title":       makeTitleContentProvider(),
+			"code":        makeCodeContentProvider(),
+			"blockquote":  makeBlockQuoteContentProvider(),
 			"image":       makeImageContentProvider(),
 			"list":        makeListContentProvider(),
 			"table":       makeTableContentProvider(),

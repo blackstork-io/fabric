@@ -97,7 +97,7 @@ func makeStixViewContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func renderStixView(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.Content, hcl.Diagnostics) {
+func renderStixView(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
 	args, err := parseStixViewArgs(params.Args)
 	if err != nil {
 		return nil, hcl.Diagnostics{{
@@ -145,8 +145,10 @@ func renderStixView(ctx context.Context, params *plugin.ProvideContentParams) (*
 		}}
 	}
 
-	return &plugin.Content{
-		Markdown: buf.String(),
+	return &plugin.ContentResult{
+		Content: &plugin.ContentElement{
+			Markdown: buf.String(),
+		},
 	}, nil
 }
 

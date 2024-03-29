@@ -77,7 +77,19 @@ func encodeContentProviderSchema(src *plugin.ContentProvider) (*ContentProviderS
 		return nil, err
 	}
 	return &ContentProviderSchema{
-		Args:   args,
-		Config: config,
+		Args:            args,
+		Config:          config,
+		InvocationOrder: encodeInvocationOrder(src.InvocationOrder),
 	}, nil
+}
+
+func encodeInvocationOrder(src plugin.InvocationOrder) InvocationOrder {
+	switch src {
+	case plugin.InvocationOrderBegin:
+		return InvocationOrder_INVOCATION_ORDER_BEGIN
+	case plugin.InvocationOrderEnd:
+		return InvocationOrder_INVOCATION_ORDER_END
+	default:
+		return InvocationOrder_INVOCATION_ORDER_UNSPECIFIED
+	}
 }

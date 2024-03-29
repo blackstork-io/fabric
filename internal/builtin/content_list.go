@@ -41,7 +41,7 @@ func makeListContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.Content, hcl.Diagnostics) {
+func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
 	format, tmpl, err := parseListContentArgs(params)
 	if err != nil {
 		return nil, hcl.Diagnostics{{
@@ -58,8 +58,10 @@ func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 			Detail:   err.Error(),
 		}}
 	}
-	return &plugin.Content{
-		Markdown: result,
+	return &plugin.ContentResult{
+		Content: &plugin.ContentElement{
+			Markdown: result,
+		},
 	}, nil
 }
 

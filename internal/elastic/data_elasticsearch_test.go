@@ -23,7 +23,7 @@ type IntegrationTestSuite struct {
 	suite.Suite
 	container *elasticsearch.ElasticsearchContainer
 	client    *es.Client
-	plugin    *plugin.Schema
+	schema    *plugin.DataSource
 	cfg       cty.Value
 	ctx       context.Context
 }
@@ -65,7 +65,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		"bearer_auth":         cty.NullVal(cty.String),
 		"ca_certs":            cty.StringVal(string(s.container.Settings.CACert)),
 	})
-	s.plugin = Plugin("")
+	s.schema = makeElasticSearchDataSource()
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -121,7 +121,7 @@ func (s *IntegrationTestSuite) TestSearchDefaults() {
 		"fields":       cty.NullVal(cty.String),
 		"size":         cty.NullVal(cty.Number),
 	})
-	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{
+	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})
@@ -180,7 +180,7 @@ func (s *IntegrationTestSuite) TestSearchFields() {
 		"fields":       cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")}),
 		"size":         cty.NullVal(cty.Number),
 	})
-	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{
+	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})
@@ -237,7 +237,7 @@ func (s *IntegrationTestSuite) TestSearchQueryString() {
 		"fields":       cty.NullVal(cty.String),
 		"size":         cty.NullVal(cty.Number),
 	})
-	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{
+	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})
@@ -293,7 +293,7 @@ func (s *IntegrationTestSuite) TestSearchQuery() {
 		"fields":       cty.NullVal(cty.String),
 		"size":         cty.NullVal(cty.Number),
 	})
-	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{
+	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})
@@ -359,7 +359,7 @@ func (s *IntegrationTestSuite) TestSearchSize() {
 		"fields":       cty.NullVal(cty.String),
 		"size":         cty.NumberIntVal(1),
 	})
-	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{
+	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})
@@ -400,7 +400,7 @@ func (s *IntegrationTestSuite) TestGetByID() {
 		"aggs":         cty.NullVal(cty.DynamicPseudoType),
 		"fields":       cty.NullVal(cty.String),
 	})
-	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{
+	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})
@@ -435,7 +435,7 @@ func (s *IntegrationTestSuite) TestGetByIDFields() {
 		"aggs":         cty.NullVal(cty.DynamicPseudoType),
 		"fields":       cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")}),
 	})
-	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{
+	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})
@@ -467,7 +467,7 @@ func (s *IntegrationTestSuite) TestGetByIDNotFound() {
 		"aggs":         cty.NullVal(cty.DynamicPseudoType),
 		"fields":       cty.NullVal(cty.String),
 	})
-	data, diags := s.plugin.RetrieveData(s.ctx, "elasticsearch", &plugin.RetrieveDataParams{
+	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})

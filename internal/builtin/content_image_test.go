@@ -13,7 +13,7 @@ import (
 
 type ImageGeneratorTestSuite struct {
 	suite.Suite
-	plugin *plugin.Schema
+	schema *plugin.ContentProvider
 }
 
 func TestImageGeneratorTestSuite(t *testing.T) {
@@ -21,11 +21,7 @@ func TestImageGeneratorTestSuite(t *testing.T) {
 }
 
 func (s *ImageGeneratorTestSuite) SetupSuite() {
-	s.plugin = &plugin.Schema{
-		ContentProviders: plugin.ContentProviders{
-			"image": makeImageContentProvider(),
-		},
-	}
+	s.schema = makeImageContentProvider()
 }
 
 func (s *ImageGeneratorTestSuite) TestSchema() {
@@ -41,7 +37,7 @@ func (s *ImageGeneratorTestSuite) TestMissingImageSource() {
 		"alt": cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "image", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
 	s.Nil(content)
@@ -58,7 +54,7 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceEmpty() {
 		"alt": cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "image", &plugin.ProvideContentParams{
+	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
 	s.Nil(content)
@@ -75,12 +71,10 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceValid() {
 		"alt": cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "image", &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
-	s.Equal(&plugin.Content{
-		Markdown: "![](https://example.com/image.png)",
-	}, content)
+	s.Equal("![](https://example.com/image.png)", result.Content.Print())
 	s.Empty(diags)
 }
 
@@ -90,11 +84,9 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceValidWithAlt() {
 		"alt": cty.StringVal("alt text"),
 	})
 	ctx := context.Background()
-	content, diags := s.plugin.ProvideContent(ctx, "image", &plugin.ProvideContentParams{
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
-	s.Equal(&plugin.Content{
-		Markdown: "![alt text](https://example.com/image.png)",
-	}, content)
+	s.Equal("![alt text](https://example.com/image.png)", result.Content.Print())
 	s.Empty(diags)
 }

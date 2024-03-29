@@ -64,7 +64,7 @@ func (p *Schema) RetrieveData(ctx context.Context, name string, params *Retrieve
 	return source.Execute(ctx, params)
 }
 
-func (p *Schema) ProvideContent(ctx context.Context, name string, params *ProvideContentParams) (*Content, hcl.Diagnostics) {
+func (p *Schema) ProvideContent(ctx context.Context, name string, params *ProvideContentParams) (*ContentResult, hcl.Diagnostics) {
 	if p == nil {
 		return nil, hcl.Diagnostics{{
 			Severity: hcl.DiagError,
@@ -87,5 +87,14 @@ func (p *Schema) ProvideContent(ctx context.Context, name string, params *Provid
 			Detail:   "Content provider '" + name + "' not found in schema",
 		}}
 	}
-	return provider.Execute(ctx, params)
+	result, diags := provider.Execute(ctx, params)
+	if diags.HasErrors() {
+		return nil, diags
+	}
+	result.Content.setMeta(&ContentMeta{
+		Provider: name,
+		Plugin:   p.Name,
+		Version:  p.Version,
+	})
+	return result, diags
 }
