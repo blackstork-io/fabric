@@ -21,14 +21,14 @@ const (
 func makeNistNvdCvesDataSource(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchNistNvdCvesData(loader),
-		Config: &hcldec.ObjectSpec{
+		Config: hcldec.ObjectSpec{
 			"api_key": &hcldec.AttrSpec{
 				Name:     "api_key",
 				Type:     cty.String,
 				Required: false,
 			},
 		},
-		Args: &hcldec.ObjectSpec{
+		Args: hcldec.ObjectSpec{
 			"last_mod_start_date": &hcldec.AttrSpec{
 				Name:     "last_mod_start_date",
 				Type:     cty.String,

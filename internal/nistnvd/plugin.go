@@ -14,7 +14,6 @@ func Plugin(version string, loader ClientLoadFn) *plugin.Schema {
 		Name:    "blackstork/nist_nvd",
 		Version: version,
 		DataSources: plugin.DataSources{
-			// "graphql": makeGraphQLDataSource(),
 			"nist_nvd_cves": makeNistNvdCvesDataSource(loader),
 		},
 	}
