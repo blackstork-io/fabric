@@ -77,6 +77,18 @@ builds:
       - windows
       - darwin
 
+  - id: plugin_nist_nvd
+    main: ./internal/nistnvd/cmd
+    binary: "nist_nvd@{{ .Version }}"
+    flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
+    goos:
+      - linux
+      - windows
+      - darwin
+
   - id: plugin_opencti
     main: ./internal/opencti/cmd
     binary: "opencti@{{ .Version }}"
@@ -330,6 +342,18 @@ archives:
       - plugin_stixview
     name_template: >-
       plugin_stixview_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+  - id: plugin_nist_nvd
+    format: tar.gz
+    builds:
+      - plugin_nist_nvd
+    name_template: >-
+      plugin_nist_nvd_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386

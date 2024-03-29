@@ -51,6 +51,12 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     no_unique_dist_dir: true
 
+  - id: nistnvd
+    main: ./internal/nistnvd/cmd
+    binary: "plugins/blackstork/nist_nvd@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    no_unique_dist_dir: true
+
   - id: postgresql
     main: ./internal/postgresql/cmd
     binary: "plugins/blackstork/postgresql@{{ .Version }}"

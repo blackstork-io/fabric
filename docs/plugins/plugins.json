@@ -31,20 +31,35 @@
         "type": "data-source"
       },
       {
+        "name": "frontmatter",
+        "type": "content-provider",
+        "arguments": [
+          "content",
+          "format"
+        ]
+      },
+      {
         "name": "toc",
         "type": "content-provider",
         "arguments": [
-          "start_level",
           "end_level",
           "ordered",
-          "scope"
+          "scope",
+          "start_level"
         ]
       },
       {
         "name": "text",
         "type": "content-provider",
         "arguments": [
+<<<<<<< HEAD
           "value"
+=======
+          "code_language",
+          "text",
+          "format_as",
+          "absolute_title_size"
+>>>>>>> 10d49a0 (internal/nistnvd: implement nist_nvd_cves data source)
         ]
       },
       {
@@ -113,6 +128,7 @@
         "name": "elasticsearch",
         "type": "data-source",
         "config_params": [
+<<<<<<< HEAD
           "api_key",
           "basic_auth_username",
           "basic_auth_password",
@@ -131,6 +147,26 @@
           "query",
           "aggs",
           "only_hits"
+=======
+          "ca_certs",
+          "base_url",
+          "cloud_id",
+          "api_key_str",
+          "api_key",
+          "basic_auth_username",
+          "basic_auth_password",
+          "bearer_auth"
+        ],
+        "arguments": [
+          "query_string",
+          "query",
+          "aggs",
+          "only_hits",
+          "fields",
+          "size",
+          "index",
+          "id"
+>>>>>>> 10d49a0 (internal/nistnvd: implement nist_nvd_cves data source)
         ]
       }
     ],
@@ -148,6 +184,7 @@
         ],
         "arguments": [
           "mentioned",
+<<<<<<< HEAD
           "sort",
           "direction",
           "since",
@@ -158,6 +195,18 @@
           "labels",
           "state",
           "assignee"
+=======
+          "labels",
+          "direction",
+          "since",
+          "limit",
+          "state",
+          "creator",
+          "assignee",
+          "sort",
+          "repository",
+          "milestone"
+>>>>>>> 10d49a0 (internal/nistnvd: implement nist_nvd_cves data source)
         ]
       }
     ],
@@ -277,10 +326,11 @@
         "name": "hackerone_reports",
         "type": "data-source",
         "config_params": [
-          "api_username",
-          "api_token"
+          "api_token",
+          "api_username"
         ],
         "arguments": [
+<<<<<<< HEAD
           "closed_at__gt",
           "disclosed_at__lt",
           "bounty_awarded_at__lt",
@@ -327,6 +377,54 @@
           "swag_awarded_at__gt",
           "swag_awarded_at__lt",
           "last_activity_at__lt"
+=======
+          "disclosed_at__gt",
+          "swag_awarded_at__null",
+          "first_program_activity_at__null",
+          "last_program_activity_at__gt",
+          "sort",
+          "hacker_published",
+          "triaged_at__lt",
+          "closed_at__lt",
+          "last_report_activity_at__gt",
+          "assignee",
+          "created_at__lt",
+          "disclosed_at__lt",
+          "reporter_agreed_on_going_public",
+          "bounty_awarded_at__lt",
+          "bounty_awarded_at__null",
+          "size",
+          "inbox_ids",
+          "id",
+          "weakness_id",
+          "last_public_activity_at__lt",
+          "triaged_at__gt",
+          "closed_at__gt",
+          "disclosed_at__null",
+          "last_program_activity_at__lt",
+          "last_activity_at__gt",
+          "keyword",
+          "custom_fields",
+          "page_number",
+          "reporter",
+          "first_program_activity_at__lt",
+          "last_program_activity_at__null",
+          "last_report_activity_at__lt",
+          "first_program_activity_at__gt",
+          "last_activity_at__lt",
+          "program",
+          "submitted_at__gt",
+          "submitted_at__lt",
+          "swag_awarded_at__gt",
+          "triaged_at__null",
+          "bounty_awarded_at__gt",
+          "swag_awarded_at__lt",
+          "last_public_activity_at__gt",
+          "state",
+          "severity",
+          "created_at__gt",
+          "closed_at__null"
+>>>>>>> 10d49a0 (internal/nistnvd: implement nist_nvd_cves data source)
         ]
       }
     ],
@@ -360,17 +458,25 @@
         "name": "splunk_search",
         "type": "data-source",
         "config_params": [
+          "deployment_name",
           "auth_token",
-          "host",
-          "deployment_name"
+          "host"
         ],
         "arguments": [
+<<<<<<< HEAD
+=======
+          "search_query",
+>>>>>>> 10d49a0 (internal/nistnvd: implement nist_nvd_cves data source)
           "max_count",
           "status_buckets",
           "rf",
           "earliest_time",
+<<<<<<< HEAD
           "latest_time",
           "search_query"
+=======
+          "latest_time"
+>>>>>>> 10d49a0 (internal/nistnvd: implement nist_nvd_cves data source)
         ]
       }
     ],
@@ -384,6 +490,7 @@
         "name": "stixview",
         "type": "content-provider",
         "arguments": [
+<<<<<<< HEAD
           "show_labels",
           "height",
           "caption",
@@ -395,10 +502,34 @@
           "gist_id",
           "stix_url",
           "show_footer"
+=======
+          "show_sidebar",
+          "show_marking_nodes",
+          "show_labels",
+          "width",
+          "caption",
+          "show_footer",
+          "show_tlp_as_tags",
+          "show_idrefs",
+          "height",
+          "gist_id",
+          "stix_url"
+>>>>>>> 10d49a0 (internal/nistnvd: implement nist_nvd_cves data source)
         ]
       }
     ],
     "shortname": "stixview",
+    "version": "v0.4.0"
+  },
+  {
+    "name": "blackstork/nist_nvd",
+    "resources": [
+      {
+        "name": "nist_nvd_cves",
+        "type": "data-source"
+      }
+    ],
+    "shortname": "nist_nvd",
     "version": "v0.4.0"
   }
 ]
