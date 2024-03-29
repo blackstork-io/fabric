@@ -3,10 +3,6 @@
     "name": "blackstork/builtin",
     "resources": [
       {
-        "name": "inline",
-        "type": "data-source"
-      },
-      {
         "name": "csv",
         "type": "data-source",
         "config_params": [
@@ -31,20 +27,30 @@
         ]
       },
       {
-        "name": "title",
+        "name": "inline",
+        "type": "data-source"
+      },
+      {
+        "name": "text",
         "type": "content-provider",
         "arguments": [
-          "value",
-          "absolute_size",
-          "relative_size"
+          "value"
         ]
       },
       {
-        "name": "image",
+        "name": "title",
         "type": "content-provider",
         "arguments": [
-          "src",
-          "alt"
+          "absolute_size",
+          "relative_size",
+          "value"
+        ]
+      },
+      {
+        "name": "blockquote",
+        "type": "content-provider",
+        "arguments": [
+          "value"
         ]
       },
       {
@@ -55,10 +61,29 @@
         ]
       },
       {
-        "name": "blockquote",
+        "name": "toc",
         "type": "content-provider",
         "arguments": [
-          "value"
+          "start_level",
+          "end_level",
+          "ordered",
+          "scope"
+        ]
+      },
+      {
+        "name": "code",
+        "type": "content-provider",
+        "arguments": [
+          "value",
+          "language"
+        ]
+      },
+      {
+        "name": "image",
+        "type": "content-provider",
+        "arguments": [
+          "src",
+          "alt"
         ]
       },
       {
@@ -76,31 +101,6 @@
           "format",
           "content"
         ]
-      },
-      {
-        "name": "toc",
-        "type": "content-provider",
-        "arguments": [
-          "scope",
-          "start_level",
-          "end_level",
-          "ordered"
-        ]
-      },
-      {
-        "name": "text",
-        "type": "content-provider",
-        "arguments": [
-          "value"
-        ]
-      },
-      {
-        "name": "code",
-        "type": "content-provider",
-        "arguments": [
-          "language",
-          "value"
-        ]
       }
     ],
     "shortname": "builtin",
@@ -113,24 +113,50 @@
         "name": "elasticsearch",
         "type": "data-source",
         "config_params": [
-          "cloud_id",
-          "api_key_str",
-          "api_key",
           "basic_auth_username",
           "basic_auth_password",
           "bearer_auth",
           "ca_certs",
-          "base_url"
+          "base_url",
+          "cloud_id",
+          "api_key_str",
+          "api_key"
         ],
         "arguments": [
+          "query_string",
+          "query",
+          "aggs",
           "only_hits",
           "fields",
           "size",
           "index",
-          "id",
-          "query_string",
-          "query",
-          "aggs"
+          "id"
+        ]
+      },
+      {
+        "name": "elastic_security_cases",
+        "type": "data-source",
+        "config_params": [
+          "kibana_endpoint_url",
+          "api_key_str",
+          "api_key"
+        ],
+        "arguments": [
+          "default_search_operator",
+          "from",
+          "owner",
+          "sort_field",
+          "tags",
+          "space_id",
+          "assignees",
+          "reporters",
+          "search",
+          "search_fields",
+          "severity",
+          "status",
+          "sort_order",
+          "to",
+          "size"
         ]
       }
     ],
@@ -147,17 +173,17 @@
           "github_token"
         ],
         "arguments": [
-          "repository",
-          "milestone",
-          "state",
-          "creator",
-          "mentioned",
-          "sort",
+          "labels",
           "direction",
           "since",
-          "limit",
+          "repository",
+          "state",
           "assignee",
-          "labels"
+          "mentioned",
+          "milestone",
+          "creator",
+          "sort",
+          "limit"
         ]
       }
     ],
@@ -171,8 +197,8 @@
         "name": "graphql",
         "type": "data-source",
         "config_params": [
-          "url",
-          "auth_token"
+          "auth_token",
+          "url"
         ],
         "arguments": [
           "query"
@@ -194,8 +220,8 @@
           "organization_id"
         ],
         "arguments": [
-          "model",
-          "prompt"
+          "prompt",
+          "model"
         ]
       }
     ],
@@ -281,52 +307,52 @@
           "api_token"
         ],
         "arguments": [
-          "weakness_id",
-          "hacker_published",
-          "triaged_at__lt",
-          "size",
-          "program",
-          "id",
           "triaged_at__gt",
-          "closed_at__lt",
-          "disclosed_at__lt",
-          "last_program_activity_at__lt",
-          "last_activity_at__gt",
-          "reporter_agreed_on_going_public",
-          "bounty_awarded_at__null",
-          "swag_awarded_at__gt",
           "swag_awarded_at__null",
+          "inbox_ids",
+          "closed_at__lt",
+          "reporter_agreed_on_going_public",
+          "last_report_activity_at__gt",
+          "first_program_activity_at__lt",
+          "last_activity_at__gt",
           "last_public_activity_at__lt",
-          "keyword",
-          "assignee",
-          "swag_awarded_at__lt",
-          "first_program_activity_at__null",
-          "last_program_activity_at__gt",
-          "last_public_activity_at__gt",
+          "triaged_at__null",
+          "program",
+          "hacker_published",
+          "closed_at__gt",
+          "disclosed_at__gt",
           "custom_fields",
-          "state",
+          "size",
+          "id",
+          "closed_at__null",
+          "bounty_awarded_at__lt",
+          "first_program_activity_at__null",
+          "reporter",
+          "assignee",
+          "severity",
           "created_at__gt",
           "created_at__lt",
-          "disclosed_at__gt",
           "disclosed_at__null",
-          "bounty_awarded_at__lt",
-          "page_number",
-          "submitted_at__lt",
-          "triaged_at__null",
-          "closed_at__gt",
           "bounty_awarded_at__gt",
-          "first_program_activity_at__lt",
-          "last_activity_at__lt",
-          "inbox_ids",
-          "severity",
-          "submitted_at__gt",
-          "last_report_activity_at__gt",
+          "bounty_awarded_at__null",
           "sort",
-          "reporter",
-          "closed_at__null",
+          "last_public_activity_at__gt",
+          "keyword",
           "last_report_activity_at__lt",
+          "submitted_at__lt",
+          "triaged_at__lt",
+          "disclosed_at__lt",
+          "last_program_activity_at__gt",
+          "state",
+          "weakness_id",
+          "submitted_at__gt",
+          "swag_awarded_at__gt",
+          "swag_awarded_at__lt",
           "first_program_activity_at__gt",
-          "last_program_activity_at__null"
+          "last_program_activity_at__null",
+          "last_activity_at__lt",
+          "page_number",
+          "last_program_activity_at__lt"
         ]
       }
     ],
@@ -343,10 +369,10 @@
           "api_key"
         ],
         "arguments": [
+          "user_id",
           "group_id",
           "start_date",
-          "end_date",
-          "user_id"
+          "end_date"
         ]
       }
     ],
@@ -384,17 +410,17 @@
         "name": "stixview",
         "type": "content-provider",
         "arguments": [
+          "show_labels",
+          "gist_id",
+          "show_footer",
+          "show_sidebar",
+          "show_tlp_as_tags",
+          "show_marking_nodes",
           "stix_url",
           "caption",
-          "show_footer",
-          "show_tlp_as_tags",
           "show_idrefs",
           "width",
-          "gist_id",
-          "show_marking_nodes",
-          "show_labels",
-          "height",
-          "show_sidebar"
+          "height"
         ]
       }
     ],
@@ -411,25 +437,25 @@
           "api_key"
         ],
         "arguments": [
-          "cvss_v3_metrics",
           "source_identifier",
+          "no_rejected",
           "cvss_v3_severity",
-          "virtual_match_string",
-          "is_vulnerable",
-          "last_mod_start_date",
-          "pub_start_date",
-          "pub_end_date",
-          "cve_id",
-          "has_cert_alerts",
-          "has_kev",
           "keyword_exact_match",
-          "limit",
+          "cvss_v3_metrics",
           "last_mod_end_date",
+          "pub_end_date",
           "cpe_name",
+          "cve_id",
           "cwe_id",
           "keyword_search",
+          "has_cert_alerts",
+          "last_mod_start_date",
+          "is_vulnerable",
           "has_cert_notes",
-          "no_rejected"
+          "virtual_match_string",
+          "has_kev",
+          "limit",
+          "pub_start_date"
         ]
       }
     ],

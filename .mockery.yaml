@@ -33,6 +33,10 @@ packages:
     config:
     interfaces:
       Client:
+  github.com/blackstork-io/fabric/internal/elastic/kbclient:
+    config:
+    interfaces:
+      Client:
   github.com/blackstork-io/fabric/plugin/resolver:
     config:
       inpackage: true

@@ -11,6 +11,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/elastic/kbclient"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -19,17 +20,25 @@ const (
 	defaultUsername = "elastic"
 )
 
-func Plugin(version string) *plugin.Schema {
+type KibanaClientLoaderFn func(url string, apiKey *string) kbclient.Client
+
+var DefaultKibanaClientLoader KibanaClientLoaderFn = kbclient.New
+
+func Plugin(version string, loader KibanaClientLoaderFn) *plugin.Schema {
+	if loader == nil {
+		loader = DefaultKibanaClientLoader
+	}
 	return &plugin.Schema{
 		Name:    "blackstork/elastic",
 		Version: version,
 		DataSources: plugin.DataSources{
-			"elasticsearch": makeElasticSearchDataSource(),
+			"elasticsearch":          makeElasticSearchDataSource(),
+			"elastic_security_cases": makeElasticSecurityCasesDataSource(loader),
 		},
 	}
 }
 
-func makeClient(pcfg cty.Value) (*es.Client, error) {
+func makeSearchClient(pcfg cty.Value) (*es.Client, error) {
 	cfg := &es.Config{
 		Addresses: []string{defaultBaseURL},
 		Username:  defaultUsername,
