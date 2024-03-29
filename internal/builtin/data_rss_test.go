@@ -278,7 +278,6 @@ func Test_fetchRSSData(t *testing.T) {
 					"url": cty.StringVal(addr + tc.url),
 				}),
 			}
-			t.Log("url", addr+tc.url)
 			if tc.auth != nil {
 				params.Config = cty.ObjectVal(map[string]cty.Value{
 					"basic_auth": cty.ListVal([]cty.Value{
