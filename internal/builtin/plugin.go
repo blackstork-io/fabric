@@ -13,6 +13,7 @@ func Plugin(version string) *plugin.Schema {
 		DataSources: plugin.DataSources{
 			"csv":    makeCSVDataSource(),
 			"txt":    makeTXTDataSource(),
+			"rss":    makeRSSDataSource(),
 			"json":   makeJSONDataSource(),
 			"inline": makeInlineDataSource(),
 		},
