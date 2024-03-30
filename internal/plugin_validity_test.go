@@ -30,7 +30,7 @@ func TestAllPluginSchemaValidity(t *testing.T) {
 	ver := "1.2.3"
 	plugins := []*plugin.Schema{
 		builtin.Plugin(ver),
-		elastic.Plugin(ver),
+		elastic.Plugin(ver, nil),
 		github.Plugin(ver, nil),
 		graphql.Plugin(ver),
 		openai.Plugin(ver, nil),

@@ -101,7 +101,7 @@ func makeElasticSearchDataSource() *plugin.DataSource {
 }
 
 func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
-	client, err := makeClient(params.Config)
+	client, err := makeSearchClient(params.Config)
 	if err != nil {
 		return nil, hcl.Diagnostics{{
 			Severity: hcl.DiagError,

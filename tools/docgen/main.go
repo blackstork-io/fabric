@@ -203,7 +203,7 @@ func main() {
 	// load all plugins
 	plugins := []*plugin.Schema{
 		builtin.Plugin(version),
-		elastic.Plugin(version),
+		elastic.Plugin(version, nil),
 		github.Plugin(version, nil),
 		graphql.Plugin(version),
 		openai.Plugin(version, nil),

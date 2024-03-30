@@ -9,6 +9,6 @@ var version string
 
 func main() {
 	pluginapiv1.Serve(
-		elastic.Plugin(version),
+		elastic.Plugin(version, elastic.DefaultKibanaClientLoader),
 	)
 }
