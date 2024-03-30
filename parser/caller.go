@@ -66,7 +66,7 @@ func (c *Caller) pluginData(kind, name string) (pluginData, diagnostics.Diag) {
 	}
 }
 
-func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evaluation.Configuration, invocation evaluation.Invocation, dataCtx plugin.MapData) (res any, diags diagnostics.Diag) {
+func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evaluation.Configuration, invocation evaluation.Invocation, dataCtx plugin.MapData, contentID uint32) (res any, diags diagnostics.Diag) {
 	data, diags := c.pluginData(kind, name)
 	if diags.HasErrors() {
 		return
@@ -146,6 +146,7 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 			Config:      configVal,
 			Args:        pluginArgs,
 			DataContext: dataCtx,
+			ContentID:   contentID,
 		})
 		res = content
 		diags.ExtendHcl(diag)
@@ -153,10 +154,10 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 	return
 }
 
-func (c *Caller) CallContent(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation, dataCtx plugin.MapData) (result *plugin.ContentResult, diag diagnostics.Diag) {
+func (c *Caller) CallContent(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation, dataCtx plugin.MapData, contentID uint32) (result *plugin.ContentResult, diag diagnostics.Diag) {
 	var ok bool
 	var res any
-	res, diag = c.callPlugin(ctx, definitions.BlockKindContent, name, config, invocation, dataCtx)
+	res, diag = c.callPlugin(ctx, definitions.BlockKindContent, name, config, invocation, dataCtx, contentID)
 	if diag.HasErrors() {
 		return
 	}
@@ -179,7 +180,7 @@ func (c *Caller) ContentInvocationOrder(ctx context.Context, name string) (order
 func (c *Caller) CallData(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation) (result plugin.Data, diag diagnostics.Diag) {
 	var ok bool
 	var res any
-	res, diag = c.callPlugin(ctx, definitions.BlockKindData, name, config, invocation, nil)
+	res, diag = c.callPlugin(ctx, definitions.BlockKindData, name, config, invocation, nil, 0)
 	if diag.HasErrors() {
 		return
 	}

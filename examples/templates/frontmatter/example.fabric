@@ -13,7 +13,7 @@ document "example" {
     content title {
         value = "Sub title 1"
     }
-
+    
     content text {
         value = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor dolore magna."
     }

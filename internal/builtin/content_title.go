@@ -91,63 +91,6 @@ func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (
 	}, nil
 }
 
-func parseScope(datactx plugin.MapData) (document *plugin.ContentSection, section *plugin.ContentSection) {
-	documentMap, ok := datactx["document"]
-	if !ok {
-		return
-	}
-
-	contentMap, ok := documentMap.(plugin.MapData)["content"]
-	if !ok {
-		return
-	}
-
-	content, err := plugin.ParseContentData(contentMap.(plugin.MapData))
-	if err != nil {
-		return
-	}
-
-	document, ok = content.(*plugin.ContentSection)
-	if !ok {
-		return
-	}
-
-	sectionMap, ok := datactx["section"]
-	if !ok || sectionMap == nil {
-		return
-	}
-	contentMap, ok = sectionMap.(plugin.MapData)["content"]
-	if !ok {
-		return
-	}
-	content, err = plugin.ParseContentData(contentMap.(plugin.MapData))
-	if err != nil {
-		return
-	}
-	section, ok = content.(*plugin.ContentSection)
-	if !ok {
-		return
-	}
-	return document, section
-}
-
-func findDepth(parent *plugin.ContentSection, id uint32, depth int) int {
-	if parent.ID() == id {
-		return depth
-	}
-	for _, child := range parent.Children {
-		if child.ID() == id {
-			return depth
-		}
-		if child, ok := child.(*plugin.ContentSection); ok {
-			if d := findDepth(child, id, depth+1); d > -1 {
-				return d
-			}
-		}
-	}
-	return -1
-}
-
 func findDefaultTitleSize(datactx plugin.MapData) int64 {
 	document, section := parseScope(datactx)
 	if section == nil {
