@@ -18,6 +18,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/github"
 	"github.com/blackstork-io/fabric/internal/graphql"
 	"github.com/blackstork-io/fabric/internal/hackerone"
+	"github.com/blackstork-io/fabric/internal/nistnvd"
 	"github.com/blackstork-io/fabric/internal/openai"
 	"github.com/blackstork-io/fabric/internal/opencti"
 	"github.com/blackstork-io/fabric/internal/postgresql"
@@ -214,6 +215,7 @@ func main() {
 		virustotal.Plugin(version, nil),
 		splunk.Plugin(version, nil),
 		stixview.Plugin(version),
+		nistnvd.Plugin(version, nil),
 	}
 	// generate markdown for each plugin
 	for _, p := range plugins {

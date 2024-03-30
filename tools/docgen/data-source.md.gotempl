@@ -5,7 +5,11 @@ plugin:
   description: ""
   tags: []
   version: "{{ .plugin.Version }}"
+  {{- if eq .plugin_shortname "nist_nvd" }}
+  source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/nistnvd/"
+  {{- else }}
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/{{ .plugin_shortname }}/"
+  {{- end }}
 resource:
   type: data-source
 type: docs

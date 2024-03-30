@@ -5,7 +5,7 @@ plugin:
   description: ""
   tags: []
   version: "v0.4.0"
-  source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/nist_nvd/"
+  source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/nistnvd/"
 resource:
   type: data-source
 type: docs
