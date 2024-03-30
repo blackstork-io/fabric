@@ -76,7 +76,7 @@ func TestRemoteSourceLookupError(t *testing.T) {
 		BaseURL: srv.URL,
 	}
 	versions, err := source.Lookup(context.Background(), Name{"blackstork", "sqlite"})
-	assert.EqualError(t, err, "failed to lookup plugin versions in the registry: [code=not_found]: plugin not found")
+	assert.EqualError(t, err, "plugin not found")
 	assert.Nil(t, versions)
 }
 

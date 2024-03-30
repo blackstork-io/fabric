@@ -45,7 +45,7 @@ func (source *sourceChain) Lookup(ctx context.Context, name Name) ([]Version, er
 	var matches []Version
 	for _, s := range source.sources {
 		found, err := s.Lookup(ctx, name)
-		if err != nil {
+		if err != nil && err != ErrPluginNotFound {
 			return nil, err
 		}
 		matches = append(matches, found...)
