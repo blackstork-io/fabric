@@ -40,8 +40,14 @@ func (s *FrontMatterGeneratorTestSuite) TestInvalidFormat() {
 		}),
 	})
 	ctx := context.Background()
+	document := plugin.ContentSection{}
 	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
+		DataContext: plugin.MapData{
+			"document": plugin.MapData{
+				"content": document.AsData(),
+			},
+		},
 	})
 	s.Nil(content)
 	s.Equal(hcl.Diagnostics{{
@@ -57,8 +63,14 @@ func (s *FrontMatterGeneratorTestSuite) TestContentAndQueryResultMissing() {
 		"format":  cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
+	document := plugin.ContentSection{}
 	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
+		DataContext: plugin.MapData{
+			"document": plugin.MapData{
+				"content": document.AsData(),
+			},
+		},
 	})
 	s.Nil(content)
 	s.Equal(hcl.Diagnostics{{
@@ -74,10 +86,14 @@ func (s *FrontMatterGeneratorTestSuite) TestInvalidQueryResult() {
 		"format":  cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
+	document := plugin.ContentSection{}
 	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
 			"query_result": plugin.StringData("invalid_type"),
+			"document": plugin.MapData{
+				"content": document.AsData(),
+			},
 		},
 	})
 	s.Nil(content)
@@ -94,8 +110,14 @@ func (s *FrontMatterGeneratorTestSuite) TestContentAndDataContextNil() {
 		"format":  cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
+	document := plugin.ContentSection{}
 	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
+		DataContext: plugin.MapData{
+			"document": plugin.MapData{
+				"content": document.AsData(),
+			},
+		},
 	})
 	s.Nil(content)
 	s.Equal(hcl.Diagnostics{{
@@ -123,9 +145,16 @@ func (s *FrontMatterGeneratorTestSuite) TestWithContent() {
 		"format": cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
+	document := plugin.ContentSection{}
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
+		DataContext: plugin.MapData{
+			"document": plugin.MapData{
+				"content": document.AsData(),
+			},
+		},
 	})
+	s.Require().Nil(diags)
 	s.Equal("---\n"+
 		"baz: 1\n"+
 		"foo: bar\n"+
@@ -137,7 +166,6 @@ func (s *FrontMatterGeneratorTestSuite) TestWithContent() {
 		"    - fred\n"+
 		"    - plugh\n"+
 		"---\n", result.Content.Print())
-	s.Nil(diags)
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestWithQueryResult() {
@@ -146,6 +174,7 @@ func (s *FrontMatterGeneratorTestSuite) TestWithQueryResult() {
 		"format":  cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
+	document := plugin.ContentSection{}
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
@@ -161,6 +190,9 @@ func (s *FrontMatterGeneratorTestSuite) TestWithQueryResult() {
 					plugin.StringData("fred"),
 					plugin.StringData("plugh"),
 				},
+			},
+			"document": plugin.MapData{
+				"content": document.AsData(),
 			},
 		},
 	})
@@ -184,6 +216,7 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatYaml() {
 		"format":  cty.StringVal("yaml"),
 	})
 	ctx := context.Background()
+	document := plugin.ContentSection{}
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
@@ -199,6 +232,9 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatYaml() {
 					plugin.StringData("fred"),
 					plugin.StringData("plugh"),
 				},
+			},
+			"document": plugin.MapData{
+				"content": document.AsData(),
 			},
 		},
 	})
@@ -222,6 +258,7 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatTOML() {
 		"format":  cty.StringVal("toml"),
 	})
 	ctx := context.Background()
+	document := plugin.ContentSection{}
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
@@ -237,6 +274,9 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatTOML() {
 					plugin.StringData("fred"),
 					plugin.StringData("plugh"),
 				},
+			},
+			"document": plugin.MapData{
+				"content": document.AsData(),
 			},
 		},
 	})
@@ -258,6 +298,7 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatJSON() {
 		"format":  cty.StringVal("json"),
 	})
 	ctx := context.Background()
+	document := plugin.ContentSection{}
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
@@ -273,6 +314,9 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatJSON() {
 					plugin.StringData("fred"),
 					plugin.StringData("plugh"),
 				},
+			},
+			"document": plugin.MapData{
+				"content": document.AsData(),
 			},
 		},
 	})

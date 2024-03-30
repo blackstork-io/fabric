@@ -55,7 +55,7 @@ func (c *ParsedContent) Render(ctx context.Context, caller evaluation.ContentCal
 		return
 	}
 
-	resultStr, diag := caller.CallContent(ctx, c.PluginName, c.Config, c.Invocation, dataCtx.AsJQData().(plugin.MapData))
+	resultStr, diag := caller.CallContent(ctx, c.PluginName, c.Config, c.Invocation, dataCtx.AsJQData().(plugin.MapData), contentID)
 	if diags.Extend(diag) || resultStr == nil {
 		// XXX: What to do if we have errors while executing content blocks?
 		// just skipping the value for now...

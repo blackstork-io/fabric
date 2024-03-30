@@ -43,6 +43,13 @@ func makeFrontMatterContentProvider() *plugin.ContentProvider {
 }
 
 func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
+	if err := validateFrontMatterContentTree(params.DataContext, params.ContentID); err != nil {
+		return nil, hcl.Diagnostics{{
+			Severity: hcl.DiagError,
+			Summary:  "Error while validating frontmatter constraints",
+			Detail:   err.Error(),
+		}}
+	}
 	format, m, err := parseFrontMatterArgs(params.Args, params.DataContext)
 	if err != nil {
 		return nil, hcl.Diagnostics{{
@@ -68,6 +75,23 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 			Effect: plugin.LocationEffectBefore,
 		},
 	}, nil
+}
+
+func validateFrontMatterContentTree(datactx plugin.MapData, contentID uint32) error {
+	if datactx == nil {
+		return fmt.Errorf("DataContext is empty")
+	}
+	document, _ := parseScope(datactx)
+	if document == nil {
+		return fmt.Errorf("frontmatter must be declared in the document")
+	}
+	if findDepth(document, contentID, 0) != 0 {
+		return fmt.Errorf("frontmatter must be declared at the top-level of the document")
+	}
+	if countDeclarations(document, "frontmatter") > 0 {
+		return fmt.Errorf("frontmatter already declared in the document")
+	}
+	return nil
 }
 
 func parseFrontMatterArgs(args cty.Value, datactx plugin.MapData) (string, plugin.MapData, error) {
