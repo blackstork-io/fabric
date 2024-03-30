@@ -29,6 +29,10 @@ packages:
     config:
     interfaces:
       Client:
+  github.com/blackstork-io/fabric/internal/nistnvd/client:
+    config:
+    interfaces:
+      Client:
   github.com/blackstork-io/fabric/plugin/resolver:
     config:
       inpackage: true

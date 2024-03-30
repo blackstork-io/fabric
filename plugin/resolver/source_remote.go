@@ -70,7 +70,11 @@ func (err regError) Error() string {
 func (source RemoteSource) Lookup(ctx context.Context, name Name) ([]Version, error) {
 	versions, err := source.fetchVersions(ctx, name)
 	if err != nil {
-		return nil, fmt.Errorf("failed to lookup plugin versions in the registry: %w", err)
+		if rerr, ok := err.(regError); ok && rerr.Code == "not_found" {
+			return nil, ErrPluginNotFound
+		} else {
+			return nil, fmt.Errorf("failed to lookup plugin versions in the registry: %w", err)
+		}
 	}
 	var matches []Version
 	for _, version := range versions {
