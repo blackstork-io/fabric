@@ -1,5 +1,6 @@
 ---
 title: Configuration
+description: Learn how to configure Fabric, data sources and content providers.
 type: docs
 weight: 20
 ---

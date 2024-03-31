@@ -1,5 +1,6 @@
 ---
 title: Documents
+description: Learn how to use document blocks to define document templates, building a content structure with the content blocks and setting data requirements with the data blocks.
 type: docs
 weight: 40
 ---

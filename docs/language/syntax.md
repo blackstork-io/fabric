@@ -1,5 +1,6 @@
 ---
 title: Syntax
+description: Explore the syntax of Fabric Configuration Language (FCL). Built upon the foundation of HCL, FCL offers simplicity, readability, and clarity. Learn about arguments and blocks, the fundamental components for crafting configurations with FCL. Dive into examples and understand the expressive and modular nature of FCL configurations.
 type: docs
 weight: 10
 ---

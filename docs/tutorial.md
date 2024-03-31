@@ -1,5 +1,6 @@
 ---
 title: Tutorial
+description: Dive into Fabric tutorial to learn everything you need to know about using Fabric effectively. From the basics of FCL commands to advanced features such as data configurations, our tutorial provides clear, step-by-step instructions for building Fabric templates. Start improving your workflow with Fabric today.
 type: docs
 weight: 30
 code_blocks_no_wrap: true

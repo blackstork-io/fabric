@@ -1,5 +1,6 @@
 ---
 title: Section Blocks
+description: Learn how to use use section blocks to build modular and reusable content structures in your templates.
 type: docs
 weight: 70
 ---

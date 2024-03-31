@@ -1,5 +1,6 @@
 ---
 title: What is Fabric?
+description: Fabric is a user-friendly open-source command-line tool for reporting workflow automation. Fabric comes with a versatile template language and a rich ecosystem of plugins.
 menuName: Docs
 type: docs
 weight: 1
@@ -7,11 +8,13 @@ weight: 1
 
 # What's Fabric?
 
-Fabric is an open-source CLI tool and a configuration language that codifies and automation of the content generation process.
+Fabric is a user-friendly open-source command-line tool designed for reporting workflow automation. It comes with a versatile configuration language for reusable templates.
 
-Fabric Configuration Language (FCL) allows users to define the document data requirements and content structure with human-readable configuration files. The files can be version-controlled, reused, and shared.
+`fabric` CLI tool facilitates data collection from various sources and renders documents (reports, overviews, briefings, etc) from the templates in Fabric Configuration Language (FCL).
 
-`fabric` is a reports-as-code tool that renders templates defined in the FCL files into Markdown documents.
+[Fabric Configuration Language]({{< ref "language" >}}) offers a structured approach to defining data requirements and content structures. With its human-readable intuitive syntax and powerful features, FCL empowers users to create reusable modular templates.
+
+Together, Fabric CLI tool and FCL offer a comprehensive solution for organizations looking to formalize and streamline their content generation processes, enhancing their cyber-security and compliance efforts.
 
 ## Get started
 

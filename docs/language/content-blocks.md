@@ -1,5 +1,6 @@
 ---
 title: Content Blocks
+description: Learn how to use Fabric content blocks efficiently for building modular and reusable document templates.
 type: docs
 weight: 60
 ---

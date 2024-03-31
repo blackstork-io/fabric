@@ -1,5 +1,8 @@
 ---
 title: Install
+description: Learn how to install Fabric and its plugins to streamline your templating workflow. Fabric binaries for Windows, macOS, and Linux are available at the project's GitHub releases page. Simply download the appropriate release archive for your operating system, unpack it, and you're ready to go.
+images:
+  - 'images/diagram.png'
 type: docs
 weight: 10
 code_blocks_no_wrap: true
@@ -36,7 +39,7 @@ tar -xvzf ./fabric_darwin_arm64.tar.gz -C ./fabric-bin
 
 ## Installing plugins
 
-Fabric relies on [the plugins]({{< ref "plugins.md" >}}) for implementing the integrations with various data sources, platforms, and services. Before the plugins can be used during the template rendering, they must be installed. Fabric's sub-command `install` can install the plugins automatically from the registry (`https://registry.blackstork.io`).
+Fabric uses [plugins]({{< ref "plugins.md" >}}) that implementing integrations with various data sources, platforms, and services. Before the plugins can be used during template rendering, they must be installed. Fabric's sub-command `install` can install the plugins automatically from the registry (`https://registry.blackstork.io`).
 
 To install the plugins:
 
@@ -53,7 +56,7 @@ To install the plugins:
 
 - **install the plugins**: run `install` sub-command to install the plugins. For example:
 
-  ```bash
+  ```text
   $ ./fabric install
   Mar 11 19:20:09.085 INF Searching plugin name=blackstork/elastic constraints=">=v0.0.1"
   Mar 11 19:20:09.522 INF Installing plugin name=blackstork/elastic version=0.4.0
@@ -62,7 +65,7 @@ To install the plugins:
   $
   ```
 
-The plugins are downloaded and installed in `./fabric` folder or in the location specified in `cache_dir` in [the global configuration]({{< ref "language/configs.md#global-configuration" >}}).
+The plugins are downloaded and installed in `./.fabric` folder or in the location specified in `cache_dir` in [the global configuration]({{< ref "language/configs.md#global-configuration" >}}).
 
 {{< hint note >}}
 
