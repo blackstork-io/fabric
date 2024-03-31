@@ -1,8 +1,6 @@
 ---
 title: Plugins
 description: Discover the power of Fabric plugins, which implement various data sources and content providers to enhance your templating experience. Data sources enable loading data from files, external services, APIs, or data storage, while content providers render document content locally or via external APIs, supporting text, tables, graphs, code, and more.
-images:
-  - 'images/diagram.png'
 type: docs
 weight: 50
 hideChildren: true

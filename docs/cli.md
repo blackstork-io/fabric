@@ -1,8 +1,6 @@
 ---
 title: Fabric CLI
 description: Fabric CLI is your gateway to Fabric's powerful features. Use `fabric` binary with commands like `install`, `data`, and `render`. Dive deeper with `fabric --help` to explore additional options and commands. Get started with Fabric CLI and unlock seamless document generation.
-images:
-  - 'images/diagram.png'
 type: docs
 weight: 20
 ---
