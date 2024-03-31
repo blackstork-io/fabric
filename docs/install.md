@@ -1,8 +1,6 @@
 ---
 title: Install
 description: Learn how to install Fabric and its plugins to streamline your templating workflow. Fabric binaries for Windows, macOS, and Linux are available at the project's GitHub releases page. Simply download the appropriate release archive for your operating system, unpack it, and you're ready to go.
-images:
-  - 'images/diagram.png'
 type: docs
 weight: 10
 code_blocks_no_wrap: true
