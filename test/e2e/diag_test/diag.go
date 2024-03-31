@@ -70,7 +70,7 @@ func dumpDiags(diags diagnostics.Diag) string {
 	if len(diags) == 0 {
 		return "no diagnostics"
 	}
-	return strings.Join(utils.FnMap(dumpDiag, diags), "\n")
+	return strings.Join(utils.FnMap(diags, dumpDiag), "\n")
 }
 
 func CompareDiags(t *testing.T, diags diagnostics.Diag, asserts [][]Assert) {

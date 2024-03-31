@@ -74,7 +74,7 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 		"description": plugin.StringData(feed.Description),
 		"link":        plugin.StringData(feed.Link),
 		"pub_date":    plugin.StringData(feed.Published),
-		"items": plugin.ListData(utils.FnMap(func(item *gofeed.Item) plugin.Data {
+		"items": plugin.ListData(utils.FnMap(feed.Items, func(item *gofeed.Item) plugin.Data {
 			data := plugin.MapData{
 				"guid":        plugin.StringData(item.GUID),
 				"pub_date":    plugin.StringData(item.Published),
@@ -86,7 +86,7 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 				data["pub_timestamp"] = plugin.NumberData(item.PublishedParsed.Unix())
 			}
 			return data
-		}, feed.Items)),
+		})),
 	}
 	if feed.PublishedParsed != nil {
 		data["pub_timestamp"] = plugin.NumberData(feed.PublishedParsed.Unix())

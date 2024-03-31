@@ -68,6 +68,6 @@ func TestFnMap(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	assert.Equal([]string{"1", "2", "3"}, FnMap(strconv.Itoa, []int{1, 2, 3}))
-	assert.Equal([]string{}, FnMap(strconv.Itoa, []int{}))
+	assert.Equal([]string{"1", "2", "3"}, FnMap([]int{1, 2, 3}, strconv.Itoa))
+	assert.Equal([]string{}, FnMap([]int{}, strconv.Itoa))
 }
