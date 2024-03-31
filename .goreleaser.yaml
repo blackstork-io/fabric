@@ -21,6 +21,8 @@ builds:
     ldflags:
       - -s -w
       - -X github.com/blackstork-io/fabric/cmd.version={{.Version}}
+      - -X github.com/blackstork-io/fabric/cmd.builtBy=goreleaser
+
     goos:
       - linux
       - windows
@@ -40,7 +42,7 @@ builds:
       - linux
       - windows
       - darwin
-  
+
   - id: plugin_github
     main: ./internal/github/cmd
     binary: "github@{{ .Version }}"

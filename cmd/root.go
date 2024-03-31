@@ -6,6 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"runtime/debug"
 	"slices"
 	"strings"
 
@@ -19,10 +20,11 @@ import (
 	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
-const devVersion = "v0.0.0-dev"
-
 // Overridden by goreleaser.
-var version = devVersion
+var (
+	version = ""
+	builtBy = "golang"
+)
 
 type logLevels struct {
 	Names []string
@@ -138,8 +140,8 @@ var rootCmd = &cobra.Command{
 		}
 		slog.SetDefault(slog.New(handler))
 		slog.Debug("Logging enabled")
-		if version == devVersion {
-			slog.Warn("This is a dev version of the software")
+		if strings.Contains(version, "-dev") {
+			slog.Warn("This is a dev version of the software!", "version", version)
 		}
 		return nil
 	},
@@ -176,4 +178,45 @@ func init() {
 	)
 	rootCmd.PersistentFlags().BoolVar(&rawArgs.colorize, "color", true, "enables colorizing the logs and diagnostics (if supported by the terminal and log format)")
 	rootCmd.PersistentFlags().BoolVarP(&rawArgs.verbose, "verbose", "v", false, "a shortcut to --log-level debug")
+
+	if builtBy == "goreleaser" {
+		// version is set by goreleaser
+		return
+	}
+
+	version = fmt.Sprintf(
+		"%s+builtBy.%s",
+		versionFromBuildInfo(),
+		builtBy,
+	)
+}
+
+func versionFromBuildInfo() (version string) {
+	version = "v0.0.0-dev"
+	info, ok := debug.ReadBuildInfo()
+	if !ok || info == nil {
+		return
+	}
+	if info.Main.Version != "(devel)" {
+		version = info.Main.Version
+		if !strings.HasPrefix(version, "v") {
+			version = "v" + version
+		}
+		return
+	}
+	// It's a dev version not built by goreleaser, add extra info
+	dirtyIdx := slices.IndexFunc(info.Settings, func(s debug.BuildSetting) bool {
+		return s.Key == "vcs.modified"
+	})
+	if dirtyIdx != -1 && info.Settings[dirtyIdx].Value == "true" {
+		version += "+dirty"
+	}
+
+	shaIdx := slices.IndexFunc(info.Settings, func(s debug.BuildSetting) bool {
+		return s.Key == "vcs.revision"
+	})
+	if shaIdx != -1 {
+		version = fmt.Sprintf("%s+rev.%s", version, info.Settings[shaIdx].Value)
+	}
+	return
 }

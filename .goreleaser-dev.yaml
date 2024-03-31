@@ -8,7 +8,7 @@ env:
   - CGO_ENABLED=0
 
 snapshot:
-  name_template: "v0.0.0-dev"
+  name_template: "{{.Tag}}-dev{{if .IsGitDirty}}+dirty{{end}}+rev.{{.FullCommit}}"
 
 builds:
   # CLI
@@ -16,7 +16,9 @@ builds:
     main: .
     binary: fabric
     ldflags:
-      "-X github.com/blackstork-io/fabric/cmd.version={{.Version}}"
+      - -X github.com/blackstork-io/fabric/cmd.version={{.Version}}
+      - -X github.com/blackstork-io/fabric/cmd.builtBy=goreleaser
+
     no_unique_dist_dir: true
 
   # Plugins
