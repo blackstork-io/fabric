@@ -1,5 +1,6 @@
 ---
 title: Syntax
+description: Explore the syntax of Fabric Configuration Language (FCL). Built upon the foundation of HCL, FCL offers simplicity, readability, and clarity. Learn about arguments and blocks, the fundamental components for crafting configurations with FCL. Dive into examples and understand the expressive and modular nature of FCL configurations.
 type: docs
 weight: 10
 ---
@@ -16,7 +17,8 @@ The arguments play a crucial role in assigning values to names within a block. A
 
 ```hcl
 ... {
-    query_string = "kibana.alert.severity:critical"
+  index = ".alerts-security.alerts-default"
+  query_string = "kibana.alert.severity:critical"
 }
 ```
 
@@ -27,12 +29,15 @@ The argument name, `query_string` in the snippet above, is allowed to contain le
 In the Fabric Configuration Language (FCL), a block serves as a versatile container defining configurations, data requirements, or content structures. An example is provided below:
 
 ```hcl
-document "alerts_overview" {
+document "test_document" {
 
-    content text {
-        text = "Static text"
-    }
-    ...
+  data inline {
+    foo = 42
+  }
+
+  content text {
+    value = "My custom static text"
+  }
 
 }
 ```

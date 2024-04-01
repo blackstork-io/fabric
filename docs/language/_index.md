@@ -1,5 +1,6 @@
 ---
 title: Language
+description: Fabric Configuration Language (FCL) drives Fabric's document generation capabilities. With FCL, users define data needs and template structures in .fabric files, streamlining content creation. Automate document production efficiently with Fabric and FCL.
 type: docs
 weight: 40
 ---

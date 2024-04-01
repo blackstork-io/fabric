@@ -1,5 +1,6 @@
 ---
 title: Content Blocks
+description: Learn how to use Fabric content blocks efficiently for building modular and reusable document templates.
 type: docs
 weight: 60
 ---
@@ -95,7 +96,7 @@ document "test-doc" {
 
     # The result of the query is stored in the `query_result` field in the context.
     # The context is available for the templating engine inside the `content.text` plugin.
-    text = "There are {{ .query_result }} items"
+    value = "There are {{ .query_result }} items"
   }
 
   content openai_text {

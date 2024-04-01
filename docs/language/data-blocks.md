@@ -1,5 +1,6 @@
 ---
 title: Data Blocks
+description: Learn how to use Fabric data blocks for defining data requirements for the templates.
 type: docs
 weight: 50
 ---
