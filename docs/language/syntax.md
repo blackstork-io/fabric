@@ -17,7 +17,8 @@ The arguments play a crucial role in assigning values to names within a block. A
 
 ```hcl
 ... {
-    query_string = "kibana.alert.severity:critical"
+  index = ".alerts-security.alerts-default"
+  query_string = "kibana.alert.severity:critical"
 }
 ```
 
@@ -28,12 +29,15 @@ The argument name, `query_string` in the snippet above, is allowed to contain le
 In the Fabric Configuration Language (FCL), a block serves as a versatile container defining configurations, data requirements, or content structures. An example is provided below:
 
 ```hcl
-document "alerts_overview" {
+document "test_document" {
 
-    content text {
-        text = "Static text"
-    }
-    ...
+  data inline {
+    foo = 42
+  }
+
+  content text {
+    value = "My custom static text"
+  }
 
 }
 ```

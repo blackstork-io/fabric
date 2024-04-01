@@ -46,6 +46,8 @@ An anonymous `ref` block adopts a name of the referenced block. Since the final 
 
 The `ref` block definition can include the attribute that would override the attributes provided in the original block. This is helpful if the block's behaviour needs adjustments per document.
 
+<!-- FIXME: https://github.com/blackstork-io/fabric/issues/29
+
 ## Query input requirement
 
 Content blocks rely on `query` attribute for selecting data needed for rendering (see content blocks' [Generic Arguments]({{< ref "content-blocks.md#generic-arguments" >}})). The JQ query uses the data path which is often document-specific and depends on the name of the data block. This hinders the re-usability of the content blocks.
@@ -68,8 +70,7 @@ content text "qux" {
   # Require the referrer to specify `query_input` query that will be used
   # to get the data for `query_input` field in the context
   query_input_required = true
-
-  text = "The data contains {{ .query_result }} elements"
+  value = "The data contains {{ .query_result }} elements"
 }
 
 document "test-document" {
@@ -99,3 +100,4 @@ document "test-document" {
 
 }
 ```
+-->
