@@ -3,8 +3,8 @@ package builtin
 import (
 	"context"
 	"fmt"
-	"net"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -86,19 +86,6 @@ func Test_makeRSSDataSchema(t *testing.T) {
 }
 
 func makeTestRssServer() (baseAddr string, closer func()) {
-	close := func() {}
-	defer func() {
-		close()
-	}()
-	lis, err := net.Listen("tcp4", "127.0.0.1:0")
-	if err != nil {
-		panic(err)
-	}
-	close = func() {
-		lis.Close()
-	}
-	baseAddr = fmt.Sprintf("http://%s/", lis.Addr().String())
-
 	mux := http.NewServeMux()
 	mux.HandleFunc("/up", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "ok")
@@ -125,13 +112,12 @@ func makeTestRssServer() (baseAddr string, closer func()) {
 	}
 	mux.Handle("/data/", http.StripPrefix("/data/", http.FileServerFS(os.DirFS(path))))
 
-	srv := http.Server{
-		Handler: mux,
-	}
-	go srv.Serve(lis)
-	close = func() {
-		srv.Close()
-	}
+	srv := httptest.NewServer(mux)
+	close := srv.Close
+	defer func() {
+		close()
+	}()
+	baseAddr = srv.URL + "/"
 	resp, err := http.Get(baseAddr + "up")
 	if err != nil {
 		panic(err)
@@ -297,8 +283,6 @@ func Test_fetchRSSData(t *testing.T) {
 			}
 
 			data, diags := p.RetrieveData(context.Background(), "rss", params)
-			fmt.Fprintf(os.Stderr, "%#v", data)
-
 			assert.Equal(tc.expected, result{data, diags})
 		})
 	}
