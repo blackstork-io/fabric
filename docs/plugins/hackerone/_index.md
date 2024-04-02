@@ -5,12 +5,12 @@ plugin:
   name: blackstork/hackerone
   description: ""
   tags: []
-  version: "v0.4.0"
+  version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/hackerone/"
 type: docs
 ---
 
-{{< plugin-header "blackstork/hackerone" "hackerone" "v0.4.0" >}}
+{{< plugin-header "blackstork/hackerone" "hackerone" "v0.4.1" >}}
 
 ## Installation
 
@@ -19,7 +19,7 @@ To install the plugin, add it to `plugin_versions` map in the Fabric global conf
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/hackerone" = ">= v0.4.0"
+    "blackstork/hackerone" = ">= v0.4.1"
   }
 }
 ```

@@ -1,7 +1,24 @@
 [
   {
     "name": "blackstork/builtin",
+    "version": "v0.4.1",
+    "shortname": "builtin",
     "resources": [
+      {
+        "name": "blockquote",
+        "type": "content-provider",
+        "arguments": [
+          "value"
+        ]
+      },
+      {
+        "name": "code",
+        "type": "content-provider",
+        "arguments": [
+          "value",
+          "language"
+        ]
+      },
       {
         "name": "csv",
         "type": "data-source",
@@ -13,11 +30,24 @@
         ]
       },
       {
-        "name": "txt",
-        "type": "data-source",
+        "name": "frontmatter",
+        "type": "content-provider",
         "arguments": [
-          "path"
+          "format",
+          "content"
         ]
+      },
+      {
+        "name": "image",
+        "type": "content-provider",
+        "arguments": [
+          "src",
+          "alt"
+        ]
+      },
+      {
+        "name": "inline",
+        "type": "data-source"
       },
       {
         "name": "json",
@@ -27,8 +57,19 @@
         ]
       },
       {
-        "name": "inline",
-        "type": "data-source"
+        "name": "list",
+        "type": "content-provider",
+        "arguments": [
+          "item_template",
+          "format"
+        ]
+      },
+      {
+        "name": "table",
+        "type": "content-provider",
+        "arguments": [
+          "columns"
+        ]
       },
       {
         "name": "text",
@@ -41,23 +82,9 @@
         "name": "title",
         "type": "content-provider",
         "arguments": [
+          "value",
           "absolute_size",
-          "relative_size",
-          "value"
-        ]
-      },
-      {
-        "name": "blockquote",
-        "type": "content-provider",
-        "arguments": [
-          "value"
-        ]
-      },
-      {
-        "name": "table",
-        "type": "content-provider",
-        "arguments": [
-          "columns"
+          "relative_size"
         ]
       },
       {
@@ -71,68 +98,19 @@
         ]
       },
       {
-        "name": "code",
-        "type": "content-provider",
+        "name": "txt",
+        "type": "data-source",
         "arguments": [
-          "value",
-          "language"
-        ]
-      },
-      {
-        "name": "image",
-        "type": "content-provider",
-        "arguments": [
-          "src",
-          "alt"
-        ]
-      },
-      {
-        "name": "list",
-        "type": "content-provider",
-        "arguments": [
-          "item_template",
-          "format"
-        ]
-      },
-      {
-        "name": "frontmatter",
-        "type": "content-provider",
-        "arguments": [
-          "format",
-          "content"
+          "path"
         ]
       }
-    ],
-    "shortname": "builtin",
-    "version": "v0.4.0"
+    ]
   },
   {
     "name": "blackstork/elastic",
+    "version": "v0.4.1",
+    "shortname": "elastic",
     "resources": [
-      {
-        "name": "elasticsearch",
-        "type": "data-source",
-        "config_params": [
-          "basic_auth_username",
-          "basic_auth_password",
-          "bearer_auth",
-          "ca_certs",
-          "base_url",
-          "cloud_id",
-          "api_key_str",
-          "api_key"
-        ],
-        "arguments": [
-          "query_string",
-          "query",
-          "aggs",
-          "only_hits",
-          "fields",
-          "size",
-          "index",
-          "id"
-        ]
-      },
       {
         "name": "elastic_security_cases",
         "type": "data-source",
@@ -142,29 +120,53 @@
           "api_key"
         ],
         "arguments": [
-          "default_search_operator",
-          "from",
           "owner",
-          "sort_field",
-          "tags",
-          "space_id",
-          "assignees",
+          "severity",
+          "sort_order",
           "reporters",
           "search",
           "search_fields",
-          "severity",
-          "status",
-          "sort_order",
+          "sort_field",
           "to",
+          "space_id",
+          "default_search_operator",
+          "assignees",
+          "from",
+          "status",
+          "tags",
+          "size"
+        ]
+      },
+      {
+        "name": "elasticsearch",
+        "type": "data-source",
+        "config_params": [
+          "basic_auth_password",
+          "bearer_auth",
+          "ca_certs",
+          "base_url",
+          "cloud_id",
+          "api_key_str",
+          "api_key",
+          "basic_auth_username"
+        ],
+        "arguments": [
+          "index",
+          "id",
+          "query_string",
+          "query",
+          "aggs",
+          "only_hits",
+          "fields",
           "size"
         ]
       }
-    ],
-    "shortname": "elastic",
-    "version": "v0.4.0"
+    ]
   },
   {
     "name": "blackstork/github",
+    "version": "v0.4.1",
+    "shortname": "github",
     "resources": [
       {
         "name": "github_issues",
@@ -173,43 +175,141 @@
           "github_token"
         ],
         "arguments": [
-          "labels",
-          "direction",
-          "since",
-          "repository",
-          "state",
-          "assignee",
-          "mentioned",
           "milestone",
+          "state",
           "creator",
           "sort",
-          "limit"
+          "direction",
+          "since",
+          "limit",
+          "repository",
+          "assignee",
+          "mentioned",
+          "labels"
         ]
       }
-    ],
-    "shortname": "github",
-    "version": "v0.4.0"
+    ]
   },
   {
     "name": "blackstork/graphql",
+    "version": "v0.4.1",
+    "shortname": "graphql",
     "resources": [
       {
         "name": "graphql",
         "type": "data-source",
         "config_params": [
-          "auth_token",
-          "url"
+          "url",
+          "auth_token"
         ],
         "arguments": [
           "query"
         ]
       }
-    ],
-    "shortname": "graphql",
-    "version": "v0.4.0"
+    ]
+  },
+  {
+    "name": "blackstork/hackerone",
+    "version": "v0.4.1",
+    "shortname": "hackerone",
+    "resources": [
+      {
+        "name": "hackerone_reports",
+        "type": "data-source",
+        "config_params": [
+          "api_username",
+          "api_token"
+        ],
+        "arguments": [
+          "program",
+          "state",
+          "closed_at__null",
+          "first_program_activity_at__null",
+          "custom_fields",
+          "reporter_agreed_on_going_public",
+          "swag_awarded_at__null",
+          "last_report_activity_at__lt",
+          "hacker_published",
+          "triaged_at__gt",
+          "triaged_at__null",
+          "closed_at__gt",
+          "disclosed_at__lt",
+          "swag_awarded_at__gt",
+          "disclosed_at__gt",
+          "first_program_activity_at__gt",
+          "last_program_activity_at__null",
+          "last_activity_at__lt",
+          "weakness_id",
+          "closed_at__lt",
+          "bounty_awarded_at__lt",
+          "last_program_activity_at__lt",
+          "last_activity_at__gt",
+          "last_public_activity_at__gt",
+          "page_number",
+          "assignee",
+          "id",
+          "submitted_at__gt",
+          "triaged_at__lt",
+          "swag_awarded_at__lt",
+          "first_program_activity_at__lt",
+          "size",
+          "sort",
+          "submitted_at__lt",
+          "last_program_activity_at__gt",
+          "last_public_activity_at__lt",
+          "keyword",
+          "bounty_awarded_at__null",
+          "inbox_ids",
+          "reporter",
+          "severity",
+          "created_at__gt",
+          "created_at__lt",
+          "disclosed_at__null",
+          "bounty_awarded_at__gt",
+          "last_report_activity_at__gt"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "blackstork/nist_nvd",
+    "version": "v0.4.1",
+    "shortname": "nist_nvd",
+    "resources": [
+      {
+        "name": "nist_nvd_cves",
+        "type": "data-source",
+        "config_params": [
+          "api_key"
+        ],
+        "arguments": [
+          "limit",
+          "pub_start_date",
+          "pub_end_date",
+          "cvss_v3_severity",
+          "cwe_id",
+          "virtual_match_string",
+          "last_mod_end_date",
+          "keyword_exact_match",
+          "is_vulnerable",
+          "no_rejected",
+          "cpe_name",
+          "cve_id",
+          "cvss_v3_metrics",
+          "has_cert_alerts",
+          "has_cert_notes",
+          "last_mod_start_date",
+          "keyword_search",
+          "source_identifier",
+          "has_kev"
+        ]
+      }
+    ]
   },
   {
     "name": "blackstork/openai",
+    "version": "v0.4.1",
+    "shortname": "openai",
     "resources": [
       {
         "name": "openai_text",
@@ -224,12 +324,12 @@
           "model"
         ]
       }
-    ],
-    "shortname": "openai",
-    "version": "v0.4.0"
+    ]
   },
   {
     "name": "blackstork/opencti",
+    "version": "v0.4.1",
+    "shortname": "opencti",
     "resources": [
       {
         "name": "opencti",
@@ -242,12 +342,12 @@
           "graphql_query"
         ]
       }
-    ],
-    "shortname": "opencti",
-    "version": "v0.4.0"
+    ]
   },
   {
     "name": "blackstork/postgresql",
+    "version": "v0.4.1",
+    "shortname": "postgresql",
     "resources": [
       {
         "name": "postgresql",
@@ -260,12 +360,36 @@
           "sql_args"
         ]
       }
-    ],
-    "shortname": "postgresql",
-    "version": "v0.4.0"
+    ]
+  },
+  {
+    "name": "blackstork/splunk",
+    "version": "v0.4.1",
+    "shortname": "splunk",
+    "resources": [
+      {
+        "name": "splunk_search",
+        "type": "data-source",
+        "config_params": [
+          "auth_token",
+          "host",
+          "deployment_name"
+        ],
+        "arguments": [
+          "status_buckets",
+          "rf",
+          "earliest_time",
+          "latest_time",
+          "search_query",
+          "max_count"
+        ]
+      }
+    ]
   },
   {
     "name": "blackstork/sqlite",
+    "version": "v0.4.1",
+    "shortname": "sqlite",
     "resources": [
       {
         "name": "sqlite",
@@ -278,12 +402,36 @@
           "sql_args"
         ]
       }
-    ],
-    "shortname": "sqlite",
-    "version": "v0.4.0"
+    ]
+  },
+  {
+    "name": "blackstork/stixview",
+    "version": "v0.4.1",
+    "shortname": "stixview",
+    "resources": [
+      {
+        "name": "stixview",
+        "type": "content-provider",
+        "arguments": [
+          "show_idrefs",
+          "height",
+          "gist_id",
+          "caption",
+          "show_footer",
+          "show_labels",
+          "width",
+          "stix_url",
+          "show_sidebar",
+          "show_tlp_as_tags",
+          "show_marking_nodes"
+        ]
+      }
+    ]
   },
   {
     "name": "blackstork/terraform",
+    "version": "v0.4.1",
+    "shortname": "terraform",
     "resources": [
       {
         "name": "terraform_state_local",
@@ -292,75 +440,12 @@
           "path"
         ]
       }
-    ],
-    "shortname": "terraform",
-    "version": "v0.4.0"
-  },
-  {
-    "name": "blackstork/hackerone",
-    "resources": [
-      {
-        "name": "hackerone_reports",
-        "type": "data-source",
-        "config_params": [
-          "api_username",
-          "api_token"
-        ],
-        "arguments": [
-          "triaged_at__gt",
-          "swag_awarded_at__null",
-          "inbox_ids",
-          "closed_at__lt",
-          "reporter_agreed_on_going_public",
-          "last_report_activity_at__gt",
-          "first_program_activity_at__lt",
-          "last_activity_at__gt",
-          "last_public_activity_at__lt",
-          "triaged_at__null",
-          "program",
-          "hacker_published",
-          "closed_at__gt",
-          "disclosed_at__gt",
-          "custom_fields",
-          "size",
-          "id",
-          "closed_at__null",
-          "bounty_awarded_at__lt",
-          "first_program_activity_at__null",
-          "reporter",
-          "assignee",
-          "severity",
-          "created_at__gt",
-          "created_at__lt",
-          "disclosed_at__null",
-          "bounty_awarded_at__gt",
-          "bounty_awarded_at__null",
-          "sort",
-          "last_public_activity_at__gt",
-          "keyword",
-          "last_report_activity_at__lt",
-          "submitted_at__lt",
-          "triaged_at__lt",
-          "disclosed_at__lt",
-          "last_program_activity_at__gt",
-          "state",
-          "weakness_id",
-          "submitted_at__gt",
-          "swag_awarded_at__gt",
-          "swag_awarded_at__lt",
-          "first_program_activity_at__gt",
-          "last_program_activity_at__null",
-          "last_activity_at__lt",
-          "page_number",
-          "last_program_activity_at__lt"
-        ]
-      }
-    ],
-    "shortname": "hackerone",
-    "version": "v0.4.0"
+    ]
   },
   {
     "name": "blackstork/virustotal",
+    "version": "v0.4.1",
+    "shortname": "virustotal",
     "resources": [
       {
         "name": "virustotal_api_usage",
@@ -375,91 +460,6 @@
           "end_date"
         ]
       }
-    ],
-    "shortname": "virustotal",
-    "version": "v0.4.0"
-  },
-  {
-    "name": "blackstork/splunk",
-    "resources": [
-      {
-        "name": "splunk_search",
-        "type": "data-source",
-        "config_params": [
-          "auth_token",
-          "host",
-          "deployment_name"
-        ],
-        "arguments": [
-          "search_query",
-          "max_count",
-          "status_buckets",
-          "rf",
-          "earliest_time",
-          "latest_time"
-        ]
-      }
-    ],
-    "shortname": "splunk",
-    "version": "v0.4.0"
-  },
-  {
-    "name": "blackstork/stixview",
-    "resources": [
-      {
-        "name": "stixview",
-        "type": "content-provider",
-        "arguments": [
-          "show_labels",
-          "gist_id",
-          "show_footer",
-          "show_sidebar",
-          "show_tlp_as_tags",
-          "show_marking_nodes",
-          "stix_url",
-          "caption",
-          "show_idrefs",
-          "width",
-          "height"
-        ]
-      }
-    ],
-    "shortname": "stixview",
-    "version": "v0.4.0"
-  },
-  {
-    "name": "blackstork/nist_nvd",
-    "resources": [
-      {
-        "name": "nist_nvd_cves",
-        "type": "data-source",
-        "config_params": [
-          "api_key"
-        ],
-        "arguments": [
-          "source_identifier",
-          "no_rejected",
-          "cvss_v3_severity",
-          "keyword_exact_match",
-          "cvss_v3_metrics",
-          "last_mod_end_date",
-          "pub_end_date",
-          "cpe_name",
-          "cve_id",
-          "cwe_id",
-          "keyword_search",
-          "has_cert_alerts",
-          "last_mod_start_date",
-          "is_vulnerable",
-          "has_cert_notes",
-          "virtual_match_string",
-          "has_kev",
-          "limit",
-          "pub_start_date"
-        ]
-      }
-    ],
-    "shortname": "nist_nvd",
-    "version": "v0.4.0"
+    ]
   }
 ]

@@ -4,7 +4,7 @@ plugin:
   name: blackstork/postgresql
   description: ""
   tags: []
-  version: "v0.4.0"
+  version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/postgresql/"
 resource:
   type: data-source
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/postgresql" "postgresql" "v0.4.0" "postgresql" "data source" >}}
+{{< plugin-resource-header "blackstork/postgresql" "postgresql" "v0.4.1" "postgresql" "data source" >}}
 
 ## Installation
 
@@ -24,7 +24,7 @@ To install the plugin, add the full plugin name to the `plugin_versions` map in 
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/postgresql" = ">= v0.4.0"
+    "blackstork/postgresql" = ">= v0.4.1"
   }
 }
 ```

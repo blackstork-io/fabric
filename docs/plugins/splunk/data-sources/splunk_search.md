@@ -4,7 +4,7 @@ plugin:
   name: blackstork/splunk
   description: ""
   tags: []
-  version: "v0.4.0"
+  version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/splunk/"
 resource:
   type: data-source
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/splunk" "splunk" "v0.4.0" "splunk_search" "data source" >}}
+{{< plugin-resource-header "blackstork/splunk" "splunk" "v0.4.1" "splunk_search" "data source" >}}
 
 ## Installation
 
@@ -24,7 +24,7 @@ To install the plugin, add the full plugin name to the `plugin_versions` map in 
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/splunk" = ">= v0.4.0"
+    "blackstork/splunk" = ">= v0.4.1"
   }
 }
 ```
