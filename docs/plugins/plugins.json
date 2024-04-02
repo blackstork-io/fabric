@@ -15,8 +15,8 @@
         "name": "code",
         "type": "content-provider",
         "arguments": [
-          "value",
-          "language"
+          "language",
+          "value"
         ]
       },
       {
@@ -33,16 +33,16 @@
         "name": "frontmatter",
         "type": "content-provider",
         "arguments": [
-          "format",
-          "content"
+          "content",
+          "format"
         ]
       },
       {
         "name": "image",
         "type": "content-provider",
         "arguments": [
-          "src",
-          "alt"
+          "alt",
+          "src"
         ]
       },
       {
@@ -82,19 +82,19 @@
         "name": "title",
         "type": "content-provider",
         "arguments": [
-          "value",
           "absolute_size",
-          "relative_size"
+          "relative_size",
+          "value"
         ]
       },
       {
         "name": "toc",
         "type": "content-provider",
         "arguments": [
-          "start_level",
           "end_level",
           "ordered",
-          "scope"
+          "scope",
+          "start_level"
         ]
       },
       {
@@ -315,13 +315,13 @@
         "name": "openai_text",
         "type": "content-provider",
         "config_params": [
-          "system_prompt",
           "api_key",
-          "organization_id"
+          "organization_id",
+          "system_prompt"
         ],
         "arguments": [
-          "prompt",
-          "model"
+          "model",
+          "prompt"
         ]
       }
     ]
@@ -413,17 +413,17 @@
         "name": "stixview",
         "type": "content-provider",
         "arguments": [
+          "caption",
+          "gist_id",
           "height",
-          "stix_url",
           "show_footer",
-          "show_tlp_as_tags",
           "show_idrefs",
           "show_labels",
-          "width",
-          "gist_id",
-          "caption",
+          "show_marking_nodes",
           "show_sidebar",
-          "show_marking_nodes"
+          "show_tlp_as_tags",
+          "stix_url",
+          "width"
         ]
       }
     ]
