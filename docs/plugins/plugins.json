@@ -60,8 +60,8 @@
         "name": "list",
         "type": "content-provider",
         "arguments": [
-          "item_template",
-          "format"
+          "format",
+          "item_template"
         ]
       },
       {
@@ -115,9 +115,9 @@
         "name": "elastic_security_cases",
         "type": "data-source",
         "config_params": [
-          "kibana_endpoint_url",
+          "api_key",
           "api_key_str",
-          "api_key"
+          "kibana_endpoint_url"
         ],
         "arguments": [
           "assignees",
@@ -141,14 +141,14 @@
         "name": "elasticsearch",
         "type": "data-source",
         "config_params": [
-          "ca_certs",
-          "base_url",
-          "cloud_id",
-          "api_key_str",
           "api_key",
-          "basic_auth_username",
+          "api_key_str",
+          "base_url",
           "basic_auth_password",
-          "bearer_auth"
+          "basic_auth_username",
+          "bearer_auth",
+          "ca_certs",
+          "cloud_id"
         ],
         "arguments": [
           "aggs",
@@ -199,8 +199,8 @@
         "name": "graphql",
         "type": "data-source",
         "config_params": [
-          "url",
-          "auth_token"
+          "auth_token",
+          "url"
         ],
         "arguments": [
           "query"
@@ -217,8 +217,8 @@
         "name": "hackerone_reports",
         "type": "data-source",
         "config_params": [
-          "api_username",
-          "api_token"
+          "api_token",
+          "api_username"
         ],
         "arguments": [
           "assignee",
@@ -315,9 +315,9 @@
         "name": "openai_text",
         "type": "content-provider",
         "config_params": [
-          "organization_id",
           "system_prompt",
-          "api_key"
+          "api_key",
+          "organization_id"
         ],
         "arguments": [
           "prompt",
@@ -371,8 +371,8 @@
         "name": "splunk_search",
         "type": "data-source",
         "config_params": [
-          "deployment_name",
           "auth_token",
+          "deployment_name",
           "host"
         ],
         "arguments": [
@@ -413,17 +413,17 @@
         "name": "stixview",
         "type": "content-provider",
         "arguments": [
-          "show_marking_nodes",
+          "height",
+          "stix_url",
+          "show_footer",
+          "show_tlp_as_tags",
           "show_idrefs",
+          "show_labels",
           "width",
           "gist_id",
-          "stix_url",
           "caption",
-          "show_footer",
           "show_sidebar",
-          "show_tlp_as_tags",
-          "show_labels",
-          "height"
+          "show_marking_nodes"
         ]
       }
     ]
