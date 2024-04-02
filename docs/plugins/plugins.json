@@ -120,44 +120,44 @@
           "api_key"
         ],
         "arguments": [
+          "assignees",
+          "default_search_operator",
+          "from",
           "owner",
-          "severity",
-          "sort_order",
           "reporters",
           "search",
           "search_fields",
+          "severity",
+          "size",
           "sort_field",
-          "to",
+          "sort_order",
           "space_id",
-          "default_search_operator",
-          "assignees",
-          "from",
           "status",
           "tags",
-          "size"
+          "to"
         ]
       },
       {
         "name": "elasticsearch",
         "type": "data-source",
         "config_params": [
-          "basic_auth_password",
-          "bearer_auth",
           "ca_certs",
           "base_url",
           "cloud_id",
           "api_key_str",
           "api_key",
-          "basic_auth_username"
+          "basic_auth_username",
+          "basic_auth_password",
+          "bearer_auth"
         ],
         "arguments": [
-          "index",
-          "id",
-          "query_string",
-          "query",
           "aggs",
-          "only_hits",
           "fields",
+          "id",
+          "index",
+          "only_hits",
+          "query",
+          "query_string",
           "size"
         ]
       }
@@ -175,17 +175,17 @@
           "github_token"
         ],
         "arguments": [
-          "milestone",
-          "state",
-          "creator",
-          "sort",
-          "direction",
-          "since",
-          "limit",
-          "repository",
           "assignee",
+          "creator",
+          "direction",
+          "labels",
+          "limit",
           "mentioned",
-          "labels"
+          "milestone",
+          "repository",
+          "since",
+          "sort",
+          "state"
         ]
       }
     ]
@@ -221,52 +221,52 @@
           "api_token"
         ],
         "arguments": [
-          "program",
-          "state",
-          "closed_at__null",
-          "first_program_activity_at__null",
-          "custom_fields",
-          "reporter_agreed_on_going_public",
-          "swag_awarded_at__null",
-          "last_report_activity_at__lt",
-          "hacker_published",
-          "triaged_at__gt",
-          "triaged_at__null",
-          "closed_at__gt",
-          "disclosed_at__lt",
-          "swag_awarded_at__gt",
-          "disclosed_at__gt",
-          "first_program_activity_at__gt",
-          "last_program_activity_at__null",
-          "last_activity_at__lt",
-          "weakness_id",
-          "closed_at__lt",
-          "bounty_awarded_at__lt",
-          "last_program_activity_at__lt",
-          "last_activity_at__gt",
-          "last_public_activity_at__gt",
-          "page_number",
           "assignee",
-          "id",
-          "submitted_at__gt",
-          "triaged_at__lt",
-          "swag_awarded_at__lt",
-          "first_program_activity_at__lt",
-          "size",
-          "sort",
-          "submitted_at__lt",
-          "last_program_activity_at__gt",
-          "last_public_activity_at__lt",
-          "keyword",
+          "bounty_awarded_at__gt",
+          "bounty_awarded_at__lt",
           "bounty_awarded_at__null",
-          "inbox_ids",
-          "reporter",
-          "severity",
+          "closed_at__gt",
+          "closed_at__lt",
+          "closed_at__null",
           "created_at__gt",
           "created_at__lt",
+          "custom_fields",
+          "disclosed_at__gt",
+          "disclosed_at__lt",
           "disclosed_at__null",
-          "bounty_awarded_at__gt",
-          "last_report_activity_at__gt"
+          "first_program_activity_at__gt",
+          "first_program_activity_at__lt",
+          "first_program_activity_at__null",
+          "hacker_published",
+          "id",
+          "inbox_ids",
+          "keyword",
+          "last_activity_at__gt",
+          "last_activity_at__lt",
+          "last_program_activity_at__gt",
+          "last_program_activity_at__lt",
+          "last_program_activity_at__null",
+          "last_public_activity_at__gt",
+          "last_public_activity_at__lt",
+          "last_report_activity_at__gt",
+          "last_report_activity_at__lt",
+          "page_number",
+          "program",
+          "reporter",
+          "reporter_agreed_on_going_public",
+          "severity",
+          "size",
+          "sort",
+          "state",
+          "submitted_at__gt",
+          "submitted_at__lt",
+          "swag_awarded_at__gt",
+          "swag_awarded_at__lt",
+          "swag_awarded_at__null",
+          "triaged_at__gt",
+          "triaged_at__lt",
+          "triaged_at__null",
+          "weakness_id"
         ]
       }
     ]
@@ -283,25 +283,25 @@
           "api_key"
         ],
         "arguments": [
-          "limit",
-          "pub_start_date",
-          "pub_end_date",
-          "cvss_v3_severity",
-          "cwe_id",
-          "virtual_match_string",
-          "last_mod_end_date",
-          "keyword_exact_match",
-          "is_vulnerable",
-          "no_rejected",
           "cpe_name",
           "cve_id",
           "cvss_v3_metrics",
+          "cvss_v3_severity",
+          "cwe_id",
           "has_cert_alerts",
           "has_cert_notes",
-          "last_mod_start_date",
+          "has_kev",
+          "is_vulnerable",
+          "keyword_exact_match",
           "keyword_search",
+          "last_mod_end_date",
+          "last_mod_start_date",
+          "limit",
+          "no_rejected",
+          "pub_end_date",
+          "pub_start_date",
           "source_identifier",
-          "has_kev"
+          "virtual_match_string"
         ]
       }
     ]
@@ -315,9 +315,9 @@
         "name": "openai_text",
         "type": "content-provider",
         "config_params": [
+          "organization_id",
           "system_prompt",
-          "api_key",
-          "organization_id"
+          "api_key"
         ],
         "arguments": [
           "prompt",
@@ -335,8 +335,8 @@
         "name": "opencti",
         "type": "data-source",
         "config_params": [
-          "graphql_url",
-          "auth_token"
+          "auth_token",
+          "graphql_url"
         ],
         "arguments": [
           "graphql_query"
@@ -356,8 +356,8 @@
           "database_url"
         ],
         "arguments": [
-          "sql_query",
-          "sql_args"
+          "sql_args",
+          "sql_query"
         ]
       }
     ]
@@ -371,17 +371,17 @@
         "name": "splunk_search",
         "type": "data-source",
         "config_params": [
+          "deployment_name",
           "auth_token",
-          "host",
-          "deployment_name"
+          "host"
         ],
         "arguments": [
-          "status_buckets",
-          "rf",
           "earliest_time",
           "latest_time",
+          "max_count",
+          "rf",
           "search_query",
-          "max_count"
+          "status_buckets"
         ]
       }
     ]
@@ -398,8 +398,8 @@
           "database_uri"
         ],
         "arguments": [
-          "sql_query",
-          "sql_args"
+          "sql_args",
+          "sql_query"
         ]
       }
     ]
@@ -413,17 +413,17 @@
         "name": "stixview",
         "type": "content-provider",
         "arguments": [
+          "show_marking_nodes",
           "show_idrefs",
-          "height",
+          "width",
           "gist_id",
+          "stix_url",
           "caption",
           "show_footer",
-          "show_labels",
-          "width",
-          "stix_url",
           "show_sidebar",
           "show_tlp_as_tags",
-          "show_marking_nodes"
+          "show_labels",
+          "height"
         ]
       }
     ]
@@ -454,10 +454,10 @@
           "api_key"
         ],
         "arguments": [
-          "user_id",
+          "end_date",
           "group_id",
           "start_date",
-          "end_date"
+          "user_id"
         ]
       }
     ]
