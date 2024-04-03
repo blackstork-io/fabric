@@ -147,7 +147,7 @@ func (s *ListGeneratorTestSuite) TestBasic() {
 
 func (s *ListGeneratorTestSuite) TestAdvanced() {
 	args := cty.ObjectVal(map[string]cty.Value{
-		"item_template": cty.StringVal("foo {{.bar}} {{.baz}}"),
+		"item_template": cty.StringVal("foo {{.bar}} {{.baz | upper}}"),
 		"format":        cty.NullVal(cty.String),
 	})
 	ctx := context.Background()
@@ -166,7 +166,7 @@ func (s *ListGeneratorTestSuite) TestAdvanced() {
 			},
 		},
 	})
-	s.Equal("* foo bar1 baz1\n* foo bar2 baz2\n", result.Content.Print())
+	s.Equal("* foo bar1 BAZ1\n* foo bar2 BAZ2\n", result.Content.Print())
 	s.Empty(diags)
 }
 
