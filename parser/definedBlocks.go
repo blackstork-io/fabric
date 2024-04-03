@@ -74,7 +74,7 @@ func PluginMapToCty[V definitions.FabricBlock](plugins map[definitions.Key]V) (c
 func (db *DefinedBlocks) AsValueMap() map[string]cty.Value {
 	content, data := PluginMapToCty(db.Plugins)
 	cfgContent, cfgData := PluginMapToCty(db.Config)
-	config := cty.MapVal(map[string]cty.Value{
+	config := cty.ObjectVal(map[string]cty.Value{
 		definitions.BlockKindContent: cfgContent,
 		definitions.BlockKindData:    cfgData,
 	})
