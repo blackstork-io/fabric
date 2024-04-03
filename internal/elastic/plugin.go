@@ -40,8 +40,7 @@ func Plugin(version string, loader KibanaClientLoaderFn) *plugin.Schema {
 
 func makeSearchClient(pcfg cty.Value) (*es.Client, error) {
 	cfg := &es.Config{
-		Addresses: []string{defaultBaseURL},
-		Username:  defaultUsername,
+		Username: defaultUsername,
 	}
 	if pcfg.IsNull() {
 		return nil, fmt.Errorf("configuration is required")
