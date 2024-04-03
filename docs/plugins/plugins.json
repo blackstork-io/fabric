@@ -1,7 +1,24 @@
 [
   {
     "name": "blackstork/builtin",
+    "version": "v0.4.1",
+    "shortname": "builtin",
     "resources": [
+      {
+        "name": "blockquote",
+        "type": "content-provider",
+        "arguments": [
+          "value"
+        ]
+      },
+      {
+        "name": "code",
+        "type": "content-provider",
+        "arguments": [
+          "language",
+          "value"
+        ]
+      },
       {
         "name": "csv",
         "type": "data-source",
@@ -13,11 +30,24 @@
         ]
       },
       {
-        "name": "txt",
-        "type": "data-source",
+        "name": "frontmatter",
+        "type": "content-provider",
         "arguments": [
-          "path"
+          "content",
+          "format"
         ]
+      },
+      {
+        "name": "image",
+        "type": "content-provider",
+        "arguments": [
+          "alt",
+          "src"
+        ]
+      },
+      {
+        "name": "inline",
+        "type": "data-source"
       },
       {
         "name": "json",
@@ -27,8 +57,19 @@
         ]
       },
       {
-        "name": "inline",
-        "type": "data-source"
+        "name": "list",
+        "type": "content-provider",
+        "arguments": [
+          "format",
+          "item_template"
+        ]
+      },
+      {
+        "name": "table",
+        "type": "content-provider",
+        "arguments": [
+          "columns"
+        ]
       },
       {
         "name": "text",
@@ -47,124 +88,85 @@
         ]
       },
       {
-        "name": "blockquote",
-        "type": "content-provider",
-        "arguments": [
-          "value"
-        ]
-      },
-      {
-        "name": "table",
-        "type": "content-provider",
-        "arguments": [
-          "columns"
-        ]
-      },
-      {
         "name": "toc",
         "type": "content-provider",
         "arguments": [
-          "start_level",
           "end_level",
           "ordered",
-          "scope"
+          "scope",
+          "start_level"
         ]
       },
       {
-        "name": "code",
-        "type": "content-provider",
+        "name": "txt",
+        "type": "data-source",
         "arguments": [
-          "value",
-          "language"
-        ]
-      },
-      {
-        "name": "image",
-        "type": "content-provider",
-        "arguments": [
-          "src",
-          "alt"
-        ]
-      },
-      {
-        "name": "list",
-        "type": "content-provider",
-        "arguments": [
-          "item_template",
-          "format"
-        ]
-      },
-      {
-        "name": "frontmatter",
-        "type": "content-provider",
-        "arguments": [
-          "format",
-          "content"
+          "path"
         ]
       }
-    ],
-    "shortname": "builtin",
-    "version": "v0.4.0"
+    ]
   },
   {
     "name": "blackstork/elastic",
+    "version": "v0.4.1",
+    "shortname": "elastic",
     "resources": [
-      {
-        "name": "elasticsearch",
-        "type": "data-source",
-        "config_params": [
-          "basic_auth_username",
-          "basic_auth_password",
-          "bearer_auth",
-          "ca_certs",
-          "base_url",
-          "cloud_id",
-          "api_key_str",
-          "api_key"
-        ],
-        "arguments": [
-          "query_string",
-          "query",
-          "aggs",
-          "only_hits",
-          "fields",
-          "size",
-          "index",
-          "id"
-        ]
-      },
       {
         "name": "elastic_security_cases",
         "type": "data-source",
         "config_params": [
-          "kibana_endpoint_url",
+          "api_key",
           "api_key_str",
-          "api_key"
+          "kibana_endpoint_url"
         ],
         "arguments": [
+          "assignees",
           "default_search_operator",
           "from",
           "owner",
-          "sort_field",
-          "tags",
-          "space_id",
-          "assignees",
           "reporters",
           "search",
           "search_fields",
           "severity",
-          "status",
+          "size",
+          "sort_field",
           "sort_order",
-          "to",
+          "space_id",
+          "status",
+          "tags",
+          "to"
+        ]
+      },
+      {
+        "name": "elasticsearch",
+        "type": "data-source",
+        "config_params": [
+          "api_key",
+          "api_key_str",
+          "base_url",
+          "basic_auth_password",
+          "basic_auth_username",
+          "bearer_auth",
+          "ca_certs",
+          "cloud_id"
+        ],
+        "arguments": [
+          "aggs",
+          "fields",
+          "id",
+          "index",
+          "only_hits",
+          "query",
+          "query_string",
           "size"
         ]
       }
-    ],
-    "shortname": "elastic",
-    "version": "v0.4.0"
+    ]
   },
   {
     "name": "blackstork/github",
+    "version": "v0.4.1",
+    "shortname": "github",
     "resources": [
       {
         "name": "github_issues",
@@ -173,25 +175,25 @@
           "github_token"
         ],
         "arguments": [
-          "labels",
-          "direction",
-          "since",
-          "repository",
-          "state",
           "assignee",
+          "creator",
+          "direction",
+          "labels",
+          "limit",
           "mentioned",
           "milestone",
-          "creator",
+          "repository",
+          "since",
           "sort",
-          "limit"
+          "state"
         ]
       }
-    ],
-    "shortname": "github",
-    "version": "v0.4.0"
+    ]
   },
   {
     "name": "blackstork/graphql",
+    "version": "v0.4.1",
+    "shortname": "graphql",
     "resources": [
       {
         "name": "graphql",
@@ -204,231 +206,75 @@
           "query"
         ]
       }
-    ],
-    "shortname": "graphql",
-    "version": "v0.4.0"
-  },
-  {
-    "name": "blackstork/openai",
-    "resources": [
-      {
-        "name": "openai_text",
-        "type": "content-provider",
-        "config_params": [
-          "system_prompt",
-          "api_key",
-          "organization_id"
-        ],
-        "arguments": [
-          "prompt",
-          "model"
-        ]
-      }
-    ],
-    "shortname": "openai",
-    "version": "v0.4.0"
-  },
-  {
-    "name": "blackstork/opencti",
-    "resources": [
-      {
-        "name": "opencti",
-        "type": "data-source",
-        "config_params": [
-          "graphql_url",
-          "auth_token"
-        ],
-        "arguments": [
-          "graphql_query"
-        ]
-      }
-    ],
-    "shortname": "opencti",
-    "version": "v0.4.0"
-  },
-  {
-    "name": "blackstork/postgresql",
-    "resources": [
-      {
-        "name": "postgresql",
-        "type": "data-source",
-        "config_params": [
-          "database_url"
-        ],
-        "arguments": [
-          "sql_query",
-          "sql_args"
-        ]
-      }
-    ],
-    "shortname": "postgresql",
-    "version": "v0.4.0"
-  },
-  {
-    "name": "blackstork/sqlite",
-    "resources": [
-      {
-        "name": "sqlite",
-        "type": "data-source",
-        "config_params": [
-          "database_uri"
-        ],
-        "arguments": [
-          "sql_query",
-          "sql_args"
-        ]
-      }
-    ],
-    "shortname": "sqlite",
-    "version": "v0.4.0"
-  },
-  {
-    "name": "blackstork/terraform",
-    "resources": [
-      {
-        "name": "terraform_state_local",
-        "type": "data-source",
-        "arguments": [
-          "path"
-        ]
-      }
-    ],
-    "shortname": "terraform",
-    "version": "v0.4.0"
+    ]
   },
   {
     "name": "blackstork/hackerone",
+    "version": "v0.4.1",
+    "shortname": "hackerone",
     "resources": [
       {
         "name": "hackerone_reports",
         "type": "data-source",
         "config_params": [
-          "api_username",
-          "api_token"
+          "api_token",
+          "api_username"
         ],
         "arguments": [
-          "triaged_at__gt",
-          "swag_awarded_at__null",
-          "inbox_ids",
-          "closed_at__lt",
-          "reporter_agreed_on_going_public",
-          "last_report_activity_at__gt",
-          "first_program_activity_at__lt",
-          "last_activity_at__gt",
-          "last_public_activity_at__lt",
-          "triaged_at__null",
-          "program",
-          "hacker_published",
-          "closed_at__gt",
-          "disclosed_at__gt",
-          "custom_fields",
-          "size",
-          "id",
-          "closed_at__null",
-          "bounty_awarded_at__lt",
-          "first_program_activity_at__null",
-          "reporter",
           "assignee",
-          "severity",
+          "bounty_awarded_at__gt",
+          "bounty_awarded_at__lt",
+          "bounty_awarded_at__null",
+          "closed_at__gt",
+          "closed_at__lt",
+          "closed_at__null",
           "created_at__gt",
           "created_at__lt",
-          "disclosed_at__null",
-          "bounty_awarded_at__gt",
-          "bounty_awarded_at__null",
-          "sort",
-          "last_public_activity_at__gt",
-          "keyword",
-          "last_report_activity_at__lt",
-          "submitted_at__lt",
-          "triaged_at__lt",
+          "custom_fields",
+          "disclosed_at__gt",
           "disclosed_at__lt",
+          "disclosed_at__null",
+          "first_program_activity_at__gt",
+          "first_program_activity_at__lt",
+          "first_program_activity_at__null",
+          "hacker_published",
+          "id",
+          "inbox_ids",
+          "keyword",
+          "last_activity_at__gt",
+          "last_activity_at__lt",
           "last_program_activity_at__gt",
+          "last_program_activity_at__lt",
+          "last_program_activity_at__null",
+          "last_public_activity_at__gt",
+          "last_public_activity_at__lt",
+          "last_report_activity_at__gt",
+          "last_report_activity_at__lt",
+          "page_number",
+          "program",
+          "reporter",
+          "reporter_agreed_on_going_public",
+          "severity",
+          "size",
+          "sort",
           "state",
-          "weakness_id",
           "submitted_at__gt",
+          "submitted_at__lt",
           "swag_awarded_at__gt",
           "swag_awarded_at__lt",
-          "first_program_activity_at__gt",
-          "last_program_activity_at__null",
-          "last_activity_at__lt",
-          "page_number",
-          "last_program_activity_at__lt"
+          "swag_awarded_at__null",
+          "triaged_at__gt",
+          "triaged_at__lt",
+          "triaged_at__null",
+          "weakness_id"
         ]
       }
-    ],
-    "shortname": "hackerone",
-    "version": "v0.4.0"
-  },
-  {
-    "name": "blackstork/virustotal",
-    "resources": [
-      {
-        "name": "virustotal_api_usage",
-        "type": "data-source",
-        "config_params": [
-          "api_key"
-        ],
-        "arguments": [
-          "user_id",
-          "group_id",
-          "start_date",
-          "end_date"
-        ]
-      }
-    ],
-    "shortname": "virustotal",
-    "version": "v0.4.0"
-  },
-  {
-    "name": "blackstork/splunk",
-    "resources": [
-      {
-        "name": "splunk_search",
-        "type": "data-source",
-        "config_params": [
-          "auth_token",
-          "host",
-          "deployment_name"
-        ],
-        "arguments": [
-          "search_query",
-          "max_count",
-          "status_buckets",
-          "rf",
-          "earliest_time",
-          "latest_time"
-        ]
-      }
-    ],
-    "shortname": "splunk",
-    "version": "v0.4.0"
-  },
-  {
-    "name": "blackstork/stixview",
-    "resources": [
-      {
-        "name": "stixview",
-        "type": "content-provider",
-        "arguments": [
-          "show_labels",
-          "gist_id",
-          "show_footer",
-          "show_sidebar",
-          "show_tlp_as_tags",
-          "show_marking_nodes",
-          "stix_url",
-          "caption",
-          "show_idrefs",
-          "width",
-          "height"
-        ]
-      }
-    ],
-    "shortname": "stixview",
-    "version": "v0.4.0"
+    ]
   },
   {
     "name": "blackstork/nist_nvd",
+    "version": "v0.4.1",
+    "shortname": "nist_nvd",
     "resources": [
       {
         "name": "nist_nvd_cves",
@@ -437,29 +283,183 @@
           "api_key"
         ],
         "arguments": [
-          "source_identifier",
-          "no_rejected",
-          "cvss_v3_severity",
-          "keyword_exact_match",
-          "cvss_v3_metrics",
-          "last_mod_end_date",
-          "pub_end_date",
           "cpe_name",
           "cve_id",
+          "cvss_v3_metrics",
+          "cvss_v3_severity",
           "cwe_id",
-          "keyword_search",
           "has_cert_alerts",
-          "last_mod_start_date",
-          "is_vulnerable",
           "has_cert_notes",
-          "virtual_match_string",
           "has_kev",
+          "is_vulnerable",
+          "keyword_exact_match",
+          "keyword_search",
+          "last_mod_end_date",
+          "last_mod_start_date",
           "limit",
-          "pub_start_date"
+          "no_rejected",
+          "pub_end_date",
+          "pub_start_date",
+          "source_identifier",
+          "virtual_match_string"
         ]
       }
-    ],
-    "shortname": "nist_nvd",
-    "version": "v0.4.0"
+    ]
+  },
+  {
+    "name": "blackstork/openai",
+    "version": "v0.4.1",
+    "shortname": "openai",
+    "resources": [
+      {
+        "name": "openai_text",
+        "type": "content-provider",
+        "config_params": [
+          "api_key",
+          "organization_id",
+          "system_prompt"
+        ],
+        "arguments": [
+          "model",
+          "prompt"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "blackstork/opencti",
+    "version": "v0.4.1",
+    "shortname": "opencti",
+    "resources": [
+      {
+        "name": "opencti",
+        "type": "data-source",
+        "config_params": [
+          "auth_token",
+          "graphql_url"
+        ],
+        "arguments": [
+          "graphql_query"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "blackstork/postgresql",
+    "version": "v0.4.1",
+    "shortname": "postgresql",
+    "resources": [
+      {
+        "name": "postgresql",
+        "type": "data-source",
+        "config_params": [
+          "database_url"
+        ],
+        "arguments": [
+          "sql_args",
+          "sql_query"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "blackstork/splunk",
+    "version": "v0.4.1",
+    "shortname": "splunk",
+    "resources": [
+      {
+        "name": "splunk_search",
+        "type": "data-source",
+        "config_params": [
+          "auth_token",
+          "deployment_name",
+          "host"
+        ],
+        "arguments": [
+          "earliest_time",
+          "latest_time",
+          "max_count",
+          "rf",
+          "search_query",
+          "status_buckets"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "blackstork/sqlite",
+    "version": "v0.4.1",
+    "shortname": "sqlite",
+    "resources": [
+      {
+        "name": "sqlite",
+        "type": "data-source",
+        "config_params": [
+          "database_uri"
+        ],
+        "arguments": [
+          "sql_args",
+          "sql_query"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "blackstork/stixview",
+    "version": "v0.4.1",
+    "shortname": "stixview",
+    "resources": [
+      {
+        "name": "stixview",
+        "type": "content-provider",
+        "arguments": [
+          "caption",
+          "gist_id",
+          "height",
+          "show_footer",
+          "show_idrefs",
+          "show_labels",
+          "show_marking_nodes",
+          "show_sidebar",
+          "show_tlp_as_tags",
+          "stix_url",
+          "width"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "blackstork/terraform",
+    "version": "v0.4.1",
+    "shortname": "terraform",
+    "resources": [
+      {
+        "name": "terraform_state_local",
+        "type": "data-source",
+        "arguments": [
+          "path"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "blackstork/virustotal",
+    "version": "v0.4.1",
+    "shortname": "virustotal",
+    "resources": [
+      {
+        "name": "virustotal_api_usage",
+        "type": "data-source",
+        "config_params": [
+          "api_key"
+        ],
+        "arguments": [
+          "end_date",
+          "group_id",
+          "start_date",
+          "user_id"
+        ]
+      }
+    ]
   }
 ]

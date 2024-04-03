@@ -30,4 +30,4 @@ generate:
     go generate ./...
 
 generate-docs:
-    go run ./tools/docgen --version v0.4.0 --output ./docs/plugins/
+    go run ./tools/docgen --version v0.4.1 --output ./docs/plugins/

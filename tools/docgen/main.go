@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -55,6 +56,13 @@ type PluginResourceMeta struct {
 	Type         string   `json:"type"`
 	ConfigParams []string `json:"config_params,omitempty"`
 	Arguments    []string `json:"arguments,omitempty"`
+}
+
+type PluginDetails struct {
+	Name      string               `json:"name"`
+	Version   string               `json:"version"`
+	Shortname string               `json:"shortname"`
+	Resources []PluginResourceMeta `json:"resources"`
 }
 
 func generateDataSourceDocs(log *slog.Logger, p *plugin.Schema, outputDir string) {
@@ -114,6 +122,7 @@ func marshalDataSource(name string, ds *plugin.DataSource) PluginResourceMeta {
 			configParams = append(configParams, k)
 		}
 	}
+	sort.Strings(configParams)
 
 	var arguments []string
 	argsSpec, ok := ds.Args.(hcldec.ObjectSpec)
@@ -122,6 +131,8 @@ func marshalDataSource(name string, ds *plugin.DataSource) PluginResourceMeta {
 			arguments = append(arguments, k)
 		}
 	}
+	sort.Strings(arguments)
+
 	return PluginResourceMeta{
 		Name:         name,
 		Type:         "data-source",
@@ -138,6 +149,7 @@ func marshalContentProvider(name string, p *plugin.ContentProvider) PluginResour
 			configParams = append(configParams, k)
 		}
 	}
+	sort.Strings(configParams)
 
 	var arguments []string
 	argsSpec, ok := p.Args.(hcldec.ObjectSpec)
@@ -146,6 +158,8 @@ func marshalContentProvider(name string, p *plugin.ContentProvider) PluginResour
 			arguments = append(arguments, k)
 		}
 	}
+	sort.Strings(arguments)
+
 	return PluginResourceMeta{
 		Name:         name,
 		Type:         "content-provider",
@@ -155,7 +169,7 @@ func marshalContentProvider(name string, p *plugin.ContentProvider) PluginResour
 }
 
 func generateMetadataFile(plugins []*plugin.Schema, outputDir string) {
-	pluginDetails := make([]any, len(plugins))
+	pluginDetails := make([]PluginDetails, len(plugins))
 
 	for i, p := range plugins {
 
@@ -168,13 +182,21 @@ func generateMetadataFile(plugins []*plugin.Schema, outputDir string) {
 			resources = append(resources, marshalContentProvider(name, contentProvider))
 		}
 
-		pluginDetails[i] = map[string]any{
-			"name":      p.Name,
-			"version":   p.Version,
-			"shortname": shortname(p.Name),
-			"resources": resources,
+		sort.Slice(resources, func(i, j int) bool {
+			return resources[i].Name < resources[j].Name
+		})
+
+		pluginDetails[i] = PluginDetails{
+			Name:      p.Name,
+			Version:   p.Version,
+			Shortname: shortname(p.Name),
+			Resources: resources,
 		}
 	}
+
+	sort.Slice(pluginDetails, func(i, j int) bool {
+		return pluginDetails[i].Name < pluginDetails[j].Name
+	})
 
 	jsonData, err := json.MarshalIndent(pluginDetails, "", "  ")
 	if err != nil {
