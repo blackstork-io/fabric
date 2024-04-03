@@ -60,7 +60,7 @@ func genTextContentText(text string, datactx plugin.MapData) (string, error) {
 	}
 
 	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, datactx)
+	err = tmpl.Execute(&buf, datactx.Any())
 	if err != nil {
 		return "", fmt.Errorf("failed to execute text template: %w", err)
 	}

@@ -9,7 +9,7 @@ import (
 	"html/template"
 	"strings"
 
-	"github.com/Masterminds/sprig"
+	"github.com/Masterminds/sprig/v3"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
@@ -133,7 +133,7 @@ func templateText(text string, datactx plugin.MapData) (string, error) {
 	}
 
 	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, datactx)
+	err = tmpl.Execute(&buf, datactx.Any())
 	if err != nil {
 		return "", fmt.Errorf("failed to execute template: %w", err)
 	}

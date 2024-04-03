@@ -93,7 +93,7 @@ func (s *OpenAITextContentTestSuite) TestAdvanced() {
 			},
 			{
 				Role:    "user",
-				Content: "Tell me a story\n```\n{\n  \"foo\": \"bar\"\n}\n```",
+				Content: "Tell me a story about BAR.\n```\n{\n  \"foo\": \"bar\"\n}\n```",
 			},
 		},
 	}).Return(&client.ChatCompletionResult{
@@ -111,7 +111,7 @@ func (s *OpenAITextContentTestSuite) TestAdvanced() {
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: cty.ObjectVal(map[string]cty.Value{
-			"prompt": cty.StringVal("Tell me a story"),
+			"prompt": cty.StringVal("Tell me a story about {{.query_result.foo | upper}}."),
 			"model":  cty.StringVal("model_123"),
 		}),
 		Config: cty.ObjectVal(map[string]cty.Value{
