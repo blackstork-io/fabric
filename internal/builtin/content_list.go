@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
@@ -77,7 +78,7 @@ func parseListContentArgs(params *plugin.ProvideContentParams) (string, *templat
 	if !slices.Contains(listAllowedFormats, format.AsString()) {
 		return "", nil, errors.New("invalid format: " + format.AsString())
 	}
-	tmpl, err := template.New("item").Parse(itemTemplate.AsString())
+	tmpl, err := template.New("item").Funcs(sprig.FuncMap()).Parse(itemTemplate.AsString())
 	return format.AsString(), tmpl, err
 }
 

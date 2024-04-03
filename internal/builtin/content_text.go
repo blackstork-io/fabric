@@ -7,6 +7,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
@@ -53,13 +54,13 @@ func genTextContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 }
 
 func genTextContentText(text string, datactx plugin.MapData) (string, error) {
-	tmpl, err := template.New("text").Parse(text)
+	tmpl, err := template.New("text").Funcs(sprig.FuncMap()).Parse(text)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse text template: %w", err)
 	}
 
 	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, datactx)
+	err = tmpl.Execute(&buf, datactx.Any())
 	if err != nil {
 		return "", fmt.Errorf("failed to execute text template: %w", err)
 	}

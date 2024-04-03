@@ -91,3 +91,17 @@ func (s *TextTestSuite) TestCallInvalidTemplate() {
 		Detail:   "failed to parse text template: template: text:1: bad character U+007D '}'",
 	}}, diags)
 }
+
+func (s *TextTestSuite) TestSprigTemplate() {
+	ctx := context.Background()
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+		Args: cty.ObjectVal(map[string]cty.Value{
+			"value": cty.StringVal("Hello {{.name | upper}}!"),
+		}),
+		DataContext: plugin.MapData{
+			"name": plugin.StringData("World"),
+		},
+	})
+	s.Empty(diags)
+	s.Equal("Hello WORLD!", result.Content.Print())
+}
