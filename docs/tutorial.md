@@ -142,11 +142,11 @@ There are 8 planets and 146 moons in our solar system.
 
 ## Content providers
 
-Fabric seamlessly integrates with external APIs for content generation. An excellent example is the utilization of the OpenAI API to dynamically generate text through prompts.
+Fabric seamlessly integrates with external APIs for content generation. An excellent example is the use of the OpenAI API to dynamically generate text through prompts.
 
 In scenarios where providing the exact text or a template string for the content block proves challenging or impossible, leveraging generative AI for summarization becomes invaluable. This enables users to dynamically create context-aware text.
 
-In this tutorial, we will utilize the [`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}}) content provider, allowing us to generate text with the OpenAI Language Model (LLM).
+In this tutorial, we will use the [`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}}) content provider to generate text with the OpenAI Large Language Model (LLM).
 
 ### Installation
 
