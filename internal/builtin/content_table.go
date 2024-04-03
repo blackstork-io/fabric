@@ -7,6 +7,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
@@ -78,11 +79,11 @@ func parseTableContentArgs(params *plugin.ProvideContentParams) (headers, values
 			return nil, nil, fmt.Errorf("missing value in table cell")
 		}
 
-		headerTmpl, err := template.New("header").Parse(header.AsString())
+		headerTmpl, err := template.New("header").Funcs(sprig.FuncMap()).Parse(header.AsString())
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to parse header template: %w", err)
 		}
-		valueTmpl, err := template.New("value").Parse(value.AsString())
+		valueTmpl, err := template.New("value").Funcs(sprig.FuncMap()).Parse(value.AsString())
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to parse value template: %w", err)
 		}
@@ -97,7 +98,7 @@ func renderTableContent(headers, values []tableCellTmpl, datactx plugin.MapData)
 	vstr := [][]string{}
 	for i, header := range headers {
 		var buf bytes.Buffer
-		err := header.Execute(&buf, datactx)
+		err := header.Execute(&buf, datactx.Any())
 		if err != nil {
 			return "", fmt.Errorf("failed to render header: %w", err)
 		}
@@ -117,7 +118,7 @@ func renderTableContent(headers, values []tableCellTmpl, datactx plugin.MapData)
 			rowstr := make([]string, len(values))
 			for i, value := range values {
 				var buf bytes.Buffer
-				err := value.Execute(&buf, row)
+				err := value.Execute(&buf, row.Any())
 				if err != nil {
 					return "", fmt.Errorf("failed to render value: %w", err)
 				}

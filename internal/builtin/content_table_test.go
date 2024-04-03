@@ -115,6 +115,40 @@ func (s *TableGeneratorTestSuite) TestBasic() {
 	s.Nil(diags)
 }
 
+func (s *TableGeneratorTestSuite) TestSprigTemplate() {
+	args := cty.ObjectVal(map[string]cty.Value{
+		"columns": cty.ListVal([]cty.Value{
+			cty.ObjectVal(map[string]cty.Value{
+				"header": cty.StringVal("{{.col_prefix | upper}} Name"),
+				"value":  cty.StringVal("{{.name | upper}}"),
+			}),
+			cty.ObjectVal(map[string]cty.Value{
+				"header": cty.StringVal("{{.col_prefix}} Age"),
+				"value":  cty.StringVal("{{.age}}"),
+			}),
+		}),
+	})
+	ctx := context.Background()
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+		Args: args,
+		DataContext: plugin.MapData{
+			"col_prefix": plugin.StringData("User"),
+			"query_result": plugin.ListData{
+				plugin.MapData{
+					"name": plugin.StringData("John"),
+					"age":  plugin.NumberData(42),
+				},
+				plugin.MapData{
+					"name": plugin.StringData("Jane"),
+					"age":  plugin.NumberData(43),
+				},
+			},
+		},
+	})
+	s.Equal("|USER Name|User Age|\n|---|---|\n|JOHN|42|\n|JANE|43|\n", result.Content.Print())
+	s.Nil(diags)
+}
+
 func (s *TableGeneratorTestSuite) TestMissingHeader() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"columns": cty.ListVal([]cty.Value{

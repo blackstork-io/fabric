@@ -97,7 +97,7 @@ func renderListContent(format string, tmpl *template.Template, datactx plugin.Ma
 	var buf bytes.Buffer
 	for i, item := range items {
 		tmpbuf := bytes.Buffer{}
-		err := tmpl.Execute(&tmpbuf, item)
+		err := tmpl.Execute(&tmpbuf, item.Any())
 		if err != nil {
 			return "", err
 		}
