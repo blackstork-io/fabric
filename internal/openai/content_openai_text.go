@@ -1,10 +1,15 @@
 package openai
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"html/template"
+	"strings"
 
+	"github.com/Masterminds/sprig"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
@@ -94,6 +99,10 @@ func renderText(ctx context.Context, cli client.Client, cfg, args cty.Value, dat
 		})
 	}
 	content := prompt.AsString()
+	content, err := templateText(content, datactx)
+	if err != nil {
+		return "", err
+	}
 	if datactx != nil {
 		if queryResult, ok := datactx[queryResultKey]; ok {
 			data, err := json.MarshalIndent(queryResult, "", "  ")
@@ -115,4 +124,18 @@ func renderText(ctx context.Context, cli client.Client, cfg, args cty.Value, dat
 		return "", errors.New("no choices")
 	}
 	return result.Choices[0].Message.Content, nil
+}
+
+func templateText(text string, datactx plugin.MapData) (string, error) {
+	tmpl, err := template.New("text").Funcs(sprig.FuncMap()).Parse(text)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse template: %w", err)
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, datactx)
+	if err != nil {
+		return "", fmt.Errorf("failed to execute template: %w", err)
+	}
+	return strings.TrimSpace(buf.String()), nil
 }
