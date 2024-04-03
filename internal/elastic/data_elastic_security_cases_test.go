@@ -29,7 +29,7 @@ func TestReportsDataSourceTestSuite(t *testing.T) {
 func (s *ReportsDataSourceTestSuite) SetupSuite() {
 	s.schema = makeElasticSecurityCasesDataSource(func(url string, apiKey *string) kbclient.Client {
 		s.storedUrl = url
-		s.storedApiKey = *&apiKey
+		s.storedApiKey = apiKey
 		return s.cli
 	})
 	s.ctx = context.Background()

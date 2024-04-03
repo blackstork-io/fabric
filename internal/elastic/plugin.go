@@ -10,6 +10,7 @@ import (
 	es "github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/zclconf/go-cty/cty"
+	ctyjson "github.com/zclconf/go-cty/cty/json"
 
 	"github.com/blackstork-io/fabric/internal/elastic/kbclient"
 	"github.com/blackstork-io/fabric/plugin"
@@ -133,10 +134,19 @@ func search(fn esapi.Search, args cty.Value) (plugin.Data, error) {
 	}
 	body := map[string]any{}
 	if query := args.GetAttr("query"); !query.IsNull() {
-		body["query"] = query.AsValueMap()
+		raw, err := ctyjson.Marshal(query, query.Type())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal query: %s", err)
+		}
+		body["query"] = json.RawMessage(raw)
+
 	}
 	if aggs := args.GetAttr("aggs"); !aggs.IsNull() {
-		body["aggs"] = aggs.AsValueMap()
+		raw, err := ctyjson.Marshal(aggs, aggs.Type())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal aggs: %s", err)
+		}
+		body["aggs"] = json.RawMessage(raw)
 	}
 	if len(body) > 0 {
 		rawBody, err := json.Marshal(body)
@@ -147,7 +157,7 @@ func search(fn esapi.Search, args cty.Value) (plugin.Data, error) {
 	}
 	if size := args.GetAttr("size"); !size.IsNull() {
 		n, _ := size.AsBigFloat().Int64()
-		if n <= 0 {
+		if n < 0 {
 			return nil, fmt.Errorf("size must be greater than 0")
 		}
 		opts = append(opts, fn.WithSize(int(n)))
