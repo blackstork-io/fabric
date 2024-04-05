@@ -8,6 +8,8 @@ hideChildren: true
 
 # Plugins
 
+## Data sources and content providers
+
 Fabric plugins implement various [data sources]({{< ref "data-sources.md" >}}) and [content providers]({{< ref "content-providers.md" >}}):
 
 - **data sources** are integrations responsible for loading data from the file, external service, API, or data storage.
