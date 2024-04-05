@@ -16,6 +16,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/openai"
 	"github.com/blackstork-io/fabric/internal/opencti"
 	"github.com/blackstork-io/fabric/internal/postgresql"
+	"github.com/blackstork-io/fabric/internal/sentinel"
 	"github.com/blackstork-io/fabric/internal/snyk"
 	"github.com/blackstork-io/fabric/internal/splunk"
 	"github.com/blackstork-io/fabric/internal/sqlite"
@@ -45,6 +46,7 @@ func TestAllPluginSchemaValidity(t *testing.T) {
 		splunk.Plugin(ver, nil),
 		nistnvd.Plugin(ver, nil),
 		snyk.Plugin(ver, nil),
+		sentinel.Plugin(ver, nil),
 	}
 	for _, p := range plugins {
 		p := p

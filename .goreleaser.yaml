@@ -205,6 +205,18 @@ builds:
       - windows
       - darwin
 
+  - id: plugin_microsoft_sentinel
+    main: ./internal/sentinel/cmd
+    binary: "microsoft_sentinel@{{ .Version }}"
+    flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
+    goos:
+      - linux
+      - windows
+      - darwin
+
 archives:
   - id: fabric
     format: tar.gz
@@ -432,6 +444,18 @@ docker_manifests:
     - "{{ .Env.CONTAINER_REPO_NAME }}:latest-amd64v1"
     - "{{ .Env.CONTAINER_REPO_NAME }}:latest-arm64v8"
     - "{{ .Env.CONTAINER_REPO_NAME }}:latest-386"
+
+  - id: plugin_microsoft_sentinel
+    format: tar.gz
+    builds:
+      - plugin_microsoft_sentinel
+    name_template: >-
+      plugin_microsoft_sentinel_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
 
 changelog:
   sort: asc

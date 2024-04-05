@@ -41,6 +41,10 @@ packages:
     config:
     interfaces:
       Client:
+  github.com/blackstork-io/fabric/internal/sentinel/client:
+    config:
+    interfaces:
+      Client:
   github.com/blackstork-io/fabric/plugin/resolver:
     config:
       inpackage: true

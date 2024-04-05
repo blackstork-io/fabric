@@ -305,6 +305,27 @@
     ]
   },
   {
+    "name": "blackstork/microsoft_sentinel",
+    "version": "v0.4.1",
+    "shortname": "microsoft_sentinel",
+    "resources": [
+      {
+        "name": "microsoft_sentinel_incidents",
+        "type": "data-source",
+        "config_params": [
+          "resource_group_name",
+          "subscription_id",
+          "workspace_name"
+        ],
+        "arguments": [
+          "filter",
+          "limit",
+          "order_by"
+        ]
+      }
+    ]
+  },
+  {
     "name": "blackstork/nist_nvd",
     "version": "v0.4.1",
     "shortname": "nist_nvd",

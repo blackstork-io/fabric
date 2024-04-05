@@ -1,0 +1,95 @@
+package client
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"time"
+
+	"github.com/google/go-querystring/query"
+)
+
+const (
+	defaultURL = "https://management.azure.com"
+	version    = "2023-11-01"
+)
+
+func String(s string) *string {
+	return &s
+}
+
+func Int(i int) *int {
+	return &i
+}
+
+type ListIncidentsReq struct {
+	SubscriptionID    string  `url:"-"`
+	ResourceGroupName string  `url:"-"`
+	WorkspaceName     string  `url:"-"`
+	Filter            *string `url:"$filter,omitempty"`
+	OrderBy           *string `url:"$orderby,omitempty"`
+	Top               *int    `url:"$top,omitempty"`
+}
+
+type ListIncidentsRes struct {
+	Value []any `json:"value"`
+}
+
+type client struct {
+	url   string
+	token string
+}
+
+type Client interface {
+	ListIncidents(ctx context.Context, req *ListIncidentsReq) (*ListIncidentsRes, error)
+}
+
+func New(token string) Client {
+	return &client{
+		url:   defaultURL,
+		token: token,
+	}
+}
+
+func (c *client) prepare(r *http.Request) {
+	r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
+	q := r.URL.Query()
+	q.Add("api-version", version)
+	r.URL.RawQuery = q.Encode()
+}
+
+func (c *client) ListIncidents(ctx context.Context, req *ListIncidentsReq) (*ListIncidentsRes, error) {
+	format := "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.OperationalInsights/workspaces/%s/providers/Microsoft.SecurityInsights/incidents"
+	u, err := url.Parse(c.url + fmt.Sprintf(format, req.SubscriptionID, req.ResourceGroupName, req.WorkspaceName))
+	if err != nil {
+		return nil, err
+	}
+	q, err := query.Values(req)
+	if err != nil {
+		return nil, err
+	}
+	u.RawQuery = q.Encode()
+	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	c.prepare(r)
+	client := http.Client{
+		Timeout: 15 * time.Second,
+	}
+	res, err := client.Do(r)
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("microsoft sentinels client returned status code: %d", res.StatusCode)
+	}
+	defer res.Body.Close()
+	var data ListIncidentsRes
+	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+	return &data, nil
+}
