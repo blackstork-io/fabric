@@ -380,6 +380,35 @@
     ]
   },
   {
+    "name": "blackstork/snyk",
+    "version": "v0.4.1",
+    "shortname": "snyk",
+    "resources": [
+      {
+        "name": "snyk_issues",
+        "type": "data-source",
+        "config_params": [
+          "api_key"
+        ],
+        "arguments": [
+          "created_after",
+          "created_before",
+          "effective_severity_level",
+          "group_id",
+          "ignored",
+          "limit",
+          "org_id",
+          "scan_item_id",
+          "scan_item_type",
+          "status",
+          "type",
+          "updated_after",
+          "updated_before"
+        ]
+      }
+    ]
+  },
+  {
     "name": "blackstork/splunk",
     "version": "v0.4.1",
     "shortname": "splunk",

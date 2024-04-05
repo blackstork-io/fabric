@@ -193,6 +193,18 @@ builds:
       - windows
       - darwin
 
+  - id: plugin_snyk
+    main: ./internal/snyk/cmd
+    binary: "snyk@{{ .Version }}"
+    flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
+    goos:
+      - linux
+      - windows
+      - darwin
+
 archives:
   - id: fabric
     format: tar.gz
@@ -367,6 +379,17 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
+  - id: plugin_snyk
+    format: tar.gz
+    builds:
+      - plugin_snyk
+    name_template: >-
+      plugin_snyk_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
 
 dockers:
   - use: buildx
@@ -409,7 +432,6 @@ docker_manifests:
     - "{{ .Env.CONTAINER_REPO_NAME }}:latest-amd64v1"
     - "{{ .Env.CONTAINER_REPO_NAME }}:latest-arm64v8"
     - "{{ .Env.CONTAINER_REPO_NAME }}:latest-386"
-
 
 changelog:
   sort: asc

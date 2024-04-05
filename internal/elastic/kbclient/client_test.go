@@ -163,18 +163,3 @@ func (s *ClientTestSuite) TestFull() {
 		},
 	}, result)
 }
-
-// func (s *ClientTestSuite) TestGetAllReportsError() {
-// 	client, srv := s.mock(func(w http.ResponseWriter, r *http.Request) {
-// 		w.WriteHeader(http.StatusUnauthorized)
-// 	}, "test_user", "test_token")
-// 	defer srv.Close()
-// 	req := GetAllReportsReq{}
-// 	_, err := client.GetAllReports(s.ctx, &req)
-// 	s.Error(err)
-// }
-
-// func (s *ClientTestSuite) TestDefaultClientURL() {
-// 	cli := New("test_user", "test_token")
-// 	s.Equal("https://api.hackerone.com", cli.(*client).url)
-// }
