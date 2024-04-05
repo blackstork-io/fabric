@@ -142,11 +142,11 @@ There are 8 planets and 146 moons in our solar system.
 
 ## Content providers
 
-Fabric seamlessly integrates with external APIs for content generation. An excellent example is the utilization of the OpenAI API to dynamically generate text through prompts.
+Fabric seamlessly integrates with external APIs for content generation. An excellent example is the use of the OpenAI API to dynamically generate text through prompts.
 
 In scenarios where providing the exact text or a template string for the content block proves challenging or impossible, leveraging generative AI for summarization becomes invaluable. This enables users to dynamically create context-aware text.
 
-In this tutorial, we will utilize the [`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}}) content provider, allowing us to generate text with the OpenAI Language Model (LLM).
+In this tutorial, we will use the [`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}}) content provider to generate text with the OpenAI Large Language Model (LLM).
 
 ### Installation
 
@@ -285,7 +285,7 @@ document "greeting" {
 }
 ```
 
-To render the document, `OPENAI_API_KEY` environment variable must be set. A simple way to do that, is to set it for each execution:
+To render the document, `OPENAI_API_KEY` environment variable must be set. A simple way to do that, is to set it for each `fabric` command execution:
 
 ```shell
 $ OPENAI_API_KEY="<key-value>" fabric render document.greeting
@@ -320,8 +320,8 @@ An excellent choice for macOS users is [MacDown](https://macdown.uranusjr.com/),
 
 # Next steps
 
-Congratulations! By completing this tutorial, you've gained a solid understanding of Fabric and its core principles.
+Congratulations! By completing this tutorial, you've gained a good understanding of Fabric and its core principles.
 
-Explore the open-source templates in the [Fabric Templates](https://github.com/blackstork-io/fabric-templates) GitHub repository. You can reuse entire documents or specific blocks in your own templates!
+Take a look at the detailed [FCL specification]({{< ref "language" >}}), explore [the open-source templates]({{< ref "templates" >}}) the community made, and see if there are integrations for your tech stack in [Fabric plugins]({{< ref "plugins" >}}).
 
 If you have any questions, feel free to ask in the [Fabric Community Slack](https://fabric-community.slack.com/) and we'll be glad to assist you!
