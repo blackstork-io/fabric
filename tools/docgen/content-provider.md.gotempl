@@ -2,8 +2,8 @@
 title: {{ .name }}
 plugin:
   name: {{ .plugin.Name }}
-  description: ""
-  tags: []
+  description: {{ .content_provider.Doc | quote }}
+  tags: {{ formatTags .content_provider.Tags }}
   version: "{{ .plugin.Version }}"
   {{- if eq .plugin_shortname "nist_nvd" }}
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/nistnvd/"
@@ -18,6 +18,12 @@ type: docs
 {{"{{"}}< breadcrumbs 2 >{{"}}"}}
 
 {{"{{"}}< plugin-resource-header "{{ .plugin.Name }}" "{{ .plugin_shortname }}" "{{ .plugin.Version }}" "{{ .name }}" "content provider" >{{"}}"}}
+
+{{if .plugin.Doc -}}
+## Description
+{{ .plugin.Doc }}
+
+{{end -}}
 
 {{ if eq .plugin.Name "blackstork/builtin" -}}
 The content provider is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.

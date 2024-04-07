@@ -15,12 +15,14 @@ import (
 
 func makeRSSDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
+		Doc:      `Fetches an rss or atom feed`,
+		Tags:     []string{"rss", "http"},
 		DataFunc: fetchRSSData,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
 				Name:       "url",
 				Type:       cty.String,
-				ExampleVal: cty.StringVal("passwd"),
+				ExampleVal: cty.StringVal("https://www.elastic.co/security-labs/rss/feed.xml"),
 				Required:   true,
 			},
 		},

@@ -31,6 +31,8 @@ func (ds DataSources) Validate() hcl.Diagnostics {
 }
 
 type DataSource struct {
+	Doc      string
+	Tags     []string
 	DataFunc RetrieveDataFunc
 	Args     dataspec.RootSpec
 	Config   dataspec.RootSpec

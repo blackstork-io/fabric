@@ -47,6 +47,8 @@ func (order InvocationOrder) Weight() int {
 }
 
 type ContentProvider struct {
+	Doc             string
+	Tags            []string
 	ContentFunc     ProvideContentFunc
 	Args            dataspec.RootSpec
 	Config          dataspec.RootSpec

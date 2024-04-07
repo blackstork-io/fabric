@@ -2,42 +2,41 @@ syntax = "proto3";
 
 package pluginapi.v1;
 
-import "pluginapi/v1/hclspec.proto";
 import "pluginapi/v1/cty.proto";
+import "pluginapi/v1/hclspec.proto";
 
 message Spec {
     oneof data {
-        Attr       attr        = 1;
-        Block      block       = 2;
-        Object   obj_spec = 3;
+        Attr    attr     = 1;
+        Block   block    = 2;
+        Object  obj_spec = 3;
         ObjDump obj_dump = 4;
-        Opaque  opaque =5;
+        Opaque  opaque   = 5;
     }
 }
 
 message NamedSpec {
     oneof data {
-        Attr       attr        = 1;
-        Block      block       = 2;
+        Attr  attr  = 1;
+        Block block = 2;
         Namer named = 3;
     }
 }
 
 message Attr {
-    string name  = 1;
-    CtyType type  = 2;
-    CtyValue default_val  = 3;
-    CtyValue example_val  = 4;
-    string doc  = 5;
-    bool required  = 6;
+    string   name        = 1;
+    CtyType  type        = 2;
+    CtyValue default_val = 3;
+    CtyValue example_val = 4;
+    string   doc         = 5;
+    bool     required    = 6;
 }
 
-
 message Block {
-    string name  = 1;
-    Spec nested = 2;
-    string doc  = 3;
-    bool required  = 4;
+    string name     = 1;
+    Spec   nested   = 2;
+    string doc      = 3;
+    bool   required = 4;
 }
 
 message Object {
@@ -45,7 +44,7 @@ message Object {
 }
 
 message ObjDump {
-    string  doc  = 1;
+    string doc = 1;
 }
 
 message Opaque {
@@ -54,6 +53,6 @@ message Opaque {
 }
 
 message Namer {
-    Spec spec = 1;
-    string  name  = 2;
+    Spec   spec = 1;
+    string name = 2;
 }

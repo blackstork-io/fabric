@@ -10,11 +10,14 @@ message Schema {
     // Plugin components
     map<string, DataSourceSchema>       data_sources      = 3;
     map<string, ContentProviderSchema>  content_providers = 4;
+    string                              doc               = 5;
 }
 
 message DataSourceSchema {
-    Spec args   = 1;
-    Spec config = 2;
+    Spec            args   = 3;
+    Spec            config = 4;
+    string          doc    = 5;
+    repeated string tags   = 6;
 }
 
 enum InvocationOrder {
@@ -27,4 +30,6 @@ message ContentProviderSchema {
     Spec            args             = 4;
     Spec            config           = 5;
     InvocationOrder invocation_order = 3;
+    string          doc              = 6;
+    repeated string tags             = 7;
 }

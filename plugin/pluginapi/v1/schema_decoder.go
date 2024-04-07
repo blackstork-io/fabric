@@ -19,6 +19,7 @@ func decodeSchema(src *Schema) (*plugin.Schema, error) {
 		Version:          src.Version,
 		DataSources:      dataSources,
 		ContentProviders: contentProviders,
+		Doc:              src.Doc,
 	}, nil
 }
 
@@ -50,6 +51,8 @@ func decodeDataSourceSchema(src *DataSourceSchema) (*plugin.DataSource, error) {
 	return &plugin.DataSource{
 		Args:   args,
 		Config: config,
+		Doc:    src.Doc,
+		Tags:   src.Tags,
 	}, nil
 }
 
@@ -81,6 +84,8 @@ func decodeContentProviderSchema(src *ContentProviderSchema) (*plugin.ContentPro
 		Args:            args,
 		Config:          config,
 		InvocationOrder: decodeInvocationOrder(src.InvocationOrder),
+		Doc:             src.Doc,
+		Tags:            src.Tags,
 	}, nil
 }
 

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/spf13/pflag"
 
@@ -122,8 +123,8 @@ func marshalDataSource(name string, ds *plugin.DataSource) PluginResourceMeta {
 	configSpec, ok := ds.Config.(dataspec.ObjectSpec)
 	if ok && configSpec != nil {
 		for _, s := range configSpec {
-			if name := dataspec.ItemName(s); name != "" {
-				configParams = append(configParams, name)
+			if itemName := dataspec.ItemName(s); itemName != "" {
+				configParams = append(configParams, itemName)
 			}
 		}
 	}
@@ -133,8 +134,8 @@ func marshalDataSource(name string, ds *plugin.DataSource) PluginResourceMeta {
 	argsSpec, ok := ds.Args.(dataspec.ObjectSpec)
 	if ok && argsSpec != nil {
 		for _, s := range argsSpec {
-			if name := dataspec.ItemName(s); name != "" {
-				arguments = append(arguments, name)
+			if itemName := dataspec.ItemName(s); itemName != "" {
+				arguments = append(arguments, itemName)
 			}
 		}
 	}
@@ -345,11 +346,21 @@ func templateAttrTypeFunc(val hcldec.Spec) string {
 }
 
 func init() {
-	base = template.Must(template.New("content-provider").Funcs(template.FuncMap{
-		"attrType":  templateAttrTypeFunc,
-		"shortname": shortname,
-		"renderDoc": dataspec.RenderDoc,
-	}).Parse(contentProviderTemplValue))
+	base = template.Must(template.New("content-provider").
+		Funcs(sprig.FuncMap()).
+		Funcs(template.FuncMap{
+			"attrType":  templateAttrTypeFunc,
+			"shortname": shortname,
+			"renderDoc": dataspec.RenderDoc,
+			"formatTags": (func(data []string) (string, error) {
+				if data == nil {
+					data = []string{}
+				}
+				res, err := json.Marshal(data)
+				return string(res), err
+			}),
+		}).
+		Parse(contentProviderTemplValue))
 	template.Must(base.New("data-source").Parse(dataSourceTemplValue))
 	template.Must(base.New("plugin").Parse(pluginTemplValue))
 }
