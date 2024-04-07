@@ -18,11 +18,11 @@ func makeGreetingContentProvider() *plugin.ContentProvider {
 		// We only define the schema for the arguments
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "name",
-				Required: true,
-				Doc: `Name of the user`,
+				Name:       "name",
+				Required:   true,
+				Doc:        `Name of the user`,
 				ExampleVal: cty.StringVal("John"),
-				Type:     cty.String,
+				Type:       cty.String,
 			},
 		},
 		// Optional: We can also define the schema for the config

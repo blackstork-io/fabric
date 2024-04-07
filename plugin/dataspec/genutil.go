@@ -46,7 +46,7 @@ func exampleValueForType(ty cty.Type) cty.Value {
 		})
 	case ty.IsTupleType():
 		v := []cty.Value{}
-		for _, innerTy := range ty.TupleElementTypes(){
+		for _, innerTy := range ty.TupleElementTypes() {
 			v = append(v, exampleValueForType(innerTy))
 		}
 		return cty.TupleVal(v)
