@@ -4,94 +4,94 @@ import (
 	"context"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func makeElasticSearchDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchElasticSearchData,
-		Config: hcldec.ObjectSpec{
-			"base_url": &hcldec.AttrSpec{
+		Config: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "base_url",
 				Type:     cty.String,
 				Required: false,
 			},
-			"cloud_id": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "cloud_id",
 				Type:     cty.String,
 				Required: false,
 			},
-			"api_key_str": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "api_key_str",
 				Type:     cty.String,
 				Required: false,
 			},
-			"api_key": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "api_key",
 				Type:     cty.List(cty.String),
 				Required: false,
 			},
-			"basic_auth_username": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "basic_auth_username",
 				Type:     cty.String,
 				Required: false,
 			},
-			"basic_auth_password": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "basic_auth_password",
 				Type:     cty.String,
 				Required: false,
 			},
-			"bearer_auth": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "bearer_auth",
 				Type:     cty.String,
 				Required: false,
 			},
-			"ca_certs": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "ca_certs",
 				Type:     cty.String,
 				Required: false,
 			},
 		},
-		Args: hcldec.ObjectSpec{
-			"index": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "index",
 				Type:     cty.String,
 				Required: true,
 			},
-			"id": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "id",
 				Type:     cty.String,
 				Required: false,
 			},
-			"query_string": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "query_string",
 				Type:     cty.String,
 				Required: false,
 			},
-			"query": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "query",
 				Type:     cty.Map(cty.DynamicPseudoType),
 				Required: false,
 			},
-			"aggs": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "aggs",
 				Type:     cty.Map(cty.DynamicPseudoType),
 				Required: false,
 			},
-			"only_hits": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "only_hits",
 				Type:     cty.Bool,
 				Required: false,
 			},
-			"fields": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "fields",
 				Type:     cty.List(cty.String),
 				Required: false,
 			},
-			"size": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "size",
 				Type:     cty.Number,
 				Required: false,

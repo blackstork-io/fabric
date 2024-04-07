@@ -10,6 +10,7 @@ import (
 
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 // Empty config, storing the range of the original block
@@ -23,7 +24,7 @@ func (c *ConfigEmpty) Exists() bool {
 }
 
 // ParseConfig implements Configuration.
-func (c *ConfigEmpty) ParseConfig(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
+func (c *ConfigEmpty) ParseConfig(spec dataspec.RootSpec) (val cty.Value, diags diagnostics.Diag) {
 	emptyBody := &hclsyntax.Body{
 		SrcRange: c.MissingItemRange,
 		EndRange: hcl.Range{
@@ -34,7 +35,7 @@ func (c *ConfigEmpty) ParseConfig(spec hcldec.Spec) (val cty.Value, diags diagno
 	}
 
 	var diag hcl.Diagnostics
-	val, diag = hcldec.Decode(emptyBody, spec, nil)
+	val, diag = hcldec.Decode(emptyBody, spec.HcldecSpec(), nil)
 	for _, d := range diag {
 		d.Summary = fmt.Sprintf("Missing required configuration: %s", d.Summary)
 	}

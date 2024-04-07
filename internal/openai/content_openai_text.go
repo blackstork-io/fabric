@@ -11,39 +11,39 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/openai/client"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func makeOpenAITextContentSchema(loader ClientLoadFn) *plugin.ContentProvider {
 	return &plugin.ContentProvider{
-		Config: hcldec.ObjectSpec{
-			"system_prompt": &hcldec.AttrSpec{
+		Config: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "system_prompt",
 				Type:     cty.String,
 				Required: false,
 			},
-			"api_key": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "api_key",
 				Type:     cty.String,
 				Required: true,
 			},
-			"organization_id": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "organization_id",
 				Type:     cty.String,
 				Required: false,
 			},
 		},
-		Args: hcldec.ObjectSpec{
-			"prompt": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "prompt",
 				Type:     cty.String,
 				Required: true,
 			},
-			"model": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "model",
 				Type:     cty.String,
 				Required: false,

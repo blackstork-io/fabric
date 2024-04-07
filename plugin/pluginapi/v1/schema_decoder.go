@@ -38,14 +38,15 @@ func decodeDataSourceSchema(src *DataSourceSchema) (*plugin.DataSource, error) {
 	if src == nil {
 		return nil, nil
 	}
-	args, err := decodeHclSpec(src.Args)
+	args, err := decodeRootSpec(src.Args)
 	if err != nil {
 		return nil, err
 	}
-	config, err := decodeHclSpec(src.Config)
+	config, err := decodeRootSpec(src.Config)
 	if err != nil {
 		return nil, err
 	}
+
 	return &plugin.DataSource{
 		Args:   args,
 		Config: config,
@@ -68,11 +69,11 @@ func decodeContentProviderSchema(src *ContentProviderSchema) (*plugin.ContentPro
 	if src == nil {
 		return nil, nil
 	}
-	args, err := decodeHclSpec(src.Args)
+	args, err := decodeRootSpec(src.Args)
 	if err != nil {
 		return nil, err
 	}
-	config, err := decodeHclSpec(src.Config)
+	config, err := decodeRootSpec(src.Config)
 	if err != nil {
 		return nil, err
 	}

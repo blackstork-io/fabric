@@ -1,5 +1,5 @@
 ---
-title: {{ .name }} 
+title: {{ .name }}
 plugin:
   name: {{ .plugin.Name }}
   description: ""
@@ -46,11 +46,7 @@ Note the version constraint set for the plugin.
 The content provider supports the following configuration parameters:
 
 ```hcl
-config content {{ $ctx.name }} {
-{{- range $key, $value := . }}
-    {{ $key }} = <{{ $value | attrType }}>  # {{if $value.Required}}required{{else}}optional{{end}}
-{{- end }}
-}
+{{ renderDoc . "config" "content" $ctx.name }}
 ```
 {{ else -}}
 The content provider doesn't support any configuration parameters.
@@ -61,11 +57,7 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content {{ $ctx.name }} {
-{{- range $key, $value := . }}
-    {{ $key }} = <{{ $value | attrType }}>  # {{if $value.Required}}required{{else}}optional{{end}}
-{{- end }}
-}
+{{ renderDoc . "content" $ctx.name }}
 ```
 {{ else }}
 The content provider doesn't define any execution parameters.

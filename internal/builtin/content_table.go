@@ -9,10 +9,10 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 type tableCellTmpl = *template.Template
@@ -20,8 +20,8 @@ type tableCellTmpl = *template.Template
 func makeTableContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genTableContent,
-		Args: hcldec.ObjectSpec{
-			"columns": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name: "columns",
 				Type: cty.List(cty.Object(map[string]cty.Type{
 					"header": cty.String,

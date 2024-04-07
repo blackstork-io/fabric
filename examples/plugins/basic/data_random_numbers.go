@@ -5,41 +5,39 @@ import (
 	"math/rand"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
-)
-
-const (
-	// defaultMin is the default minimum value for random number generation
-	defaultMin = 0
-	// defaultMax is the default maximum value for random number generation
-	defaultMax = 100
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 // makeRandomNumbersDataSource creates a new data source for generating random numbers
 func makeRandomNumbersDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		// Config is optional, we can define the schema for the config that is reusable for this data source
-		Config: hcldec.ObjectSpec{
-			"min": &hcldec.AttrSpec{
-				Name:     "min",
-				Required: false,
-				Type:     cty.Number,
+		Config: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
+				Name:       "min",
+				Required:   false,
+				Type:       cty.Number,
+				Doc:        `Lower bound (inclusive)`,
+				DefaultVal: cty.NumberIntVal(0),
 			},
-			"max": &hcldec.AttrSpec{
-				Name:     "max",
-				Required: false,
-				Type:     cty.Number,
+			&dataspec.AttrSpec{
+				Name:       "max",
+				Required:   false,
+				Type:       cty.Number,
+				Doc:        `Upper bound (inclusive)`,
+				DefaultVal: cty.NumberIntVal(100),
 			},
 		},
 		// We define the schema for the arguments
-		Args: hcldec.ObjectSpec{
-			"length": &hcldec.AttrSpec{
-				Name:     "length",
-				Required: true,
-				Type:     cty.Number,
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
+				Name:       "length",
+				Required:   true,
+				Type:       cty.Number,
+				ExampleVal: cty.NumberIntVal(10),
 			},
 		},
 		// Optional: We can also define the schema for the config
@@ -50,12 +48,7 @@ func makeRandomNumbersDataSource() *plugin.DataSource {
 func fetchRandomNumbers(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
 	min := params.Config.GetAttr("min")
 	max := params.Config.GetAttr("max")
-	if min.IsNull() {
-		min = cty.NumberIntVal(defaultMin)
-	}
-	if max.IsNull() {
-		max = cty.NumberIntVal(defaultMax)
-	}
+
 	// validating the arguments
 	length := params.Args.GetAttr("length")
 	if length.IsNull() {

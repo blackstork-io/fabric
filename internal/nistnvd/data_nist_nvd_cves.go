@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/nistnvd/client"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 const (
@@ -21,105 +21,105 @@ const (
 func makeNistNvdCvesDataSource(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchNistNvdCvesData(loader),
-		Config: hcldec.ObjectSpec{
-			"api_key": &hcldec.AttrSpec{
+		Config: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "api_key",
 				Type:     cty.String,
 				Required: false,
 			},
 		},
-		Args: hcldec.ObjectSpec{
-			"last_mod_start_date": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "last_mod_start_date",
 				Type:     cty.String,
 				Required: false,
 			},
-			"last_mod_end_date": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "last_mod_end_date",
 				Type:     cty.String,
 				Required: false,
 			},
-			"pub_start_date": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "pub_start_date",
 				Type:     cty.String,
 				Required: false,
 			},
-			"pub_end_date": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "pub_end_date",
 				Type:     cty.String,
 				Required: false,
 			},
-			"cpe_name": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "cpe_name",
 				Type:     cty.String,
 				Required: false,
 			},
-			"cve_id": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "cve_id",
 				Type:     cty.String,
 				Required: false,
 			},
-			"cvss_v3_metrics": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "cvss_v3_metrics",
 				Type:     cty.String,
 				Required: false,
 			},
-			"cvss_v3_severity": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "cvss_v3_severity",
 				Type:     cty.String,
 				Required: false,
 			},
-			"cwe_id": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "cwe_id",
 				Type:     cty.String,
 				Required: false,
 			},
-			"keyword_search": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "keyword_search",
 				Type:     cty.String,
 				Required: false,
 			},
-			"virtual_match_string": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "virtual_match_string",
 				Type:     cty.String,
 				Required: false,
 			},
-			"source_identifier": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "source_identifier",
 				Type:     cty.String,
 				Required: false,
 			},
-			"has_cert_alerts": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "has_cert_alerts",
 				Type:     cty.Bool,
 				Required: false,
 			},
-			"has_kev": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "has_kev",
 				Type:     cty.Bool,
 				Required: false,
 			},
-			"has_cert_notes": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "has_cert_notes",
 				Type:     cty.Bool,
 				Required: false,
 			},
-			"is_vulnerable": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "is_vulnerable",
 				Type:     cty.Bool,
 				Required: false,
 			},
-			"keyword_exact_match": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "keyword_exact_match",
 				Type:     cty.Bool,
 				Required: false,
 			},
-			"no_rejected": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "no_rejected",
 				Type:     cty.Bool,
 				Required: false,
 			},
-			"limit": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "limit",
 				Type:     cty.Number,
 				Required: false,

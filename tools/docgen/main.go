@@ -29,6 +29,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/terraform"
 	"github.com/blackstork-io/fabric/internal/virustotal"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 var (
@@ -39,17 +40,19 @@ var (
 //go:embed content-provider.md.gotempl
 var contentProviderTemplValue string
 
-var contentProviderTempl *template.Template
+var base *template.Template
+
+// var contentProviderTempl *template.Template
 
 //go:embed data-source.md.gotempl
 var dataSourceTemplValue string
 
-var dataSourceTempl *template.Template
+// var dataSourceTempl *template.Template
 
 //go:embed plugin.md.gotempl
 var pluginTemplValue string
 
-var pluginTempl *template.Template
+// var pluginTempl *template.Template
 
 type PluginResourceMeta struct {
 	Name         string   `json:"name"`
@@ -116,19 +119,23 @@ func generateContentProviderDocs(log *slog.Logger, p *plugin.Schema, outputDir s
 
 func marshalDataSource(name string, ds *plugin.DataSource) PluginResourceMeta {
 	var configParams []string
-	configSpec, ok := ds.Config.(hcldec.ObjectSpec)
+	configSpec, ok := ds.Config.(dataspec.ObjectSpec)
 	if ok && configSpec != nil {
-		for k := range configSpec {
-			configParams = append(configParams, k)
+		for _, s := range configSpec {
+			if name := dataspec.ItemName(s); name != "" {
+				configParams = append(configParams, name)
+			}
 		}
 	}
 	sort.Strings(configParams)
 
 	var arguments []string
-	argsSpec, ok := ds.Args.(hcldec.ObjectSpec)
+	argsSpec, ok := ds.Args.(dataspec.ObjectSpec)
 	if ok && argsSpec != nil {
-		for k := range argsSpec {
-			arguments = append(arguments, k)
+		for _, s := range argsSpec {
+			if name := dataspec.ItemName(s); name != "" {
+				arguments = append(arguments, name)
+			}
 		}
 	}
 	sort.Strings(arguments)
@@ -143,19 +150,21 @@ func marshalDataSource(name string, ds *plugin.DataSource) PluginResourceMeta {
 
 func marshalContentProvider(name string, p *plugin.ContentProvider) PluginResourceMeta {
 	var configParams []string
-	configSpec, ok := p.Config.(hcldec.ObjectSpec)
+	configSpec, ok := p.Config.(dataspec.ObjectSpec)
 	if ok && configSpec != nil {
-		for k := range configSpec {
-			configParams = append(configParams, k)
+		for _, s := range configSpec {
+			if itemName := dataspec.ItemName(s); itemName != "" {
+				configParams = append(configParams, itemName)
+			}
 		}
 	}
-	sort.Strings(configParams)
-
 	var arguments []string
-	argsSpec, ok := p.Args.(hcldec.ObjectSpec)
+	argsSpec, ok := p.Args.(dataspec.ObjectSpec)
 	if ok && argsSpec != nil {
-		for k := range argsSpec {
-			arguments = append(arguments, k)
+		for _, s := range argsSpec {
+			if itemName := dataspec.ItemName(s); itemName != "" {
+				arguments = append(arguments, itemName)
+			}
 		}
 	}
 	sort.Strings(arguments)
@@ -283,7 +292,7 @@ func renderPluginDoc(pluginSchema *plugin.Schema, fp string) error {
 	}
 	defer f.Close()
 
-	return pluginTempl.Execute(f, pluginSchema)
+	return base.ExecuteTemplate(f, "plugin", pluginSchema)
 }
 
 func renderContentProviderDoc(pluginSchema *plugin.Schema, contentProviderName string, contentProvider *plugin.ContentProvider, fp string) error {
@@ -299,7 +308,7 @@ func renderContentProviderDoc(pluginSchema *plugin.Schema, contentProviderName s
 		"name":             contentProviderName,
 		"content_provider": contentProvider,
 	}
-	return contentProviderTempl.Execute(f, templContext)
+	return base.ExecuteTemplate(f, "content-provider", templContext)
 }
 
 func renderDataSourceDoc(pluginSchema *plugin.Schema, dataSourceName string, dataSource *plugin.DataSource, fp string) error {
@@ -315,7 +324,7 @@ func renderDataSourceDoc(pluginSchema *plugin.Schema, dataSourceName string, dat
 		"name":             dataSourceName,
 		"data_source":      dataSource,
 	}
-	return dataSourceTempl.Execute(f, templContext)
+	return base.ExecuteTemplate(f, "data-source", templContext)
 }
 
 func shortname(name string) string {
@@ -336,14 +345,11 @@ func templateAttrTypeFunc(val hcldec.Spec) string {
 }
 
 func init() {
-	contentProviderTempl = template.Must(template.New("content-provider").Funcs(template.FuncMap{
-		"attrType": templateAttrTypeFunc,
-	}).Parse(contentProviderTemplValue))
-	dataSourceTempl = template.Must(template.New("data-source").Funcs(template.FuncMap{
-		"attrType": templateAttrTypeFunc,
-	}).Parse(dataSourceTemplValue))
-	pluginTempl = template.Must(template.New("plugin").Funcs(template.FuncMap{
+	base = template.Must(template.New("content-provider").Funcs(template.FuncMap{
 		"attrType":  templateAttrTypeFunc,
 		"shortname": shortname,
-	}).Parse(pluginTemplValue))
+		"renderDoc": dataspec.RenderDoc,
+	}).Parse(contentProviderTemplValue))
+	template.Must(base.New("data-source").Parse(dataSourceTemplValue))
+	template.Must(base.New("plugin").Parse(pluginTemplValue))
 }

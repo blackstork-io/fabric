@@ -45,11 +45,7 @@ Note the version constraint set for the plugin.
 The data source supports the following configuration parameters:
 
 ```hcl
-config data {{ $ctx.name }} {
-{{- range $key, $value := . }}
-    {{ $key }} = <{{ $value | attrType }}>  # {{if $value.Required}}required{{else}}optional{{end}}
-{{- end }}
-}
+{{ renderDoc . "config" "data" $ctx.name }}
 ```
 {{- else -}}
 The data source doesn't support configuration.
@@ -61,11 +57,7 @@ The data source doesn't support configuration.
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data {{ $ctx.name }} {
-{{- range $key, $value := . }}
-    {{ $key }} = <{{ $value | attrType }}>  # {{if $value.Required}}required{{else}}optional{{end}}
-{{- end }}
-}
+{{ renderDoc . "data" $ctx.name }}
 ```
 {{- else -}}
 The data source doesn't define any execution parameters.

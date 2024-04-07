@@ -6,11 +6,11 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/elastic/kbclient"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 const (
@@ -21,96 +21,96 @@ const (
 func makeElasticSecurityCasesDataSource(loader KibanaClientLoaderFn) *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchElasticSecurityCases(loader),
-		Config: hcldec.ObjectSpec{
-			"kibana_endpoint_url": &hcldec.AttrSpec{
-				Name:     "kibana_endpoint_url",
+		Config: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
+Name: "kibana_endpoint_url",
 				Type:     cty.String,
 				Required: true,
 			},
-			"api_key_str": &hcldec.AttrSpec{
-				Name:     "api_key_str",
+			&dataspec.AttrSpec{
+Name: "api_key_str",
 				Type:     cty.String,
 				Required: false,
 			},
-			"api_key": &hcldec.AttrSpec{
-				Name:     "api_key",
+			&dataspec.AttrSpec{
+Name: "api_key",
 				Type:     cty.List(cty.String),
 				Required: false,
 			},
 		},
-		Args: hcldec.ObjectSpec{
-			"space_id": &hcldec.AttrSpec{
-				Name:     "space_id",
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
+Name: "space_id",
 				Type:     cty.String,
 				Required: false,
 			},
-			"assignees": &hcldec.AttrSpec{
-				Name:     "assignees",
+			&dataspec.AttrSpec{
+Name: "assignees",
 				Type:     cty.List(cty.String),
 				Required: false,
 			},
-			"default_search_operator": &hcldec.AttrSpec{
-				Name:     "default_search_operator",
+			&dataspec.AttrSpec{
+Name: "default_search_operator",
 				Type:     cty.String,
 				Required: false,
 			},
-			"from": &hcldec.AttrSpec{
-				Name:     "from",
+			&dataspec.AttrSpec{
+Name: "from",
 				Type:     cty.String,
 				Required: false,
 			},
-			"owner": &hcldec.AttrSpec{
-				Name:     "owner",
+			&dataspec.AttrSpec{
+Name: "owner",
 				Type:     cty.List(cty.String),
 				Required: false,
 			},
-			"reporters": &hcldec.AttrSpec{
-				Name:     "reporters",
+			&dataspec.AttrSpec{
+Name: "reporters",
 				Type:     cty.List(cty.String),
 				Required: false,
 			},
-			"search": &hcldec.AttrSpec{
-				Name:     "search",
+			&dataspec.AttrSpec{
+Name: "search",
 				Type:     cty.String,
 				Required: false,
 			},
-			"search_fields": &hcldec.AttrSpec{
-				Name:     "search_fields",
+			&dataspec.AttrSpec{
+Name: "search_fields",
 				Type:     cty.List(cty.String),
 				Required: false,
 			},
-			"severity": &hcldec.AttrSpec{
-				Name:     "severity",
+			&dataspec.AttrSpec{
+Name: "severity",
 				Type:     cty.String,
 				Required: false,
 			},
-			"sort_field": &hcldec.AttrSpec{
-				Name:     "sort_field",
+			&dataspec.AttrSpec{
+Name: "sort_field",
 				Type:     cty.String,
 				Required: false,
 			},
-			"sort_order": &hcldec.AttrSpec{
-				Name:     "sort_order",
+			&dataspec.AttrSpec{
+Name: "sort_order",
 				Type:     cty.String,
 				Required: false,
 			},
-			"status": &hcldec.AttrSpec{
-				Name:     "status",
+			&dataspec.AttrSpec{
+Name: "status",
 				Type:     cty.String,
 				Required: false,
 			},
-			"tags": &hcldec.AttrSpec{
-				Name:     "tags",
+			&dataspec.AttrSpec{
+Name: "tags",
 				Type:     cty.List(cty.String),
 				Required: false,
 			},
-			"to": &hcldec.AttrSpec{
-				Name:     "to",
+			&dataspec.AttrSpec{
+Name: "to",
 				Type:     cty.String,
 				Required: false,
 			},
-			"size": &hcldec.AttrSpec{
-				Name:     "size",
+			&dataspec.AttrSpec{
+Name: "size",
 				Type:     cty.Number,
 				Required: false,
 			},

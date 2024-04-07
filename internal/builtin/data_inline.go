@@ -8,12 +8,24 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func makeInlineDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchInlineData,
-		Args:     nil,
+		Args: &dataspec.ObjDumpSpec{
+			Doc: `
+				Arbitrary structure of (possibly nested) blocks and attributes.
+				For example:
+				  key1 = "value1"
+				  nested {
+				    blocks {
+				      key2 = 42
+				    }
+				  }
+			`,
+		},
 	}
 }
 

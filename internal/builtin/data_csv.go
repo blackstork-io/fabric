@@ -9,10 +9,10 @@ import (
 	"unicode/utf8"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 const defaultCSVDelimiter = ','
@@ -20,15 +20,15 @@ const defaultCSVDelimiter = ','
 func makeCSVDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchCSVData,
-		Config: hcldec.ObjectSpec{
-			"delimiter": &hcldec.AttrSpec{
+		Config: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "delimiter",
 				Type:     cty.String,
 				Required: false,
 			},
 		},
-		Args: hcldec.ObjectSpec{
-			"path": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "path",
 				Type:     cty.String,
 				Required: true,

@@ -5,41 +5,49 @@ import (
 	"time"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/mmcdole/gofeed"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func makeRSSDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchRSSData,
-		Args: hcldec.ObjectSpec{
-			"url": &hcldec.AttrSpec{
-				Name:     "url",
-				Type:     cty.String,
-				Required: true,
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
+				Name:       "url",
+				Type:       cty.String,
+				ExampleVal: cty.StringVal("passwd"),
+				Required:   true,
 			},
 		},
-		Config: hcldec.ObjectSpec{
-			"basic_auth": &hcldec.BlockListSpec{
-				TypeName: "basic_auth",
-				Nested: &hcldec.ObjectSpec{
-					"username": &hcldec.AttrSpec{
-						Name:     "username",
-						Type:     cty.String,
-						Required: true,
+		Config: dataspec.ObjectSpec{
+			&dataspec.BlockSpec{
+				Name:     "basic_auth",
+				Required: false,
+				Doc: `
+					Authentication parameters used while accessing the rss source.
+				`,
+				Nested: &dataspec.ObjectSpec{
+					&dataspec.AttrSpec{
+						Name:       "username",
+						Type:       cty.String,
+						ExampleVal: cty.StringVal("user@example.com"),
+						Required:   true,
 					},
-					"password": &hcldec.AttrSpec{
-						Name:     "password",
-						Type:     cty.String,
+					&dataspec.AttrSpec{
+						Name:       "password",
+						Type:       cty.String,
+						ExampleVal: cty.StringVal("passwd"),
+						Doc: `
+							Note: you can use function like "from_env()" to avoid storing credentials in plaintext
+						`,
 						Required: true,
 					},
 				},
-				MinItems: 0,
-				MaxItems: 1,
 			},
 		},
 	}
@@ -49,12 +57,11 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 	fp := gofeed.NewParser()
 	url := params.Args.GetAttr("url").AsString()
 
-	basicAuthList := params.Config.GetAttr("basic_auth")
-	if basicAuthList.LengthInt() == 1 {
-		basicAuthObj := basicAuthList.Index(cty.NumberIntVal(0))
+	basicAuth := params.Config.GetAttr("basic_auth")
+	if !basicAuth.IsNull() {
 		fp.AuthConfig = &gofeed.Auth{
-			Username: basicAuthObj.GetAttr("username").AsString(),
-			Password: basicAuthObj.GetAttr("password").AsString(),
+			Username: basicAuth.GetAttr("username").AsString(),
+			Password: basicAuth.GetAttr("password").AsString(),
 		}
 	}
 

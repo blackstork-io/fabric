@@ -38,11 +38,11 @@ func encodeDataSourceSchema(src *plugin.DataSource) (*DataSourceSchema, error) {
 	if src == nil {
 		return nil, nil
 	}
-	args, err := encodeHclSpec(src.Args)
+	args, err := encodeSpec(src.Args)
 	if err != nil {
 		return nil, err
 	}
-	config, err := encodeHclSpec(src.Config)
+	config, err := encodeSpec(src.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -68,11 +68,11 @@ func encodeContentProviderSchema(src *plugin.ContentProvider) (*ContentProviderS
 	if src == nil {
 		return nil, nil
 	}
-	args, err := encodeHclSpec(src.Args)
+	args, err := encodeSpec(src.Args)
 	if err != nil {
 		return nil, err
 	}
-	config, err := encodeHclSpec(src.Config)
+	config, err := encodeSpec(src.Config)
 	if err != nil {
 		return nil, err
 	}

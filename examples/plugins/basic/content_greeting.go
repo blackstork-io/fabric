@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 // makeGreetingContentProvider creates a new content provider that prints out a greeting message
@@ -16,10 +16,12 @@ func makeGreetingContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		// Config is optional, in this case we don't need it
 		// We only define the schema for the arguments
-		Args: hcldec.ObjectSpec{
-			"name": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "name",
 				Required: true,
+				Doc: `Name of the user`,
+				ExampleVal: cty.StringVal("John"),
 				Type:     cty.String,
 			},
 		},

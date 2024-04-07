@@ -46,9 +46,9 @@ func Test_makeRSSDataSchema(t *testing.T) {
 		`), "", hcl.InitialPos)
 		assert.Empty(diags)
 
-		val, diags := hcldec.Decode(cfg.Body, schema.Config, nil)
+		val, diags := hcldec.Decode(cfg.Body, schema.Config.HcldecSpec(), nil)
 		assert.Empty(diags)
-		username := val.GetAttr("basic_auth").Index(cty.NumberIntVal(0)).GetAttr("username").AsString()
+		username := val.GetAttr("basic_auth").GetAttr("username").AsString()
 
 		assert.Equal("example_username", username, val.GoString())
 	})
@@ -64,7 +64,7 @@ func Test_makeRSSDataSchema(t *testing.T) {
 		`), "", hcl.InitialPos)
 		assert.Empty(diags)
 
-		_, diags = hcldec.Decode(cfg.Body, schema.Config, nil)
+		_, diags = hcldec.Decode(cfg.Body, schema.Config.HcldecSpec(), nil)
 		assert.True(diags.HasErrors())
 	})
 
@@ -78,10 +78,10 @@ func Test_makeRSSDataSchema(t *testing.T) {
 		`), "", hcl.InitialPos)
 		assert.Empty(diags)
 
-		val, diags := hcldec.Decode(cfg.Body, schema.Config, nil)
+		val, diags := hcldec.Decode(cfg.Body, schema.Config.HcldecSpec(), nil)
 		assert.Empty(diags)
 		auth := val.GetAttr("basic_auth")
-		assert.Equal(0, auth.LengthInt())
+		assert.True(auth.IsNull())
 	})
 }
 
@@ -266,16 +266,14 @@ func Test_fetchRSSData(t *testing.T) {
 			}
 			if tc.auth != nil {
 				params.Config = cty.ObjectVal(map[string]cty.Value{
-					"basic_auth": cty.ListVal([]cty.Value{
-						cty.ObjectVal(map[string]cty.Value{
-							"username": cty.StringVal(tc.auth.Username),
-							"password": cty.StringVal(tc.auth.Password),
-						}),
+					"basic_auth": cty.ObjectVal(map[string]cty.Value{
+						"username": cty.StringVal(tc.auth.Username),
+						"password": cty.StringVal(tc.auth.Password),
 					}),
 				})
 			} else {
 				params.Config = cty.ObjectVal(map[string]cty.Value{
-					"basic_auth": cty.ListValEmpty(cty.Object(map[string]cty.Type{
+					"basic_auth": cty.NullVal(cty.Object(map[string]cty.Type{
 						"username": cty.String,
 						"password": cty.String,
 					})),

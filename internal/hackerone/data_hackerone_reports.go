@@ -6,209 +6,209 @@ import (
 	"time"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/hackerone/client"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func makeHackerOneReportsDataSchema(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
-		Config: hcldec.ObjectSpec{
-			"api_username": &hcldec.AttrSpec{
+		Config: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "api_username",
 				Type:     cty.String,
 				Required: true,
 			},
-			"api_token": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "api_token",
 				Type:     cty.String,
 				Required: true,
 			},
 		},
-		Args: hcldec.ObjectSpec{
-			"size": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name: "size",
 				Type: cty.Number,
 			},
-			"page_number": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "page_number",
 				Type: cty.Number,
 			},
-			"sort": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "sort",
 				Type: cty.String,
 			},
-			"program": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "program",
 				Type: cty.List(cty.String),
 			},
-			"inbox_ids": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "inbox_ids",
 				Type: cty.List(cty.Number),
 			},
-			"reporter": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "reporter",
 				Type: cty.List(cty.String),
 			},
-			"assignee": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "assignee",
 				Type: cty.List(cty.String),
 			},
-			"state": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "state",
 				Type: cty.List(cty.String),
 			},
-			"id": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "id",
 				Type: cty.List(cty.Number),
 			},
-			"weakness_id": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "weakness_id",
 				Type: cty.List(cty.Number),
 			},
-			"severity": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "severity",
 				Type: cty.List(cty.String),
 			},
-			"hacker_published": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "hacker_published",
 				Type: cty.Bool,
 			},
-			"created_at__gt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "created_at__gt",
 				Type: cty.String,
 			},
-			"created_at__lt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "created_at__lt",
 				Type: cty.String,
 			},
-			"submitted_at__gt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "submitted_at__gt",
 				Type: cty.String,
 			},
-			"submitted_at__lt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "submitted_at__lt",
 				Type: cty.String,
 			},
-			"triaged_at__gt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "triaged_at__gt",
 				Type: cty.String,
 			},
-			"triaged_at__lt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "triaged_at__lt",
 				Type: cty.String,
 			},
-			"triaged_at__null": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "triaged_at__null",
 				Type: cty.Bool,
 			},
-			"closed_at__gt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "closed_at__gt",
 				Type: cty.String,
 			},
-			"closed_at__lt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "closed_at__lt",
 				Type: cty.String,
 			},
-			"closed_at__null": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "closed_at__null",
 				Type: cty.Bool,
 			},
-			"disclosed_at__gt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "disclosed_at__gt",
 				Type: cty.String,
 			},
-			"disclosed_at__lt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "disclosed_at__lt",
 				Type: cty.String,
 			},
-			"disclosed_at__null": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "disclosed_at__null",
 				Type: cty.Bool,
 			},
-			"reporter_agreed_on_going_public": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "reporter_agreed_on_going_public",
 				Type: cty.Bool,
 			},
-			"bounty_awarded_at__gt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "bounty_awarded_at__gt",
 				Type: cty.String,
 			},
-			"bounty_awarded_at__lt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "bounty_awarded_at__lt",
 				Type: cty.String,
 			},
-			"bounty_awarded_at__null": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "bounty_awarded_at__null",
 				Type: cty.Bool,
 			},
-			"swag_awarded_at__gt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "swag_awarded_at__gt",
 				Type: cty.String,
 			},
-			"swag_awarded_at__lt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "swag_awarded_at__lt",
 				Type: cty.String,
 			},
-			"swag_awarded_at__null": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "swag_awarded_at__null",
 				Type: cty.Bool,
 			},
-			"last_report_activity_at__gt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "last_report_activity_at__gt",
 				Type: cty.String,
 			},
-			"last_report_activity_at__lt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "last_report_activity_at__lt",
 				Type: cty.String,
 			},
-			"first_program_activity_at__gt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "first_program_activity_at__gt",
 				Type: cty.String,
 			},
-			"first_program_activity_at__lt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "first_program_activity_at__lt",
 				Type: cty.String,
 			},
-			"first_program_activity_at__null": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "first_program_activity_at__null",
 				Type: cty.Bool,
 			},
-			"last_program_activity_at__gt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "last_program_activity_at__gt",
 				Type: cty.String,
 			},
-			"last_program_activity_at__lt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "last_program_activity_at__lt",
 				Type: cty.String,
 			},
-			"last_program_activity_at__null": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "last_program_activity_at__null",
 				Type: cty.Bool,
 			},
-			"last_activity_at__gt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "last_activity_at__gt",
 				Type: cty.String,
 			},
-			"last_activity_at__lt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "last_activity_at__lt",
 				Type: cty.String,
 			},
-			"last_public_activity_at__gt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "last_public_activity_at__gt",
 				Type: cty.String,
 			},
-			"last_public_activity_at__lt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "last_public_activity_at__lt",
 				Type: cty.String,
 			},
-			"keyword": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "keyword",
 				Type: cty.String,
 			},
-			"custom_fields": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name: "custom_fields",
 				Type: cty.Map(cty.String),
 			},

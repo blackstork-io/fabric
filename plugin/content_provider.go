@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 type ContentProviders map[string]*ContentProvider
@@ -47,8 +48,8 @@ func (order InvocationOrder) Weight() int {
 
 type ContentProvider struct {
 	ContentFunc     ProvideContentFunc
-	Args            hcldec.Spec
-	Config          hcldec.Spec
+	Args            dataspec.RootSpec
+	Config          dataspec.RootSpec
 	InvocationOrder InvocationOrder
 }
 
