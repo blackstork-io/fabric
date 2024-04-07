@@ -78,8 +78,8 @@ func validateDataSource(t testing.TB, ds *plugin.DataSource) {
 		assert.Empty(t, ds.Config.Validate(), "data source config validation errors")
 	}
 	if ds.Args != nil {
-		assert.False(t, ds.Config.IsEmpty(), "data source args should have at least one attribute")
-		assert.Empty(t, ds.Config.Validate(), "data source args validation errors")
+		assert.False(t, ds.Args.IsEmpty(), "data source args should have at least one attribute")
+		assert.Empty(t, ds.Args.Validate(), "data source args validation errors")
 	}
 }
 
