@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package pluginapi.v1;
 
-import "pluginapi/v1/spec.proto";
+import "pluginapi/v1/dataspec.proto";
 
 message Schema {
     string name    = 1;

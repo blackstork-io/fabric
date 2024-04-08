@@ -37,7 +37,7 @@ func decodeSpec(src *Spec) (dataspec.Spec, error) {
 	}
 }
 
-func decodeAttrSpec(src *Attr) (*dataspec.AttrSpec, error) {
+func decodeAttrSpec(src *AttrSpec) (*dataspec.AttrSpec, error) {
 	t, err := decodeCtyType(src.GetType())
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func decodeAttrSpec(src *Attr) (*dataspec.AttrSpec, error) {
 	}, nil
 }
 
-func decodeBlockSpec(src *Block) (*dataspec.BlockSpec, error) {
+func decodeBlockSpec(src *BlockSpec) (*dataspec.BlockSpec, error) {
 	nested, err := decodeSpec(src.GetNested())
 	if err != nil {
 		return nil, err
@@ -73,26 +73,26 @@ func decodeBlockSpec(src *Block) (*dataspec.BlockSpec, error) {
 	}, nil
 }
 
-func decodeObjSpec(src *Object) (dataspec.ObjectSpec, error) {
+func decodeObjSpec(src *ObjectSpec) (dataspec.ObjectSpec, error) {
 	encodedSpecs := src.GetSpecs()
 	specs := make(dataspec.ObjectSpec, 0, len(encodedSpecs))
 	for _, s := range encodedSpecs {
 		switch sT := s.Data.(type) {
 		case nil:
 			continue
-		case *NamedSpec_Named:
+		case *ObjectSpec_ObjectSpecChild_Named:
 			parsedSpec, err := decodeSpec(sT.Named.GetSpec())
 			if err != nil {
 				return nil, err
 			}
-			specs = append(specs, dataspec.UnderKey(sT.Named.Name, parsedSpec))
-		case *NamedSpec_Attr:
+			specs = append(specs, dataspec.UnderKey(sT.Named.Key, parsedSpec))
+		case *ObjectSpec_ObjectSpecChild_Attr:
 			parsedSpec, err := decodeAttrSpec(sT.Attr)
 			if err != nil {
 				return nil, err
 			}
 			specs = append(specs, parsedSpec)
-		case *NamedSpec_Block:
+		case *ObjectSpec_ObjectSpecChild_Block:
 			parsedSpec, err := decodeBlockSpec(sT.Block)
 			if err != nil {
 				return nil, err
@@ -106,13 +106,13 @@ func decodeObjSpec(src *Object) (dataspec.ObjectSpec, error) {
 	return specs, nil
 }
 
-func decodeObjDumpSpec(objDump *ObjDump) (*dataspec.ObjDumpSpec, error) {
+func decodeObjDumpSpec(objDump *ObjDumpSpec) (*dataspec.ObjDumpSpec, error) {
 	return &dataspec.ObjDumpSpec{
 		Doc: objDump.Doc,
 	}, nil
 }
 
-func decodeOpaqueSpec(opaque *Opaque) (*dataspec.OpaqueSpec, error) {
+func decodeOpaqueSpec(opaque *OpaqueSpec) (*dataspec.OpaqueSpec, error) {
 	res := &dataspec.OpaqueSpec{
 		Doc: opaque.Doc,
 	}

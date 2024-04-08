@@ -43,7 +43,7 @@ func encodeSpec(src dataspec.Spec) (*Spec, error) {
 	case *dataspec.ObjDumpSpec:
 		return &Spec{
 			Data: &Spec_ObjDump{
-				ObjDump: &ObjDump{
+				ObjDump: &ObjDumpSpec{
 					Doc: sp.Doc,
 				},
 			},
@@ -55,7 +55,7 @@ func encodeSpec(src dataspec.Spec) (*Spec, error) {
 		}
 		return &Spec{
 			Data: &Spec_Opaque{
-				Opaque: &Opaque{
+				Opaque: &OpaqueSpec{
 					Doc:  sp.Doc,
 					Spec: v,
 				},
@@ -67,7 +67,7 @@ func encodeSpec(src dataspec.Spec) (*Spec, error) {
 }
 
 // case *spec.KeyForObjectSpecr:
-func encodeAttr(src *dataspec.AttrSpec) (*Attr, error) {
+func encodeAttr(src *dataspec.AttrSpec) (*AttrSpec, error) {
 	ty, err := encodeCtyType(src.Type)
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func encodeAttr(src *dataspec.AttrSpec) (*Attr, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Attr{
+	return &AttrSpec{
 		Name:       src.Name,
 		Type:       ty,
 		DefaultVal: dv,
@@ -90,12 +90,12 @@ func encodeAttr(src *dataspec.AttrSpec) (*Attr, error) {
 	}, nil
 }
 
-func encodeBlock(src *dataspec.BlockSpec) (*Block, error) {
+func encodeBlock(src *dataspec.BlockSpec) (*BlockSpec, error) {
 	nested, err := encodeSpec(src.Nested)
 	if err != nil {
 		return nil, err
 	}
-	return &Block{
+	return &BlockSpec{
 		Name:     src.Name,
 		Nested:   nested,
 		Doc:      src.Doc,
@@ -103,8 +103,8 @@ func encodeBlock(src *dataspec.BlockSpec) (*Block, error) {
 	}, nil
 }
 
-func encodeObject(src dataspec.ObjectSpec) (*Object, error) {
-	res := make([]*NamedSpec, 0, len(src))
+func encodeObject(src dataspec.ObjectSpec) (*ObjectSpec, error) {
+	res := make([]*ObjectSpec_ObjectSpecChild, 0, len(src))
 	for _, s := range src {
 		switch sT := s.(type) {
 		case *dataspec.AttrSpec:
@@ -112,8 +112,8 @@ func encodeObject(src dataspec.ObjectSpec) (*Object, error) {
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, &NamedSpec{
-				Data: &NamedSpec_Attr{
+			res = append(res, &ObjectSpec_ObjectSpecChild{
+				Data: &ObjectSpec_ObjectSpecChild_Attr{
 					Attr: v,
 				},
 			})
@@ -122,8 +122,8 @@ func encodeObject(src dataspec.ObjectSpec) (*Object, error) {
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, &NamedSpec{
-				Data: &NamedSpec_Block{
+			res = append(res, &ObjectSpec_ObjectSpecChild{
+				Data: &ObjectSpec_ObjectSpecChild_Block{
 					Block: v,
 				},
 			})
@@ -132,11 +132,11 @@ func encodeObject(src dataspec.ObjectSpec) (*Object, error) {
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, &NamedSpec{
-				Data: &NamedSpec_Named{
-					Named: &Namer{
+			res = append(res, &ObjectSpec_ObjectSpecChild{
+				Data: &ObjectSpec_ObjectSpecChild_Named{
+					Named: &KeyForObjectSpec{
 						Spec: v,
-						Name: sT.KeyForObjectSpec(),
+						Key:  sT.KeyForObjectSpec(),
 					},
 				},
 			})
@@ -145,7 +145,7 @@ func encodeObject(src dataspec.ObjectSpec) (*Object, error) {
 		}
 	}
 
-	return &Object{
+	return &ObjectSpec{
 		Specs: res,
 	}, nil
 }
