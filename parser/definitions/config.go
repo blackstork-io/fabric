@@ -10,6 +10,7 @@ import (
 
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 // Configuration block.
@@ -28,10 +29,10 @@ func (c *Config) Exists() bool {
 var _ evaluation.Configuration = (*Config)(nil)
 
 // ParseConfig implements Configuration.
-func (c *Config) ParseConfig(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
+func (c *Config) ParseConfig(spec dataspec.RootSpec) (val cty.Value, diags diagnostics.Diag) {
 	c.once.Do(func() {
 		var diag hcl.Diagnostics
-		c.value, diag = hcldec.Decode(c.Body, spec, evaluation.NewEvalContext())
+		c.value, diag = hcldec.Decode(c.Body, spec.HcldecSpec(), evaluation.NewEvalContext())
 		if diags.ExtendHcl(diag) {
 			// don't let partially-decoded values live
 			c.value = cty.NilVal

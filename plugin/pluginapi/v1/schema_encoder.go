@@ -19,6 +19,8 @@ func encodeSchema(src *plugin.Schema) (*Schema, error) {
 		Version:          src.Version,
 		DataSources:      dataSources,
 		ContentProviders: contentProviders,
+		Doc:              src.Doc,
+		Tags:             src.Tags,
 	}, nil
 }
 
@@ -38,17 +40,19 @@ func encodeDataSourceSchema(src *plugin.DataSource) (*DataSourceSchema, error) {
 	if src == nil {
 		return nil, nil
 	}
-	args, err := encodeHclSpec(src.Args)
+	args, err := encodeSpec(src.Args)
 	if err != nil {
 		return nil, err
 	}
-	config, err := encodeHclSpec(src.Config)
+	config, err := encodeSpec(src.Config)
 	if err != nil {
 		return nil, err
 	}
 	return &DataSourceSchema{
 		Args:   args,
 		Config: config,
+		Doc:    src.Doc,
+		Tags:   src.Tags,
 	}, nil
 }
 
@@ -68,11 +72,11 @@ func encodeContentProviderSchema(src *plugin.ContentProvider) (*ContentProviderS
 	if src == nil {
 		return nil, nil
 	}
-	args, err := encodeHclSpec(src.Args)
+	args, err := encodeSpec(src.Args)
 	if err != nil {
 		return nil, err
 	}
-	config, err := encodeHclSpec(src.Config)
+	config, err := encodeSpec(src.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -80,6 +84,8 @@ func encodeContentProviderSchema(src *plugin.ContentProvider) (*ContentProviderS
 		Args:            args,
 		Config:          config,
 		InvocationOrder: encodeInvocationOrder(src.InvocationOrder),
+		Doc:             src.Doc,
+		Tags:            src.Tags,
 	}, nil
 }
 

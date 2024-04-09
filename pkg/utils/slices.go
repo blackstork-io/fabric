@@ -16,7 +16,8 @@ func SetAt[T any](slice []T, idx int, val T) []T {
 	return slice
 }
 
-func FnMap[I, O any](fn func(I) O, s []I) []O {
+// Produce a new slice by applying function fn to items of the slice s.
+func FnMap[I, O any](s []I, fn func(I) O) []O {
 	out := make([]O, len(s))
 	for i, v := range s {
 		out[i] = fn(v)

@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 const (
@@ -26,23 +26,23 @@ var availableTOCScopes = []string{"document", "section", "auto"}
 
 func makeTOCContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
-		Args: hcldec.ObjectSpec{
-			"start_level": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "start_level",
 				Type:     cty.Number,
 				Required: false,
 			},
-			"end_level": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "end_level",
 				Type:     cty.Number,
 				Required: false,
 			},
-			"ordered": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "ordered",
 				Type:     cty.Bool,
 				Required: false,
 			},
-			"scope": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "scope",
 				Type:     cty.String,
 				Required: false,

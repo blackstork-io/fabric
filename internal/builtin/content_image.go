@@ -6,22 +6,22 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func makeImageContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genImageContent,
-		Args: hcldec.ObjectSpec{
-			"src": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "src",
 				Type:     cty.String,
 				Required: true,
 			},
-			"alt": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "alt",
 				Type:     cty.String,
 				Required: false,

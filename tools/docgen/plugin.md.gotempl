@@ -3,8 +3,8 @@ title: {{ if eq .Name "blackstork/builtin" -}}Built-in{{- else -}}{{ .Name }}{{-
 {{ if eq .Name "blackstork/builtin" -}}weight: 10{{- else -}}weight: 20{{- end }}
 plugin:
   name: {{ .Name }}
-  description: ""
-  tags: []
+  description: {{ .Doc | quote }}
+  tags: {{ formatTags .Tags }}
   version: "{{ .Version }}"
   {{- if eq (shortname .Name) "nist_nvd" }}
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/nistnvd/"
@@ -15,6 +15,12 @@ type: docs
 ---
 
 {{"{{"}}< plugin-header "{{ .Name }}" "{{ shortname .Name }}" "{{ .Version }}" >{{"}}"}}
+
+{{if .Doc -}}
+## Description
+{{ .Doc }}
+
+{{end -}}
 
 {{ if eq .Name "blackstork/builtin" -}}
 `fabric` binary includes a set of built-in data sources and content providers, available out-of-the-box.

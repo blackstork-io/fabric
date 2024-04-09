@@ -6,19 +6,21 @@ func decodeSchema(src *Schema) (*plugin.Schema, error) {
 	if src == nil {
 		return nil, nil
 	}
-	dataSources, err := decodeDataSourceSchemaMap(src.DataSources)
+	dataSources, err := decodeDataSourceSchemaMap(src.GetDataSources())
 	if err != nil {
 		return nil, err
 	}
-	contentProviders, err := decodeContentProviderSchemaMap(src.ContentProviders)
+	contentProviders, err := decodeContentProviderSchemaMap(src.GetContentProviders())
 	if err != nil {
 		return nil, err
 	}
 	return &plugin.Schema{
-		Name:             src.Name,
-		Version:          src.Version,
+		Name:             src.GetName(),
+		Version:          src.GetVersion(),
 		DataSources:      dataSources,
 		ContentProviders: contentProviders,
+		Doc:              src.GetDoc(),
+		Tags:             src.GetTags(),
 	}, nil
 }
 
@@ -38,17 +40,20 @@ func decodeDataSourceSchema(src *DataSourceSchema) (*plugin.DataSource, error) {
 	if src == nil {
 		return nil, nil
 	}
-	args, err := decodeHclSpec(src.Args)
+	args, err := decodeRootSpec(src.GetArgs())
 	if err != nil {
 		return nil, err
 	}
-	config, err := decodeHclSpec(src.Config)
+	config, err := decodeRootSpec(src.GetConfig())
 	if err != nil {
 		return nil, err
 	}
+
 	return &plugin.DataSource{
 		Args:   args,
 		Config: config,
+		Doc:    src.GetDoc(),
+		Tags:   src.GetTags(),
 	}, nil
 }
 
@@ -68,18 +73,20 @@ func decodeContentProviderSchema(src *ContentProviderSchema) (*plugin.ContentPro
 	if src == nil {
 		return nil, nil
 	}
-	args, err := decodeHclSpec(src.Args)
+	args, err := decodeRootSpec(src.GetArgs())
 	if err != nil {
 		return nil, err
 	}
-	config, err := decodeHclSpec(src.Config)
+	config, err := decodeRootSpec(src.GetConfig())
 	if err != nil {
 		return nil, err
 	}
 	return &plugin.ContentProvider{
 		Args:            args,
 		Config:          config,
-		InvocationOrder: decodeInvocationOrder(src.InvocationOrder),
+		InvocationOrder: decodeInvocationOrder(src.GetInvocationOrder()),
+		Doc:             src.GetDoc(),
+		Tags:            src.GetTags(),
 	}, nil
 }
 

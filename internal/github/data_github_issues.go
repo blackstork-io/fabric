@@ -9,74 +9,74 @@ import (
 
 	gh "github.com/google/go-github/v58/github"
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func makeGithubIssuesDataSchema(loader ClientLoaderFn) *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchGithubIssuesData(loader),
-		Config: hcldec.ObjectSpec{
-			"github_token": &hcldec.AttrSpec{
+		Config: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "github_token",
 				Type:     cty.String,
 				Required: true,
 			},
 		},
-		Args: hcldec.ObjectSpec{
-			"repository": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "repository",
 				Type:     cty.String,
 				Required: true,
 			},
-			"milestone": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "milestone",
 				Type:     cty.String,
 				Required: false,
 			},
-			"state": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "state",
 				Type:     cty.String,
 				Required: false,
 			},
-			"assignee": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "assignee",
 				Type:     cty.String,
 				Required: false,
 			},
-			"creator": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "creator",
 				Type:     cty.String,
 				Required: false,
 			},
-			"mentioned": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "mentioned",
 				Type:     cty.String,
 				Required: false,
 			},
-			"labels": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "labels",
 				Type:     cty.List(cty.String),
 				Required: false,
 			},
-			"sort": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "sort",
 				Type:     cty.String,
 				Required: false,
 			},
-			"direction": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "direction",
 				Type:     cty.String,
 				Required: false,
 			},
-			"since": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "since",
 				Type:     cty.String,
 				Required: false,
 			},
-			"limit": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "limit",
 				Type:     cty.Number,
 				Required: false,

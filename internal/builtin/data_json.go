@@ -8,17 +8,17 @@ import (
 	"path/filepath"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func makeJSONDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchJSONData,
-		Args: hcldec.ObjectSpec{
-			"glob": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "glob",
 				Type:     cty.String,
 				Required: true,

@@ -8,6 +8,7 @@ import (
 
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 // Desugars `title = "foo"` into appropriate `context` invocation.
@@ -41,7 +42,7 @@ func (t *titleInvocation) MissingItemRange() hcl.Range {
 	return t.Expression.Range()
 }
 
-func (t *titleInvocation) ParseInvocation(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
+func (t *titleInvocation) ParseInvocation(spec dataspec.RootSpec) (val cty.Value, diags diagnostics.Diag) {
 	// Titles can only be rendered once, so there's no reason to put `sync.Once` like in proper blocks
 	expr, ok := t.Expression.(hclsyntax.Expression)
 	if !ok {
@@ -68,7 +69,7 @@ func (t *titleInvocation) ParseInvocation(spec hcldec.Spec) (val cty.Value, diag
 		},
 	}
 
-	val, diag := hcldec.Decode(body, spec, nil)
+	val, diag := hcldec.Decode(body, spec.HcldecSpec(), nil)
 	diags.ExtendHcl(diag)
 	return
 }

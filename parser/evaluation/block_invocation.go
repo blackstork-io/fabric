@@ -2,11 +2,11 @@ package evaluation
 
 import (
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 type BlockInvocation struct {
@@ -29,34 +29,9 @@ func (b *BlockInvocation) DefRange() hcl.Range {
 	return b.DefinitionRange
 }
 
-func hclBodyToVal(body *hclsyntax.Body) (val cty.Value, diags diagnostics.Diag) {
-	obj := make(map[string]cty.Value, len(body.Attributes)+len(body.Blocks))
-	for name, attr := range body.Attributes {
-		attrVal, diag := attr.Expr.Value(nil)
-		if diags.ExtendHcl(diag) {
-			continue
-		}
-		obj[name] = attrVal
-	}
-	for _, block := range body.Blocks {
-		blockVal, diag := hclBodyToVal(block.Body)
-		if diags.Extend(diag) {
-			continue
-		}
-		obj[block.Type] = blockVal
-	}
-	val = cty.ObjectVal(obj)
-	return
-}
-
 // ParseInvocation implements Invocation.
-func (b *BlockInvocation) ParseInvocation(spec hcldec.Spec) (cty.Value, diagnostics.Diag) {
-	if spec == nil {
-		res, err := hclBodyToVal(b.Body)
-		return res, err
-	}
-	res, diag := hcldec.Decode(b.Body, spec, NewEvalContext())
-	return res, diagnostics.Diag(diag)
+func (b *BlockInvocation) ParseInvocation(spec dataspec.RootSpec) (cty.Value, diagnostics.Diag) {
+	return dataspec.Decode(b.Body, spec, NewEvalContext())
 }
 
 // Range implements Invocation.

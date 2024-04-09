@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package pluginapi.v1;
 
-import "pluginapi/v1/hclspec.proto";
+import "pluginapi/v1/dataspec.proto";
 
 message Schema {
     string name    = 1;
@@ -10,11 +10,15 @@ message Schema {
     // Plugin components
     map<string, DataSourceSchema>       data_sources      = 3;
     map<string, ContentProviderSchema>  content_providers = 4;
+    string                              doc               = 5;
+    repeated string                     tags              = 6;
 }
 
 message DataSourceSchema {
-    HclSpec args   = 1;
-    HclSpec config = 2;
+    Spec            args   = 3;
+    Spec            config = 4;
+    string          doc    = 5;
+    repeated string tags   = 6;
 }
 
 enum InvocationOrder {
@@ -24,7 +28,9 @@ enum InvocationOrder {
 }
 
 message ContentProviderSchema {
-    HclSpec         args             = 1;
-    HclSpec         config           = 2;
+    Spec            args             = 4;
+    Spec            config           = 5;
     InvocationOrder invocation_order = 3;
+    string          doc              = 6;
+    repeated string tags             = 7;
 }

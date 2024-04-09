@@ -6,40 +6,40 @@ import (
 	"time"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/virustotal/client"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func makeVirusTotalAPIUsageDataSchema(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchVirusTotalAPIUsageData(loader),
-		Config: hcldec.ObjectSpec{
-			"api_key": &hcldec.AttrSpec{
+		Config: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "api_key",
 				Type:     cty.String,
 				Required: true,
 			},
 		},
-		Args: hcldec.ObjectSpec{
-			"user_id": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "user_id",
 				Type:     cty.String,
 				Required: false,
 			},
-			"group_id": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "group_id",
 				Type:     cty.String,
 				Required: false,
 			},
-			"start_date": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "start_date",
 				Type:     cty.String,
 				Required: false,
 			},
-			"end_date": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "end_date",
 				Type:     cty.String,
 				Required: false,

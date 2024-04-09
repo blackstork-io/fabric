@@ -11,10 +11,10 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 //go:embed stixview.gohtml
@@ -36,58 +36,58 @@ func init() {
 
 func makeStixViewContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
-		Args: hcldec.ObjectSpec{
-			"gist_id": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "gist_id",
 				Type:     cty.String,
 				Required: false,
 			},
-			"stix_url": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "stix_url",
 				Type:     cty.String,
 				Required: false,
 			},
-			"caption": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "caption",
 				Type:     cty.String,
 				Required: false,
 			},
-			"show_footer": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "show_footer",
 				Type:     cty.Bool,
 				Required: false,
 			},
-			"show_sidebar": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "show_sidebar",
 				Type:     cty.Bool,
 				Required: false,
 			},
-			"show_tlp_as_tags": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "show_tlp_as_tags",
 				Type:     cty.Bool,
 				Required: false,
 			},
-			"show_marking_nodes": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "show_marking_nodes",
 				Type:     cty.Bool,
 				Required: false,
 			},
-			"show_labels": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "show_labels",
 				Type:     cty.Bool,
 				Required: false,
 			},
-			"show_idrefs": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "show_idrefs",
 				Type:     cty.Bool,
 				Required: false,
 			},
-			"width": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "width",
 				Type:     cty.Number,
 				Required: false,
 			},
-			"height": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "height",
 				Type:     cty.Number,
 				Required: false,

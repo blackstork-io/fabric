@@ -8,29 +8,29 @@ import (
 	"time"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func makeSqliteDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
-		Config: hcldec.ObjectSpec{
-			"database_uri": &hcldec.AttrSpec{
+		Config: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "database_uri",
 				Type:     cty.String,
 				Required: true,
 			},
 		},
-		Args: hcldec.ObjectSpec{
-			"sql_query": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "sql_query",
 				Type:     cty.String,
 				Required: true,
 			},
-			"sql_args": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "sql_args",
 				Type:     cty.List(cty.DynamicPseudoType),
 				Required: false,

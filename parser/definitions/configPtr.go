@@ -2,11 +2,11 @@ package definitions
 
 import (
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 // Attribute referencing a configuration block (`config = path.to.config`).
@@ -21,7 +21,7 @@ func (c *ConfigPtr) Exists() bool {
 }
 
 // ParseConfig implements Configuration.
-func (c *ConfigPtr) ParseConfig(spec hcldec.Spec) (val cty.Value, diags diagnostics.Diag) {
+func (c *ConfigPtr) ParseConfig(spec dataspec.RootSpec) (val cty.Value, diags diagnostics.Diag) {
 	return c.Cfg.ParseConfig(spec)
 }
 

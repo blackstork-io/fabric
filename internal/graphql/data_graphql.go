@@ -9,28 +9,28 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func makeGraphQLDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
-		Config: hcldec.ObjectSpec{
-			"url": &hcldec.AttrSpec{
+		Config: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "url",
 				Type:     cty.String,
 				Required: true,
 			},
-			"auth_token": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "auth_token",
 				Type:     cty.String,
 				Required: false,
 			},
 		},
-		Args: hcldec.ObjectSpec{
-			"query": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "query",
 				Type:     cty.String,
 				Required: true,

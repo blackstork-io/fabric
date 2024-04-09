@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 type DataSources map[string]*DataSource
@@ -30,9 +31,11 @@ func (ds DataSources) Validate() hcl.Diagnostics {
 }
 
 type DataSource struct {
+	Doc      string
+	Tags     []string
 	DataFunc RetrieveDataFunc
-	Args     hcldec.Spec
-	Config   hcldec.Spec
+	Args     dataspec.RootSpec
+	Config   dataspec.RootSpec
 }
 
 func (ds *DataSource) Validate() hcl.Diagnostics {
@@ -54,12 +57,9 @@ func (ds *DataSource) Execute(ctx context.Context, params *RetrieveDataParams) (
 			Summary:  "Missing DataSource schema",
 		}}
 	}
-	if ds.DataFunc == nil {
-		return nil, hcl.Diagnostics{{
-			Severity: hcl.DiagError,
-			Summary:  "Incomplete DataSourceSchema",
-			Detail:   "datasource function not loaded",
-		}}
+	diags := ds.Validate()
+	if diags.HasErrors() {
+		return nil, diags
 	}
 	return ds.DataFunc(ctx, params)
 }

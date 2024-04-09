@@ -9,6 +9,8 @@ import (
 type Schema struct {
 	Name             string
 	Version          string
+	Doc              string
+	Tags             []string
 	DataSources      DataSources
 	ContentProviders ContentProviders
 }

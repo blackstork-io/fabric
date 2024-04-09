@@ -19,7 +19,7 @@ func countDeclarations(data *plugin.ContentSection, name string) int {
 	return count
 }
 
-func parseScope(datactx plugin.MapData) (document *plugin.ContentSection, section *plugin.ContentSection) {
+func parseScope(datactx plugin.MapData) (document, section *plugin.ContentSection) {
 	documentMap, ok := datactx["document"]
 	if !ok {
 		return

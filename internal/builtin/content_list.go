@@ -11,10 +11,10 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 const (
@@ -27,13 +27,13 @@ var listAllowedFormats = []string{"unordered", "ordered", "tasklist"}
 func makeListContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genListContent,
-		Args: hcldec.ObjectSpec{
-			"item_template": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "item_template",
 				Type:     cty.String,
 				Required: true,
 			},
-			"format": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "format",
 				Type:     cty.String,
 				Required: false,

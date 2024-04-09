@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/blackstork-io/fabric/internal/builtin"
 	"github.com/blackstork-io/fabric/internal/elastic"
@@ -75,30 +74,12 @@ func validateDataSource(t testing.TB, ds *plugin.DataSource) {
 	assert.NotNil(t, ds, "data source should not be nil")
 	assert.NotEmpty(t, ds.DataFunc, "data source should have a data function")
 	if ds.Config != nil {
-		switch spec := ds.Config.(type) {
-		case hcldec.ObjectSpec:
-			assert.Greater(t, len(spec), 0, "data source config should have at least one attribute")
-			for key, val := range spec {
-				attr, ok := val.(*hcldec.AttrSpec)
-				require.True(t, ok, "data source config attribute should be of type *hcldec.AttrSpec")
-				validateAttrSpec(t, key, attr)
-			}
-		default:
-			t.Errorf("unexpected data source config type: %T", ds.Config)
-		}
+		assert.False(t, ds.Config.IsEmpty(), "data source config should have at least one attribute")
+		assert.Empty(t, ds.Config.Validate(), "data source config validation errors")
 	}
 	if ds.Args != nil {
-		switch spec := ds.Args.(type) {
-		case hcldec.ObjectSpec:
-			assert.Greater(t, len(spec), 0, "data source args should have at least one attribute")
-			for key, val := range spec {
-				attr, ok := val.(*hcldec.AttrSpec)
-				require.True(t, ok, "data source args attribute should be of type *hcldec.AttrSpec")
-				validateAttrSpec(t, key, attr)
-			}
-		default:
-			t.Errorf("unexpected data source args type: %T", ds.Args)
-		}
+		assert.False(t, ds.Args.IsEmpty(), "data source args should have at least one attribute")
+		assert.Empty(t, ds.Args.Validate(), "data source args validation errors")
 	}
 }
 
@@ -107,30 +88,13 @@ func validateContentProvider(t testing.TB, cp *plugin.ContentProvider) {
 	assert.NotNil(t, cp, "content provider should not be nil")
 	assert.NotEmpty(t, cp.ContentFunc, "content provider should have a content function")
 	if cp.Config != nil {
-		switch spec := cp.Config.(type) {
-		case hcldec.ObjectSpec:
-			assert.Greater(t, len(spec), 0, "content provider config should have at least one attribute")
-			for key, val := range spec {
-				attr, ok := val.(*hcldec.AttrSpec)
-				require.True(t, ok, "content provider config attribute should be of type *hcldec.AttrSpec")
-				validateAttrSpec(t, key, attr)
-			}
-		default:
-			t.Errorf("unexpected content provider config type: %T", cp.Config)
-		}
+		assert.False(t, cp.Config.IsEmpty(), "content provider config should have at least one attribute")
+		assert.Empty(t, cp.Config.Validate(), "content provider config validation errors")
+
 	}
 	if cp.Args != nil {
-		switch spec := cp.Args.(type) {
-		case hcldec.ObjectSpec:
-			assert.Greater(t, len(spec), 0, "content provider args should have at least one attribute")
-			for key, val := range spec {
-				attr, ok := val.(*hcldec.AttrSpec)
-				require.True(t, ok, "content provider args attribute should be of type *hcldec.AttrSpec")
-				validateAttrSpec(t, key, attr)
-			}
-		default:
-			t.Errorf("unexpected content provider args type: %T", cp.Args)
-		}
+		assert.False(t, cp.Args.IsEmpty(), "content provider args should have at least one attribute")
+		assert.Empty(t, cp.Args.Validate(), "content provider args validation errors")
 	}
 }
 

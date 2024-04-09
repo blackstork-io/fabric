@@ -15,12 +15,13 @@ import (
 	"github.com/blackstork-io/fabric/pkg/fabctx"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/runner"
 )
 
 type pluginData struct {
-	ConfigSpec     hcldec.Spec
-	InvocationSpec hcldec.Spec
+	ConfigSpec     dataspec.RootSpec
+	InvocationSpec dataspec.RootSpec
 }
 
 type Caller struct {
@@ -80,7 +81,7 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 		var diag diagnostics.Diag
 		configVal, diag = config.ParseConfig(data.ConfigSpec)
 		if !diags.Extend(diag) {
-			typ := hcldec.ImpliedType(data.ConfigSpec)
+			typ := hcldec.ImpliedType(data.ConfigSpec.HcldecSpec())
 			errs := configVal.Type().TestConformance(typ)
 			if errs != nil {
 				// Attempt a conversion
@@ -103,14 +104,17 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 
 	pluginArgs, diag := invocation.ParseInvocation(data.InvocationSpec)
 	diags.Extend(diag)
-	if data.InvocationSpec != nil {
-		typ := hcldec.ImpliedType(data.InvocationSpec)
-		errs := pluginArgs.Type().TestConformance(typ)
-		if errs != nil {
-			// Attempt a conversion
-			var err error
-			pluginArgs, err = convert.Convert(pluginArgs, typ)
-			diags.AppendErr(err, "Error while serializing args")
+	if !data.InvocationSpec.IsEmpty() {
+		spec := data.InvocationSpec.HcldecSpec()
+		if spec != nil {
+			typ := hcldec.ImpliedType(spec)
+			errs := pluginArgs.Type().TestConformance(typ)
+			if errs != nil {
+				// Attempt a conversion
+				var err error
+				pluginArgs, err = convert.Convert(pluginArgs, typ)
+				diags.AppendErr(err, "Error while serializing args")
+			}
 		}
 	}
 	if diags.HasErrors() {

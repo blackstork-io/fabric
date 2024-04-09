@@ -9,12 +9,12 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/zclconf/go-cty/cty"
 	"gopkg.in/yaml.v3"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 const (
@@ -27,13 +27,13 @@ var frontMatterAllowedFormats = []string{"yaml", "toml", "json"}
 func makeFrontMatterContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genFrontMatterContent,
-		Args: hcldec.ObjectSpec{
-			"format": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "format",
 				Type:     cty.String,
 				Required: false,
 			},
-			"content": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "content",
 				Type:     cty.Map(cty.DynamicPseudoType),
 				Required: false,

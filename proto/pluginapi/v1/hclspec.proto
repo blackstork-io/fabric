@@ -48,7 +48,7 @@ message HclBlockAttrs {
     CtyType type     = 2;
     bool    required = 3;
 }
-   
+
 message HclBlockList {
     string  name      = 1;
     HclSpec nested    = 2;

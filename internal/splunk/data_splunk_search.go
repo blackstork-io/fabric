@@ -8,59 +8,59 @@ import (
 	"time"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/splunk/client"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func makeSplunkSearchDataSchema(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
-		Config: hcldec.ObjectSpec{
-			"auth_token": &hcldec.AttrSpec{
+		Config: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "auth_token",
 				Type:     cty.String,
 				Required: true,
 			},
-			"host": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "host",
 				Type:     cty.String,
 				Required: false,
 			},
-			"deployment_name": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "deployment_name",
 				Type:     cty.String,
 				Required: false,
 			},
 		},
-		Args: hcldec.ObjectSpec{
-			"search_query": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
 				Name:     "search_query",
 				Type:     cty.String,
 				Required: true,
 			},
-			"max_count": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "max_count",
 				Type:     cty.Number,
 				Required: false,
 			},
-			"status_buckets": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "status_buckets",
 				Type:     cty.Number,
 				Required: false,
 			},
-			"rf": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "rf",
 				Type:     cty.List(cty.String),
 				Required: false,
 			},
-			"earliest_time": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "earliest_time",
 				Type:     cty.String,
 				Required: false,
 			},
-			"latest_time": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
 				Name:     "latest_time",
 				Type:     cty.String,
 				Required: false,
