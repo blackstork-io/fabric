@@ -77,7 +77,7 @@ func decodeObjSpec(src *ObjectSpec) (dataspec.ObjectSpec, error) {
 	encodedSpecs := src.GetSpecs()
 	specs := make(dataspec.ObjectSpec, 0, len(encodedSpecs))
 	for _, s := range encodedSpecs {
-		switch sT := s.Data.(type) {
+		switch sT := s.GetData().(type) {
 		case nil:
 			continue
 		case *ObjectSpec_ObjectSpecChild_Named:
@@ -85,7 +85,7 @@ func decodeObjSpec(src *ObjectSpec) (dataspec.ObjectSpec, error) {
 			if err != nil {
 				return nil, err
 			}
-			specs = append(specs, dataspec.UnderKey(sT.Named.Key, parsedSpec))
+			specs = append(specs, dataspec.UnderKey(sT.Named.GetKey(), parsedSpec))
 		case *ObjectSpec_ObjectSpecChild_Attr:
 			parsedSpec, err := decodeAttrSpec(sT.Attr)
 			if err != nil {
@@ -108,16 +108,16 @@ func decodeObjSpec(src *ObjectSpec) (dataspec.ObjectSpec, error) {
 
 func decodeObjDumpSpec(objDump *ObjDumpSpec) (*dataspec.ObjDumpSpec, error) {
 	return &dataspec.ObjDumpSpec{
-		Doc: objDump.Doc,
+		Doc: objDump.GetDoc(),
 	}, nil
 }
 
 func decodeOpaqueSpec(opaque *OpaqueSpec) (*dataspec.OpaqueSpec, error) {
 	res := &dataspec.OpaqueSpec{
-		Doc: opaque.Doc,
+		Doc: opaque.GetDoc(),
 	}
 	var err error
-	res.Spec, err = decodeHclSpec(opaque.Spec)
+	res.Spec, err = decodeHclSpec(opaque.GetSpec())
 	if err != nil {
 		return nil, err
 	}

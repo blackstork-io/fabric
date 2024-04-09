@@ -4,7 +4,7 @@ title: {{ if eq .Name "blackstork/builtin" -}}Built-in{{- else -}}{{ .Name }}{{-
 plugin:
   name: {{ .Name }}
   description: {{ .Doc | quote }}
-  tags: []
+  tags: {{ formatTags .Tags }}
   version: "{{ .Version }}"
   {{- if eq (shortname .Name) "nist_nvd" }}
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/nistnvd/"

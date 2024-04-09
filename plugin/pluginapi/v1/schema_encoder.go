@@ -20,6 +20,7 @@ func encodeSchema(src *plugin.Schema) (*Schema, error) {
 		DataSources:      dataSources,
 		ContentProviders: contentProviders,
 		Doc:              src.Doc,
+		Tags:             src.Tags,
 	}, nil
 }
 
