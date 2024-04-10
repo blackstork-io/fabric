@@ -2,7 +2,7 @@
 title: blockquote
 plugin:
   name: blackstork/builtin
-  description: ""
+  description: "Formats text as a block quote"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -29,7 +29,7 @@ The content provider supports the following execution parameters:
 ```hcl
 content "blockquote" {
   # Required. For example:
-  value = "some string"
+  value = "Text to be formatted as a quote"
 }
 
 ```

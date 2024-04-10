@@ -2,7 +2,7 @@
 title: list
 plugin:
   name: blackstork/builtin
-  description: ""
+  description: "Produces a list of items"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -28,11 +28,15 @@ The content provider supports the following execution parameters:
 
 ```hcl
 content "list" {
+  # Go template for the item of the list
+  #
   # Required. For example:
-  item_template = "some string"
+  item_template = "[{{.Title}}]({{.URL}})"
 
+  # Can be one of: "unordered", "ordered", "tasklist"
+  #
   # Optional. Default value:
-  format = null
+  format = "unordered"
 }
 
 ```

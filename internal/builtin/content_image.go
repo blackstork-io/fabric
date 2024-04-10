@@ -17,16 +17,20 @@ func makeImageContentProvider() *plugin.ContentProvider {
 		ContentFunc: genImageContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "src",
-				Type:     cty.String,
-				Required: true,
+				Name:       "src",
+				Type:       cty.String,
+				Required:   true,
+				ExampleVal: cty.StringVal("https://example.com/img.png"),
 			},
 			&dataspec.AttrSpec{
-				Name:     "alt",
-				Type:     cty.String,
-				Required: false,
+				Name:       "alt",
+				Type:       cty.String,
+				Required:   false,
+				ExampleVal: cty.StringVal("Text description of the image"),
+				// Not using empty string as DefaultVal here for semantical meaning
 			},
 		},
+		Doc: "Inserts an image",
 	}
 }
 

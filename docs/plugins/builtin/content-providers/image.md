@@ -2,7 +2,7 @@
 title: image
 plugin:
   name: blackstork/builtin
-  description: ""
+  description: "Inserts an image"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -29,8 +29,11 @@ The content provider supports the following execution parameters:
 ```hcl
 content "image" {
   # Required. For example:
-  src = "some string"
+  src = "https://example.com/img.png"
 
+  # For example:
+  # alt = "Text description of the image"
+  #
   # Optional. Default value:
   alt = null
 }

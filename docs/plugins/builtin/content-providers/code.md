@@ -2,7 +2,7 @@
 title: code
 plugin:
   name: blackstork/builtin
-  description: ""
+  description: "Formats text as code snippet"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -29,10 +29,15 @@ The content provider supports the following execution parameters:
 ```hcl
 content "code" {
   # Required. For example:
-  value = "some string"
+  value = "Text to be formatted as a code block"
 
+  # Specifiy the language for syntax highlighting
+  #
+  # For example:
+  # language = "python3"
+  #
   # Optional. Default value:
-  language = null
+  language = ""
 }
 
 ```
