@@ -15,40 +15,52 @@ import (
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
-const defaultCSVDelimiter = ','
-
 func makeCSVDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchCSVData,
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "delimiter",
-				Type:     cty.String,
-				Required: false,
+				Name:       "delimiter",
+				Type:       cty.String,
+				Required:   false,
+				DefaultVal: cty.StringVal(","),
+				Doc:        `Must be a one-character string`,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "path",
-				Type:     cty.String,
-				Required: true,
+				Name:       "path",
+				Type:       cty.String,
+				Required:   true,
+				ExampleVal: cty.StringVal("path/to/file.csv"),
 			},
 		},
+		Doc: `
+		Imports and parses a csv file.
+
+		We assume the table has a header and turn each line into a map based on the header titles.
+
+		For example following table
+
+		| column_A | column_B | column_C |
+		| -------- | -------- | -------- |
+		| Test     | true     | 42       |
+		| Line 2   | false    | 4.2      |
+
+		will be represented as the following structure:
+		` + "```json" + `
+		[
+		  {"column_A": "Test", "column_B": true, "column_C": 42},
+		  {"column_A": "Line 2", "column_B": false, "column_C": 4.2}
+		]
+		` + "```",
 	}
 }
 
 func getDelim(config cty.Value) (r rune, diags hcl.Diagnostics) {
-	r = defaultCSVDelimiter
-	if config.IsNull() {
-		return
-	}
-	delim := config.GetAttr("delimiter")
-	if delim.IsNull() {
-		return
-	}
-	delimStr := delim.AsString()
-	delimRune, runeLen := utf8.DecodeRuneInString(delimStr)
-	if runeLen == 0 || len(delimStr) != runeLen {
+	delim := config.GetAttr("delimiter").AsString()
+	delimRune, runeLen := utf8.DecodeRuneInString(delim)
+	if runeLen == 0 || len(delim) != runeLen {
 		diags = hcl.Diagnostics{{
 			Severity: hcl.DiagError,
 			Summary:  "delimiter must be a single character",
@@ -60,8 +72,8 @@ func getDelim(config cty.Value) (r rune, diags hcl.Diagnostics) {
 }
 
 func fetchCSVData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
-	path := params.Args.GetAttr("path")
-	if path.IsNull() || path.AsString() == "" {
+	path := params.Args.GetAttr("path").AsString()
+	if path == "" {
 		return nil, hcl.Diagnostics{{
 			Severity: hcl.DiagError,
 			Summary:  "path is required",
@@ -71,7 +83,7 @@ func fetchCSVData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 	if diags != nil {
 		return nil, diags
 	}
-	data, err := readCSVFile(ctx, path.AsString(), delim)
+	data, err := readCSVFile(ctx, path, delim)
 	if err != nil {
 		return nil, hcl.Diagnostics{{
 			Severity: hcl.DiagError,
