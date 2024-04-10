@@ -46,7 +46,6 @@ config "data" "elastic_security_cases" {
   # Optional. Default value:
   api_key = null
 }
-
 ```
 
 ## Usage
@@ -100,5 +99,4 @@ data "elastic_security_cases" {
   # Optional. Default value:
   size = null
 }
-
 ```

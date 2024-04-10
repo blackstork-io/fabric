@@ -40,6 +40,5 @@ content "toc" {
   # Optional. Default value:
   scope = null
 }
-
 ```
 

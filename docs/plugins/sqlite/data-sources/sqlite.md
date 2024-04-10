@@ -40,7 +40,6 @@ config "data" "sqlite" {
   # Required. For example:
   database_uri = "some string"
 }
-
 ```
 
 ## Usage
@@ -55,5 +54,4 @@ data "sqlite" {
   # Optional. Default value:
   sql_args = null
 }
-
 ```

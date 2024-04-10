@@ -40,7 +40,6 @@ config "data" "virustotal_api_usage" {
   # Required. For example:
   api_key = "some string"
 }
-
 ```
 
 ## Usage
@@ -61,5 +60,4 @@ data "virustotal_api_usage" {
   # Optional. Default value:
   end_date = null
 }
-
 ```

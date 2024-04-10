@@ -37,6 +37,5 @@ content "table" {
     value  = "some string"
   }]
 }
-
 ```
 

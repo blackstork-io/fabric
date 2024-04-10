@@ -31,6 +31,5 @@ content "text" {
   # Required. For example:
   value = "some string"
 }
-
 ```
 

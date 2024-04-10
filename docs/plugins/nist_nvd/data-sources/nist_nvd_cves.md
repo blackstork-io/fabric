@@ -40,7 +40,6 @@ config "data" "nist_nvd_cves" {
   # Optional. Default value:
   api_key = null
 }
-
 ```
 
 ## Usage
@@ -106,5 +105,4 @@ data "nist_nvd_cves" {
   # Optional. Default value:
   limit = null
 }
-
 ```

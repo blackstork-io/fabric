@@ -30,5 +30,4 @@ data "json" {
   # Required. For example:
   glob = "some string"
 }
-
 ```

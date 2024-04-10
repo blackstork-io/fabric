@@ -26,7 +26,6 @@ config "data" "csv" {
   # Optional. Default value:
   delimiter = null
 }
-
 ```
 
 ## Usage
@@ -38,5 +37,4 @@ data "csv" {
   # Required. For example:
   path = "some string"
 }
-
 ```

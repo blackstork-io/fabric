@@ -43,7 +43,6 @@ config "data" "opencti" {
   # Optional. Default value:
   auth_token = null
 }
-
 ```
 
 ## Usage
@@ -55,5 +54,4 @@ data "opencti" {
   # Required. For example:
   graphql_query = "some string"
 }
-
 ```

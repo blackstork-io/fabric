@@ -40,7 +40,6 @@ config "data" "github_issues" {
   # Required. For example:
   github_token = "some string"
 }
-
 ```
 
 ## Usage
@@ -82,5 +81,4 @@ data "github_issues" {
   # Optional. Default value:
   limit = null
 }
-
 ```

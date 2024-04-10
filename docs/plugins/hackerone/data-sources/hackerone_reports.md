@@ -43,7 +43,6 @@ config "data" "hackerone_reports" {
   # Required. For example:
   api_token = "some string"
 }
-
 ```
 
 ## Usage
@@ -190,5 +189,4 @@ data "hackerone_reports" {
   # Optional. Default value:
   custom_fields = null
 }
-
 ```

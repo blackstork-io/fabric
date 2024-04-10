@@ -34,6 +34,5 @@ content "frontmatter" {
   # Optional. Default value:
   content = null
 }
-
 ```
 

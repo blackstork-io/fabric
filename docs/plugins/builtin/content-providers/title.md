@@ -37,6 +37,5 @@ content "title" {
   # Optional. Default value:
   relative_size = null
 }
-
 ```
 

@@ -61,7 +61,6 @@ config "data" "elasticsearch" {
   # Optional. Default value:
   ca_certs = null
 }
-
 ```
 
 ## Usage
@@ -94,5 +93,4 @@ data "elasticsearch" {
   # Optional. Default value:
   size = null
 }
-
 ```

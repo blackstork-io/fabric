@@ -43,7 +43,6 @@ config "data" "graphql" {
   # Optional. Default value:
   auth_token = null
 }
-
 ```
 
 ## Usage
@@ -55,5 +54,4 @@ data "graphql" {
   # Required. For example:
   query = "some string"
 }
-
 ```

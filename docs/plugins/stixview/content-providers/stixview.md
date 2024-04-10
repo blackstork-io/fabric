@@ -75,6 +75,5 @@ content "stixview" {
   # Optional. Default value:
   height = null
 }
-
 ```
 

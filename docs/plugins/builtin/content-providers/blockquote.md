@@ -31,6 +31,5 @@ content "blockquote" {
   # Required. For example:
   value = "Text to be formatted as a quote"
 }
-
 ```
 

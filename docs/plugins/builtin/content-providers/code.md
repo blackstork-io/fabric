@@ -39,6 +39,5 @@ content "code" {
   # Optional. Default value:
   language = ""
 }
-
 ```
 

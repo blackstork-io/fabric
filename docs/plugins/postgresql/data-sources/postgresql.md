@@ -40,7 +40,6 @@ config "data" "postgresql" {
   # Required. For example:
   database_url = "some string"
 }
-
 ```
 
 ## Usage
@@ -55,5 +54,4 @@ data "postgresql" {
   # Optional. Default value:
   sql_args = null
 }
-
 ```

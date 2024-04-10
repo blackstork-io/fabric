@@ -39,7 +39,6 @@ config "data" "rss" {
     password = "passwd"
   }
 }
-
 ```
 
 ## Usage
@@ -51,5 +50,4 @@ data "rss" {
   # Required. For example:
   url = "https://www.elastic.co/security-labs/rss/feed.xml"
 }
-
 ```

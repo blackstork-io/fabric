@@ -44,5 +44,4 @@ data "terraform_state_local" {
   # Required. For example:
   path = "some string"
 }
-
 ```

@@ -30,5 +30,4 @@ data "txt" {
   # Required. For example:
   path = "some string"
 }
-
 ```

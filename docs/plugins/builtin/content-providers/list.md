@@ -38,6 +38,5 @@ content "list" {
   # Optional. Default value:
   format = "unordered"
 }
-
 ```
 

@@ -37,6 +37,5 @@ content "image" {
   # Optional. Default value:
   alt = null
 }
-
 ```
 

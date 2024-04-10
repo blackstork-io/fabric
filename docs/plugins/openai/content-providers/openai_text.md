@@ -47,7 +47,6 @@ config "content" "openai_text" {
   # Optional. Default value:
   organization_id = null
 }
-
 ```
 
 #### Usage
@@ -62,6 +61,5 @@ content "openai_text" {
   # Optional. Default value:
   model = null
 }
-
 ```
 

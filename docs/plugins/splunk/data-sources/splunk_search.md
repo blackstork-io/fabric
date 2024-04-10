@@ -46,7 +46,6 @@ config "data" "splunk_search" {
   # Optional. Default value:
   deployment_name = null
 }
-
 ```
 
 ## Usage
@@ -73,5 +72,4 @@ data "splunk_search" {
   # Optional. Default value:
   latest_time = null
 }
-
 ```
