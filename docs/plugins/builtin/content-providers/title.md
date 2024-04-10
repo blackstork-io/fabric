@@ -1,5 +1,5 @@
 ---
-title: title 
+title: title
 plugin:
   name: blackstork/builtin
   description: ""
@@ -27,10 +27,16 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content title {
-    absolute_size = <number>  # optional
-    relative_size = <number>  # optional
-    value = <string>  # required
+content "title" {
+  # Required. For example:
+  value = "some string"
+
+  # Optional. Default value:
+  absolute_size = null
+
+  # Optional. Default value:
+  relative_size = null
 }
+
 ```
 

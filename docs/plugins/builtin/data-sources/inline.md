@@ -23,4 +23,19 @@ The data source doesn't support configuration.
 
 ## Usage
 
-The data source doesn't define any execution parameters.
+The data source supports the following parameters in the data blocks:
+
+```hcl
+data "inline" {
+  # Arbitrary structure of (possibly nested) blocks and attributes.
+  # For example:
+  #   key1 = "value1"
+  #   nested {
+  #     blocks {
+  #       key2 = 42
+  #     }
+  #   }
+
+}
+
+```

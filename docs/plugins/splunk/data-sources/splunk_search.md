@@ -36,11 +36,17 @@ Note the version constraint set for the plugin.
 The data source supports the following configuration parameters:
 
 ```hcl
-config data splunk_search {
-    auth_token = <string>  # required
-    deployment_name = <string>  # optional
-    host = <string>  # optional
+config "data" "splunk_search" {
+  # Required. For example:
+  auth_token = "some string"
+
+  # Optional. Default value:
+  host = null
+
+  # Optional. Default value:
+  deployment_name = null
 }
+
 ```
 
 ## Usage
@@ -48,12 +54,24 @@ config data splunk_search {
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data splunk_search {
-    earliest_time = <string>  # optional
-    latest_time = <string>  # optional
-    max_count = <number>  # optional
-    rf = <list of string>  # optional
-    search_query = <string>  # required
-    status_buckets = <number>  # optional
+data "splunk_search" {
+  # Required. For example:
+  search_query = "some string"
+
+  # Optional. Default value:
+  max_count = null
+
+  # Optional. Default value:
+  status_buckets = null
+
+  # Optional. Default value:
+  rf = null
+
+  # Optional. Default value:
+  earliest_time = null
+
+  # Optional. Default value:
+  latest_time = null
 }
+
 ```

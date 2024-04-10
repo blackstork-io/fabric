@@ -1,5 +1,5 @@
 ---
-title: blockquote 
+title: blockquote
 plugin:
   name: blackstork/builtin
   description: ""
@@ -27,8 +27,10 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content blockquote {
-    value = <string>  # required
+content "blockquote" {
+  # Required. For example:
+  value = "some string"
 }
+
 ```
 

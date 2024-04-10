@@ -1,5 +1,5 @@
 ---
-title: list 
+title: list
 plugin:
   name: blackstork/builtin
   description: ""
@@ -27,9 +27,13 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content list {
-    format = <string>  # optional
-    item_template = <string>  # required
+content "list" {
+  # Required. For example:
+  item_template = "some string"
+
+  # Optional. Default value:
+  format = null
 }
+
 ```
 

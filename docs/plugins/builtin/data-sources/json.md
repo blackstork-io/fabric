@@ -26,7 +26,9 @@ The data source doesn't support configuration.
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data json {
-    glob = <string>  # required
+data "json" {
+  # Required. For example:
+  glob = "some string"
 }
+
 ```

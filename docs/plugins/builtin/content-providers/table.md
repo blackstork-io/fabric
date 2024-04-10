@@ -1,5 +1,5 @@
 ---
-title: table 
+title: table
 plugin:
   name: blackstork/builtin
   description: ""
@@ -27,8 +27,16 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content table {
-    columns = <list of object>  # required
+content "table" {
+  # Required. For example:
+  columns = [{
+    header = "some string"
+    value  = "some string"
+    }, {
+    header = "some string"
+    value  = "some string"
+  }]
 }
+
 ```
 

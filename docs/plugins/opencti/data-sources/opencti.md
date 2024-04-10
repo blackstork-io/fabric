@@ -36,10 +36,14 @@ Note the version constraint set for the plugin.
 The data source supports the following configuration parameters:
 
 ```hcl
-config data opencti {
-    auth_token = <string>  # optional
-    graphql_url = <string>  # required
+config "data" "opencti" {
+  # Required. For example:
+  graphql_url = "some string"
+
+  # Optional. Default value:
+  auth_token = null
 }
+
 ```
 
 ## Usage
@@ -47,7 +51,9 @@ config data opencti {
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data opencti {
-    graphql_query = <string>  # required
+data "opencti" {
+  # Required. For example:
+  graphql_query = "some string"
 }
+
 ```

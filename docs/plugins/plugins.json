@@ -65,6 +65,16 @@
         ]
       },
       {
+        "name": "rss",
+        "type": "data-source",
+        "config_params": [
+          "basic_auth"
+        ],
+        "arguments": [
+          "url"
+        ]
+      },
+      {
         "name": "table",
         "type": "content-provider",
         "arguments": [
@@ -315,9 +325,9 @@
         "name": "openai_text",
         "type": "content-provider",
         "config_params": [
+          "system_prompt",
           "api_key",
-          "organization_id",
-          "system_prompt"
+          "organization_id"
         ],
         "arguments": [
           "model",

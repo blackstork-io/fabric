@@ -1,5 +1,5 @@
 ---
-title: image 
+title: image
 plugin:
   name: blackstork/builtin
   description: ""
@@ -27,9 +27,13 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content image {
-    alt = <string>  # optional
-    src = <string>  # required
+content "image" {
+  # Required. For example:
+  src = "some string"
+
+  # Optional. Default value:
+  alt = null
 }
+
 ```
 

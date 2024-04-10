@@ -22,9 +22,11 @@ The data source is built-in, which means it's a part of `fabric` binary. It's av
 The data source supports the following configuration parameters:
 
 ```hcl
-config data csv {
-    delimiter = <string>  # optional
+config "data" "csv" {
+  # Optional. Default value:
+  delimiter = null
 }
+
 ```
 
 ## Usage
@@ -32,7 +34,9 @@ config data csv {
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data csv {
-    path = <string>  # required
+data "csv" {
+  # Required. For example:
+  path = "some string"
 }
+
 ```

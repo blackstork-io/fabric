@@ -36,10 +36,14 @@ Note the version constraint set for the plugin.
 The data source supports the following configuration parameters:
 
 ```hcl
-config data graphql {
-    auth_token = <string>  # optional
-    url = <string>  # required
+config "data" "graphql" {
+  # Required. For example:
+  url = "some string"
+
+  # Optional. Default value:
+  auth_token = null
 }
+
 ```
 
 ## Usage
@@ -47,7 +51,9 @@ config data graphql {
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data graphql {
-    query = <string>  # required
+data "graphql" {
+  # Required. For example:
+  query = "some string"
 }
+
 ```

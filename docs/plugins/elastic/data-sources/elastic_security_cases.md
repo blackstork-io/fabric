@@ -36,11 +36,17 @@ Note the version constraint set for the plugin.
 The data source supports the following configuration parameters:
 
 ```hcl
-config data elastic_security_cases {
-    api_key = <list of string>  # optional
-    api_key_str = <string>  # optional
-    kibana_endpoint_url = <string>  # required
+config "data" "elastic_security_cases" {
+  # Required. For example:
+  kibana_endpoint_url = "some string"
+
+  # Optional. Default value:
+  api_key_str = null
+
+  # Optional. Default value:
+  api_key = null
 }
+
 ```
 
 ## Usage
@@ -48,21 +54,51 @@ config data elastic_security_cases {
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data elastic_security_cases {
-    assignees = <list of string>  # optional
-    default_search_operator = <string>  # optional
-    from = <string>  # optional
-    owner = <list of string>  # optional
-    reporters = <list of string>  # optional
-    search = <string>  # optional
-    search_fields = <list of string>  # optional
-    severity = <string>  # optional
-    size = <number>  # optional
-    sort_field = <string>  # optional
-    sort_order = <string>  # optional
-    space_id = <string>  # optional
-    status = <string>  # optional
-    tags = <list of string>  # optional
-    to = <string>  # optional
+data "elastic_security_cases" {
+  # Optional. Default value:
+  space_id = null
+
+  # Optional. Default value:
+  assignees = null
+
+  # Optional. Default value:
+  default_search_operator = null
+
+  # Optional. Default value:
+  from = null
+
+  # Optional. Default value:
+  owner = null
+
+  # Optional. Default value:
+  reporters = null
+
+  # Optional. Default value:
+  search = null
+
+  # Optional. Default value:
+  search_fields = null
+
+  # Optional. Default value:
+  severity = null
+
+  # Optional. Default value:
+  sort_field = null
+
+  # Optional. Default value:
+  sort_order = null
+
+  # Optional. Default value:
+  status = null
+
+  # Optional. Default value:
+  tags = null
+
+  # Optional. Default value:
+  to = null
+
+  # Optional. Default value:
+  size = null
 }
+
 ```

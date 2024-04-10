@@ -36,16 +36,32 @@ Note the version constraint set for the plugin.
 The data source supports the following configuration parameters:
 
 ```hcl
-config data elasticsearch {
-    api_key = <list of string>  # optional
-    api_key_str = <string>  # optional
-    base_url = <string>  # optional
-    basic_auth_password = <string>  # optional
-    basic_auth_username = <string>  # optional
-    bearer_auth = <string>  # optional
-    ca_certs = <string>  # optional
-    cloud_id = <string>  # optional
+config "data" "elasticsearch" {
+  # Optional. Default value:
+  base_url = null
+
+  # Optional. Default value:
+  cloud_id = null
+
+  # Optional. Default value:
+  api_key_str = null
+
+  # Optional. Default value:
+  api_key = null
+
+  # Optional. Default value:
+  basic_auth_username = null
+
+  # Optional. Default value:
+  basic_auth_password = null
+
+  # Optional. Default value:
+  bearer_auth = null
+
+  # Optional. Default value:
+  ca_certs = null
 }
+
 ```
 
 ## Usage
@@ -53,14 +69,30 @@ config data elasticsearch {
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data elasticsearch {
-    aggs = <map of dynamic>  # optional
-    fields = <list of string>  # optional
-    id = <string>  # optional
-    index = <string>  # required
-    only_hits = <bool>  # optional
-    query = <map of dynamic>  # optional
-    query_string = <string>  # optional
-    size = <number>  # optional
+data "elasticsearch" {
+  # Required. For example:
+  index = "some string"
+
+  # Optional. Default value:
+  id = null
+
+  # Optional. Default value:
+  query_string = null
+
+  # Optional. Default value:
+  query = null
+
+  # Optional. Default value:
+  aggs = null
+
+  # Optional. Default value:
+  only_hits = null
+
+  # Optional. Default value:
+  fields = null
+
+  # Optional. Default value:
+  size = null
 }
+
 ```

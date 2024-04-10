@@ -1,5 +1,5 @@
 ---
-title: frontmatter 
+title: frontmatter
 plugin:
   name: blackstork/builtin
   description: ""
@@ -27,9 +27,13 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content frontmatter {
-    content = <map of dynamic>  # optional
-    format = <string>  # optional
+content "frontmatter" {
+  # Optional. Default value:
+  format = null
+
+  # Optional. Default value:
+  content = null
 }
+
 ```
 

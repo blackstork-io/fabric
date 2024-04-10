@@ -1,5 +1,5 @@
 ---
-title: code 
+title: code
 plugin:
   name: blackstork/builtin
   description: ""
@@ -27,9 +27,13 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content code {
-    language = <string>  # optional
-    value = <string>  # required
+content "code" {
+  # Required. For example:
+  value = "some string"
+
+  # Optional. Default value:
+  language = null
 }
+
 ```
 

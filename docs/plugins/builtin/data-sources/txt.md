@@ -26,7 +26,9 @@ The data source doesn't support configuration.
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data txt {
-    path = <string>  # required
+data "txt" {
+  # Required. For example:
+  path = "some string"
 }
+
 ```

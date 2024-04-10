@@ -40,7 +40,9 @@ The data source doesn't support configuration.
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data terraform_state_local {
-    path = <string>  # required
+data "terraform_state_local" {
+  # Required. For example:
+  path = "some string"
 }
+
 ```

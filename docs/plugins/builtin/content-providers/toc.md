@@ -1,5 +1,5 @@
 ---
-title: toc 
+title: toc
 plugin:
   name: blackstork/builtin
   description: ""
@@ -27,11 +27,19 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content toc {
-    end_level = <number>  # optional
-    ordered = <bool>  # optional
-    scope = <string>  # optional
-    start_level = <number>  # optional
+content "toc" {
+  # Optional. Default value:
+  start_level = null
+
+  # Optional. Default value:
+  end_level = null
+
+  # Optional. Default value:
+  ordered = null
+
+  # Optional. Default value:
+  scope = null
 }
+
 ```
 
