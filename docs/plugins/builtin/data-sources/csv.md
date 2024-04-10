@@ -2,7 +2,7 @@
 title: csv
 plugin:
   name: blackstork/builtin
-  description: "Imports and parses a csv file."
+  description: "Imports and parses a csv file"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"

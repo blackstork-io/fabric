@@ -2,7 +2,7 @@
 title: json
 plugin:
   name: blackstork/builtin
-  description: "Imports and parses the files matching \"glob\"."
+  description: "Imports and parses the files matching \"glob\""
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"

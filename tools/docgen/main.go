@@ -339,7 +339,7 @@ func description(doc string) string {
 
 func shortDescription(doc string) string {
 	firstLine, _, _ := strings.Cut(strings.TrimSpace(doc), "\n")
-	return firstLine
+	return strings.TrimRight(firstLine, ".")
 }
 
 func shortname(name string) string {
