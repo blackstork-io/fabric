@@ -26,6 +26,7 @@ func makeInlineDataSource() *plugin.DataSource {
 				  }
 			`,
 		},
+		Doc: `Creates a queryable key-value map from the block's contents`,
 	}
 }
 

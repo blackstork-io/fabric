@@ -19,11 +19,32 @@ func makeJSONDataSource() *plugin.DataSource {
 		DataFunc: fetchJSONData,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "glob",
-				Type:     cty.String,
-				Required: true,
+				Name:       "glob",
+				Type:       cty.String,
+				Required:   true,
+				ExampleVal: cty.StringVal("reports/*_data.json"),
+				Doc:        `A pattern that selects the json files to be read`,
 			},
 		},
+		Doc: `
+			Imports and parses the files matching "glob".
+			Results are presented using the following structure:
+			` + "```json" + `
+			  [
+			    {
+			      "filename": "<name of the file matched by glob>",
+			      "contents": {
+			        "contents of the file": "parsed as json"
+			      },
+			    },
+			    {
+			      "filename": "<next file>",
+			      "contents": {
+			        "next": "contents"
+			      },
+			    }
+			  ]
+			` + "```",
 	}
 }
 

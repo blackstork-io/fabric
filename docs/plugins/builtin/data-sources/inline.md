@@ -2,7 +2,7 @@
 title: inline
 plugin:
   name: blackstork/builtin
-  description: ""
+  description: "Creates a queryable key-value map from the block's contents"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -14,6 +14,9 @@ type: docs
 {{< breadcrumbs 2 >}}
 
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "inline" "data source" >}}
+
+## Description
+Creates a queryable key-value map from the block's contents
 
 The data source is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 

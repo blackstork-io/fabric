@@ -2,7 +2,7 @@
 title: {{ .name }}
 plugin:
   name: {{ .plugin.Name }}
-  description: {{ .data_source.Doc | quote }}
+  description: {{ .short_desc | quote }}
   tags: {{ formatTags .data_source.Tags }}
   version: "{{ .plugin.Version }}"
   {{- if eq .plugin_shortname "nist_nvd" }}
@@ -21,7 +21,7 @@ type: docs
 
 {{if .data_source.Doc -}}
 ## Description
-{{ .data_source.Doc }}
+{{ .desc }}
 
 {{end -}}
 

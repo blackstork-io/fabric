@@ -31,6 +31,7 @@ func (ds DataSources) Validate() hcl.Diagnostics {
 }
 
 type DataSource struct {
+	// first non-empty line is treated as a short description
 	Doc      string
 	Tags     []string
 	DataFunc RetrieveDataFunc
