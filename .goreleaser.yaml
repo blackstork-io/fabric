@@ -376,7 +376,7 @@ dockers:
     ids:
       - fabric
     image_templates:
-      - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-amd64v1"
+      - "{{ .Env.CONTAINER_REPO_NAME }}:latest-amd64v1"
     build_flag_templates:
       - "--platform=linux/amd64/v1"
   - use: buildx
@@ -385,7 +385,7 @@ dockers:
     ids:
       - fabric
     image_templates:
-      - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-arm64v8"
+      - "{{ .Env.CONTAINER_REPO_NAME }}:latest-arm64v8"
     build_flag_templates:
       - "--platform=linux/arm64/v8"
   - use: buildx
@@ -394,21 +394,21 @@ dockers:
     ids:
       - fabric
     image_templates:
-      - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-386"
+      - "{{ .Env.CONTAINER_REPO_NAME }}:latest-386"
     build_flag_templates:
       - "--platform=linux/386"
 
 docker_manifests:
   - name_template: "{{ .Env.CONTAINER_REPO_NAME }}:{{ .Version }}"
     image_templates:
-    - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-amd64v1"
-    - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-arm64v8"
-    - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-386"
+    - "{{ .Env.CONTAINER_REPO_NAME }}:latest-amd64v1"
+    - "{{ .Env.CONTAINER_REPO_NAME }}:latest-arm64v8"
+    - "{{ .Env.CONTAINER_REPO_NAME }}:latest-386"
   - name_template: "{{ .Env.CONTAINER_REPO_NAME }}:latest"
     image_templates:
-    - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-amd64v1"
-    - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-arm64v8"
-    - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-386"
+    - "{{ .Env.CONTAINER_REPO_NAME }}:latest-amd64v1"
+    - "{{ .Env.CONTAINER_REPO_NAME }}:latest-arm64v8"
+    - "{{ .Env.CONTAINER_REPO_NAME }}:latest-386"
 
 
 changelog:
