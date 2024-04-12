@@ -23,10 +23,16 @@ builds:
       - -X github.com/blackstork-io/fabric/cmd.version={{.Version}}
       - -X github.com/blackstork-io/fabric/cmd.builtBy=goreleaser
 
-    goos:
-      - linux
-      - windows
-      - darwin
+    targets:
+      - linux_amd64_v1
+      - linux_arm64 # implicitly v8
+      - linux_386
+      - darwin_amd64_v1
+      - darwin_arm64
+      - windows_amd64_v1
+      - windows_arm64_8
+      - windows_386
+
 
   # Plugins
   # TODO: generate this list with custom script or use Premium goreleaser to template it
@@ -361,6 +367,49 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+dockers:
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    goamd64: v1
+    ids:
+      - fabric
+    image_templates:
+      - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-amd64v1"
+    build_flag_templates:
+      - "--platform=linux/amd64/v1"
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    ids:
+      - fabric
+    image_templates:
+      - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-arm64v8"
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+  - use: buildx
+    goos: linux
+    goarch: "386"
+    ids:
+      - fabric
+    image_templates:
+      - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-386"
+    build_flag_templates:
+      - "--platform=linux/386"
+
+docker_manifests:
+  - name_template: "{{ .Env.CONTAINER_REPO_NAME }}:{{ .Version }}"
+    image_templates:
+    - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-amd64v1"
+    - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-arm64v8"
+    - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-386"
+  - name_template: "{{ .Env.CONTAINER_REPO_NAME }}:latest"
+    image_templates:
+    - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-amd64v1"
+    - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-arm64v8"
+    - "{{ .Env.CONTAINER_REPO_NAME }}:platform-specific-{{ .Version }}-386"
+
 
 changelog:
   sort: asc
