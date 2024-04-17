@@ -36,8 +36,8 @@ Note the version constraint set for the plugin.
 The data source supports the following configuration parameters:
 
 ```hcl
-config "data" "sqlite" {
-  # Required. For example:
+config data sqlite {
+  # Required string. For example:
   database_uri = "some string"
 }
 ```
@@ -47,11 +47,11 @@ config "data" "sqlite" {
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data "sqlite" {
-  # Required. For example:
+data sqlite {
+  # Required string. For example:
   sql_query = "some string"
 
-  # Optional. Default value:
+  # Optional list of any single type. Default value:
   sql_args = null
 }
 ```

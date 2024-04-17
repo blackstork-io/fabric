@@ -27,17 +27,17 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content "toc" {
-  # Optional. Default value:
+content toc {
+  # Optional number. Default value:
   start_level = null
 
-  # Optional. Default value:
+  # Optional number. Default value:
   end_level = null
 
-  # Optional. Default value:
+  # Optional bool. Default value:
   ordered = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   scope = null
 }
 ```

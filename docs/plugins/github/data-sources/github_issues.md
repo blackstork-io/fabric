@@ -36,8 +36,8 @@ Note the version constraint set for the plugin.
 The data source supports the following configuration parameters:
 
 ```hcl
-config "data" "github_issues" {
-  # Required. For example:
+config data github_issues {
+  # Required string. For example:
   github_token = "some string"
 }
 ```
@@ -47,38 +47,38 @@ config "data" "github_issues" {
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data "github_issues" {
-  # Required. For example:
+data github_issues {
+  # Required string. For example:
   repository = "some string"
 
-  # Optional. Default value:
+  # Optional string. Default value:
   milestone = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   state = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   assignee = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   creator = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   mentioned = null
 
-  # Optional. Default value:
+  # Optional list of string. Default value:
   labels = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   sort = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   direction = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   since = null
 
-  # Optional. Default value:
+  # Optional number. Default value:
   limit = null
 }
 ```

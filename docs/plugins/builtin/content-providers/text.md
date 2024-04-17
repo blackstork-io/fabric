@@ -27,10 +27,10 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content "text" {
+content text {
   # A string to render. Can use go template syntax.
   #
-  # Required. For example:
+  # Required string. For example:
   value = "Hello world!"
 }
 ```

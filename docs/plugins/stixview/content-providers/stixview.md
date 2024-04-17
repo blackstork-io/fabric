@@ -41,38 +41,38 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content "stixview" {
-  # Optional. Default value:
+content stixview {
+  # Optional string. Default value:
   gist_id = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   stix_url = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   caption = null
 
-  # Optional. Default value:
+  # Optional bool. Default value:
   show_footer = null
 
-  # Optional. Default value:
+  # Optional bool. Default value:
   show_sidebar = null
 
-  # Optional. Default value:
+  # Optional bool. Default value:
   show_tlp_as_tags = null
 
-  # Optional. Default value:
+  # Optional bool. Default value:
   show_marking_nodes = null
 
-  # Optional. Default value:
+  # Optional bool. Default value:
   show_labels = null
 
-  # Optional. Default value:
+  # Optional bool. Default value:
   show_idrefs = null
 
-  # Optional. Default value:
+  # Optional number. Default value:
   width = null
 
-  # Optional. Default value:
+  # Optional number. Default value:
   height = null
 }
 ```

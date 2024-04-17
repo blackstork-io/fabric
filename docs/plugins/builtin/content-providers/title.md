@@ -27,14 +27,14 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content "title" {
-  # Required. For example:
+content title {
+  # Required string. For example:
   value = "some string"
 
-  # Optional. Default value:
+  # Optional number. Default value:
   absolute_size = null
 
-  # Optional. Default value:
+  # Optional number. Default value:
   relative_size = null
 }
 ```

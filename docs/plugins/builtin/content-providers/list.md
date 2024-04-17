@@ -27,15 +27,15 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content "list" {
+content list {
   # Go template for the item of the list
   #
-  # Required. For example:
+  # Required string. For example:
   item_template = "[{{.Title}}]({{.URL}})"
 
   # Can be one of: "unordered", "ordered", "tasklist"
   #
-  # Optional. Default value:
+  # Optional string. Default value:
   format = "unordered"
 }
 ```

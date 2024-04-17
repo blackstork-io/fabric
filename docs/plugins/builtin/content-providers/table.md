@@ -27,8 +27,8 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content "table" {
-  # Required. For example:
+content table {
+  # Required list of object. For example:
   columns = [{
     header = "some string"
     value  = "some string"

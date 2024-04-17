@@ -27,8 +27,8 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content "code" {
-  # Required. For example:
+content code {
+  # Required string. For example:
   value = "Text to be formatted as a code block"
 
   # Specifiy the language for syntax highlighting
@@ -36,7 +36,7 @@ content "code" {
   # For example:
   # language = "python3"
   #
-  # Optional. Default value:
+  # Optional string. Default value:
   language = ""
 }
 ```

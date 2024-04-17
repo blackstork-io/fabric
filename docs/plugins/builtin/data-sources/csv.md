@@ -42,10 +42,10 @@ The data source is built-in, which means it's a part of `fabric` binary. It's av
 The data source supports the following configuration parameters:
 
 ```hcl
-config "data" "csv" {
+config data csv {
   # Must be a one-character string
   #
-  # Optional. Default value:
+  # Optional string. Default value:
   delimiter = ","
 }
 ```
@@ -55,8 +55,8 @@ config "data" "csv" {
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data "csv" {
-  # Required. For example:
+data csv {
+  # Required string. For example:
   path = "path/to/file.csv"
 }
 ```

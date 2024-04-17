@@ -27,8 +27,8 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content "blockquote" {
-  # Required. For example:
+content blockquote {
+  # Required string. For example:
   value = "Text to be formatted as a quote"
 }
 ```

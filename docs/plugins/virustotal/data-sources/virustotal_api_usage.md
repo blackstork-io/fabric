@@ -36,8 +36,8 @@ Note the version constraint set for the plugin.
 The data source supports the following configuration parameters:
 
 ```hcl
-config "data" "virustotal_api_usage" {
-  # Required. For example:
+config data virustotal_api_usage {
+  # Required string. For example:
   api_key = "some string"
 }
 ```
@@ -47,17 +47,17 @@ config "data" "virustotal_api_usage" {
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data "virustotal_api_usage" {
-  # Optional. Default value:
+data virustotal_api_usage {
+  # Optional string. Default value:
   user_id = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   group_id = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   start_date = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   end_date = null
 }
 ```

@@ -36,8 +36,8 @@ Note the version constraint set for the plugin.
 The data source supports the following configuration parameters:
 
 ```hcl
-config "data" "postgresql" {
-  # Required. For example:
+config data postgresql {
+  # Required string. For example:
   database_url = "some string"
 }
 ```
@@ -47,11 +47,11 @@ config "data" "postgresql" {
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data "postgresql" {
-  # Required. For example:
+data postgresql {
+  # Required string. For example:
   sql_query = "some string"
 
-  # Optional. Default value:
+  # Optional list of any single type. Default value:
   sql_args = null
 }
 ```

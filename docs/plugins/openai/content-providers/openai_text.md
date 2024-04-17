@@ -37,14 +37,14 @@ Note the version constraint set for the plugin.
 The content provider supports the following configuration parameters:
 
 ```hcl
-config "content" "openai_text" {
-  # Optional. Default value:
+config content openai_text {
+  # Optional string. Default value:
   system_prompt = null
 
-  # Required. For example:
+  # Required string. For example:
   api_key = "some string"
 
-  # Optional. Default value:
+  # Optional string. Default value:
   organization_id = null
 }
 ```
@@ -54,11 +54,11 @@ config "content" "openai_text" {
 The content provider supports the following execution parameters:
 
 ```hcl
-content "openai_text" {
-  # Required. For example:
+content openai_text {
+  # Required string. For example:
   prompt = "some string"
 
-  # Optional. Default value:
+  # Optional string. Default value:
   model = null
 }
 ```

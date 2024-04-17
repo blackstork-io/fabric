@@ -36,8 +36,8 @@ Note the version constraint set for the plugin.
 The data source supports the following configuration parameters:
 
 ```hcl
-config "data" "nist_nvd_cves" {
-  # Optional. Default value:
+config data nist_nvd_cves {
+  # Optional string. Default value:
   api_key = null
 }
 ```
@@ -47,62 +47,62 @@ config "data" "nist_nvd_cves" {
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data "nist_nvd_cves" {
-  # Optional. Default value:
+data nist_nvd_cves {
+  # Optional string. Default value:
   last_mod_start_date = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   last_mod_end_date = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   pub_start_date = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   pub_end_date = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   cpe_name = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   cve_id = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   cvss_v3_metrics = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   cvss_v3_severity = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   cwe_id = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   keyword_search = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   virtual_match_string = null
 
-  # Optional. Default value:
+  # Optional string. Default value:
   source_identifier = null
 
-  # Optional. Default value:
+  # Optional bool. Default value:
   has_cert_alerts = null
 
-  # Optional. Default value:
+  # Optional bool. Default value:
   has_kev = null
 
-  # Optional. Default value:
+  # Optional bool. Default value:
   has_cert_notes = null
 
-  # Optional. Default value:
+  # Optional bool. Default value:
   is_vulnerable = null
 
-  # Optional. Default value:
+  # Optional bool. Default value:
   keyword_exact_match = null
 
-  # Optional. Default value:
+  # Optional bool. Default value:
   no_rejected = null
 
-  # Optional. Default value:
+  # Optional number. Default value:
   limit = null
 }
 ```

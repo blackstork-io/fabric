@@ -46,10 +46,10 @@ The data source doesn't support configuration.
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data "json" {
+data json {
   # A pattern that selects the json files to be read
   #
-  # Required. For example:
+  # Required string. For example:
   glob = "reports/*_data.json"
 }
 ```

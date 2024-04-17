@@ -25,17 +25,17 @@ The data source is built-in, which means it's a part of `fabric` binary. It's av
 The data source supports the following configuration parameters:
 
 ```hcl
-config "data" "rss" {
+config data rss {
   # Authentication parameters used while accessing the rss source.
   #
   # Optional
   basic_auth {
-    # Required. For example:
+    # Required string. For example:
     username = "user@example.com"
 
     # Note: you can use function like "from_env()" to avoid storing credentials in plaintext
     #
-    # Required. For example:
+    # Required string. For example:
     password = "passwd"
   }
 }
@@ -46,8 +46,8 @@ config "data" "rss" {
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data "rss" {
-  # Required. For example:
+data rss {
+  # Required string. For example:
   url = "https://www.elastic.co/security-labs/rss/feed.xml"
 }
 ```

@@ -27,11 +27,11 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content "frontmatter" {
-  # Optional. Default value:
+content frontmatter {
+  # Optional string. Default value:
   format = null
 
-  # Optional. Default value:
+  # Optional map of any single type. Default value:
   content = null
 }
 ```

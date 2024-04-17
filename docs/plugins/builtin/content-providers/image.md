@@ -27,14 +27,14 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-content "image" {
-  # Required. For example:
+content image {
+  # Required string. For example:
   src = "https://example.com/img.png"
 
   # For example:
   # alt = "Text description of the image"
   #
-  # Optional. Default value:
+  # Optional string. Default value:
   alt = null
 }
 ```

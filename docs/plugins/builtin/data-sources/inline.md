@@ -29,7 +29,7 @@ The data source doesn't support configuration.
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-data "inline" {
+data inline {
   # Arbitrary structure of (possibly nested) blocks and attributes.
   # For example:
   #   key1 = "value1"
