@@ -31,8 +31,12 @@ func (a *AttrSpec) DocComment() hclwrite.Tokens {
 	if len(tokens) != 0 {
 		tokens = appendCommentNewLine(tokens)
 	}
+
 	if a.Required {
-		tokens = comment(tokens, "Required. For example:")
+		tokens = comment(
+			tokens,
+			fmt.Sprintf("Required %s. For example:", a.Type.FriendlyNameForConstraint()),
+		)
 	} else {
 		if a.ExampleVal != cty.NilVal {
 			f := hclwrite.NewEmptyFile()
@@ -40,7 +44,10 @@ func (a *AttrSpec) DocComment() hclwrite.Tokens {
 			tokens = comment(tokens, "For example:\n"+string(hclwrite.Format(f.Bytes())))
 			tokens = appendCommentNewLine(tokens)
 		}
-		tokens = comment(tokens, "Optional. Default value:")
+		tokens = comment(
+			tokens,
+			fmt.Sprintf("Optional %s. Default value:", a.Type.FriendlyNameForConstraint()),
+		)
 	}
 	return tokens
 }
