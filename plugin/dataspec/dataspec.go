@@ -2,6 +2,9 @@
 package dataspec
 
 import (
+	"bytes"
+	"strings"
+
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 )
@@ -22,9 +25,41 @@ type RootSpec interface {
 
 // RenderDoc renders the block documentation for spec.
 func RenderDoc(spec RootSpec, blockName string, labels ...string) string {
+	// Special-casing the first line generation:
+	// config "data" "csv" { -> config data csv {
+
+	const placeholder = "P"
+	var sb strings.Builder
+
+	if strings.Contains(blockName, " ") {
+		return "<error: block name contains spaces>"
+	}
+
 	f := hclwrite.NewEmptyFile()
-	spec.WriteDoc(f.Body().AppendNewBlock(blockName, labels).Body())
-	return string(hclwrite.Format(f.Bytes()))
+	spec.WriteDoc(f.Body().AppendNewBlock(placeholder, nil).Body())
+	doc := hclwrite.Format(f.Bytes())
+	blockBodyStart := bytes.IndexByte(doc, '{')
+	if blockBodyStart == -1 {
+		return "<error: no block body generated>"
+	}
+
+	sb.WriteString(blockName)
+	sb.WriteByte(' ')
+	for _, label := range labels {
+		hasSpaces := strings.Contains(blockName, " ")
+		if hasSpaces {
+			sb.WriteByte('"')
+		}
+		sb.WriteString(label)
+		if hasSpaces {
+			sb.WriteString(`" `)
+		} else {
+			sb.WriteByte(' ')
+		}
+	}
+	sb.Write(doc[blockBodyStart:])
+
+	return sb.String()
 }
 
 // Spec is a documentable wrapper over `hcldec.Spec`s.
