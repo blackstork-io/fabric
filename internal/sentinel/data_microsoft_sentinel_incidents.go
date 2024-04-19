@@ -4,45 +4,53 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/hcl/v2"
+	"github.com/zclconf/go-cty/cty"
+
 	"github.com/blackstork-io/fabric/internal/sentinel/client"
 	"github.com/blackstork-io/fabric/plugin"
-	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
-	"github.com/zclconf/go-cty/cty"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func makeMicrosoftSentinelIncidentsDataSource(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
+		Doc:      "The `microsoft_sentinel_incidents` data source fetches incidents from Microsoft Sentinel.",
 		DataFunc: fetchMicrosoftSentinelIncidents(loader),
-		Config: hcldec.ObjectSpec{
-			"subscription_id": &hcldec.AttrSpec{
+		Config: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
+				Doc:      "The Azure subscription ID",
 				Name:     "subscription_id",
 				Type:     cty.String,
 				Required: true,
 			},
-			"resource_group_name": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
+				Doc:      "The Azure resource group name",
 				Name:     "resource_group_name",
 				Type:     cty.String,
 				Required: true,
 			},
-			"workspace_name": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
+				Doc:      "The Azure workspace name",
 				Name:     "workspace_name",
 				Type:     cty.String,
 				Required: true,
 			},
 		},
-		Args: hcldec.ObjectSpec{
-			"filter": &hcldec.AttrSpec{
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
+				Doc:      "The filter expression",
 				Name:     "filter",
 				Type:     cty.String,
 				Required: false,
 			},
-			"limit": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
+				Doc:      "The maximum number of incidents to return",
 				Name:     "limit",
 				Type:     cty.Number,
 				Required: false,
 			},
-			"order_by": &hcldec.AttrSpec{
+			&dataspec.AttrSpec{
+				Doc:      "The order by expression",
 				Name:     "order_by",
 				Type:     cty.String,
 				Required: false,

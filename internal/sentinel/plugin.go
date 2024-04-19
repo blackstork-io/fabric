@@ -3,9 +3,10 @@ package sentinel
 import (
 	"fmt"
 
+	"github.com/zclconf/go-cty/cty"
+
 	"github.com/blackstork-io/fabric/internal/sentinel/client"
 	"github.com/blackstork-io/fabric/plugin"
-	"github.com/zclconf/go-cty/cty"
 )
 
 type ClientLoadFn func(token string) client.Client
@@ -17,6 +18,7 @@ func Plugin(version string, loader ClientLoadFn) *plugin.Schema {
 		loader = DefaultClientLoader
 	}
 	return &plugin.Schema{
+		Doc:     "The `microsoft_sentinel` plugin fetches data from Microsoft Sentinel.",
 		Name:    "blackstork/microsoft_sentinel",
 		Version: version,
 		DataSources: plugin.DataSources{
