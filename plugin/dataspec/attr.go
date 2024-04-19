@@ -3,6 +3,7 @@ package dataspec
 import (
 	"fmt"
 
+	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
@@ -70,21 +71,36 @@ func (a *AttrSpec) WriteDoc(w *hclwrite.Body) {
 	w.SetAttributeValue(a.Name, val)
 }
 
-func (a *AttrSpec) HcldecSpec() (res hcldec.Spec) {
-	res = &hcldec.AttrSpec{
+func (a *AttrSpec) HcldecSpec() hcldec.Spec {
+	res := &hcldec.AttrSpec{
 		Name:     a.Name,
 		Type:     a.Type,
 		Required: a.Required,
 	}
-	if !a.Required && !a.DefaultVal.IsNull() {
-		res = &hcldec.DefaultSpec{
-			Primary: res,
-			Default: &hcldec.LiteralSpec{
-				Value: a.DefaultVal,
+	if a.Required {
+		return &hcldec.ValidateSpec{
+			Wrapped: res,
+			Func: func(value cty.Value) hcl.Diagnostics {
+				if value.IsNull() {
+					return []*hcl.Diagnostic{{
+						Severity: hcl.DiagError,
+						Summary:  "Non-null value is required",
+					}}
+				}
+				return nil
 			},
 		}
+	} else {
+		if !a.DefaultVal.IsNull() {
+			return &hcldec.DefaultSpec{
+				Primary: res,
+				Default: &hcldec.LiteralSpec{
+					Value: a.DefaultVal,
+				},
+			}
+		}
 	}
-	return
+	return res
 }
 
 func (a *AttrSpec) Validate() (errs []string) {
