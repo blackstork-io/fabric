@@ -4,88 +4,91 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/hcl/v2"
+	"github.com/zclconf/go-cty/cty"
+
 	"github.com/blackstork-io/fabric/internal/snyk/client"
 	"github.com/blackstork-io/fabric/plugin"
-	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
-	"github.com/zclconf/go-cty/cty"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func makeSnykIssuesDataSource(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
+		Doc:      "The `snyk_issues` data source fetches issues from Snyk.",
 		DataFunc: fetchSnykIssues(loader),
-		Config: hcldec.ObjectSpec{
-			"api_key": &hcldec.AttrSpec{
-				Name:     "api_key",
-				Type:     cty.String,
-				Required: true,
+		Config: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
+				Doc:  "The Snyk API key",
+				Name: "api_key",
+				Type: cty.String,
 			},
 		},
-		Args: hcldec.ObjectSpec{
-			"group_id": &hcldec.AttrSpec{
-				Name:     "group_id",
-				Type:     cty.String,
-				Required: false,
+		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
+				Doc:  "The group ID",
+				Name: "group_id",
+				Type: cty.String,
 			},
-			"org_id": &hcldec.AttrSpec{
-				Name:     "org_id",
-				Type:     cty.String,
-				Required: false,
+			&dataspec.AttrSpec{
+				Doc:  "The organization ID",
+				Name: "org_id",
+				Type: cty.String,
 			},
-			"scan_item_id": &hcldec.AttrSpec{
-				Name:     "scan_item_id",
-				Type:     cty.String,
-				Required: false,
+			&dataspec.AttrSpec{
+				Doc:  "The scan item ID",
+				Name: "scan_item_id",
+				Type: cty.String,
 			},
-			"scan_item_type": &hcldec.AttrSpec{
-				Name:     "scan_item_type",
-				Type:     cty.String,
-				Required: false,
+			&dataspec.AttrSpec{
+				Doc:  "The scan item type",
+				Name: "scan_item_type",
+				Type: cty.String,
 			},
-			"type": &hcldec.AttrSpec{
-				Name:     "type",
-				Type:     cty.String,
-				Required: false,
+			&dataspec.AttrSpec{
+				Doc:  "The issue type",
+				Name: "type",
+				Type: cty.String,
 			},
-			"updated_before": &hcldec.AttrSpec{
-				Name:     "updated_before",
-				Type:     cty.String,
-				Required: false,
+			&dataspec.AttrSpec{
+				Doc:  "The updated before date",
+				Name: "updated_before",
+				Type: cty.String,
 			},
-			"updated_after": &hcldec.AttrSpec{
-				Name:     "updated_after",
-				Type:     cty.String,
-				Required: false,
+			&dataspec.AttrSpec{
+				Doc:  "The updated after date",
+				Name: "updated_after",
+				Type: cty.String,
 			},
-			"created_before": &hcldec.AttrSpec{
-				Name:     "created_before",
-				Type:     cty.String,
-				Required: false,
+			&dataspec.AttrSpec{
+				Doc:  "The created before date",
+				Name: "created_before",
+				Type: cty.String,
 			},
-			"created_after": &hcldec.AttrSpec{
-				Name:     "created_after",
-				Type:     cty.String,
-				Required: false,
+			&dataspec.AttrSpec{
+				Doc:  "The created after date",
+				Name: "created_after",
+				Type: cty.String,
 			},
-			"effective_severity_level": &hcldec.AttrSpec{
-				Name:     "effective_severity_level",
-				Type:     cty.List(cty.String),
-				Required: false,
+			&dataspec.AttrSpec{
+				Doc:  "The effective severity level",
+				Name: "effective_severity_level",
+				Type: cty.List(cty.String),
 			},
-			"status": &hcldec.AttrSpec{
-				Name:     "status",
-				Type:     cty.List(cty.String),
-				Required: false,
+			&dataspec.AttrSpec{
+				Doc:  "The status",
+				Name: "status",
+				Type: cty.List(cty.String),
 			},
-			"ignored": &hcldec.AttrSpec{
-				Name:     "ignored",
-				Type:     cty.Bool,
-				Required: false,
+			&dataspec.AttrSpec{
+				Doc:  "The ignored flag",
+				Name: "ignored",
+				Type: cty.Bool,
 			},
-			"limit": &hcldec.AttrSpec{
-				Name:     "limit",
-				Type:     cty.Number,
-				Required: false,
+			&dataspec.AttrSpec{
+				Doc:          "The limit of issues to fetch",
+				Name:         "limit",
+				Type:         cty.Number,
+				MinInclusive: cty.NumberIntVal(1),
 			},
 		},
 	}

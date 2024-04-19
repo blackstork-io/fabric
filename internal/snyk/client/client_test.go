@@ -169,5 +169,4 @@ func (s *ClientTestSuite) TestFull() {
 			Next: String("test_next"),
 		},
 	}, result)
-
 }

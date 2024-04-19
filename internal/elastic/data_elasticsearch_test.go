@@ -518,7 +518,7 @@ func (s *IntegrationTestSuite) TestScrollSearchSteps() {
 		"only_hits":    cty.BoolVal(false),
 		"aggs":         cty.NullVal(cty.DynamicPseudoType),
 		"fields":       cty.NullVal(cty.String),
-		"size":         cty.NumberIntVal(5),  // does not matter
+		"size":         cty.NumberIntVal(5), // does not matter
 	})
 	// There are only 3 results, so with the size 5 and step size 1,
 	// we should hit 4 requests:
