@@ -15,6 +15,9 @@ type: docs
 
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "blockquote" "content provider" >}}
 
+## Description
+Formats text as a block quote
+
 The content provider is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 
 

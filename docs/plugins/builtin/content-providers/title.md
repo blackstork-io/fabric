@@ -2,7 +2,7 @@
 title: title
 plugin:
   name: blackstork/builtin
-  description: ""
+  description: "Produces a title"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -14,6 +14,12 @@ type: docs
 {{< breadcrumbs 2 >}}
 
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "title" "content provider" >}}
+
+## Description
+Produces a title.
+
+The title size after calculations must be in an interval [0; 5] inclusive, where 0
+corresponds to the largest size (`<h1>`) and 5 corresponds to (`<h6>`)
 
 The content provider is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 
@@ -28,14 +34,22 @@ The content provider supports the following execution parameters:
 
 ```hcl
 content title {
+  # Title content
+  #
   # Required string. For example:
-  value = "some string"
+  value = "Vulnerability Report"
 
+  # Sets the absolute size of the title.
+  # If `null` – absoulute title size is determined from the document structure
+  #
   # Optional number. Default value:
   absolute_size = null
 
+  # Adjusts the absolute size of the title.
+  # The value (which may be negative) is added to the `absolute_size` to produce the final title size
+  #
   # Optional number. Default value:
-  relative_size = null
+  relative_size = 0
 }
 ```
 
