@@ -38,14 +38,17 @@ content frontmatter {
 
   # Arbitrary key-value map to be put in the frontmatter.
   # 
-  # If null – data from "query_result" will be put in the frontmatter instead
+  # NOTE: Data from "query_result" replaces this value if present
   #
   # For example:
   # content = {
   #   key = "arbitrary value"
+  #   key2 = {
+  #     "can be nested" = 42
+  #   }
   # }
   #
-  # Optional map of any single type. Default value:
+  # Optional any type. Default value:
   content = null
 }
 ```
