@@ -1,4 +1,4 @@
-package diag_test
+package testtools
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/stretchr/testify/assert"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/utils"
@@ -73,10 +72,12 @@ func dumpDiags(diags diagnostics.Diag) string {
 	return strings.Join(utils.FnMap(diags, dumpDiag), "\n")
 }
 
-func CompareDiags(t *testing.T, diags diagnostics.Diag, asserts [][]Assert) {
+func CompareDiags(t *testing.T, fm map[string]*hcl.File, diags diagnostics.Diag, asserts [][]Assert) {
 	t.Helper()
 	if !matchBiject(diags, asserts) {
-		assert.Fail(t, "Diagnostics do not match", dumpDiags(diags))
+		var buf strings.Builder
+		diagnostics.PrintDiags(&buf, diags, fm, false)
+		t.Fatalf("\n\n%s", buf.String())
 	}
 }
 

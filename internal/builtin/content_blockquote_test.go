@@ -4,10 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/suite"
-	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -31,29 +30,17 @@ func (s *BlockQuoteTestSuite) TestSchema() {
 }
 
 func (s *BlockQuoteTestSuite) TestMissingText() {
-	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value": cty.NullVal(cty.String),
-		}),
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
-		},
-	})
-	s.Nil(content)
-	s.Equal(hcl.Diagnostics{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "value is required",
-	}}, diags)
+	testtools.Decode(s.T(), s.schema.Args, ``, [][]testtools.Assert{{testtools.DetailContains(`The argument "value" is required`)}})
+	return
 }
 
 func (s *BlockQuoteTestSuite) TestCallBlockquote() {
 	ctx := context.Background()
+	args := testtools.Decode(s.T(), s.schema.Args, `
+		value = "Hello {{.name}}!"
+	`, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value": cty.StringVal(`Hello {{.name}}!`),
-		}),
+		Args: args,
 		DataContext: plugin.MapData{
 			"name": plugin.StringData("World"),
 		},
@@ -68,10 +55,11 @@ func (s *BlockQuoteTestSuite) TestCallBlockquote() {
 
 func (s *BlockQuoteTestSuite) TestCallBlockquoteMultiline() {
 	ctx := context.Background()
+	args := testtools.Decode(s.T(), s.schema.Args, `
+		value = "Hello\n{{.name}}\nfor you!"
+	`, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value": cty.StringVal("Hello\n{{.name}}\nfor you!"),
-		}),
+		Args: args,
 		DataContext: plugin.MapData{
 			"name": plugin.StringData("World"),
 		},
@@ -86,10 +74,11 @@ func (s *BlockQuoteTestSuite) TestCallBlockquoteMultiline() {
 
 func (s *BlockQuoteTestSuite) TestCallBlockquoteMultilineDoubleNewline() {
 	ctx := context.Background()
+	args := testtools.Decode(s.T(), s.schema.Args, `
+		value = "Hello\n{{.name}}\n\nfor you!"
+	`, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value": cty.StringVal("Hello\n{{.name}}\n\nfor you!"),
-		}),
+		Args: args,
 		DataContext: plugin.MapData{
 			"name": plugin.StringData("World"),
 		},

@@ -10,13 +10,13 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/blackstork-io/fabric/cmd"
+	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/fabctx"
 	"github.com/blackstork-io/fabric/plugin"
-	"github.com/blackstork-io/fabric/test/e2e/diag_test"
 )
 
-func dataTest(t *testing.T, testName string, files []string, target string, expectedResult plugin.MapData, diagAsserts [][]diag_test.Assert) {
+func dataTest(t *testing.T, testName string, files []string, target string, expectedResult plugin.MapData, diagAsserts [][]testtools.Assert) {
 	t.Helper()
 	t.Run(testName, func(t *testing.T) {
 		t.Parallel()
@@ -46,7 +46,7 @@ func dataTest(t *testing.T, testName string, files []string, target string, expe
 		}
 
 		assert.Equal(t, expectedResult, res)
-		diag_test.CompareDiags(t, diags, diagAsserts)
+		testtools.CompareDiags(t, eval.FileMap, diags, diagAsserts)
 	})
 }
 
@@ -76,7 +76,7 @@ func TestE2EData(t *testing.T) {
 		plugin.MapData{
 			"hello": plugin.StringData("world"),
 		},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 	dataTest(
 		t, "Basic",
@@ -96,6 +96,6 @@ func TestE2EData(t *testing.T) {
 		plugin.MapData{
 			"hello": plugin.StringData("world"),
 		},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 }
