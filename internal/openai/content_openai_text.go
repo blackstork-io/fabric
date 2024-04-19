@@ -22,34 +22,41 @@ func makeOpenAITextContentSchema(loader ClientLoadFn) *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "system_prompt",
-				Type:     cty.String,
-				Required: false,
+				Name:       "system_prompt",
+				Type:       cty.String,
+				Required:   false,
+				ExampleVal: cty.StringVal("You are a security report summarizer"),
 			},
 			&dataspec.AttrSpec{
-				Name:     "api_key",
-				Type:     cty.String,
-				Required: true,
+				Name:       "api_key",
+				Type:       cty.String,
+				Required:   true,
+				ExampleVal: cty.StringVal("OPENAI_API_KEY"),
 			},
 			&dataspec.AttrSpec{
-				Name:     "organization_id",
-				Type:     cty.String,
-				Required: false,
+				Name:       "organization_id",
+				Type:       cty.String,
+				Required:   false,
+				ExampleVal: cty.StringVal("YOUR_ORG_ID"),
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "prompt",
-				Type:     cty.String,
-				Required: true,
+				Name:       "prompt",
+				Type:       cty.String,
+				Required:   true,
+				Doc:        `Go template of the prompt for an OpenAI model`,
+				ExampleVal: cty.StringVal("This is the report to be summarized: "),
 			},
 			&dataspec.AttrSpec{
-				Name:     "model",
-				Type:     cty.String,
-				Required: false,
+				Name:       "model",
+				Type:       cty.String,
+				Required:   false,
+				DefaultVal: cty.StringVal("gpt-3.5-turbo"),
 			},
 		},
 		ContentFunc: genOpenAIText(loader),
+		Doc:         `Produces a chat completion result from an OpenAI model`,
 	}
 }
 
@@ -84,12 +91,9 @@ func renderText(ctx context.Context, cli client.Client, cfg, args cty.Value, dat
 	if prompt.IsNull() || prompt.AsString() == "" {
 		return "", errors.New("prompt is required in invocation")
 	}
-	model := args.GetAttr("model")
-	if model.IsNull() || model.AsString() == "" {
-		model = cty.StringVal(defaultModel)
-	}
+
 	params := client.ChatCompletionParams{
-		Model: model.AsString(),
+		Model: args.GetAttr("model").AsString(),
 	}
 	systemPrompt := cfg.GetAttr("system_prompt")
 	if !systemPrompt.IsNull() && systemPrompt.AsString() != "" {

@@ -13,12 +13,12 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"gopkg.in/yaml.v3"
 
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 const (
-	frontMatterDefaultFormat  = "yaml"
 	frontMatterQueryResultKey = "query_result"
 )
 
@@ -29,16 +29,27 @@ func makeFrontMatterContentProvider() *plugin.ContentProvider {
 		ContentFunc: genFrontMatterContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "format",
-				Type:     cty.String,
-				Required: false,
+				Name:       "format",
+				Type:       cty.String,
+				Required:   false,
+				Doc:        `Format of the frontmatter. Must be one of ` + utils.JoinSurround(", ", `"`, frontMatterAllowedFormats...),
+				DefaultVal: cty.StringVal("yaml"),
 			},
 			&dataspec.AttrSpec{
-				Name:     "content",
-				Type:     cty.Map(cty.DynamicPseudoType),
-				Required: false,
+				Name: "content",
+				Type: cty.Map(cty.DynamicPseudoType),
+				Doc: `
+				Arbitrary key-value map to be put in the frontmatter.
+
+				If null – data from "query_result" will be put in the frontmatter instead`,
+				Required:   false,
+				DefaultVal: cty.NullVal(cty.DynamicPseudoType),
+				ExampleVal: cty.MapVal(map[string]cty.Value{
+					"key": cty.StringVal("arbitrary value"),
+				}),
 			},
 		},
+		Doc: `Produces the frontmatter.`,
 	}
 }
 
@@ -95,12 +106,10 @@ func validateFrontMatterContentTree(datactx plugin.MapData, contentID uint32) er
 }
 
 func parseFrontMatterArgs(args cty.Value, datactx plugin.MapData) (string, plugin.MapData, error) {
-	format := args.GetAttr("format")
-	if format.IsNull() || format.AsString() == "" {
-		format = cty.StringVal(frontMatterDefaultFormat)
-	}
-	if !slices.Contains(frontMatterAllowedFormats, format.AsString()) {
-		return "", nil, fmt.Errorf("invalid format: %s", format.AsString())
+	format := args.GetAttr("format").AsString()
+
+	if !slices.Contains(frontMatterAllowedFormats, format) {
+		return "", nil, fmt.Errorf("invalid format: %s", format)
 	}
 	var m plugin.MapData
 	if datactx != nil {
@@ -120,7 +129,7 @@ func parseFrontMatterArgs(args cty.Value, datactx plugin.MapData) (string, plugi
 			return "", nil, errors.New("query_result and content are nil")
 		}
 	}
-	return format.AsString(), m, nil
+	return format, m, nil
 }
 
 func renderFrontMatterContent(format string, m plugin.MapData) (string, error) {

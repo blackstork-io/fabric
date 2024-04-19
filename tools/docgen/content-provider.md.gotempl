@@ -19,7 +19,7 @@ type: docs
 
 {{"{{"}}< plugin-resource-header "{{ .plugin.Name }}" "{{ .plugin_shortname }}" "{{ .plugin.Version }}" "{{ .name }}" "content provider" >{{"}}"}}
 
-{{if .plugin.Doc -}}
+{{if .content_provider.Doc -}}
 ## Description
 {{ .desc }}
 

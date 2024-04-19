@@ -19,21 +19,31 @@ func makeGraphQLDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "url",
-				Type:     cty.String,
-				Required: true,
+				Name:       "url",
+				Type:       cty.String,
+				Required:   true,
+				ExampleVal: cty.StringVal("https://example.com/graphql"),
+				Doc:        `API endpoint to perform GraphQL queries against`,
 			},
 			&dataspec.AttrSpec{
-				Name:     "auth_token",
-				Type:     cty.String,
-				Required: false,
+				Name:       "auth_token",
+				Type:       cty.String,
+				Required:   false,
+				ExampleVal: cty.StringVal("<token>"),
+				DefaultVal: cty.NullVal(cty.String),
+				Doc: `
+					Token to be sent to the server as "Authorization: Bearer" header.
+					Empty or null tokens are not sent.
+				`,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "query",
-				Type:     cty.String,
-				Required: true,
+				Name:       "query",
+				Type:       cty.String,
+				Required:   true,
+				Doc:        `GraphQL query`,
+				ExampleVal: cty.StringVal(`query{user{id, name}}`),
 			},
 		},
 		DataFunc: fetchGraphQLData,

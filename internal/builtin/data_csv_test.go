@@ -206,6 +206,7 @@ func Test_fetchCSVData(t *testing.T) {
 }
 
 func Test_readCSVFileCancellation(t *testing.T) {
+	const defaultCSVDelimiter = ','
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	data, err := readCSVFile(ctx, "testdata/csv/comma.csv", defaultCSVDelimiter)

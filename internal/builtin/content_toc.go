@@ -15,11 +15,8 @@ import (
 )
 
 const (
-	minTOCLevel          = 0
-	maxTOCLevel          = 5
-	defaultTOCStartLevel = 0
-	defaultTOCEndLevel   = 2
-	defaultTOCOrdered    = false
+	minTOCLevel = 0
+	maxTOCLevel = 5
 )
 
 var availableTOCScopes = []string{"document", "section", "auto"}
@@ -28,28 +25,48 @@ func makeTOCContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "start_level",
-				Type:     cty.Number,
-				Required: false,
+				Name:       "start_level",
+				Type:       cty.Number,
+				Required:   false,
+				DefaultVal: cty.NumberIntVal(0),
+				Doc:        `Largest header size which produces entries in the table of contents`,
 			},
 			&dataspec.AttrSpec{
-				Name:     "end_level",
-				Type:     cty.Number,
-				Required: false,
+				Name:       "end_level",
+				Type:       cty.Number,
+				Required:   false,
+				DefaultVal: cty.NumberIntVal(2),
+				Doc:        `Smallest header size which produces entries in the table of contents`,
 			},
 			&dataspec.AttrSpec{
-				Name:     "ordered",
-				Type:     cty.Bool,
-				Required: false,
+				Name:       "ordered",
+				Type:       cty.Bool,
+				Required:   false,
+				DefaultVal: cty.False,
+				Doc:        `Whether to use ordered list for the contents`,
 			},
 			&dataspec.AttrSpec{
 				Name:     "scope",
 				Type:     cty.String,
 				Required: false,
+				Doc: `
+				Scope of the headers to evaluate.
+				Must be one of:
+				  "document" – look for headers in the whole document
+				  "section" – look for headers only in the current section
+				  "auto" – behaves as "section" if the "toc" block is inside of a section; else – behaves as "document"
+				`,
+				DefaultVal: cty.StringVal("auto"),
 			},
 		},
 		InvocationOrder: plugin.InvocationOrderEnd,
 		ContentFunc:     genTOC,
+		Doc: `
+			Produces table of contents.
+
+			Inspects the rendered document for headers of a certain size and creates a linked
+			table of contents
+		`,
 	}
 }
 
@@ -64,41 +81,28 @@ func parseTOCArgs(args cty.Value) (*tocArgs, error) {
 	if args.IsNull() {
 		return nil, fmt.Errorf("arguments are null")
 	}
-	startLevel := args.GetAttr("start_level")
-	if startLevel.IsNull() {
-		startLevel = cty.NumberIntVal(defaultTOCStartLevel)
-	} else {
-		n, _ := startLevel.AsBigFloat().Int64()
-		if n < minTOCLevel || n > maxTOCLevel {
-			return nil, fmt.Errorf("start_level should be between %d and %d", minTOCLevel, maxTOCLevel)
-		}
+	startLevel, _ := args.GetAttr("start_level").AsBigFloat().Int64()
+	if startLevel < minTOCLevel || startLevel > maxTOCLevel {
+		return nil, fmt.Errorf("start_level should be between %d and %d", minTOCLevel, maxTOCLevel)
 	}
-	endLevel := args.GetAttr("end_level")
-	if endLevel.IsNull() {
-		endLevel = cty.NumberIntVal(defaultTOCEndLevel)
-	} else {
-		n, _ := endLevel.AsBigFloat().Int64()
-		if n < minTOCLevel || n > maxTOCLevel {
-			return nil, fmt.Errorf("end_level should be between %d and %d", minTOCLevel, maxTOCLevel)
-		}
+
+	endLevel, _ := args.GetAttr("end_level").AsBigFloat().Int64()
+	if endLevel < minTOCLevel || endLevel > maxTOCLevel {
+		return nil, fmt.Errorf("end_level should be between %d and %d", minTOCLevel, maxTOCLevel)
 	}
+
 	ordered := args.GetAttr("ordered")
-	if ordered.IsNull() {
-		ordered = cty.BoolVal(defaultTOCOrdered)
-	}
-	scope := args.GetAttr("scope")
-	if scope.IsNull() {
-		scope = cty.StringVal("auto")
-	} else if !slices.Contains(availableTOCScopes, scope.AsString()) {
+
+	scope := args.GetAttr("scope").AsString()
+	if !slices.Contains(availableTOCScopes, scope) {
 		return nil, fmt.Errorf("scope should be one of %s", strings.Join(availableTOCScopes, ", "))
 	}
-	startLevelI64, _ := startLevel.AsBigFloat().Int64()
-	endLevelI64, _ := endLevel.AsBigFloat().Int64()
+
 	return &tocArgs{
-		startLevel: int(startLevelI64),
-		endLevel:   int(endLevelI64),
+		startLevel: int(startLevel),
+		endLevel:   int(endLevel),
 		ordered:    ordered.True(),
-		scope:      scope.AsString(),
+		scope:      scope,
 	}, nil
 }
 

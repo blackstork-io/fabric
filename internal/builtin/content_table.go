@@ -27,9 +27,33 @@ func makeTableContentProvider() *plugin.ContentProvider {
 					"header": cty.String,
 					"value":  cty.String,
 				})),
+				Doc: `List of header and value go templates for each column`,
+				ExampleVal: cty.ListVal([]cty.Value{
+					cty.ObjectVal(map[string]cty.Value{
+						"header": cty.StringVal("1st column header template"),
+						"value":  cty.StringVal("1st column values template"),
+					}),
+					cty.ObjectVal(map[string]cty.Value{
+						"header": cty.StringVal("2nd column header template"),
+						"value":  cty.StringVal("2nd column values template"),
+					}),
+					cty.ObjectVal(map[string]cty.Value{
+						"header": cty.StringVal("..."),
+						"value":  cty.StringVal("..."),
+					}),
+				}),
 				Required: true,
 			},
 		},
+		Doc: `
+			Produces a table.
+
+			This content provider assumes that ` + "`query_result`" + ` is a list of objects representing rows,
+			and uses the configured ` + "`value`" + ` go templates (see below) to display each row.
+
+			NOTE: ` + "`header`" + ` templates are executed with the whole context availible, while ` + "`value`" + `
+			templates are executed on each item of the ` + "`query_result`" + ` list.
+		`,
 	}
 }
 
