@@ -10,6 +10,7 @@ import (
 
 	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/printer/mdprint"
 )
 
 type ListGeneratorTestSuite struct {
@@ -89,7 +90,7 @@ func (s *ListGeneratorTestSuite) TestUnordered() {
 			},
 		},
 	})
-	s.Equal("* foo bar\n* foo baz\n", result.Content.Print())
+	s.Equal("* foo bar\n* foo baz\n", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }
 
@@ -109,7 +110,7 @@ func (s *ListGeneratorTestSuite) TestOrdered() {
 			},
 		},
 	})
-	s.Equal("1. foo bar\n2. foo baz\n", result.Content.Print())
+	s.Equal("1. foo bar\n2. foo baz\n", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }
 
@@ -129,7 +130,7 @@ func (s *ListGeneratorTestSuite) TestTaskList() {
 			},
 		},
 	})
-	s.Equal("* [ ] foo bar\n* [ ] foo baz\n", result.Content.Print())
+	s.Equal("* [ ] foo bar\n* [ ] foo baz\n", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }
 
@@ -149,7 +150,7 @@ func (s *ListGeneratorTestSuite) TestBasic() {
 			},
 		},
 	})
-	s.Equal("* foo bar\n* foo baz\n", result.Content.Print())
+	s.Equal("* foo bar\n* foo baz\n", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }
 
@@ -175,7 +176,7 @@ func (s *ListGeneratorTestSuite) TestAdvanced() {
 			},
 		},
 	})
-	s.Equal("* foo bar1 BAZ1\n* foo bar2 BAZ2\n", result.Content.Print())
+	s.Equal("* foo bar1 BAZ1\n* foo bar2 BAZ2\n", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }
 
@@ -192,7 +193,7 @@ func (s *ListGeneratorTestSuite) TestEmptyQueryResult() {
 			"query_result": plugin.ListData{},
 		},
 	})
-	s.Equal("", result.Content.Print())
+	s.Equal("", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }
 

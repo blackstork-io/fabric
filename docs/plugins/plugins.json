@@ -65,6 +65,13 @@
         ]
       },
       {
+        "name": "local_file",
+        "type": "publisher",
+        "arguments": [
+          "path"
+        ]
+      },
+      {
         "name": "rss",
         "type": "data-source",
         "config_params": [

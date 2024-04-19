@@ -155,7 +155,7 @@ func renderYAMLFrontMatter(m plugin.MapData) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	buf.WriteString("---\n")
+	buf.WriteString("---")
 	return buf.String(), nil
 }
 
@@ -166,7 +166,7 @@ func renderTOMLFrontMatter(m plugin.MapData) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	buf.WriteString("+++\n")
+	buf.WriteString("+++")
 	return buf.String(), nil
 }
 

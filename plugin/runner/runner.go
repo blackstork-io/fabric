@@ -10,9 +10,10 @@ import (
 )
 
 type Runner struct {
-	pluginMap  map[string]loadedPlugin
-	dataMap    map[string]loadedDataSource
-	contentMap map[string]loadedContentProvider
+	pluginMap    map[string]loadedPlugin
+	dataMap      map[string]loadedDataSource
+	contentMap   map[string]loadedContentProvider
+	publisherMap map[string]loadedPublisher
 }
 
 func Load(binaryMap map[string]string, builtin *plugin.Schema, logger *slog.Logger) (*Runner, hcl.Diagnostics) {
@@ -21,9 +22,10 @@ func Load(binaryMap map[string]string, builtin *plugin.Schema, logger *slog.Logg
 		return nil, diags
 	}
 	return &Runner{
-		pluginMap:  loader.pluginMap,
-		dataMap:    loader.dataMap,
-		contentMap: loader.contentMap,
+		pluginMap:    loader.pluginMap,
+		dataMap:      loader.dataMap,
+		contentMap:   loader.contentMap,
+		publisherMap: loader.publisherMap,
 	}, nil
 }
 
@@ -49,6 +51,18 @@ func (m *Runner) ContentProvider(name string) (*plugin.ContentProvider, hcl.Diag
 		}}
 	}
 	return provider.ContentProvider, nil
+}
+
+func (m *Runner) Publisher(name string) (*plugin.Publisher, hcl.Diagnostics) {
+	publisher, has := m.publisherMap[name]
+	if !has {
+		return nil, hcl.Diagnostics{{
+			Severity: hcl.DiagError,
+			Summary:  fmt.Sprintf("Missing publisher '%s'", name),
+			Detail:   fmt.Sprintf("'%s' not found in any plugin", name),
+		}}
+	}
+	return publisher.Publisher, nil
 }
 
 func (m *Runner) Close() hcl.Diagnostics {

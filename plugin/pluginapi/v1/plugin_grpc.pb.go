@@ -22,6 +22,7 @@ const (
 	PluginService_GetSchema_FullMethodName      = "/pluginapi.v1.PluginService/GetSchema"
 	PluginService_RetrieveData_FullMethodName   = "/pluginapi.v1.PluginService/RetrieveData"
 	PluginService_ProvideContent_FullMethodName = "/pluginapi.v1.PluginService/ProvideContent"
+	PluginService_Publish_FullMethodName        = "/pluginapi.v1.PluginService/Publish"
 )
 
 // PluginServiceClient is the client API for PluginService service.
@@ -31,6 +32,7 @@ type PluginServiceClient interface {
 	GetSchema(ctx context.Context, in *GetSchemaRequest, opts ...grpc.CallOption) (*GetSchemaResponse, error)
 	RetrieveData(ctx context.Context, in *RetrieveDataRequest, opts ...grpc.CallOption) (*RetrieveDataResponse, error)
 	ProvideContent(ctx context.Context, in *ProvideContentRequest, opts ...grpc.CallOption) (*ProvideContentResponse, error)
+	Publish(ctx context.Context, in *PublishRequest, opts ...grpc.CallOption) (*PublishResponse, error)
 }
 
 type pluginServiceClient struct {
@@ -68,6 +70,15 @@ func (c *pluginServiceClient) ProvideContent(ctx context.Context, in *ProvideCon
 	return out, nil
 }
 
+func (c *pluginServiceClient) Publish(ctx context.Context, in *PublishRequest, opts ...grpc.CallOption) (*PublishResponse, error) {
+	out := new(PublishResponse)
+	err := c.cc.Invoke(ctx, PluginService_Publish_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PluginServiceServer is the server API for PluginService service.
 // All implementations must embed UnimplementedPluginServiceServer
 // for forward compatibility
@@ -75,6 +86,7 @@ type PluginServiceServer interface {
 	GetSchema(context.Context, *GetSchemaRequest) (*GetSchemaResponse, error)
 	RetrieveData(context.Context, *RetrieveDataRequest) (*RetrieveDataResponse, error)
 	ProvideContent(context.Context, *ProvideContentRequest) (*ProvideContentResponse, error)
+	Publish(context.Context, *PublishRequest) (*PublishResponse, error)
 	mustEmbedUnimplementedPluginServiceServer()
 }
 
@@ -90,6 +102,9 @@ func (UnimplementedPluginServiceServer) RetrieveData(context.Context, *RetrieveD
 }
 func (UnimplementedPluginServiceServer) ProvideContent(context.Context, *ProvideContentRequest) (*ProvideContentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProvideContent not implemented")
+}
+func (UnimplementedPluginServiceServer) Publish(context.Context, *PublishRequest) (*PublishResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
 }
 func (UnimplementedPluginServiceServer) mustEmbedUnimplementedPluginServiceServer() {}
 
@@ -158,6 +173,24 @@ func _PluginService_ProvideContent_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PluginService_Publish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PublishRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PluginServiceServer).Publish(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PluginService_Publish_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PluginServiceServer).Publish(ctx, req.(*PublishRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PluginService_ServiceDesc is the grpc.ServiceDesc for PluginService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -176,6 +209,10 @@ var PluginService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ProvideContent",
 			Handler:    _PluginService_ProvideContent_Handler,
+		},
+		{
+			MethodName: "Publish",
+			Handler:    _PluginService_Publish_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

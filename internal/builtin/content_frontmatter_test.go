@@ -10,6 +10,7 @@ import (
 
 	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/printer/mdprint"
 )
 
 type FrontMatterGeneratorTestSuite struct {
@@ -174,7 +175,7 @@ func (s *FrontMatterGeneratorTestSuite) TestWithContent() {
 		"waldo:\n"+
 		"    - fred\n"+
 		"    - plugh\n"+
-		"---\n", result.Content.Print())
+		"---", mdprint.PrintString(result.Content))
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestWithQueryResult() {
@@ -217,7 +218,7 @@ func (s *FrontMatterGeneratorTestSuite) TestWithQueryResult() {
 		"waldo:\n"+
 		"    - fred\n"+
 		"    - plugh\n"+
-		"---\n", result.Content.Print())
+		"---", mdprint.PrintString(result.Content))
 	s.Nil(diags)
 }
 
@@ -261,7 +262,7 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatYaml() {
 		"waldo:\n"+
 		"    - fred\n"+
 		"    - plugh\n"+
-		"---\n", result.Content.Print())
+		"---", mdprint.PrintString(result.Content))
 	s.Nil(diags)
 }
 
@@ -303,7 +304,7 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatTOML() {
 		"[quux]\n"+
 		"corge = 'grault'\n"+
 		"garply = false\n"+
-		"+++\n", result.Content.Print())
+		"+++", mdprint.PrintString(result.Content))
 	s.Nil(diags)
 }
 
@@ -349,6 +350,6 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatJSON() {
 		"    \"fred\",\n"+
 		"    \"plugh\"\n"+
 		"  ]\n"+
-		"}\n", result.Content.Print())
+		"}\n", mdprint.PrintString(result.Content))
 	s.Nil(diags)
 }

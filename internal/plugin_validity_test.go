@@ -64,6 +64,13 @@ func TestAllPluginSchemaValidity(t *testing.T) {
 					validateContentProvider(t, cp)
 				})
 			}
+			for name, pub := range p.Publishers {
+				pub := pub
+				t.Run(name, func(t *testing.T) {
+					t.Parallel()
+					validatePublisher(t, pub)
+				})
+			}
 			assert.False(t, p.Validate().HasErrors(), "plugin should not have validation errors")
 		})
 	}
@@ -95,6 +102,16 @@ func validateContentProvider(t testing.TB, cp *plugin.ContentProvider) {
 	if cp.Args != nil {
 		assert.False(t, cp.Args.IsEmpty(), "content provider args should have at least one attribute")
 		assert.Empty(t, cp.Args.Validate(), "content provider args validation errors")
+	}
+}
+
+func validatePublisher(t testing.TB, pub *plugin.Publisher) {
+	t.Helper()
+	assert.NotNil(t, pub, "publisher should not be nil")
+	assert.NotEmpty(t, pub.PublishFunc, "publisher should have a publish function")
+	if pub.Config != nil {
+		assert.False(t, pub.Config.IsEmpty(), "publisher config should have at least one attribute")
+		assert.Empty(t, pub.Config.Validate(), "publisher config validation errors")
 	}
 }
 

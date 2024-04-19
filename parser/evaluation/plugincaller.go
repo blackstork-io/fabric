@@ -16,7 +16,12 @@ type ContentCaller interface {
 	ContentInvocationOrder(ctx context.Context, name string) (order plugin.InvocationOrder, diag diagnostics.Diag)
 }
 
+type PublishCaller interface {
+	CallPublish(ctx context.Context, name string, config Configuration, invocation Invocation, context plugin.MapData, format plugin.OutputFormat) diagnostics.Diag
+}
+
 type PluginCaller interface {
 	DataCaller
 	ContentCaller
+	PublishCaller
 }

@@ -14,11 +14,16 @@ func encodeSchema(src *plugin.Schema) (*Schema, error) {
 	if err != nil {
 		return nil, err
 	}
+	publishers, err := encodePublisherSchemaMap(src.Publishers)
+	if err != nil {
+		return nil, err
+	}
 	return &Schema{
 		Name:             src.Name,
 		Version:          src.Version,
 		DataSources:      dataSources,
 		ContentProviders: contentProviders,
+		Publishers:       publishers,
 		Doc:              src.Doc,
 		Tags:             src.Tags,
 	}, nil
@@ -98,4 +103,54 @@ func encodeInvocationOrder(src plugin.InvocationOrder) InvocationOrder {
 	default:
 		return InvocationOrder_INVOCATION_ORDER_UNSPECIFIED
 	}
+}
+
+func encodeOutputFormat(src plugin.OutputFormat) OutputFormat {
+	switch src {
+	case plugin.OutputFormatMD:
+		return OutputFormat_OUTPUT_FORMAT_MD
+	case plugin.OutputFormatHTML:
+		return OutputFormat_OUTPUT_FORMAT_HTML
+	case plugin.OutputFormatPDF:
+		return OutputFormat_OUTPUT_FORMAT_PDF
+	default:
+		return OutputFormat_OUTPUT_FORMAT_UNSPECIFIED
+	}
+}
+
+func encodePublisherSchemaMap(src plugin.Publishers) (map[string]*PublisherSchema, error) {
+	dst := make(map[string]*PublisherSchema, len(src))
+	var err error
+	for k, v := range src {
+		dst[k], err = encodePublisherShema(v)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return dst, nil
+}
+
+func encodePublisherShema(src *plugin.Publisher) (*PublisherSchema, error) {
+	if src == nil {
+		return nil, nil
+	}
+	args, err := encodeSpec(src.Args)
+	if err != nil {
+		return nil, err
+	}
+	config, err := encodeSpec(src.Config)
+	if err != nil {
+		return nil, err
+	}
+	formats := make([]OutputFormat, len(src.AllowedFormats))
+	for i, f := range src.AllowedFormats {
+		formats[i] = encodeOutputFormat(f)
+	}
+	return &PublisherSchema{
+		Args:           args,
+		Config:         config,
+		Doc:            src.Doc,
+		Tags:           src.Tags,
+		AllowedFormats: formats,
+	}, nil
 }

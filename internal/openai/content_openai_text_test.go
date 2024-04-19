@@ -12,6 +12,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/openai/client"
 	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/openai/client"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/printer/mdprint"
 )
 
 type OpenAITextContentTestSuite struct {
@@ -80,7 +81,7 @@ func (s *OpenAITextContentTestSuite) TestBasic() {
 		DataContext: plugin.MapData{},
 	})
 	s.Nil(diags)
-	s.Equal("Once upon a time.", result.Content.Print())
+	s.Equal("Once upon a time.", mdprint.PrintString(result.Content))
 }
 
 func (s *OpenAITextContentTestSuite) TestAdvanced() {
@@ -126,7 +127,7 @@ func (s *OpenAITextContentTestSuite) TestAdvanced() {
 		},
 	})
 	s.Nil(diags)
-	s.Equal("Once upon a time.", result.Content.Print())
+	s.Equal("Once upon a time.", mdprint.PrintString(result.Content))
 }
 
 func (s *OpenAITextContentTestSuite) TestMissingPrompt() {

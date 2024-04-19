@@ -3,7 +3,6 @@ package plugin
 import (
 	"fmt"
 	"slices"
-	"strings"
 	"sync"
 )
 
@@ -44,7 +43,6 @@ type Content interface {
 	ID() uint32
 	AsJQData() Data
 	Meta() *ContentMeta
-	Print() string
 }
 
 type ContentEmpty struct {
@@ -76,10 +74,6 @@ func (n *ContentEmpty) Meta() *ContentMeta {
 	return n.meta
 }
 
-func (n *ContentEmpty) Print() string {
-	return ""
-}
-
 func (n *ContentEmpty) AsJQData() Data {
 	return n.AsData()
 }
@@ -89,15 +83,6 @@ type ContentSection struct {
 	id       uint32
 	Children []Content
 	meta     *ContentMeta
-}
-
-// Print returns the content tree as a string.
-func (c *ContentSection) Print() string {
-	list := make([]string, len(c.Children))
-	for i, child := range c.Children {
-		list[i] = child.Print()
-	}
-	return strings.Join(list, "\n\n")
 }
 
 // Add content to the content tree.
@@ -212,10 +197,6 @@ type ContentElement struct {
 
 func (c *ContentElement) ID() uint32 {
 	return c.id
-}
-
-func (c *ContentElement) Print() string {
-	return c.Markdown
 }
 
 func (c *ContentElement) setID(id uint32) {

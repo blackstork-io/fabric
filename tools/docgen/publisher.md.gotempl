@@ -1,0 +1,70 @@
+---
+title: {{ .name }}
+plugin:
+  name: {{ .plugin.Name }}
+  description: {{ .publisher.Doc | quote }}
+  tags: {{ formatTags .publisher.Tags }}
+  version: "{{ .plugin.Version }}"
+  {{- if eq .plugin_shortname "nist_nvd" }}
+  source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/nistnvd/"
+  {{- else }}
+  source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/{{ .plugin_shortname }}/"
+  {{- end }}
+resource:
+  type: publisher
+type: docs
+---
+
+{{"{{"}}< breadcrumbs 2 >{{"}}"}}
+
+{{"{{"}}< plugin-resource-header "{{ .plugin.Name }}" "{{ .plugin_shortname }}" "{{ .plugin.Version }}" "{{ .name }}" "publisher" >{{"}}"}}
+
+{{if .plugin.Doc -}}
+## Description
+{{ .plugin.Doc }}
+
+{{end -}}
+
+{{ if eq .plugin.Name "blackstork/builtin" -}}
+The publisher is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
+{{ else -}}
+## Installation
+
+To use `{{ .name }}` publisher, you must install the plugin `{{ .plugin.Name }}`.
+
+To install the plugin, add the full plugin name to the `plugin_versions` map in the Fabric global configuration block (see [Global configuration]({{"{{"}}< ref "configs.md#global-configuration" >{{"}}"}}) for more details), as shown below:
+
+```hcl
+fabric {
+  plugin_versions = {
+    "{{ .plugin.Name }}" = ">= {{ .plugin.Version }}"
+  }
+}
+```
+
+Note the version constraint set for the plugin.
+{{ end }}
+
+#### Configuration
+
+{{ $ctx := . -}}
+{{with .publisher.Config -}}
+The publisher supports the following configuration parameters:
+
+```hcl
+{{ renderDoc . "config" "publish" $ctx.name }}
+```
+{{ else -}}
+The publisher doesn't support any configuration parameters.
+{{ end }}
+#### Usage
+
+{{with .publisher.Args -}}
+The publisher supports the following execution parameters:
+
+```hcl
+{{ renderDoc . "publish" $ctx.name }}
+```
+{{ else }}
+The publisher doesn't define any execution parameters.
+{{ end }}

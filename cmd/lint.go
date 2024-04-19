@@ -29,6 +29,11 @@ func (n *noopPluginCaller) CallData(ctx context.Context, name string, config eva
 	return plugin.MapData{}, nil
 }
 
+// CallPublish implements evaluation.PluginCaller.
+func (n *noopPluginCaller) CallPublish(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation, context plugin.MapData, format plugin.OutputFormat) diagnostics.Diag {
+	return nil
+}
+
 var _ evaluation.PluginCaller = (*noopPluginCaller)(nil)
 
 func Lint(ctx context.Context, eval *Evaluator, sourceDir fs.FS, fullLint bool) (diags diagnostics.Diag) {
@@ -56,7 +61,7 @@ func Lint(ctx context.Context, eval *Evaluator, sourceDir fs.FS, fullLint bool) 
 			continue
 		}
 
-		_, diag = pd.Render(ctx, caller)
+		_, _, diag = pd.Render(ctx, caller)
 		diags.Extend(diag)
 	}
 	return

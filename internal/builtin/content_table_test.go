@@ -10,6 +10,7 @@ import (
 
 	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/printer/mdprint"
 )
 
 type TableGeneratorTestSuite struct {
@@ -54,7 +55,7 @@ func (s *TableGeneratorTestSuite) TestNilQueryResult() {
 			"query_result": nil,
 		},
 	})
-	s.Equal("|User Name|User Age|\n|---|---|\n", result.Content.Print())
+	s.Equal("|User Name|User Age|\n|---|---|\n", mdprint.PrintString(result.Content))
 	s.Nil(diags)
 }
 
@@ -80,7 +81,7 @@ func (s *TableGeneratorTestSuite) TestEmptyQueryResult() {
 			"query_result": plugin.ListData{},
 		},
 	})
-	s.Equal("|User Name|User Age|\n|---|---|\n", result.Content.Print())
+	s.Equal("|User Name|User Age|\n|---|---|\n", mdprint.PrintString(result.Content))
 	s.Nil(diags)
 }
 
@@ -115,7 +116,7 @@ func (s *TableGeneratorTestSuite) TestBasic() {
 			},
 		},
 	})
-	s.Equal("|User Name|User Age|\n|---|---|\n|John|42|\n|Jane|43|\n", result.Content.Print())
+	s.Equal("|User Name|User Age|\n|---|---|\n|John|42|\n|Jane|43|\n", mdprint.PrintString(result.Content))
 	s.Nil(diags)
 }
 
@@ -150,7 +151,7 @@ func (s *TableGeneratorTestSuite) TestSprigTemplate() {
 			},
 		},
 	})
-	s.Equal("|USER Name|User Age|\n|---|---|\n|JOHN|42|\n|JANE|43|\n", result.Content.Print())
+	s.Equal("|USER Name|User Age|\n|---|---|\n|JOHN|42|\n|JANE|43|\n", mdprint.PrintString(result.Content))
 	s.Nil(diags)
 }
 

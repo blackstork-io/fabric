@@ -35,6 +35,7 @@ func (pe *ParsedPlugin) GetBlockInvocation() *evaluation.BlockInvocation {
 type (
 	ParsedContent ParsedPlugin
 	ParsedData    ParsedPlugin
+	ParsedPublish ParsedPlugin
 )
 
 func (c *ParsedContent) Name() string {
@@ -109,6 +110,42 @@ func (c *ParsedContent) EvalQuery(ctx context.Context, dataCtx *evaluation.DataC
 		return
 	}
 	dataCtx.Set("query_result", queryResult)
+	return
+}
+
+func (c *ParsedPublish) EvalQuery() (format plugin.OutputFormat, diags diagnostics.Diag) {
+	body := c.Invocation.GetBody()
+	attr, found := body.Attributes["format"]
+	if !found {
+		return plugin.OutputFormatUnspecified, nil
+	}
+	val, newBody, dgs := hcldec.PartialDecode(body, &hcldec.ObjectSpec{
+		"format": &hcldec.AttrSpec{
+			Name:     "format",
+			Type:     cty.String,
+			Required: true,
+		},
+	}, nil)
+	c.Invocation.SetBody(utils.ToHclsyntaxBody(newBody))
+	if diags.ExtendHcl(dgs) {
+		return
+	}
+	formatStr := val.GetAttr("format").AsString()
+	switch formatStr {
+	case plugin.OutputFormatMD.String():
+		format = plugin.OutputFormatMD
+	case plugin.OutputFormatHTML.String():
+		format = plugin.OutputFormatHTML
+	case plugin.OutputFormatPDF.String():
+		format = plugin.OutputFormatPDF
+	default:
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Invalid format",
+			Detail:   "Unknown format: " + formatStr,
+			Subject:  &attr.SrcRange,
+		})
+	}
 	return
 }
 

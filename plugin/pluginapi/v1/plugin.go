@@ -56,6 +56,12 @@ func (p *grpcPlugin) GRPCClient(ctx context.Context, broker *goplugin.GRPCBroker
 		}
 		cg.ContentFunc = p.clientGenerateFunc(name, client)
 	}
+	for name, pub := range schema.Publishers {
+		if pub == nil {
+			return nil, fmt.Errorf("nil publisher")
+		}
+		pub.PublishFunc = p.clientPublishFunc(name, client)
+	}
 	return schema, nil
 }
 
@@ -160,5 +166,54 @@ func (p *grpcPlugin) clientDataFunc(name string, client PluginServiceClient) plu
 		data := decodeData(res.Data)
 		diags := decodeDiagnosticList(res.Diagnostics)
 		return data, diags
+	}
+}
+
+func (p *grpcPlugin) clientPublishFunc(name string, client PluginServiceClient) plugin.PublishFunc {
+	return func(ctx context.Context, params *plugin.PublishParams) hcl.Diagnostics {
+		p.logger.Debug("Calling publisher", "name", name)
+		defer func(start time.Time) {
+			p.logger.Debug("Called publisher", "name", name, "took", time.Since(start))
+		}(time.Now())
+		if params == nil {
+			return hcl.Diagnostics{{
+				Severity: hcl.DiagError,
+				Summary:  "Nil params",
+				Detail:   "Nil params",
+			}}
+		}
+		argsEncoded, err := encodeCtyValue(params.Args)
+		if err != nil {
+			return hcl.Diagnostics{{
+				Severity: hcl.DiagError,
+				Summary:  "Failed to encode args",
+				Detail:   err.Error(),
+			}}
+		}
+		cfgEncoded, err := encodeCtyValue(params.Config)
+		if err != nil {
+			return hcl.Diagnostics{{
+				Severity: hcl.DiagError,
+				Summary:  "Failed to encode config",
+				Detail:   err.Error(),
+			}}
+		}
+		datactx := encodeMapData(params.DataContext)
+		format := encodeOutputFormat(params.Format)
+		res, err := client.Publish(ctx, &PublishRequest{
+			Publisher:   name,
+			Config:      cfgEncoded,
+			Args:        argsEncoded,
+			DataContext: datactx,
+			Format:      format,
+		}, p.callOptions()...)
+		if err != nil {
+			return hcl.Diagnostics{{
+				Severity: hcl.DiagError,
+				Summary:  "Failed to publish",
+				Detail:   err.Error(),
+			}}
+		}
+		return decodeDiagnosticList(res.Diagnostics)
 	}
 }
