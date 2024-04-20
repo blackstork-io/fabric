@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -33,12 +34,13 @@ func (s *FrontMatterGeneratorTestSuite) TestSchema() {
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestInvalidFormat() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"format": cty.StringVal("invalid_type"),
 		"content": cty.ObjectVal(map[string]cty.Value{
 			"foo": cty.StringVal("bar"),
 		}),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
 	ctx := context.Background()
 	document := plugin.ContentSection{}
 	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
@@ -58,10 +60,12 @@ func (s *FrontMatterGeneratorTestSuite) TestInvalidFormat() {
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestContentAndQueryResultMissing() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"content": cty.NullVal(cty.DynamicPseudoType),
 		"format":  cty.NullVal(cty.String),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
+
 	ctx := context.Background()
 	document := plugin.ContentSection{}
 	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
@@ -81,10 +85,12 @@ func (s *FrontMatterGeneratorTestSuite) TestContentAndQueryResultMissing() {
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestInvalidQueryResult() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"content": cty.NullVal(cty.DynamicPseudoType),
 		"format":  cty.NullVal(cty.String),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
+
 	ctx := context.Background()
 	document := plugin.ContentSection{}
 	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
@@ -97,18 +103,19 @@ func (s *FrontMatterGeneratorTestSuite) TestInvalidQueryResult() {
 		},
 	})
 	s.Nil(content)
-	s.Equal(hcl.Diagnostics{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "invalid query result: plugin.StringData",
-	}}, diags)
+	testtools.CompareDiags(s.T(), nil, diags, [][]testtools.Assert{{
+		testtools.IsError,
+		testtools.DetailContains("invalid", "plugin.StringData"),
+	}})
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestContentAndDataContextNil() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"content": cty.NullVal(cty.DynamicPseudoType),
 		"format":  cty.NullVal(cty.String),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
+
 	ctx := context.Background()
 	document := plugin.ContentSection{}
 	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
@@ -128,7 +135,7 @@ func (s *FrontMatterGeneratorTestSuite) TestContentAndDataContextNil() {
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestWithContent() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"content": cty.ObjectVal(map[string]cty.Value{
 			"baz": cty.NumberIntVal(1),
 			"foo": cty.StringVal("bar"),
@@ -144,6 +151,8 @@ func (s *FrontMatterGeneratorTestSuite) TestWithContent() {
 		}),
 		"format": cty.NullVal(cty.String),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
+
 	ctx := context.Background()
 	document := plugin.ContentSection{}
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
@@ -169,10 +178,12 @@ func (s *FrontMatterGeneratorTestSuite) TestWithContent() {
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestWithQueryResult() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"content": cty.NullVal(cty.DynamicPseudoType),
 		"format":  cty.NullVal(cty.String),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
+
 	ctx := context.Background()
 	document := plugin.ContentSection{}
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
@@ -211,10 +222,12 @@ func (s *FrontMatterGeneratorTestSuite) TestWithQueryResult() {
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestFormatYaml() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"content": cty.NullVal(cty.DynamicPseudoType),
 		"format":  cty.StringVal("yaml"),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
+
 	ctx := context.Background()
 	document := plugin.ContentSection{}
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
@@ -253,10 +266,12 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatYaml() {
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestFormatTOML() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"content": cty.NullVal(cty.DynamicPseudoType),
 		"format":  cty.StringVal("toml"),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
+
 	ctx := context.Background()
 	document := plugin.ContentSection{}
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
@@ -293,10 +308,12 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatTOML() {
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestFormatJSON() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"content": cty.NullVal(cty.DynamicPseudoType),
 		"format":  cty.StringVal("json"),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
+
 	ctx := context.Background()
 	document := plugin.ContentSection{}
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{

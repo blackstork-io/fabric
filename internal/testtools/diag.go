@@ -72,7 +72,12 @@ func dumpDiags(diags diagnostics.Diag) string {
 	return strings.Join(utils.FnMap(diags, dumpDiag), "\n")
 }
 
-func CompareDiags(t *testing.T, fm map[string]*hcl.File, diags diagnostics.Diag, asserts [][]Assert) {
+func CompareDiags[D diagnostics.Generic](t *testing.T, fm map[string]*hcl.File, diags D, asserts [][]Assert) {
+	t.Helper()
+	compareDiags(t, fm, diagnostics.From(diags), asserts)
+}
+
+func compareDiags(t *testing.T, fm map[string]*hcl.File, diags diagnostics.Diag, asserts [][]Assert) {
 	t.Helper()
 	if !matchBiject(diags, asserts) {
 		var buf strings.Builder

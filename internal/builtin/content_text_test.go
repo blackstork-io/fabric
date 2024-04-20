@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -31,29 +32,24 @@ func (s *TextTestSuite) TestSchema() {
 }
 
 func (s *TextTestSuite) TestMissingText() {
-	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value": cty.NullVal(cty.String),
-		}),
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
-		},
+	val := cty.ObjectVal(map[string]cty.Value{
+		"value": cty.NullVal(cty.String),
 	})
-	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "value is required",
-	}}, diags)
+	testtools.ReencodeCTY(s.T(), s.schema.Args, val, [][]testtools.Assert{{
+		testtools.IsError,
+		testtools.SummaryContains("Non-null value is required"),
+	}})
 }
 
 func (s *TextTestSuite) TestBasic() {
+	val := cty.ObjectVal(map[string]cty.Value{
+		"value": cty.StringVal("Hello {{.name}}!"),
+	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value": cty.StringVal("Hello {{.name}}!"),
-		}),
+		Args: args,
 		DataContext: plugin.MapData{
 			"name": plugin.StringData("World"),
 		},
@@ -63,11 +59,13 @@ func (s *TextTestSuite) TestBasic() {
 }
 
 func (s *TextTestSuite) TestNoTemplate() {
+	val := cty.ObjectVal(map[string]cty.Value{
+		"value": cty.StringVal("Hello World!"),
+	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value": cty.StringVal("Hello World!"),
-		}),
+		Args:        args,
 		DataContext: nil,
 	})
 	s.Empty(diags)
@@ -75,11 +73,14 @@ func (s *TextTestSuite) TestNoTemplate() {
 }
 
 func (s *TextTestSuite) TestCallInvalidTemplate() {
+	val := cty.ObjectVal(map[string]cty.Value{
+		"value": cty.StringVal("Hello {{.name}!"),
+	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value": cty.StringVal("Hello {{.name}!"),
-		}),
+		Args: args,
 		DataContext: plugin.MapData{
 			"name": plugin.StringData("World"),
 		},

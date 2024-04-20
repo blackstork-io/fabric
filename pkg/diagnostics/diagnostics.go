@@ -6,6 +6,15 @@ import (
 	"github.com/hashicorp/hcl/v2"
 )
 
+// Generic type matching both hcl.Diagnostics and these Diags
+type Generic interface {
+	~[]*hcl.Diagnostic
+}
+
+func From[D Generic](diags D) Diag {
+	return Diag(diags)
+}
+
 type Diag hcl.Diagnostics // Diagnostics does implement error interface, but not, itself, an error.
 
 type repeatedError struct{}

@@ -20,6 +20,7 @@ import (
 // a rewrite that can't be automated with regex or similar.
 // New tests should use Decode and provide a string of hcl.
 func ReencodeCTY(t *testing.T, spec dataspec.RootSpec, val cty.Value, asserts [][]Assert) cty.Value {
+	t.Helper()
 	ty := val.Type()
 	if !(ty.IsMapType() || ty.IsObjectType()) {
 		panic("Can't handle type " + ty.FriendlyName())
