@@ -31,7 +31,7 @@ func ReencodeCTY(t *testing.T, spec dataspec.RootSpec, val cty.Value, asserts []
 		k, v := it.Element()
 		b.SetAttributeValue(k.AsString(), v)
 	}
-	return Decode(t, spec, string(hclwrite.Format(f.Bytes())), asserts)
+	return DecodeAndAssert(t, spec, string(hclwrite.Format(f.Bytes())), asserts)
 }
 
 const filename = "<inline-data>"
@@ -42,22 +42,29 @@ const filename = "<inline-data>"
 
 // Decodes a string (representing content of a config/data/content block)
 // into cty.Value according to given spec (i.e. respecting default values)
-func Decode(t *testing.T, spec dataspec.RootSpec, body string, asserts [][]Assert) (v cty.Value) {
+func DecodeAndAssert(t *testing.T, spec dataspec.RootSpec, body string, asserts [][]Assert) (v cty.Value) {
 	t.Helper()
-	var f *hcl.File
 	var diags diagnostics.Diag
+	var fm map[string]*hcl.File
 	defer func() {
 		t.Helper()
-		var fm map[string]*hcl.File
-		if f != nil {
-			fm = map[string]*hcl.File{
-				filename: f,
-			}
-		}
 		CompareDiags(t, fm, diags, asserts)
 	}()
-	var diag hcl.Diagnostics
-	f, diag = hclsyntax.ParseConfig([]byte(body), filename, hcl.InitialPos)
+	f, diag := hclsyntax.ParseConfig([]byte(body), filename, hcl.InitialPos)
+	if diags.ExtendHcl(diag) {
+		return
+	}
+	fm = map[string]*hcl.File{
+		filename: f,
+	}
+	v, dgs := dataspec.Decode(f.Body, spec, nil)
+	diags.Extend(dgs)
+	return
+}
+
+func Decode(t *testing.T, spec dataspec.RootSpec, body string) (v cty.Value, diags diagnostics.Diag) {
+	t.Helper()
+	f, diag := hclsyntax.ParseConfig([]byte(body), filename, hcl.InitialPos)
 	if diags.ExtendHcl(diag) {
 		return
 	}

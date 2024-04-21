@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -18,27 +18,23 @@ func Test_makeInlineDataSchema(t *testing.T) {
 }
 
 func Test_fetchInlineData(t *testing.T) {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"foo": cty.StringVal("bar"),
-		"baz": cty.NumberIntVal(1),
-		"qux": cty.BoolVal(true),
-		"quux": cty.ListVal([]cty.Value{
-			cty.StringVal("corge"),
-			cty.StringVal("grault"),
-			cty.StringVal("garply"),
-		}),
-		"quuz": cty.ObjectVal(map[string]cty.Value{
-			"garply": cty.StringVal("waldo"),
-			"fred":   cty.NumberFloatVal(3.123),
-			"plugh":  cty.BoolVal(false),
-		}),
-		"xyzzy": cty.NullVal(cty.String),
-	})
 	p := &plugin.Schema{
 		DataSources: plugin.DataSources{
 			"inline": makeInlineDataSource(),
 		},
 	}
+	args := testtools.DecodeAndAssert(t, p.DataSources["inline"].Args, `
+        foo  = "bar"
+        baz  = 1
+        qux  = true
+        quux = ["corge", "grault", "garply"]
+        quuz = {
+                garply = "waldo"
+                fred   = 3.123
+                plugh  = false
+        }
+        xyzzy = null
+    `, [][]testtools.Assert{})
 	data, diags := p.RetrieveData(context.Background(), "inline", &plugin.RetrieveDataParams{
 		Args: args,
 	})

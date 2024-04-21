@@ -30,13 +30,13 @@ func (s *BlockQuoteTestSuite) TestSchema() {
 }
 
 func (s *BlockQuoteTestSuite) TestMissingText() {
-	testtools.Decode(s.T(), s.schema.Args, ``, [][]testtools.Assert{{testtools.DetailContains(`The argument "value" is required`)}})
+	testtools.DecodeAndAssert(s.T(), s.schema.Args, ``, [][]testtools.Assert{{testtools.DetailContains(`The argument "value" is required`)}})
 	return
 }
 
 func (s *BlockQuoteTestSuite) TestCallBlockquote() {
 	ctx := context.Background()
-	args := testtools.Decode(s.T(), s.schema.Args, `
+	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
 		value = "Hello {{.name}}!"
 	`, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
@@ -55,7 +55,7 @@ func (s *BlockQuoteTestSuite) TestCallBlockquote() {
 
 func (s *BlockQuoteTestSuite) TestCallBlockquoteMultiline() {
 	ctx := context.Background()
-	args := testtools.Decode(s.T(), s.schema.Args, `
+	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
 		value = "Hello\n{{.name}}\nfor you!"
 	`, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
@@ -74,7 +74,7 @@ func (s *BlockQuoteTestSuite) TestCallBlockquoteMultiline() {
 
 func (s *BlockQuoteTestSuite) TestCallBlockquoteMultilineDoubleNewline() {
 	ctx := context.Background()
-	args := testtools.Decode(s.T(), s.schema.Args, `
+	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
 		value = "Hello\n{{.name}}\n\nfor you!"
 	`, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
