@@ -2,7 +2,7 @@
 title: terraform_state_local
 plugin:
   name: blackstork/terraform
-  description: ""
+  description: "Loads terraform state data"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/terraform/"
@@ -14,6 +14,9 @@ type: docs
 {{< breadcrumbs 2 >}}
 
 {{< plugin-resource-header "blackstork/terraform" "terraform" "v0.4.1" "terraform_state_local" "data source" >}}
+
+## Description
+Loads terraform state data
 
 ## Installation
 
@@ -42,6 +45,6 @@ The data source supports the following parameters in the data blocks:
 ```hcl
 data terraform_state_local {
   # Required string. For example:
-  path = "some string"
+  path = "path/to/terraform.tfstate"
 }
 ```
