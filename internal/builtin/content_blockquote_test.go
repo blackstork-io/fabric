@@ -30,7 +30,26 @@ func (s *BlockQuoteTestSuite) TestSchema() {
 }
 
 func (s *BlockQuoteTestSuite) TestMissingText() {
-	testtools.DecodeAndAssert(s.T(), s.schema.Args, ``, [][]testtools.Assert{{testtools.DetailContains(`The argument "value" is required`)}})
+	testtools.DecodeAndAssert(s.T(), s.schema.Args, ``, [][]testtools.Assert{
+		{
+			testtools.IsError,
+			testtools.DetailContains(`The argument "value" is required`),
+		},
+		{
+			testtools.IsError,
+			testtools.SummaryContains(`Argument must be non-null`),
+		},
+	})
+	return
+}
+
+func (s *BlockQuoteTestSuite) TestNullText() {
+	testtools.DecodeAndAssert(s.T(), s.schema.Args, `value = null`, [][]testtools.Assert{
+		{
+			testtools.IsError,
+			testtools.SummaryContains(`Argument must be non-null`),
+		},
+	})
 	return
 }
 

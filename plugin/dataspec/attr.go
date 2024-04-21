@@ -84,7 +84,8 @@ func (a *AttrSpec) HcldecSpec() hcldec.Spec {
 				if value.IsNull() {
 					return []*hcl.Diagnostic{{
 						Severity: hcl.DiagError,
-						Summary:  "Non-null value is required",
+						Summary:  "Argument must be non-null",
+						Detail:   fmt.Sprintf("The argument %q was either not defined or is null.", res.Name),
 					}}
 				}
 				return nil

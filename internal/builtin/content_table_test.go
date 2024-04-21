@@ -255,7 +255,7 @@ func (s *TableGeneratorTestSuite) TestNilColumns() {
 	})
 	testtools.ReencodeCTY(s.T(), s.schema.Args, val, [][]testtools.Assert{{
 		testtools.IsError,
-		testtools.SummaryContains("Non-null value is required"),
+		testtools.SummaryContains("Argument must be non-null"),
 	}})
 }
 
