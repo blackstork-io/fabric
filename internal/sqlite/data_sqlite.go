@@ -19,29 +19,24 @@ func makeSqliteDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "database_uri",
-				Type:       cty.String,
-				Required:   true,
-				ExampleVal: cty.StringVal("file:test.db"),
+				Name:     "database_uri",
+				Type:     cty.String,
+				Required: true,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "sql_query",
-				Type:       cty.String,
-				Required:   true,
-				ExampleVal: cty.StringVal("SELECT * FROM example WHERE id=$1 OR age=$2"),
+				Name:     "sql_query",
+				Type:     cty.String,
+				Required: true,
 			},
 			&dataspec.AttrSpec{
-				Name:       "sql_args",
-				Type:       cty.List(cty.DynamicPseudoType),
-				Required:   false,
-				ExampleVal: cty.ListVal([]cty.Value{cty.NumberIntVal(42), cty.NumberIntVal(24)}),
-				Doc:        `Values for the prepared statement`,
+				Name:     "sql_args",
+				Type:     cty.List(cty.DynamicPseudoType),
+				Required: false,
 			},
 		},
 		DataFunc: fetchSqliteData,
-		Doc:      `Produces query results from Sqlite`,
 	}
 }
 

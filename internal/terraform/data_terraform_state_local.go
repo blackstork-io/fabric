@@ -16,14 +16,12 @@ func makeTerraformStateLocalDataSource() *plugin.DataSource {
 		Config: nil,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "path",
-				Type:       cty.String,
-				Required:   true,
-				ExampleVal: cty.StringVal("path/to/terraform.tfstate"),
+				Name:     "path",
+				Type:     cty.String,
+				Required: true,
 			},
 		},
 		DataFunc: fetchTerraformStateLocalData,
-		Doc:      `Loads terraform state data`,
 	}
 }
 

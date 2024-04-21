@@ -14,35 +14,24 @@ func makeOpenCTIDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "graphql_url",
-				Type:       cty.String,
-				Required:   true,
-				ExampleVal: cty.StringVal("https://example.com/graphql"),
-				Doc:        `API endpoint to perform GraphQL queries against`,
+				Name:     "graphql_url",
+				Type:     cty.String,
+				Required: true,
 			},
 			&dataspec.AttrSpec{
-				Name:       "auth_token",
-				Type:       cty.String,
-				Required:   false,
-				ExampleVal: cty.StringVal("<token>"),
-				DefaultVal: cty.NullVal(cty.String),
-				Doc: `
-					Token to be sent to the server as "Authorization: Bearer" header.
-					Empty or null tokens are not sent.
-				`,
+				Name:     "auth_token",
+				Type:     cty.String,
+				Required: false,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "graphql_query",
-				Type:       cty.String,
-				Required:   true,
-				Doc:        `GraphQL query`,
-				ExampleVal: cty.StringVal(`query{user{id, name}}`),
+				Name:     "graphql_query",
+				Type:     cty.String,
+				Required: true,
 			},
 		},
 		DataFunc: fetchOpenCTIData,
-		Doc:      `Produces OpenCTI responces to GraphQL queries`,
 	}
 }
 
