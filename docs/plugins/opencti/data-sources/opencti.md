@@ -2,7 +2,7 @@
 title: opencti
 plugin:
   name: blackstork/opencti
-  description: "Produces OpenCTI responces to GraphQL queries"
+  description: ""
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/opencti/"
@@ -14,9 +14,6 @@ type: docs
 {{< breadcrumbs 2 >}}
 
 {{< plugin-resource-header "blackstork/opencti" "opencti" "v0.4.1" "opencti" "data source" >}}
-
-## Description
-Produces OpenCTI responces to GraphQL queries
 
 ## Installation
 
@@ -40,17 +37,9 @@ The data source supports the following configuration parameters:
 
 ```hcl
 config data opencti {
-  # API endpoint to perform GraphQL queries against
-  #
   # Required string. For example:
-  graphql_url = "https://example.com/graphql"
+  graphql_url = "some string"
 
-  # Token to be sent to the server as "Authorization: Bearer" header.
-  # Empty or null tokens are not sent.
-  #
-  # For example:
-  # auth_token = "<token>"
-  #
   # Optional string. Default value:
   auth_token = null
 }
@@ -62,9 +51,7 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data opencti {
-  # GraphQL query
-  #
   # Required string. For example:
-  graphql_query = "query{user{id, name}}"
+  graphql_query = "some string"
 }
 ```

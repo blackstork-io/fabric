@@ -2,7 +2,7 @@
 title: postgresql
 plugin:
   name: blackstork/postgresql
-  description: "Produces query results from PostgresSQL"
+  description: ""
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/postgresql/"
@@ -14,9 +14,6 @@ type: docs
 {{< breadcrumbs 2 >}}
 
 {{< plugin-resource-header "blackstork/postgresql" "postgresql" "v0.4.1" "postgresql" "data source" >}}
-
-## Description
-Produces query results from PostgresSQL
 
 ## Installation
 
@@ -41,7 +38,7 @@ The data source supports the following configuration parameters:
 ```hcl
 config data postgresql {
   # Required string. For example:
-  database_url = "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"
+  database_url = "some string"
 }
 ```
 
@@ -52,13 +49,8 @@ The data source supports the following parameters in the data blocks:
 ```hcl
 data postgresql {
   # Required string. For example:
-  sql_query = "SELECT * FROM example WHERE id=$1 OR age=$2"
+  sql_query = "some string"
 
-  # Values for the prepared statement
-  #
-  # For example:
-  # sql_args = [42, 24]
-  #
   # Optional list of any single type. Default value:
   sql_args = null
 }
