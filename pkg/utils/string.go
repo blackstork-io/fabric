@@ -68,15 +68,23 @@ func MemoizedKeys[M ~map[string]V, V any](m *M) func() string {
 	})
 }
 
+const defaultTabSize = 4
+
 // Strip common whitespace from the beginnings of the lines, trim the end whitespace
-func TrimDedent(text string, tabSize int) (lines []string) {
+// Tab is assumed to be equal to 4 spaces
+func TrimDedent(text string) (lines []string) {
+	return TrimDedentTabsize(text, defaultTabSize)
+}
+
+// Strip common whitespace from the beginnings of the lines, trim the end whitespace
+func TrimDedentTabsize(text string, tabSize int) (lines []string) {
 	s := bufio.NewScanner(strings.NewReader(strings.ReplaceAll(text, "\t", "    ")))
 	var commonWhitespace string
 	lenNonempty := 0
 
 	for s.Scan() {
 		line := s.Text()
-		if lenNonempty != 0 && len(commonWhitespace) == 0 {
+		if lenNonempty != 0 && commonWhitespace == "" {
 			lines = append(lines, line)
 			lenNonempty = len(lines)
 			continue
@@ -107,7 +115,7 @@ func TrimDedent(text string, tabSize int) (lines []string) {
 			// replace tabs for better slice-ability
 			var sb strings.Builder
 
-			for i := 0; i < whitespace; i++ {
+			for range whitespace {
 				sb.WriteByte(' ')
 			}
 			sb.WriteString(line[firstNonSpace:])

@@ -1,14 +1,12 @@
 package testtools
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
 type (
@@ -50,26 +48,6 @@ func sliceRemove[T any](s []T, pos int) []T {
 	s[pos] = s[len(s)-1]
 	s[len(s)-1] = tmp
 	return s[:len(s)-1]
-}
-
-func dumpDiag(diag *hcl.Diagnostic) string {
-	var sev string
-	switch diag.Severity {
-	case hcl.DiagError:
-		sev = "hcl.DiagError"
-	case hcl.DiagWarning:
-		sev = "hcl.DiagWarning"
-	default:
-		sev = fmt.Sprintf("hcl.DiagInvalid(%d)", diag.Severity)
-	}
-	return fmt.Sprintf("Severity: %s; Summary: %q; Detail: %q", sev, diag.Summary, diag.Detail)
-}
-
-func dumpDiags(diags diagnostics.Diag) string {
-	if len(diags) == 0 {
-		return "no diagnostics"
-	}
-	return strings.Join(utils.FnMap(diags, dumpDiag), "\n")
 }
 
 func CompareDiags[D diagnostics.Generic](t *testing.T, fm map[string]*hcl.File, diags D, asserts [][]Assert) {

@@ -91,16 +91,15 @@ func (a *AttrSpec) HcldecSpec() hcldec.Spec {
 				return nil
 			},
 		}
-	} else {
-		if !a.DefaultVal.IsNull() {
-			return &hcldec.DefaultSpec{
-				Primary: res,
-				Default: &hcldec.LiteralSpec{
-					Value: a.DefaultVal,
-				},
-			}
+	} else if !a.DefaultVal.IsNull() {
+		return &hcldec.DefaultSpec{
+			Primary: res,
+			Default: &hcldec.LiteralSpec{
+				Value: a.DefaultVal,
+			},
 		}
 	}
+
 	return res
 }
 

@@ -21,9 +21,9 @@ func printDiags(output io.Writer, diags Diag, fileMap map[string]*hcl.File, colo
 	}
 	width := 80
 	if file, ok := output.(*os.File); ok {
-		term_width, _, err := term.GetSize(int(file.Fd()))
-		if err == nil && term_width > 0 {
-			width = term_width
+		termWidth, _, err := term.GetSize(int(file.Fd()))
+		if err == nil && termWidth > 0 {
+			width = termWidth
 		}
 		if colorize {
 			output = colorable.NewColorable(file)

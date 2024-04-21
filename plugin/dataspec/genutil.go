@@ -57,7 +57,7 @@ func exampleValueForType(ty cty.Type) cty.Value {
 func comment(tokens hclwrite.Tokens, text string) hclwrite.Tokens {
 	var sb strings.Builder
 
-	for _, line := range utils.TrimDedent(text, 4) {
+	for _, line := range utils.TrimDedent(text) {
 		sb.WriteString("# ")
 		sb.WriteString(line)
 		sb.WriteByte('\n')
