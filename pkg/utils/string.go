@@ -115,7 +115,7 @@ func TrimDedentTabsize(text string, tabSize int) (lines []string) {
 			// replace tabs for better slice-ability
 			var sb strings.Builder
 
-			for range whitespace {
+			for i := 0; i < whitespace; i++ {
 				sb.WriteByte(' ')
 			}
 			sb.WriteString(line[firstNonSpace:])
