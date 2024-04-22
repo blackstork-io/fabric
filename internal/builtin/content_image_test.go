@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -32,27 +33,22 @@ func (s *ImageGeneratorTestSuite) TestSchema() {
 }
 
 func (s *ImageGeneratorTestSuite) TestMissingImageSource() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"src": cty.NullVal(cty.String),
 		"alt": cty.NullVal(cty.String),
 	})
-	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-	})
-	s.Nil(content)
-	s.Equal(hcl.Diagnostics{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "src is required",
-	}}, diags)
+	testtools.ReencodeCTY(s.T(), s.schema.Args, val, [][]testtools.Assert{{
+		testtools.IsError,
+		testtools.SummaryContains("Argument must be non-null"),
+	}})
 }
 
 func (s *ImageGeneratorTestSuite) TestCallImageSourceEmpty() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"src": cty.StringVal(""),
 		"alt": cty.NullVal(cty.String),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -66,10 +62,12 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceEmpty() {
 }
 
 func (s *ImageGeneratorTestSuite) TestCallImageSourceValid() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"src": cty.StringVal("https://example.com/image.png"),
 		"alt": cty.NullVal(cty.String),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -79,10 +77,12 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceValid() {
 }
 
 func (s *ImageGeneratorTestSuite) TestCallImageSourceValidWithAlt() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"src": cty.StringVal("https://example.com/image.png"),
 		"alt": cty.StringVal("alt text"),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,

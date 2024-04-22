@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bufio"
 	"slices"
 	"strings"
 	"sync"
@@ -65,4 +66,73 @@ func MemoizedKeys[M ~map[string]V, V any](m *M) func() string {
 		slices.Sort(keys)
 		return JoinSurround(", ", "'", keys...)
 	})
+}
+
+const defaultTabSize = 4
+
+// Strip common whitespace from the beginnings of the lines, trim the end whitespace
+// Tab is assumed to be equal to 4 spaces
+func TrimDedent(text string) (lines []string) {
+	return TrimDedentTabsize(text, defaultTabSize)
+}
+
+// Strip common whitespace from the beginnings of the lines, trim the end whitespace
+func TrimDedentTabsize(text string, tabSize int) (lines []string) {
+	s := bufio.NewScanner(strings.NewReader(strings.ReplaceAll(text, "\t", "    ")))
+	var commonWhitespace string
+	lenNonempty := 0
+
+	for s.Scan() {
+		line := s.Text()
+		if lenNonempty != 0 && commonWhitespace == "" {
+			lines = append(lines, line)
+			lenNonempty = len(lines)
+			continue
+		}
+		numTabs := 0
+		numSpaces := 0
+		firstNonSpace := strings.IndexFunc(line, func(r rune) bool {
+			switch r {
+			case '\t':
+				numTabs += 1
+				return false
+			case ' ':
+				numSpaces += 1
+				return false
+			default:
+				return true
+			}
+		})
+		if firstNonSpace == -1 {
+			if lenNonempty != 0 {
+				lines = append(lines, commonWhitespace)
+			}
+			continue
+		}
+
+		whitespace := numSpaces + numTabs*tabSize
+		if numTabs > 0 {
+			// replace tabs for better slice-ability
+			var sb strings.Builder
+
+			for i := 0; i < whitespace; i++ {
+				sb.WriteByte(' ')
+			}
+			sb.WriteString(line[firstNonSpace:])
+			line = sb.String()
+		}
+
+		if lenNonempty == 0 {
+			commonWhitespace = strings.Repeat(" ", whitespace)
+		} else if whitespace < len(commonWhitespace) {
+			commonWhitespace = commonWhitespace[:whitespace]
+		}
+		lines = append(lines, line)
+		lenNonempty = len(lines)
+	}
+	lines = lines[:lenNonempty:lenNonempty]
+	for i := range lines {
+		lines[i] = strings.TrimRightFunc(lines[i][len(commonWhitespace):], unicode.IsSpace)
+	}
+	return
 }

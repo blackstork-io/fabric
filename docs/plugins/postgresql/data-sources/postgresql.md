@@ -37,7 +37,8 @@ The data source supports the following configuration parameters:
 
 ```hcl
 config data postgresql {
-    database_url = <string>  # required
+  # Required string. For example:
+  database_url = "some string"
 }
 ```
 
@@ -47,7 +48,10 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data postgresql {
-    sql_args = <list of dynamic>  # optional
-    sql_query = <string>  # required
+  # Required string. For example:
+  sql_query = "some string"
+
+  # Optional list of any single type. Default value:
+  sql_args = null
 }
 ```

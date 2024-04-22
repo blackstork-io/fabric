@@ -1,8 +1,8 @@
 ---
-title: frontmatter 
+title: frontmatter
 plugin:
   name: blackstork/builtin
-  description: ""
+  description: "Produces the frontmatter"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -14,6 +14,9 @@ type: docs
 {{< breadcrumbs 2 >}}
 
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "frontmatter" "content provider" >}}
+
+## Description
+Produces the frontmatter.
 
 The content provider is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 
@@ -28,8 +31,25 @@ The content provider supports the following execution parameters:
 
 ```hcl
 content frontmatter {
-    content = <map of dynamic>  # optional
-    format = <string>  # optional
+  # Format of the frontmatter. Must be one of "yaml", "toml", "json"
+  #
+  # Optional string. Default value:
+  format = "yaml"
+
+  # Arbitrary key-value map to be put in the frontmatter.
+  # 
+  # NOTE: Data from "query_result" replaces this value if present
+  #
+  # For example:
+  # content = {
+  #   key = "arbitrary value"
+  #   key2 = {
+  #     "can be nested" = 42
+  #   }
+  # }
+  #
+  # Optional any type. Default value:
+  content = null
 }
 ```
 

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -32,10 +33,12 @@ func (s *ListGeneratorTestSuite) TestSchema() {
 }
 
 func (s *ListGeneratorTestSuite) TestNilQueryResult() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"item_template": cty.StringVal("{{.}}"),
 		"format":        cty.NullVal(cty.String),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args:        args,
@@ -50,10 +53,11 @@ func (s *ListGeneratorTestSuite) TestNilQueryResult() {
 }
 
 func (s *ListGeneratorTestSuite) TestNonArrayQueryResult() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"item_template": cty.StringVal("{{.}}"),
 		"format":        cty.NullVal(cty.String),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -70,10 +74,11 @@ func (s *ListGeneratorTestSuite) TestNonArrayQueryResult() {
 }
 
 func (s *ListGeneratorTestSuite) TestUnordered() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"item_template": cty.StringVal("foo {{.}}"),
 		"format":        cty.StringVal("unordered"),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -89,10 +94,11 @@ func (s *ListGeneratorTestSuite) TestUnordered() {
 }
 
 func (s *ListGeneratorTestSuite) TestOrdered() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"item_template": cty.StringVal("foo {{.}}"),
 		"format":        cty.StringVal("ordered"),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -108,10 +114,11 @@ func (s *ListGeneratorTestSuite) TestOrdered() {
 }
 
 func (s *ListGeneratorTestSuite) TestTaskList() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"item_template": cty.StringVal("foo {{.}}"),
 		"format":        cty.StringVal("tasklist"),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -127,10 +134,11 @@ func (s *ListGeneratorTestSuite) TestTaskList() {
 }
 
 func (s *ListGeneratorTestSuite) TestBasic() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"item_template": cty.StringVal("foo {{.}}"),
 		"format":        cty.NullVal(cty.String),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -146,10 +154,11 @@ func (s *ListGeneratorTestSuite) TestBasic() {
 }
 
 func (s *ListGeneratorTestSuite) TestAdvanced() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"item_template": cty.StringVal("foo {{.bar}} {{.baz | upper}}"),
 		"format":        cty.NullVal(cty.String),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -171,10 +180,11 @@ func (s *ListGeneratorTestSuite) TestAdvanced() {
 }
 
 func (s *ListGeneratorTestSuite) TestEmptyQueryResult() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"item_template": cty.StringVal("foo {{.}}"),
 		"format":        cty.NullVal(cty.String),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -187,30 +197,22 @@ func (s *ListGeneratorTestSuite) TestEmptyQueryResult() {
 }
 
 func (s *ListGeneratorTestSuite) TestMissingItemTemplate() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"item_template": cty.NullVal(cty.String),
 		"format":        cty.NullVal(cty.String),
 	})
-	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"query_result": plugin.ListData{},
-		},
-	})
-	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse template",
-		Detail:   "item_template is required",
-	}}, diags)
+	testtools.ReencodeCTY(s.T(), s.schema.Args, val, [][]testtools.Assert{{
+		testtools.IsError,
+		testtools.SummaryContains("Argument must be non-null"),
+	}})
 }
 
 func (s *ListGeneratorTestSuite) TestInvalidFormat() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"item_template": cty.StringVal("foo {{.}}"),
 		"format":        cty.StringVal("invalid"),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -227,10 +229,11 @@ func (s *ListGeneratorTestSuite) TestInvalidFormat() {
 }
 
 func (s *ListGeneratorTestSuite) TestMissingDataContext() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"item_template": cty.StringVal("foo {{.}}"),
 		"format":        cty.NullVal(cty.String),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,

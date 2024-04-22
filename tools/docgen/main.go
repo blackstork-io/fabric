@@ -29,6 +29,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/stixview"
 	"github.com/blackstork-io/fabric/internal/terraform"
 	"github.com/blackstork-io/fabric/internal/virustotal"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
@@ -308,6 +309,8 @@ func renderContentProviderDoc(pluginSchema *plugin.Schema, contentProviderName s
 		"plugin_shortname": shortname(pluginSchema.Name),
 		"name":             contentProviderName,
 		"content_provider": contentProvider,
+		"desc":             description(contentProvider.Doc),
+		"short_desc":       shortDescription(contentProvider.Doc),
 	}
 	return base.ExecuteTemplate(f, "content-provider", templContext)
 }
@@ -324,8 +327,19 @@ func renderDataSourceDoc(pluginSchema *plugin.Schema, dataSourceName string, dat
 		"plugin_shortname": shortname(pluginSchema.Name),
 		"name":             dataSourceName,
 		"data_source":      dataSource,
+		"desc":             description(dataSource.Doc),
+		"short_desc":       shortDescription(dataSource.Doc),
 	}
 	return base.ExecuteTemplate(f, "data-source", templContext)
+}
+
+func description(doc string) string {
+	return strings.Join(utils.TrimDedent(doc), "\n")
+}
+
+func shortDescription(doc string) string {
+	firstLine, _, _ := strings.Cut(strings.TrimSpace(doc), "\n")
+	return strings.TrimRight(firstLine, ".")
 }
 
 func shortname(name string) string {

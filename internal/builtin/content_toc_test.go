@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -32,19 +33,20 @@ func (s *TOCContentTestSuite) TestSchema() {
 }
 
 func (s *TOCContentTestSuite) TestSimple() {
-	schema := makeTOCContentProvider()
+	val := cty.ObjectVal(map[string]cty.Value{
+		"start_level": cty.NullVal(cty.Number),
+		"end_level":   cty.NullVal(cty.Number),
+		"ordered":     cty.NullVal(cty.Bool),
+		"scope":       cty.NullVal(cty.String),
+	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	titleMeta := plugin.MapData{
 		"provider": plugin.StringData("title"),
 		"plugin":   plugin.StringData("blackstork/builtin"),
 	}
-	res, diags := schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"start_level": cty.NullVal(cty.Number),
-			"end_level":   cty.NullVal(cty.Number),
-			"ordered":     cty.NullVal(cty.Bool),
-			"scope":       cty.NullVal(cty.String),
-		}),
+	res, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+		Args: args,
 		DataContext: plugin.MapData{
 			"document": plugin.MapData{
 				"content": plugin.MapData{
@@ -91,19 +93,20 @@ func (s *TOCContentTestSuite) TestSimple() {
 }
 
 func (s *TOCContentTestSuite) TestAdvanced() {
-	schema := makeTOCContentProvider()
+	val := cty.ObjectVal(map[string]cty.Value{
+		"start_level": cty.NumberIntVal(1),
+		"end_level":   cty.NumberIntVal(2),
+		"ordered":     cty.True,
+		"scope":       cty.StringVal("document"),
+	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	titleMeta := plugin.MapData{
 		"provider": plugin.StringData("title"),
 		"plugin":   plugin.StringData("blackstork/builtin"),
 	}
-	res, diags := schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"start_level": cty.NumberIntVal(1),
-			"end_level":   cty.NumberIntVal(2),
-			"ordered":     cty.True,
-			"scope":       cty.StringVal("document"),
-		}),
+	res, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+		Args: args,
 
 		DataContext: plugin.MapData{
 			"document": plugin.MapData{

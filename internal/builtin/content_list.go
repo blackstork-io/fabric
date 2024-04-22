@@ -19,26 +19,35 @@ import (
 
 const (
 	listQueryResultKey = "query_result"
-	listDefaultFormat  = "unordered"
 )
 
 var listAllowedFormats = []string{"unordered", "ordered", "tasklist"}
 
 func makeListContentProvider() *plugin.ContentProvider {
+	fmtDoc := fmt.Appendf(nil, "Can be one of: %q", listAllowedFormats[0])
+	for _, format := range listAllowedFormats[1:] {
+		fmtDoc = fmt.Appendf(fmtDoc, ", %q", format)
+	}
+
 	return &plugin.ContentProvider{
 		ContentFunc: genListContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "item_template",
-				Type:     cty.String,
-				Required: true,
+				Name:       "item_template",
+				Type:       cty.String,
+				Required:   true,
+				ExampleVal: cty.StringVal(`[{{.Title}}]({{.URL}})`),
+				Doc:        "Go template for the item of the list",
 			},
 			&dataspec.AttrSpec{
-				Name:     "format",
-				Type:     cty.String,
-				Required: false,
+				Name:       "format",
+				Type:       cty.String,
+				Required:   false,
+				DefaultVal: cty.StringVal("unordered"),
+				Doc:        string(fmtDoc),
 			},
 		},
+		Doc: "Produces a list of items",
 	}
 }
 
@@ -68,18 +77,13 @@ func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 
 func parseListContentArgs(params *plugin.ProvideContentParams) (string, *template.Template, error) {
 	itemTemplate := params.Args.GetAttr("item_template")
-	if itemTemplate.IsNull() {
-		return "", nil, errors.New("item_template is required")
-	}
-	format := params.Args.GetAttr("format")
-	if format.IsNull() {
-		format = cty.StringVal(listDefaultFormat)
-	}
-	if !slices.Contains(listAllowedFormats, format.AsString()) {
-		return "", nil, errors.New("invalid format: " + format.AsString())
+	format := params.Args.GetAttr("format").AsString()
+
+	if !slices.Contains(listAllowedFormats, format) {
+		return "", nil, errors.New("invalid format: " + format)
 	}
 	tmpl, err := template.New("item").Funcs(sprig.FuncMap()).Parse(itemTemplate.AsString())
-	return format.AsString(), tmpl, err
+	return format, tmpl, err
 }
 
 func renderListContent(format string, tmpl *template.Template, datactx plugin.MapData) (string, error) {

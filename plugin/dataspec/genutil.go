@@ -1,14 +1,13 @@
 package dataspec
 
 import (
-	"bufio"
-	"slices"
 	"strings"
-	"unicode"
 
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
 func exampleValueForType(ty cty.Type) cty.Value {
@@ -56,39 +55,11 @@ func exampleValueForType(ty cty.Type) cty.Value {
 }
 
 func comment(tokens hclwrite.Tokens, text string) hclwrite.Tokens {
-	s := bufio.NewScanner(strings.NewReader(strings.ReplaceAll(text, "\t", "    ")))
-	var lines []string
-	var commonWhitespace string
-	lenNonempty := 0
-
-	for s.Scan() {
-		line := s.Text()
-		if strings.TrimSpace(line) == "" {
-			if lenNonempty != 0 {
-				lines = append(lines, commonWhitespace)
-			}
-			continue
-		}
-
-		whitespace := 0
-		for whitespace < len(line) && line[whitespace] == ' ' {
-			whitespace++
-		}
-		if lenNonempty == 0 {
-			commonWhitespace = strings.Repeat(" ", whitespace)
-		} else if whitespace < len(commonWhitespace) {
-			commonWhitespace = commonWhitespace[:whitespace]
-		}
-		lines = append(lines, line)
-		lenNonempty = len(lines)
-	}
-	tokens = slices.Grow(tokens, lenNonempty)
-
 	var sb strings.Builder
 
-	for _, line := range lines[:lenNonempty] {
+	for _, line := range utils.TrimDedent(text) {
 		sb.WriteString("# ")
-		sb.WriteString(strings.TrimRightFunc(line[len(commonWhitespace):], unicode.IsSpace))
+		sb.WriteString(line)
 		sb.WriteByte('\n')
 		tokens = append(tokens, &hclwrite.Token{
 			Type:  hclsyntax.TokenComment,

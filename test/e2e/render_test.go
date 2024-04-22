@@ -11,12 +11,12 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/blackstork-io/fabric/cmd"
+	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/fabctx"
-	"github.com/blackstork-io/fabric/test/e2e/diag_test"
 )
 
-func renderTest(t *testing.T, testName string, files []string, docName string, expectedResult []string, diagAsserts [][]diag_test.Assert) {
+func renderTest(t *testing.T, testName string, files []string, docName string, expectedResult []string, diagAsserts [][]testtools.Assert) {
 	t.Helper()
 	t.Run(testName, func(t *testing.T) {
 		t.Parallel()
@@ -55,7 +55,7 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 				res,
 			)
 		}
-		diag_test.CompareDiags(t, diags, diagAsserts)
+		testtools.CompareDiags(t, eval.FileMap, diags, diagAsserts)
 	})
 }
 
@@ -90,7 +90,7 @@ func TestE2ERender(t *testing.T) {
 			"# Welcome",
 			"Hello from fabric",
 		},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 	renderTest(
 		t, "Ref",
@@ -113,7 +113,7 @@ func TestE2ERender(t *testing.T) {
 			"# Welcome",
 			"Hello from ref",
 		},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 	renderTest(
 		t, "Ref across files",
@@ -137,7 +137,7 @@ func TestE2ERender(t *testing.T) {
 			"# Welcome",
 			"Hello from ref",
 		},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 	renderTest(
 		t, "Ref chain",
@@ -163,7 +163,7 @@ func TestE2ERender(t *testing.T) {
 		[]string{
 			"> Hello from ref chain",
 		},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 	renderTest(
 		t, "Ref loop untouched",
@@ -197,7 +197,7 @@ func TestE2ERender(t *testing.T) {
 		[]string{
 			"Near refloop",
 		},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 
 	renderTest(
@@ -230,8 +230,8 @@ func TestE2ERender(t *testing.T) {
 		},
 		"test-doc",
 		[]string{},
-		[][]diag_test.Assert{
-			{diag_test.IsError, diag_test.SummaryContains("Circular reference detected")},
+		[][]testtools.Assert{
+			{testtools.IsError, testtools.SummaryContains("Circular reference detected")},
 		},
 	)
 	renderTest(
@@ -304,7 +304,7 @@ func TestE2ERender(t *testing.T) {
 			"s3 extra",
 			"final section",
 		},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 	renderTest(
 		t, "Templating support",
@@ -321,7 +321,7 @@ func TestE2ERender(t *testing.T) {
 		[]string{
 			"4",
 		},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 	renderTest(
 		t, "Data ref name warning missing",
@@ -341,7 +341,7 @@ func TestE2ERender(t *testing.T) {
 		},
 		"test-doc",
 		[]string{},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 	renderTest(
 		t, "Data ref name warning",
@@ -364,8 +364,8 @@ func TestE2ERender(t *testing.T) {
 		},
 		"test-doc",
 		[]string{},
-		[][]diag_test.Assert{
-			{diag_test.IsWarning, diag_test.SummaryContains("Data conflict")},
+		[][]testtools.Assert{
+			{testtools.IsWarning, testtools.SummaryContains("Data conflict")},
 		},
 	)
 	renderTest(
@@ -384,15 +384,15 @@ func TestE2ERender(t *testing.T) {
 		},
 		"test-doc",
 		[]string{"txt"},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 	renderTest(
 		t, "No fabric files",
 		[]string{},
 		"test-doc",
 		[]string{},
-		[][]diag_test.Assert{
-			{diag_test.IsError, diag_test.SummaryContains("No fabric files found")},
+		[][]testtools.Assert{
+			{testtools.IsError, testtools.SummaryContains("No fabric files found")},
 		},
 	)
 	renderTest(
@@ -411,7 +411,7 @@ func TestE2ERender(t *testing.T) {
 		},
 		"test-doc",
 		[]string{"From data block: val"},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 	renderTest(
 		t, "Data with jq interaction",
@@ -432,7 +432,7 @@ func TestE2ERender(t *testing.T) {
 		},
 		"test",
 		[]string{"There are 3 items"},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 	renderTest(
 		t, "Document meta",
@@ -451,7 +451,7 @@ func TestE2ERender(t *testing.T) {
 		},
 		"test",
 		[]string{"author = foo"},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 	renderTest(
 		t, "Document and content meta",
@@ -478,7 +478,7 @@ func TestE2ERender(t *testing.T) {
 		},
 		"test",
 		[]string{"author = foobarbaz"},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 	renderTest(
 		t, "Meta scoping and nesting",
@@ -529,7 +529,7 @@ func TestE2ERender(t *testing.T) {
 			"author = unknown",
 			"author = bar",
 		},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 	renderTest(
 		t, "Reference rendered blocks",
@@ -556,6 +556,6 @@ func TestE2ERender(t *testing.T) {
 			"content[0] = first result",
 			"content[1] = content[0] = first result",
 		},
-		[][]diag_test.Assert{},
+		[][]testtools.Assert{},
 	)
 }

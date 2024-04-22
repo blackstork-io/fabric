@@ -1,5 +1,5 @@
 ---
-title: openai_text 
+title: openai_text
 plugin:
   name: blackstork/openai
   description: ""
@@ -38,9 +38,14 @@ The content provider supports the following configuration parameters:
 
 ```hcl
 config content openai_text {
-    api_key = <string>  # required
-    organization_id = <string>  # optional
-    system_prompt = <string>  # optional
+  # Optional string. Default value:
+  system_prompt = null
+
+  # Required string. For example:
+  api_key = "some string"
+
+  # Optional string. Default value:
+  organization_id = null
 }
 ```
 
@@ -50,8 +55,11 @@ The content provider supports the following execution parameters:
 
 ```hcl
 content openai_text {
-    model = <string>  # optional
-    prompt = <string>  # required
+  # Required string. For example:
+  prompt = "some string"
+
+  # Optional string. Default value:
+  model = null
 }
 ```
 

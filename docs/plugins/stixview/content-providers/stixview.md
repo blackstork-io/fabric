@@ -1,5 +1,5 @@
 ---
-title: stixview 
+title: stixview
 plugin:
   name: blackstork/stixview
   description: ""
@@ -42,17 +42,38 @@ The content provider supports the following execution parameters:
 
 ```hcl
 content stixview {
-    caption = <string>  # optional
-    gist_id = <string>  # optional
-    height = <number>  # optional
-    show_footer = <bool>  # optional
-    show_idrefs = <bool>  # optional
-    show_labels = <bool>  # optional
-    show_marking_nodes = <bool>  # optional
-    show_sidebar = <bool>  # optional
-    show_tlp_as_tags = <bool>  # optional
-    stix_url = <string>  # optional
-    width = <number>  # optional
+  # Optional string. Default value:
+  gist_id = null
+
+  # Optional string. Default value:
+  stix_url = null
+
+  # Optional string. Default value:
+  caption = null
+
+  # Optional bool. Default value:
+  show_footer = null
+
+  # Optional bool. Default value:
+  show_sidebar = null
+
+  # Optional bool. Default value:
+  show_tlp_as_tags = null
+
+  # Optional bool. Default value:
+  show_marking_nodes = null
+
+  # Optional bool. Default value:
+  show_labels = null
+
+  # Optional bool. Default value:
+  show_idrefs = null
+
+  # Optional number. Default value:
+  width = null
+
+  # Optional number. Default value:
+  height = null
 }
 ```
 

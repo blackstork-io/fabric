@@ -23,21 +23,39 @@ func makeTitleContentProvider() *plugin.ContentProvider {
 		ContentFunc: genTitleContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "value",
-				Type:     cty.String,
-				Required: true,
+				Name:       "value",
+				Type:       cty.String,
+				Required:   true,
+				Doc:        `Title content`,
+				ExampleVal: cty.StringVal("Vulnerability Report"),
 			},
 			&dataspec.AttrSpec{
-				Name:     "absolute_size",
-				Type:     cty.Number,
-				Required: false,
+				Name:       "absolute_size",
+				Type:       cty.Number,
+				Required:   false,
+				DefaultVal: cty.NullVal(cty.Number),
+				Doc: `
+					Sets the absolute size of the title.
+					If ` + "`null`" + ` – absoulute title size is determined from the document structure
+				`,
 			},
 			&dataspec.AttrSpec{
-				Name:     "relative_size",
-				Type:     cty.Number,
-				Required: false,
+				Name:       "relative_size",
+				Type:       cty.Number,
+				Required:   false,
+				DefaultVal: cty.NumberIntVal(0),
+				Doc: `
+					Adjusts the absolute size of the title.
+					The value (which may be negative) is added to the ` + "`absolute_size`" + ` to produce the final title size
+				`,
 			},
 		},
+		Doc: `
+			Produces a title.
+
+			The title size after calculations must be in an interval [0; 5] inclusive, where 0
+			corresponds to the largest size (` + "`<h1>`" + `) and 5 corresponds to (` + "`<h6>`" + `)
+		`,
 	}
 }
 
@@ -55,9 +73,6 @@ func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (
 		absoluteSize = cty.NumberIntVal(findDefaultTitleSize(params.DataContext) + 1)
 	}
 	relativeSize := params.Args.GetAttr("relative_size")
-	if relativeSize.IsNull() {
-		relativeSize = cty.NumberIntVal(0)
-	}
 
 	titleSize, _ := absoluteSize.AsBigFloat().Int64()
 	relationSize, _ := relativeSize.AsBigFloat().Int64()

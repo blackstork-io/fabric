@@ -47,6 +47,7 @@ func (order InvocationOrder) Weight() int {
 }
 
 type ContentProvider struct {
+	// first non-empty line is treated as a short description
 	Doc             string
 	Tags            []string
 	ContentFunc     ProvideContentFunc

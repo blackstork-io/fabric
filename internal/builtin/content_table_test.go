@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -32,7 +33,7 @@ func (s *TableGeneratorTestSuite) TestSchema() {
 }
 
 func (s *TableGeneratorTestSuite) TestNilQueryResult() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"columns": cty.ListVal([]cty.Value{
 			cty.ObjectVal(map[string]cty.Value{
 				"header": cty.StringVal("{{.col_prefix}} Name"),
@@ -44,6 +45,7 @@ func (s *TableGeneratorTestSuite) TestNilQueryResult() {
 			}),
 		}),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -57,7 +59,7 @@ func (s *TableGeneratorTestSuite) TestNilQueryResult() {
 }
 
 func (s *TableGeneratorTestSuite) TestEmptyQueryResult() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"columns": cty.ListVal([]cty.Value{
 			cty.ObjectVal(map[string]cty.Value{
 				"header": cty.StringVal("{{.col_prefix}} Name"),
@@ -69,6 +71,7 @@ func (s *TableGeneratorTestSuite) TestEmptyQueryResult() {
 			}),
 		}),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -82,7 +85,7 @@ func (s *TableGeneratorTestSuite) TestEmptyQueryResult() {
 }
 
 func (s *TableGeneratorTestSuite) TestBasic() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"columns": cty.ListVal([]cty.Value{
 			cty.ObjectVal(map[string]cty.Value{
 				"header": cty.StringVal("{{.col_prefix}} Name"),
@@ -94,6 +97,7 @@ func (s *TableGeneratorTestSuite) TestBasic() {
 			}),
 		}),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -116,7 +120,7 @@ func (s *TableGeneratorTestSuite) TestBasic() {
 }
 
 func (s *TableGeneratorTestSuite) TestSprigTemplate() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"columns": cty.ListVal([]cty.Value{
 			cty.ObjectVal(map[string]cty.Value{
 				"header": cty.StringVal("{{.col_prefix | upper}} Name"),
@@ -128,6 +132,7 @@ func (s *TableGeneratorTestSuite) TestSprigTemplate() {
 			}),
 		}),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -150,7 +155,7 @@ func (s *TableGeneratorTestSuite) TestSprigTemplate() {
 }
 
 func (s *TableGeneratorTestSuite) TestMissingHeader() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"columns": cty.ListVal([]cty.Value{
 			cty.ObjectVal(map[string]cty.Value{
 				"value": cty.StringVal("{{.name}}"),
@@ -160,33 +165,14 @@ func (s *TableGeneratorTestSuite) TestMissingHeader() {
 			}),
 		}),
 	})
-	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"col_prefix": plugin.StringData("User"),
-			"query_result": plugin.ListData{
-				plugin.MapData{
-					"name": plugin.StringData("John"),
-					"age":  plugin.NumberData(42),
-				},
-				plugin.MapData{
-					"name": plugin.StringData("Jane"),
-					"age":  plugin.NumberData(43),
-				},
-			},
-		},
-	})
-	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "missing header in table cell",
-	}}, diags)
+	testtools.ReencodeCTY(s.T(), s.schema.Args, val, [][]testtools.Assert{{
+		testtools.IsError,
+		testtools.DetailContains("attribute", "header", "required"),
+	}})
 }
 
 func (s *TableGeneratorTestSuite) TestNilHeader() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"columns": cty.ListVal([]cty.Value{
 			cty.ObjectVal(map[string]cty.Value{
 				"header": cty.NullVal(cty.String),
@@ -198,6 +184,7 @@ func (s *TableGeneratorTestSuite) TestNilHeader() {
 			}),
 		}),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -224,7 +211,7 @@ func (s *TableGeneratorTestSuite) TestNilHeader() {
 }
 
 func (s *TableGeneratorTestSuite) TestNilValue() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"columns": cty.ListVal([]cty.Value{
 			cty.ObjectVal(map[string]cty.Value{
 				"header": cty.StringVal("{{.col_prefix}} Name"),
@@ -236,6 +223,7 @@ func (s *TableGeneratorTestSuite) TestNilValue() {
 			}),
 		}),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -262,38 +250,20 @@ func (s *TableGeneratorTestSuite) TestNilValue() {
 }
 
 func (s *TableGeneratorTestSuite) TestNilColumns() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"columns": cty.NullVal(cty.List(cty.Object(map[string]cty.Type{}))),
 	})
-	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"col_prefix": plugin.StringData("User"),
-			"query_result": plugin.ListData{
-				plugin.MapData{
-					"name": plugin.StringData("John"),
-					"age":  plugin.NumberData(42),
-				},
-				plugin.MapData{
-					"name": plugin.StringData("Jane"),
-					"age":  plugin.NumberData(43),
-				},
-			},
-		},
-	})
-	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "columns is required",
-	}}, diags)
+	testtools.ReencodeCTY(s.T(), s.schema.Args, val, [][]testtools.Assert{{
+		testtools.IsError,
+		testtools.SummaryContains("Argument must be non-null"),
+	}})
 }
 
 func (s *TableGeneratorTestSuite) TestEmptyColumns() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"columns": cty.ListValEmpty(cty.Object(map[string]cty.Type{})),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -320,7 +290,7 @@ func (s *TableGeneratorTestSuite) TestEmptyColumns() {
 }
 
 func (s *TableGeneratorTestSuite) TestInvalidHeaderTemplate() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"columns": cty.ListVal([]cty.Value{
 			cty.ObjectVal(map[string]cty.Value{
 				"header": cty.StringVal("{{.col_prefix} Name"),
@@ -332,6 +302,7 @@ func (s *TableGeneratorTestSuite) TestInvalidHeaderTemplate() {
 			}),
 		}),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -358,7 +329,7 @@ func (s *TableGeneratorTestSuite) TestInvalidHeaderTemplate() {
 }
 
 func (s *TableGeneratorTestSuite) TestInvalidValueTemplate() {
-	args := cty.ObjectVal(map[string]cty.Value{
+	val := cty.ObjectVal(map[string]cty.Value{
 		"columns": cty.ListVal([]cty.Value{
 			cty.ObjectVal(map[string]cty.Value{
 				"header": cty.StringVal("{{.col_prefix}} Name"),
@@ -370,6 +341,7 @@ func (s *TableGeneratorTestSuite) TestInvalidValueTemplate() {
 			}),
 		}),
 	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,

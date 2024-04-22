@@ -1,8 +1,8 @@
 ---
-title: blockquote 
+title: blockquote
 plugin:
   name: blackstork/builtin
-  description: ""
+  description: "Formats text as a block quote"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -14,6 +14,9 @@ type: docs
 {{< breadcrumbs 2 >}}
 
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "blockquote" "content provider" >}}
+
+## Description
+Formats text as a block quote
 
 The content provider is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 
@@ -28,7 +31,8 @@ The content provider supports the following execution parameters:
 
 ```hcl
 content blockquote {
-    value = <string>  # required
+  # Required string. For example:
+  value = "Text to be formatted as a quote"
 }
 ```
 

@@ -2,7 +2,7 @@
 title: {{ .name }}
 plugin:
   name: {{ .plugin.Name }}
-  description: {{ .content_provider.Doc | quote }}
+  description: {{ .short_desc | quote }}
   tags: {{ formatTags .content_provider.Tags }}
   version: "{{ .plugin.Version }}"
   {{- if eq .plugin_shortname "nist_nvd" }}
@@ -19,9 +19,9 @@ type: docs
 
 {{"{{"}}< plugin-resource-header "{{ .plugin.Name }}" "{{ .plugin_shortname }}" "{{ .plugin.Version }}" "{{ .name }}" "content provider" >{{"}}"}}
 
-{{if .plugin.Doc -}}
+{{if .content_provider.Doc -}}
 ## Description
-{{ .plugin.Doc }}
+{{ .desc }}
 
 {{end -}}
 
@@ -52,7 +52,7 @@ Note the version constraint set for the plugin.
 The content provider supports the following configuration parameters:
 
 ```hcl
-{{ renderDoc . "config" "content" $ctx.name }}
+{{ renderDoc . "config" "content" $ctx.name -}}
 ```
 {{ else -}}
 The content provider doesn't support any configuration parameters.
@@ -63,7 +63,7 @@ The content provider doesn't support any configuration parameters.
 The content provider supports the following execution parameters:
 
 ```hcl
-{{ renderDoc . "content" $ctx.name }}
+{{ renderDoc . "content" $ctx.name -}}
 ```
 {{ else }}
 The content provider doesn't define any execution parameters.

@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -31,31 +31,25 @@ func (s *CodeTestSuite) TestSchema() {
 }
 
 func (s *CodeTestSuite) TestMissingValue() {
-	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value":    cty.NullVal(cty.String),
-			"language": cty.NullVal(cty.String),
-		}),
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
-		},
+	val := cty.ObjectVal(map[string]cty.Value{
+		"value":    cty.NullVal(cty.String),
+		"language": cty.NullVal(cty.String),
 	})
-	s.Nil(content)
-	s.Equal(hcl.Diagnostics{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "value is required",
-	}}, diags)
+	testtools.ReencodeCTY(s.T(), s.schema.Args, val, [][]testtools.Assert{{
+		testtools.SummaryContains("Argument must be non-null"),
+	}})
 }
 
 func (s *CodeTestSuite) TestCallCodeDefault() {
 	ctx := context.Background()
+	val := cty.ObjectVal(map[string]cty.Value{
+		"value":    cty.StringVal(`Hello {{.name}}!`),
+		"language": cty.NullVal(cty.String),
+	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value":    cty.StringVal(`Hello {{.name}}!`),
-			"language": cty.NullVal(cty.String),
-		}),
+		Args: args,
 		DataContext: plugin.MapData{
 			"name": plugin.StringData("World"),
 		},
@@ -70,11 +64,14 @@ func (s *CodeTestSuite) TestCallCodeDefault() {
 
 func (s *CodeTestSuite) TestCallCodeWithLanguage() {
 	ctx := context.Background()
+	val := cty.ObjectVal(map[string]cty.Value{
+		"value":    cty.StringVal(`{"hello": "{{.name}}"}`),
+		"language": cty.StringVal("json"),
+	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value":    cty.StringVal(`{"hello": "{{.name}}"}`),
-			"language": cty.StringVal("json"),
-		}),
+		Args: args,
 		DataContext: plugin.MapData{
 			"name": plugin.StringData("world"),
 		},

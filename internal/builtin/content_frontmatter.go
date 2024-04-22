@@ -3,7 +3,6 @@ package builtin
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -13,12 +12,12 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"gopkg.in/yaml.v3"
 
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 const (
-	frontMatterDefaultFormat  = "yaml"
 	frontMatterQueryResultKey = "query_result"
 )
 
@@ -29,16 +28,30 @@ func makeFrontMatterContentProvider() *plugin.ContentProvider {
 		ContentFunc: genFrontMatterContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "format",
-				Type:     cty.String,
-				Required: false,
+				Name:       "format",
+				Type:       cty.String,
+				Required:   false,
+				Doc:        `Format of the frontmatter. Must be one of ` + utils.JoinSurround(", ", `"`, frontMatterAllowedFormats...),
+				DefaultVal: cty.StringVal("yaml"),
 			},
 			&dataspec.AttrSpec{
-				Name:     "content",
-				Type:     cty.Map(cty.DynamicPseudoType),
-				Required: false,
+				Name: "content",
+				Type: cty.DynamicPseudoType,
+				Doc: `
+				Arbitrary key-value map to be put in the frontmatter.
+
+				NOTE: Data from "query_result" replaces this value if present`,
+				Required:   false,
+				DefaultVal: cty.NullVal(cty.DynamicPseudoType),
+				ExampleVal: cty.ObjectVal(map[string]cty.Value{
+					"key": cty.StringVal("arbitrary value"),
+					"key2": cty.MapVal(map[string]cty.Value{
+						"can be nested": cty.NumberIntVal(42),
+					}),
+				}),
 			},
 		},
+		Doc: `Produces the frontmatter.`,
 	}
 }
 
@@ -95,32 +108,31 @@ func validateFrontMatterContentTree(datactx plugin.MapData, contentID uint32) er
 }
 
 func parseFrontMatterArgs(args cty.Value, datactx plugin.MapData) (string, plugin.MapData, error) {
-	format := args.GetAttr("format")
-	if format.IsNull() || format.AsString() == "" {
-		format = cty.StringVal(frontMatterDefaultFormat)
+	format := args.GetAttr("format").AsString()
+
+	if !slices.Contains(frontMatterAllowedFormats, format) {
+		return "", nil, fmt.Errorf("invalid format: %s", format)
 	}
-	if !slices.Contains(frontMatterAllowedFormats, format.AsString()) {
-		return "", nil, fmt.Errorf("invalid format: %s", format.AsString())
-	}
-	var m plugin.MapData
+	var data plugin.Data
 	if datactx != nil {
-		if queryResult, ok := datactx[frontMatterQueryResultKey]; ok {
-			if qr, ok := queryResult.(plugin.MapData); ok {
-				m = qr
-			} else {
-				return "", nil, fmt.Errorf("invalid query result: %T", queryResult)
-			}
+		if qr, ok := datactx[frontMatterQueryResultKey]; ok {
+			data = qr
 		}
 	}
-	content := args.GetAttr("content")
-	if m == nil {
+	if data == nil {
+		content := args.GetAttr("content")
 		if !content.IsNull() {
-			m = convertCtyToDataMap(content)
-		} else {
-			return "", nil, errors.New("query_result and content are nil")
+			data = plugin.ConvertCtyToData(content)
 		}
 	}
-	return format.AsString(), m, nil
+	if data == nil {
+		return "", nil, fmt.Errorf("%s and content are nil", frontMatterQueryResultKey)
+	}
+	m, ok := data.(plugin.MapData)
+	if !ok {
+		return "", nil, fmt.Errorf("invalid frontmatter data type: %T", data)
+	}
+	return format, m, nil
 }
 
 func renderFrontMatterContent(format string, m plugin.MapData) (string, error) {
@@ -167,43 +179,4 @@ func renderJSONFrontMatter(m plugin.MapData) (string, error) {
 		return "", err
 	}
 	return buf.String(), nil
-}
-
-func convertCtyToDataMap(v cty.Value) plugin.MapData {
-	result := make(plugin.MapData)
-	for k, v := range v.AsValueMap() {
-		result[k] = convertCtyToData(v)
-	}
-	return result
-}
-
-func convertCtyToData(v cty.Value) plugin.Data {
-	if v.IsNull() {
-		return nil
-	}
-	t := v.Type()
-	switch {
-	case t == cty.String:
-		return plugin.StringData(v.AsString())
-	case t == cty.Number:
-		if v.AsBigFloat().IsInt() {
-			n, _ := v.AsBigFloat().Float64()
-			return plugin.NumberData(n)
-		}
-	case t == cty.Bool:
-		return plugin.BoolData(v.True())
-	case t.IsMapType() || t.IsObjectType():
-		return convertCtyToDataMap(v)
-	case t.IsListType():
-		return convertCtyToDataList(v)
-	}
-	return nil
-}
-
-func convertCtyToDataList(v cty.Value) plugin.ListData {
-	var result plugin.ListData
-	for _, v := range v.AsValueSlice() {
-		result = append(result, convertCtyToData(v))
-	}
-	return result
 }

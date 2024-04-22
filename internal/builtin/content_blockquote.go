@@ -16,24 +16,19 @@ func makeBlockQuoteContentProvider() *plugin.ContentProvider {
 		ContentFunc: genBlockQuoteContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "value",
-				Type:     cty.String,
-				Required: true,
+				Name:       "value",
+				Type:       cty.String,
+				ExampleVal: cty.StringVal("Text to be formatted as a quote"),
+				Required:   true,
 			},
 		},
+		Doc: "Formats text as a block quote",
 	}
 }
 
 func genBlockQuoteContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
-	value := params.Args.GetAttr("value")
-	if value.IsNull() {
-		return nil, hcl.Diagnostics{{
-			Severity: hcl.DiagError,
-			Summary:  "Failed to parse arguments",
-			Detail:   "value is required",
-		}}
-	}
-	text, err := genTextContentText(value.AsString(), params.DataContext)
+	value := params.Args.GetAttr("value").AsString()
+	text, err := genTextContentText(value, params.DataContext)
 	if err != nil {
 		return nil, hcl.Diagnostics{{
 			Severity: hcl.DiagError,

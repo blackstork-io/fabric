@@ -1,8 +1,8 @@
 ---
-title: list 
+title: list
 plugin:
   name: blackstork/builtin
-  description: ""
+  description: "Produces a list of items"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -14,6 +14,9 @@ type: docs
 {{< breadcrumbs 2 >}}
 
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "list" "content provider" >}}
+
+## Description
+Produces a list of items
 
 The content provider is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 
@@ -28,8 +31,15 @@ The content provider supports the following execution parameters:
 
 ```hcl
 content list {
-    format = <string>  # optional
-    item_template = <string>  # required
+  # Go template for the item of the list
+  #
+  # Required string. For example:
+  item_template = "[{{.Title}}]({{.URL}})"
+
+  # Can be one of: "unordered", "ordered", "tasklist"
+  #
+  # Optional string. Default value:
+  format = "unordered"
 }
 ```
 

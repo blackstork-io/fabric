@@ -41,6 +41,7 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data terraform_state_local {
-    path = <string>  # required
+  # Required string. For example:
+  path = "some string"
 }
 ```

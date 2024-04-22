@@ -3,6 +3,7 @@ package dataspec
 import (
 	"fmt"
 
+	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
@@ -31,8 +32,12 @@ func (a *AttrSpec) DocComment() hclwrite.Tokens {
 	if len(tokens) != 0 {
 		tokens = appendCommentNewLine(tokens)
 	}
+
 	if a.Required {
-		tokens = comment(tokens, "Required. For example:")
+		tokens = comment(
+			tokens,
+			fmt.Sprintf("Required %s. For example:", a.Type.FriendlyNameForConstraint()),
+		)
 	} else {
 		if a.ExampleVal != cty.NilVal {
 			f := hclwrite.NewEmptyFile()
@@ -40,7 +45,10 @@ func (a *AttrSpec) DocComment() hclwrite.Tokens {
 			tokens = comment(tokens, "For example:\n"+string(hclwrite.Format(f.Bytes())))
 			tokens = appendCommentNewLine(tokens)
 		}
-		tokens = comment(tokens, "Optional. Default value:")
+		tokens = comment(
+			tokens,
+			fmt.Sprintf("Optional %s. Default value:", a.Type.FriendlyNameForConstraint()),
+		)
 	}
 	return tokens
 }
@@ -63,21 +71,36 @@ func (a *AttrSpec) WriteDoc(w *hclwrite.Body) {
 	w.SetAttributeValue(a.Name, val)
 }
 
-func (a *AttrSpec) HcldecSpec() (res hcldec.Spec) {
-	res = &hcldec.AttrSpec{
+func (a *AttrSpec) HcldecSpec() hcldec.Spec {
+	res := &hcldec.AttrSpec{
 		Name:     a.Name,
 		Type:     a.Type,
 		Required: a.Required,
 	}
-	if !a.Required && !a.DefaultVal.IsNull() {
-		res = &hcldec.DefaultSpec{
+	if a.Required {
+		return &hcldec.ValidateSpec{
+			Wrapped: res,
+			Func: func(value cty.Value) hcl.Diagnostics {
+				if value.IsNull() {
+					return []*hcl.Diagnostic{{
+						Severity: hcl.DiagError,
+						Summary:  "Argument must be non-null",
+						Detail:   fmt.Sprintf("The argument %q was either not defined or is null.", res.Name),
+					}}
+				}
+				return nil
+			},
+		}
+	} else if !a.DefaultVal.IsNull() {
+		return &hcldec.DefaultSpec{
 			Primary: res,
 			Default: &hcldec.LiteralSpec{
 				Value: a.DefaultVal,
 			},
 		}
 	}
-	return
+
+	return res
 }
 
 func (a *AttrSpec) Validate() (errs []string) {

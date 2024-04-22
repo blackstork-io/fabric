@@ -37,8 +37,11 @@ The data source supports the following configuration parameters:
 
 ```hcl
 config data opencti {
-    auth_token = <string>  # optional
-    graphql_url = <string>  # required
+  # Required string. For example:
+  graphql_url = "some string"
+
+  # Optional string. Default value:
+  auth_token = null
 }
 ```
 
@@ -48,6 +51,7 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data opencti {
-    graphql_query = <string>  # required
+  # Required string. For example:
+  graphql_query = "some string"
 }
 ```

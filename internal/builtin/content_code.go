@@ -11,41 +11,39 @@ import (
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
-const (
-	defaultCodeLanguage = ""
-)
-
 func makeCodeContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genCodeContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "value",
-				Type:     cty.String,
-				Required: true,
+				Name:       "value",
+				Type:       cty.String,
+				Required:   true,
+				ExampleVal: cty.StringVal("Text to be formatted as a code block"),
 			},
 			&dataspec.AttrSpec{
-				Name:     "language",
-				Type:     cty.String,
-				Required: false,
+				Name:       "language",
+				Type:       cty.String,
+				Required:   false,
+				ExampleVal: cty.StringVal("python3"),
+				DefaultVal: cty.StringVal(""),
+				Doc:        `Specifiy the language for syntax highlighting`,
 			},
 		},
+		Doc: "Formats text as code snippet",
 	}
 }
 
 func genCodeContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
 	value := params.Args.GetAttr("value")
-	if value.IsNull() {
-		return nil, hcl.Diagnostics{{
-			Severity: hcl.DiagError,
-			Summary:  "Failed to parse arguments",
-			Detail:   "value is required",
-		}}
-	}
+	// if value.IsNull() {
+	// 	return nil, hcl.Diagnostics{{
+	// 		Severity: hcl.DiagError,
+	// 		Summary:  "Failed to parse arguments",
+	// 		Detail:   "value is required",
+	// 	}}
+	// }
 	lang := params.Args.GetAttr("language")
-	if lang.IsNull() {
-		lang = cty.StringVal(defaultCodeLanguage)
-	}
 	text, err := genTextContentText(value.AsString(), params.DataContext)
 	if err != nil {
 		return nil, hcl.Diagnostics{{

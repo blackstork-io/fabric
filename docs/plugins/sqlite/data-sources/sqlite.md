@@ -37,7 +37,8 @@ The data source supports the following configuration parameters:
 
 ```hcl
 config data sqlite {
-    database_uri = <string>  # required
+  # Required string. For example:
+  database_uri = "some string"
 }
 ```
 
@@ -47,7 +48,10 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data sqlite {
-    sql_args = <list of dynamic>  # optional
-    sql_query = <string>  # required
+  # Required string. For example:
+  sql_query = "some string"
+
+  # Optional list of any single type. Default value:
+  sql_args = null
 }
 ```

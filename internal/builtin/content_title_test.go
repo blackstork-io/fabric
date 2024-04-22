@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -31,33 +32,27 @@ func (s *TitleTestSuite) TestSchema() {
 }
 
 func (s *TitleTestSuite) TestMissingValue() {
-	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value":         cty.NullVal(cty.String),
-			"absolute_size": cty.NullVal(cty.Number),
-			"relative_size": cty.NullVal(cty.Number),
-		}),
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
-		},
+	val := cty.ObjectVal(map[string]cty.Value{
+		"value":         cty.NullVal(cty.String),
+		"absolute_size": cty.NullVal(cty.Number),
+		"relative_size": cty.NullVal(cty.Number),
 	})
-	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "value is required",
-	}}, diags)
+	testtools.ReencodeCTY(s.T(), s.schema.Args, val, [][]testtools.Assert{{
+		testtools.IsError,
+		testtools.SummaryContains("Argument must be non-null"),
+	}})
 }
 
 func (s *TitleTestSuite) TestTDefault() {
+	val := cty.ObjectVal(map[string]cty.Value{
+		"value":         cty.StringVal("Hello {{.name}}!"),
+		"absolute_size": cty.NullVal(cty.Number),
+		"relative_size": cty.NullVal(cty.Number),
+	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value":         cty.StringVal("Hello {{.name}}!"),
-			"absolute_size": cty.NullVal(cty.Number),
-			"relative_size": cty.NullVal(cty.Number),
-		}),
+		Args: args,
 		DataContext: plugin.MapData{
 			"name": plugin.StringData("World"),
 		},
@@ -67,13 +62,15 @@ func (s *TitleTestSuite) TestTDefault() {
 }
 
 func (s *TitleTestSuite) TestWithTextMultiline() {
+	val := cty.ObjectVal(map[string]cty.Value{
+		"value":         cty.StringVal("Hello\n{{.name}}\nfor you!"),
+		"absolute_size": cty.NullVal(cty.Number),
+		"relative_size": cty.NullVal(cty.Number),
+	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value":         cty.StringVal("Hello\n{{.name}}\nfor you!"),
-			"absolute_size": cty.NullVal(cty.Number),
-			"relative_size": cty.NullVal(cty.Number),
-		}),
+		Args: args,
 		DataContext: plugin.MapData{
 			"name": plugin.StringData("World"),
 		},
@@ -83,13 +80,15 @@ func (s *TitleTestSuite) TestWithTextMultiline() {
 }
 
 func (s *TitleTestSuite) TestWithSize() {
+	val := cty.ObjectVal(map[string]cty.Value{
+		"value":         cty.StringVal("Hello {{.name}}!"),
+		"absolute_size": cty.NumberIntVal(2),
+		"relative_size": cty.NullVal(cty.Number),
+	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value":         cty.StringVal("Hello {{.name}}!"),
-			"absolute_size": cty.NumberIntVal(2),
-			"relative_size": cty.NullVal(cty.Number),
-		}),
+		Args: args,
 		DataContext: plugin.MapData{
 			"name": plugin.StringData("World"),
 		},
@@ -99,13 +98,15 @@ func (s *TitleTestSuite) TestWithSize() {
 }
 
 func (s *TitleTestSuite) TestWithSizeTooBig() {
+	val := cty.ObjectVal(map[string]cty.Value{
+		"value":         cty.StringVal("Hello {{.name}}!"),
+		"absolute_size": cty.NumberIntVal(7),
+		"relative_size": cty.NullVal(cty.Number),
+	})
+	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value":         cty.StringVal("Hello {{.name}}!"),
-			"absolute_size": cty.NumberIntVal(7),
-			"relative_size": cty.NullVal(cty.Number),
-		}),
+		Args: args,
 		DataContext: plugin.MapData{
 			"name": plugin.StringData("World"),
 		},

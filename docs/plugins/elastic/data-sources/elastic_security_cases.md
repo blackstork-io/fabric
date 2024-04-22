@@ -37,9 +37,14 @@ The data source supports the following configuration parameters:
 
 ```hcl
 config data elastic_security_cases {
-    api_key = <list of string>  # optional
-    api_key_str = <string>  # optional
-    kibana_endpoint_url = <string>  # required
+  # Required string. For example:
+  kibana_endpoint_url = "some string"
+
+  # Optional string. Default value:
+  api_key_str = null
+
+  # Optional list of string. Default value:
+  api_key = null
 }
 ```
 
@@ -49,20 +54,49 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data elastic_security_cases {
-    assignees = <list of string>  # optional
-    default_search_operator = <string>  # optional
-    from = <string>  # optional
-    owner = <list of string>  # optional
-    reporters = <list of string>  # optional
-    search = <string>  # optional
-    search_fields = <list of string>  # optional
-    severity = <string>  # optional
-    size = <number>  # optional
-    sort_field = <string>  # optional
-    sort_order = <string>  # optional
-    space_id = <string>  # optional
-    status = <string>  # optional
-    tags = <list of string>  # optional
-    to = <string>  # optional
+  # Optional string. Default value:
+  space_id = null
+
+  # Optional list of string. Default value:
+  assignees = null
+
+  # Optional string. Default value:
+  default_search_operator = null
+
+  # Optional string. Default value:
+  from = null
+
+  # Optional list of string. Default value:
+  owner = null
+
+  # Optional list of string. Default value:
+  reporters = null
+
+  # Optional string. Default value:
+  search = null
+
+  # Optional list of string. Default value:
+  search_fields = null
+
+  # Optional string. Default value:
+  severity = null
+
+  # Optional string. Default value:
+  sort_field = null
+
+  # Optional string. Default value:
+  sort_order = null
+
+  # Optional string. Default value:
+  status = null
+
+  # Optional list of string. Default value:
+  tags = null
+
+  # Optional string. Default value:
+  to = null
+
+  # Optional number. Default value:
+  size = null
 }
 ```

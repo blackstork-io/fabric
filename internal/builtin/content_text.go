@@ -20,11 +20,14 @@ func makeTextContentProvider() *plugin.ContentProvider {
 		ContentFunc: genTextContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "value",
-				Type:     cty.String,
-				Required: true,
+				Name:       "value",
+				Type:       cty.String,
+				Required:   true,
+				ExampleVal: cty.StringVal("Hello world!"),
+				Doc:        `A string to render. Can use go template syntax.`,
 			},
 		},
+		Doc: `Renders text`,
 	}
 }
 

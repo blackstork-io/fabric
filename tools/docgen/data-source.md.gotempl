@@ -2,7 +2,7 @@
 title: {{ .name }}
 plugin:
   name: {{ .plugin.Name }}
-  description: {{ .data_source.Doc | quote }}
+  description: {{ .short_desc | quote }}
   tags: {{ formatTags .data_source.Tags }}
   version: "{{ .plugin.Version }}"
   {{- if eq .plugin_shortname "nist_nvd" }}
@@ -21,7 +21,7 @@ type: docs
 
 {{if .data_source.Doc -}}
 ## Description
-{{ .data_source.Doc }}
+{{ .desc }}
 
 {{end -}}
 
@@ -51,7 +51,7 @@ Note the version constraint set for the plugin.
 The data source supports the following configuration parameters:
 
 ```hcl
-{{ renderDoc . "config" "data" $ctx.name }}
+{{ renderDoc . "config" "data" $ctx.name -}}
 ```
 {{- else -}}
 The data source doesn't support configuration.
@@ -63,7 +63,7 @@ The data source doesn't support configuration.
 The data source supports the following parameters in the data blocks:
 
 ```hcl
-{{ renderDoc . "data" $ctx.name }}
+{{ renderDoc . "data" $ctx.name -}}
 ```
 {{- else -}}
 The data source doesn't define any execution parameters.

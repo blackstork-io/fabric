@@ -1,8 +1,8 @@
 ---
-title: code 
+title: code
 plugin:
   name: blackstork/builtin
-  description: ""
+  description: "Formats text as code snippet"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -14,6 +14,9 @@ type: docs
 {{< breadcrumbs 2 >}}
 
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "code" "content provider" >}}
+
+## Description
+Formats text as code snippet
 
 The content provider is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 
@@ -28,8 +31,16 @@ The content provider supports the following execution parameters:
 
 ```hcl
 content code {
-    language = <string>  # optional
-    value = <string>  # required
+  # Required string. For example:
+  value = "Text to be formatted as a code block"
+
+  # Specifiy the language for syntax highlighting
+  #
+  # For example:
+  # language = "python3"
+  #
+  # Optional string. Default value:
+  language = ""
 }
 ```
 
