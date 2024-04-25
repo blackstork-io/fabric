@@ -11,6 +11,7 @@ import (
 
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/fabctx"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 )
@@ -49,7 +50,7 @@ func (c *ParsedContent) Render(ctx context.Context, caller evaluation.ContentCal
 	} else {
 		dataCtx.Delete(BlockKindContent)
 	}
-	diags.Extend(c.EvalQuery(&dataCtx))
+	diags.Extend(c.EvalQuery(ctx, &dataCtx))
 	// TODO: #28 #29
 	if diags.HasErrors() {
 		return
@@ -77,7 +78,7 @@ func (c *ParsedContent) Render(ctx context.Context, caller evaluation.ContentCal
 	return
 }
 
-func (c *ParsedContent) EvalQuery(dataCtx *evaluation.DataContext) (diags diagnostics.Diag) {
+func (c *ParsedContent) EvalQuery(ctx context.Context, dataCtx *evaluation.DataContext) (diags diagnostics.Diag) {
 	body := c.Invocation.GetBody()
 	attr, found := body.Attributes["query"]
 	if !found {
@@ -97,7 +98,7 @@ func (c *ParsedContent) EvalQuery(dataCtx *evaluation.DataContext) (diags diagno
 	query := val.GetAttr("query").AsString()
 
 	dataCtx.Set("query", plugin.StringData(query))
-	queryResult, err := runQuery(query, dataCtx)
+	queryResult, err := runQuery(ctx, query, dataCtx)
 	if err != nil {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
@@ -111,7 +112,7 @@ func (c *ParsedContent) EvalQuery(dataCtx *evaluation.DataContext) (diags diagno
 	return
 }
 
-func runQuery(query string, dataCtx *evaluation.DataContext) (result plugin.Data, err error) {
+func runQuery(ctx context.Context, query string, dataCtx *evaluation.DataContext) (result plugin.Data, err error) {
 	jqQuery, err := gojq.Parse(query)
 	if err != nil {
 		err = fmt.Errorf("failed to parse the query: %w", err)
@@ -122,6 +123,9 @@ func runQuery(query string, dataCtx *evaluation.DataContext) (result plugin.Data
 	if err != nil {
 		err = fmt.Errorf("failed to compile the query: %w", err)
 		return
+	}
+	if fabctx.Get(ctx).IsLinting() {
+		return plugin.ListData(nil), nil
 	}
 	res, hasResult := code.Run(dataCtx.Any()).Next()
 	if !hasResult {
