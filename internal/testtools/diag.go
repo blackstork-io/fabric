@@ -74,6 +74,9 @@ nextDiag:
 	for _, diag := range dgs {
 	nextAssertSet:
 		for assertSetIdx, assertSet := range asserts {
+			if len(assertSet) == 0 {
+				panic("assert set has length 0")
+			}
 			for _, assert := range assertSet {
 				if !assert(diag) {
 					continue nextAssertSet

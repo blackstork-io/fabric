@@ -82,11 +82,11 @@ func validateDataSource(t testing.TB, ds *plugin.DataSource) {
 	assert.NotEmpty(t, ds.DataFunc, "data source should have a data function")
 	if ds.Config != nil {
 		assert.False(t, ds.Config.IsEmpty(), "data source config should have at least one attribute")
-		assert.Empty(t, ds.Config.Validate(), "data source config validation errors")
+		assert.Empty(t, ds.Config.ValidateSpec(), "data source config validation errors")
 	}
 	if ds.Args != nil {
 		assert.False(t, ds.Args.IsEmpty(), "data source args should have at least one attribute")
-		assert.Empty(t, ds.Args.Validate(), "data source args validation errors")
+		assert.Empty(t, ds.Args.ValidateSpec(), "data source args validation errors")
 	}
 }
 
@@ -96,12 +96,12 @@ func validateContentProvider(t testing.TB, cp *plugin.ContentProvider) {
 	assert.NotEmpty(t, cp.ContentFunc, "content provider should have a content function")
 	if cp.Config != nil {
 		assert.False(t, cp.Config.IsEmpty(), "content provider config should have at least one attribute")
-		assert.Empty(t, cp.Config.Validate(), "content provider config validation errors")
+		assert.Empty(t, cp.Config.ValidateSpec(), "content provider config validation errors")
 
 	}
 	if cp.Args != nil {
 		assert.False(t, cp.Args.IsEmpty(), "content provider args should have at least one attribute")
-		assert.Empty(t, cp.Args.Validate(), "content provider args validation errors")
+		assert.Empty(t, cp.Args.ValidateSpec(), "content provider args validation errors")
 	}
 }
 

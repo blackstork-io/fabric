@@ -35,6 +35,6 @@ func (*ObjDumpSpec) IsEmpty() bool {
 	return false
 }
 
-func (*ObjDumpSpec) Validate() (errs []string) {
+func (*ObjDumpSpec) ValidateSpec() (errs []string) {
 	return
 }

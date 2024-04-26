@@ -48,7 +48,7 @@ func (b *BlockSpec) HcldecSpec() hcldec.Spec {
 	}
 }
 
-func (b *BlockSpec) Validate() (errs []string) {
+func (b *BlockSpec) ValidateSpec() (errs []string) {
 	switch st := b.Nested.(type) {
 	case ObjectSpec:
 	case *OpaqueSpec:

@@ -52,7 +52,7 @@ func (o ObjectSpec) WriteDoc(w *hclwrite.Body) {
 	}
 }
 
-func (o ObjectSpec) Validate() (errs []string) {
+func (o ObjectSpec) ValidateSpec() (errs []string) {
 	names := make(map[string]struct{}, len(o))
 	for _, spec := range o {
 		if _, found := names[spec.KeyForObjectSpec()]; found {
@@ -60,7 +60,9 @@ func (o ObjectSpec) Validate() (errs []string) {
 		} else {
 			names[spec.KeyForObjectSpec()] = struct{}{}
 		}
-		switch st := spec.getSpec().(type) {
+		sp := spec.getSpec()
+		errs = append(errs, sp.ValidateSpec()...)
+		switch st := sp.(type) {
 		case *AttrSpec:
 		case *BlockSpec:
 		case *OpaqueSpec:

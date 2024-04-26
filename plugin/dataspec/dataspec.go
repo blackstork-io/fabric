@@ -67,7 +67,7 @@ type Spec interface {
 	HcldecSpec() hcldec.Spec
 	WriteDoc(w *hclwrite.Body)
 	getSpec() Spec
-	Validate() []string
+	ValidateSpec() []string
 }
 
 // Reperesents types that could be included as children in Object.

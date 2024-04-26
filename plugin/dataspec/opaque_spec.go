@@ -32,6 +32,6 @@ func (o *OpaqueSpec) WriteDoc(w *hclwrite.Body) {
 	w.AppendUnstructuredTokens(tokens)
 }
 
-func (*OpaqueSpec) Validate() (errs []string) {
+func (*OpaqueSpec) ValidateSpec() (errs []string) {
 	return
 }
