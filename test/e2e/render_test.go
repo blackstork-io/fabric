@@ -440,17 +440,23 @@ func TestE2ERender(t *testing.T) {
 			`
 			document "test" {
 				meta {
-					author = "foo"
+					authors = ["foo", "bar"]
+					version = "0.1.2"
+					tags = ["xxx", "yyy"]
 				}
 				content text {
-				  query = ".document.meta.author"
-				  value = "author = {{ .query_result }}"
+					query = ".document.meta.authors"
+					value = <<-EOT
+						authors={{ .query_result | join "," }},
+						version={{ .document.meta.version }},
+						tag={{ index .document.meta.tags 0 }}
+					EOT
 				}
 			}
 			`,
 		},
 		"test",
-		[]string{"author = foo"},
+		[]string{"authors=foo,bar,\nversion=0.1.2,\ntag=xxx"},
 		[][]testtools.Assert{},
 	)
 	renderTest(
@@ -459,17 +465,17 @@ func TestE2ERender(t *testing.T) {
 			`
 			document "test" {
 				meta {
-				  author = "foo"
+				  authors = ["foo"]
 				}
 				section {
 				  meta {
-					author = "bar"
+					authors = ["bar"]
 				  }
 				  content text {
 					meta {
-					  author = "baz"
+					  authors = ["baz"]
 					}
-					query = "(.document.meta.author + .section.meta.author + .content.meta.author)" //
+					query = "(.document.meta.authors[0] + .section.meta.authors[0] + .content.meta.authors[0])" //
 					value = "author = {{ .query_result }}"
 				  }
 				}
@@ -485,7 +491,7 @@ func TestE2ERender(t *testing.T) {
 		[]string{
 			`
 			content text get_section_author {
-				query = ".section.meta.author // \"unknown\""
+				query = ".section.meta.authors[0] // \"unknown\""
 				value = "author = {{ .query_result }}"
 			}
 			document "test" {
@@ -498,7 +504,7 @@ func TestE2ERender(t *testing.T) {
 					}
 					section {
 						meta {
-							author = "foo"
+							authors = ["foo"]
 						}
 						content ref {
 							base = content.text.get_section_author
@@ -509,7 +515,7 @@ func TestE2ERender(t *testing.T) {
 							}
 							section {
 								meta {
-									author = "bar"
+									authors = ["bar"]
 								}
 								content ref {
 									base = content.text.get_section_author
@@ -538,15 +544,15 @@ func TestE2ERender(t *testing.T) {
 			document "test" {
 				content text {
 					value = "first result"
-				  }
-				  content text {
+				}
+				content text {
 					query = ".document.content.children[0].markdown"
 					value = "content[0] = {{ .query_result }}"
-				  }
-				  content text {
+				}
+				content text {
 					query = ".document.content.children[1].markdown"
 					value = "content[1] = {{ .query_result }}"
-				  }
+				}
 			  }
 			`,
 		},
