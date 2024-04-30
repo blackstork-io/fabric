@@ -228,13 +228,16 @@ document "greeting" {
 
   content openai_text {
     query = "{planet: .data.inline.solar_system.planets[-1]}"
-    prompt = "Share a fact about the planet specified in the provided data"
+    prompt = <<-EOT
+      Share a fact about the planet specified in the provided
+      data: {{ .query_result | toRawJson }}
+    EOT
   }
 
 }
 ```
 
-A JQ query `"{planet: .data.inline.solar_system.planets[-1]}` in `query` argument fetches the last item from the list (`Neptune`) and creates a new JSON object `{"planet": "Neptune"}`. This object is stored under `query_result` field in the context. `openai_text` content provider combines the `prompt` string with the `query_result` value to create a user prompt for OpenAI API.
+A JQ query `"{planet: .data.inline.solar_system.planets[-1]}` in `query` argument fetches the last item from the list (`Neptune`) and creates a new JSON object `{"planet": "Neptune"}`, stored under `query_result` field in the context.
 
 {{< hint note >}}
 If you would like to specify a system prompt for OpenAI API, you can set it up in the configuration for `openai_text` provider. See the provider's [documentation]({{< ref "plugins/openai/content-providers/openai_text" >}}) for more configuration options.
@@ -279,7 +282,10 @@ document "greeting" {
 
   content openai_text {
     query = "{planet: .data.inline.solar_system.planets[-1]}"
-    prompt = "Share a fact about the planet specified in the provided data"
+    prompt = <<-EOT
+      Share a fact about the planet specified in the provided
+      data: {{ .query_result | toRawJson }}
+    EOT
   }
 
 }
