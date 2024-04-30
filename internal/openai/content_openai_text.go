@@ -3,10 +3,9 @@ package openai
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
+	"text/template"
 	"strings"
 
 	"github.com/Masterminds/sprig/v3"
@@ -102,15 +101,6 @@ func renderText(ctx context.Context, cli client.Client, cfg, args cty.Value, dat
 	content, err := templateText(content, datactx)
 	if err != nil {
 		return "", err
-	}
-	if datactx != nil {
-		if queryResult, ok := datactx[queryResultKey]; ok {
-			data, err := json.MarshalIndent(queryResult, "", "  ")
-			if err != nil {
-				return "", err
-			}
-			content += "\n```\n" + string(data) + "\n```"
-		}
 	}
 	params.Messages = append(params.Messages, client.ChatCompletionMessage{
 		Role:    "user",
