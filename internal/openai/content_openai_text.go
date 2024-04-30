@@ -5,8 +5,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"text/template"
 	"strings"
+	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/hashicorp/hcl/v2"
