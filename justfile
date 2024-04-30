@@ -20,6 +20,9 @@ lint: format
 test:
     go test -timeout 10s -race -short -v ./...
 
+test-pretty:
+    gotestsum --format dots-v2 -- -timeout 10s -race -short -v ./...
+
 test-all:
     go test -timeout 5m -race -v ./...
 
