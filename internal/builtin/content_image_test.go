@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/suite"
-	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
@@ -33,22 +32,23 @@ func (s *ImageGeneratorTestSuite) TestSchema() {
 }
 
 func (s *ImageGeneratorTestSuite) TestMissingImageSource() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"src": cty.NullVal(cty.String),
-		"alt": cty.NullVal(cty.String),
-	})
-	testtools.ReencodeCTY(s.T(), s.schema.Args, val, [][]testtools.Assert{{
-		testtools.IsError,
-		testtools.SummaryContains("Argument must be non-null"),
-	}})
+	testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+		src = null
+		alt = null
+		`,
+		[][]testtools.Assert{{
+			testtools.IsError,
+			testtools.SummaryContains("Argument must be non-null"),
+		}})
 }
 
 func (s *ImageGeneratorTestSuite) TestCallImageSourceEmpty() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"src": cty.StringVal(""),
-		"alt": cty.NullVal(cty.String),
-	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+		src = ""
+		alt = null
+		`,
+		nil)
+
 	ctx := context.Background()
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -62,11 +62,10 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceEmpty() {
 }
 
 func (s *ImageGeneratorTestSuite) TestCallImageSourceValid() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"src": cty.StringVal("https://example.com/image.png"),
-		"alt": cty.NullVal(cty.String),
-	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+		src = "https://example.com/image.png"
+		`,
+		nil)
 
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
@@ -77,16 +76,45 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceValid() {
 }
 
 func (s *ImageGeneratorTestSuite) TestCallImageSourceValidWithAlt() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"src": cty.StringVal("https://example.com/image.png"),
-		"alt": cty.StringVal("alt text"),
-	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+		src = "https://example.com/image.png"
+		alt = "alt text"
+		`,
+		nil)
 
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
 	s.Equal("![alt text](https://example.com/image.png)", result.Content.Print())
+	s.Empty(diags)
+}
+
+func (s *ImageGeneratorTestSuite) TestCallImageSourceTemplateRender() {
+	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+		src = "./{{ add 1 2 }}.png"
+		`,
+		nil)
+
+	ctx := context.Background()
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+		Args: args,
+	})
+	s.Equal("![](./3.png)", result.Content.Print())
+	s.Empty(diags)
+}
+
+func (s *ImageGeneratorTestSuite) TestCallImageAltTemplateRender() {
+	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+		src = "./{{ add 1 2 }}.png"
+		alt = "{{ add 2 3 }} alt text"
+		`,
+		nil)
+
+	ctx := context.Background()
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+		Args: args,
+	})
+	s.Equal("![5 alt text](./3.png)", result.Content.Print())
 	s.Empty(diags)
 }
