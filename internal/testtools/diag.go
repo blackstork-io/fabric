@@ -110,11 +110,7 @@ func CompareDiags[D diagnostics.Generic](t *testing.T, fm map[string]*hcl.File, 
 
 func compareDiags(t *testing.T, fm map[string]*hcl.File, diags diagnostics.Diag, asserts [][]Assert) {
 	t.Helper()
-	// t.Logf("Verifying diagnostics with asserts. diags=%s, asserts=%s", diags, asserts)
 	if !matchBiject(t, diags, asserts) {
-		// 		var buf strings.Builder
-		// 		diagnostics.PrintDiags(&buf, diags, fm, false)
-		// 		t.Fatalf("\n\n%s", buf.String())
 		var b strings.Builder
 		b.WriteString("Actual diagnostics:\n")
 		for _, diag := range diags {
