@@ -2,13 +2,16 @@ package builtin
 
 import (
 	"context"
-	"testing"
+	"fmt"
 	"log/slog"
+	"strings"
+	"testing"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/assert"
-	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/testtools"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -22,86 +25,69 @@ func Test_makeJSONDataSchema(t *testing.T) {
 func Test_fetchJSONData(t *testing.T) {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 
-	type result struct {
-		Data  plugin.Data
-		Diags hcl.Diagnostics
-	}
 	tt := []struct {
-		name     string
-		path     string
-		glob     string
-		expected result
+		name          string
+		path          string
+		glob          string
+		expectedData  plugin.Data
+		expectedDiags [][]testtools.Assert
 	}{
 		{
 			name: "invalid_json_file_with_glob",
 			glob: "testdata/json/invalid.txt",
-			expected: result{
-				Diags: hcl.Diagnostics{{
-					Severity: hcl.DiagError,
-					Summary:  "Failed to read JSON files",
-					Detail:   "invalid character 'i' looking for beginning of object key string",
-				}},
-			},
+			expectedDiags: [][]testtools.Assert{{
+				testtools.IsError,
+				testtools.SummaryEquals("Failed to read the files"),
+				testtools.DetailEquals("invalid character 'i' looking for beginning of object key string"),
+			}},
 		},
 		{
 			name: "invalid_json_file_with_path",
 			path: "testdata/json/invalid.txt",
-			expected: result{
-				Diags: hcl.Diagnostics{{
-					Severity: hcl.DiagError,
-					Summary:  "Failed to read a JSON file",
-					Detail:   "invalid character 'i' looking for beginning of object key string",
-				}},
-			},
+			expectedDiags: [][]testtools.Assert{{
+				testtools.IsError,
+				testtools.SummaryEquals("Failed to read a file"),
+				testtools.DetailEquals("invalid character 'i' looking for beginning of object key string"),
+			}},
 		},
 		{
 			name: "no_params",
-			expected: result{
-				Diags: hcl.Diagnostics{{
-					Severity: hcl.DiagError,
-					Summary:  "Failed to parse arguments",
-					Detail:   "Either \"glob\" value or \"path\" value must be provided",
-				}},
-			},
+			expectedDiags: [][]testtools.Assert{{
+				testtools.IsError,
+				testtools.SummaryEquals("Failed to parse arguments"),
+				testtools.DetailEquals("Either \"glob\" value or \"path\" value must be provided"),
+			}},
 		},
 		{
-			name: "no_glob_matches",
-			glob: "testdata/json/unknown_dir/*.json",
-			expected: result{
-				Data: plugin.ListData{},
-			},
+			name:         "no_glob_matches",
+			glob:         "testdata/json/unknown_dir/*.json",
+			expectedData: plugin.ListData{},
 		},
 		{
 			name: "no_path_match",
 			path: "testdata/json/unknown_dir/does-not-exist.json",
-			expected: result{
-				Diags: hcl.Diagnostics{{
-					Severity: hcl.DiagError,
-					Summary:  "Failed to read a JSON file",
-					Detail:   "open testdata/json/unknown_dir/does-not-exist.json: no such file or directory",
-				}},
-			},
+			expectedDiags: [][]testtools.Assert{{
+				testtools.IsError,
+				testtools.SummaryEquals("Failed to read a file"),
+				testtools.DetailEquals("open testdata/json/unknown_dir/does-not-exist.json: no such file or directory"),
+			}},
 		},
 		{
 			name: "load_one_file_with_path",
 			path: "testdata/json/a.json",
-			expected: result{
-				Data: plugin.MapData{
-					"property_for": plugin.StringData("a.json"),
-				},
+			expectedData: plugin.MapData{
+				"property_for": plugin.StringData("a.json"),
 			},
 		},
 		{
 			name: "glob_matches_one_file",
 			glob: "testdata/json/a.json",
-			expected: result{
-				Data: plugin.ListData{
-					plugin.MapData{
-						"file_name": plugin.StringData("a.json"),
-						"file_path": plugin.StringData("testdata/json/a.json"),
-						"content": plugin.MapData{
-							"property_for": plugin.StringData("a.json"),
-						},
+			expectedData: plugin.ListData{
+				plugin.MapData{
+					"file_name": plugin.StringData("a.json"),
+					"file_path": plugin.StringData("testdata/json/a.json"),
+					"content": plugin.MapData{
+						"property_for": plugin.StringData("a.json"),
 					},
 				},
 			},
@@ -109,34 +95,32 @@ func Test_fetchJSONData(t *testing.T) {
 		{
 			name: "glob_matches_multiple_files",
 			glob: "testdata/json/dir/*.json",
-			expected: result{
-				Data: plugin.ListData{
-					plugin.MapData{
-						"file_name": plugin.StringData("b.json"),
-						"file_path": plugin.StringData("testdata/json/dir/b.json"),
-						"content": plugin.ListData{
-							plugin.MapData{
-								"id":           plugin.NumberData(1),
-								"property_for": plugin.StringData("dir/b.json"),
-							},
-							plugin.MapData{
-								"id":           plugin.NumberData(2),
-								"property_for": plugin.StringData("dir/b.json"),
-							},
+			expectedData: plugin.ListData{
+				plugin.MapData{
+					"file_name": plugin.StringData("b.json"),
+					"file_path": plugin.StringData("testdata/json/dir/b.json"),
+					"content": plugin.ListData{
+						plugin.MapData{
+							"id":           plugin.NumberData(1),
+							"property_for": plugin.StringData("dir/b.json"),
+						},
+						plugin.MapData{
+							"id":           plugin.NumberData(2),
+							"property_for": plugin.StringData("dir/b.json"),
 						},
 					},
-					plugin.MapData{
-						"file_name": plugin.StringData("c.json"),
-						"file_path": plugin.StringData("testdata/json/dir/c.json"),
-						"content": plugin.ListData{
-							plugin.MapData{
-								"id":           plugin.NumberData(3),
-								"property_for": plugin.StringData("dir/c.json"),
-							},
-							plugin.MapData{
-								"id":           plugin.NumberData(4),
-								"property_for": plugin.StringData("dir/c.json"),
-							},
+				},
+				plugin.MapData{
+					"file_name": plugin.StringData("c.json"),
+					"file_path": plugin.StringData("testdata/json/dir/c.json"),
+					"content": plugin.ListData{
+						plugin.MapData{
+							"id":           plugin.NumberData(3),
+							"property_for": plugin.StringData("dir/c.json"),
+						},
+						plugin.MapData{
+							"id":           plugin.NumberData(4),
+							"property_for": plugin.StringData("dir/c.json"),
 						},
 					},
 				},
@@ -150,13 +134,31 @@ func Test_fetchJSONData(t *testing.T) {
 					"json": makeJSONDataSource(),
 				},
 			}
-			data, diags := p.RetrieveData(context.Background(), "json", &plugin.RetrieveDataParams{
-				Args: cty.ObjectVal(map[string]cty.Value{
-					"glob": cty.StringVal(tc.glob),
-					"path": cty.StringVal(tc.path),
-				}),
-			})
-			assert.Equal(t, tc.expected, result{data, diags})
+
+			args := make([]string, 0)
+			if tc.path != "" {
+				args = append(args, fmt.Sprintf("path = %q", tc.path))
+			}
+			if tc.glob != "" {
+				args = append(args, fmt.Sprintf("glob = %q", tc.glob))
+			}
+			argsBody := strings.Join(args, ",")
+
+			var diags diagnostics.Diag
+
+			argVal, diag := testtools.Decode(t, p.DataSources["json"].Args, argsBody)
+			diags.Extend(diag)
+
+			var data plugin.Data
+			if !diags.HasErrors() {
+				ctx := context.Background()
+				var dgs hcl.Diagnostics
+				data, dgs = p.RetrieveData(ctx, "json", &plugin.RetrieveDataParams{Args: argVal})
+				diags.ExtendHcl(dgs)
+			}
+			assert.Equal(t, tc.expectedData, data)
+			testtools.CompareDiags(t, nil, diags, tc.expectedDiags)
+
 		})
 	}
 }

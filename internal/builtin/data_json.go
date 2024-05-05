@@ -37,10 +37,13 @@ func makeJSONDataSource() *plugin.DataSource {
 		Doc: `
 			Loads JSON files with the names that match a provided "glob" pattern or a single file from a provided path.
 
-			Either "glob" value or "path" value must be provided.
+			Either "glob" or "path" attribute must be provided.
 
 			When "path" is specified, only the content of the file is returned.
-			When "glob" is specified, the structure returned by the data source is a list of dicts with file data, for example:
+			When "glob" is specified, the structure returned by the data source is a list of dicts that contain the content of the file and file metadata.
+
+			For example, with "glob" set, the data source will return the following data structure:
+
 			` + "```json" + `
 			[
 			  {
@@ -67,9 +70,9 @@ func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plug
 	glob := params.Args.GetAttr("glob")
 	path := params.Args.GetAttr("path")
 
-	if !(path.IsNull() || path.AsString() == "") {
-		slog.Debug("Reading a file from the provided path", "path", path.AsString())
-		data, err := readAndDecodeFile(path.AsString())
+	if !path.IsNull() && path.AsString() != "" {
+		slog.Debug("Reading a file from the path", "path", path.AsString())
+		data, err := readAndDecodeJSONFile(path.AsString())
 		if err != nil {
 			slog.Error(
 				"Error while reading a JSON file",
@@ -78,13 +81,13 @@ func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plug
 			)
 			return nil, hcl.Diagnostics{{
 				Severity: hcl.DiagError,
-				Summary:  "Failed to read a JSON file",
+				Summary:  "Failed to read a file",
 				Detail:   err.Error(),
 			}}
 		}
 		return data, nil
-	} else if !(glob.IsNull() || glob.AsString() == "") {
-		slog.Debug("Reading the files that match a provided glob", "glob", glob.AsString())
+	} else if !glob.IsNull() && glob.AsString() != "" {
+		slog.Debug("Reading the files that match the glob pattern", "glob", glob.AsString())
 		data, err := readJSONFiles(ctx, glob.AsString())
 		if err != nil {
 			slog.Error(
@@ -94,7 +97,7 @@ func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plug
 			)
 			return nil, hcl.Diagnostics{{
 				Severity: hcl.DiagError,
-				Summary:  "Failed to read JSON files",
+				Summary:  "Failed to read the files",
 				Detail:   err.Error(),
 			}}
 		}
@@ -109,7 +112,7 @@ func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plug
 	}}
 }
 
-func readAndDecodeFile(path string) (plugin.Data, error) {
+func readAndDecodeJSONFile(path string) (plugin.Data, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -136,7 +139,7 @@ func readJSONFiles(ctx context.Context, pattern string) (plugin.ListData, error)
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			content, err := readAndDecodeFile(path)
+			content, err := readAndDecodeJSONFile(path)
 			if err != nil {
 				return result, err
 			}

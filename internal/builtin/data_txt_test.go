@@ -2,12 +2,15 @@ package builtin
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/assert"
-	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/testtools"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -19,48 +22,65 @@ func Test_makeTXTDataSchema(t *testing.T) {
 }
 
 func Test_fetchTXTData(t *testing.T) {
-	type result struct {
-		Data  plugin.Data
-		Diags hcl.Diagnostics
-	}
 	tt := []struct {
-		name     string
-		path     string
-		expected result
+		name          string
+		path          string
+		glob          string
+		expectedData  plugin.Data
+		expectedDiags [][]testtools.Assert
 	}{
 		{
-			name: "valid_path",
-			path: "testdata/txt/data.txt",
-			expected: result{
-				Data: plugin.StringData("data_content"),
+			name:         "valid_path",
+			path:         "testdata/txt/data.txt",
+			expectedData: plugin.StringData("data_content"),
+		},
+		{
+			name: "with_glob_matches",
+			glob: "testdata/txt/dat*.txt",
+			expectedData: plugin.ListData{
+				plugin.MapData{
+					"file_name": plugin.StringData("data.txt"),
+					"file_path": plugin.StringData("testdata/txt/data.txt"),
+					"content":   plugin.StringData("data_content"),
+				},
 			},
 		},
 		{
-			name: "empty_path",
-			expected: result{
-				Diags: hcl.Diagnostics{{
-					Severity: hcl.DiagError,
-					Summary:  "Failed to parse arguments",
-					Detail:   "path is required",
-				}},
-			},
+			name: "no_path_no_glob",
+			expectedDiags: [][]testtools.Assert{{
+				testtools.IsError,
+				testtools.SummaryEquals("Failed to parse provided arguments"),
+				testtools.DetailEquals("Either \"glob\" value or \"path\" value must be provided"),
+			}},
+		},
+		{
+			name:         "no_glob_matches",
+			glob:         "testdata/txt/does-not-exist*.txt",
+			expectedData: plugin.ListData{},
 		},
 		{
 			name: "invalid_path",
 			path: "testdata/txt/does_not_exist.txt",
-			expected: result{
-				Diags: hcl.Diagnostics{{
-					Severity: hcl.DiagError,
-					Summary:  "Failed to open txt file",
-					Detail:   "open testdata/txt/does_not_exist.txt: no such file or directory",
-				}},
-			},
+			expectedDiags: [][]testtools.Assert{{
+				testtools.IsError,
+				testtools.SummaryEquals("Failed to read a file"),
+				testtools.DetailEquals("<nil>: Failed to open a file; open testdata/txt/does_not_exist.txt: no such file or directory"),
+			}},
 		},
 		{
-			name: "empty_file",
-			path: "testdata/txt/empty.txt",
-			expected: result{
-				Data: plugin.StringData(""),
+			name:         "empty_file_with_path",
+			path:         "testdata/txt/empty.txt",
+			expectedData: plugin.StringData(""),
+		},
+		{
+			name: "empty_file_with_glob",
+			glob: "testdata/txt/empt*.txt",
+			expectedData: plugin.ListData{
+				plugin.MapData{
+					"file_name": plugin.StringData("empty.txt"),
+					"file_path": plugin.StringData("testdata/txt/empty.txt"),
+					"content":   plugin.StringData(""),
+				},
 			},
 		},
 	}
@@ -72,12 +92,31 @@ func Test_fetchTXTData(t *testing.T) {
 					"txt": makeTXTDataSource(),
 				},
 			}
-			data, diags := p.RetrieveData(context.Background(), "txt", &plugin.RetrieveDataParams{
-				Args: cty.ObjectVal(map[string]cty.Value{
-					"path": cty.StringVal(tc.path),
-				}),
-			})
-			assert.Equal(t, tc.expected, result{data, diags})
+
+			args := make([]string, 0)
+			if tc.path != "" {
+				args = append(args, fmt.Sprintf("path = %q", tc.path))
+			}
+			if tc.glob != "" {
+				args = append(args, fmt.Sprintf("glob = %q", tc.glob))
+			}
+			argsBody := strings.Join(args, ",")
+
+			var diags diagnostics.Diag
+
+			argVal, diag := testtools.Decode(t, p.DataSources["txt"].Args, argsBody)
+			diags.Extend(diag)
+
+			var data plugin.Data
+			if !diags.HasErrors() {
+				ctx := context.Background()
+				var dgs hcl.Diagnostics
+				data, dgs = p.RetrieveData(ctx, "txt", &plugin.RetrieveDataParams{Args: argVal})
+				diags.ExtendHcl(dgs)
+			}
+			assert.Equal(t, tc.expectedData, data)
+			testtools.CompareDiags(t, nil, diags, tc.expectedDiags)
+
 		})
 	}
 }

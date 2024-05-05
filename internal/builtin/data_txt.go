@@ -3,6 +3,7 @@ package builtin
 import (
 	"context"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -35,41 +36,34 @@ func makeTXTDataSource() *plugin.DataSource {
 		Doc: `
 			Loads TXT files with the names that match a provided "glob" pattern or a single file from a provided path.
 
-			Either "glob" value or "path" value must be provided.
+			Either "glob" or "path" attribute must be set.
 
 			When "path" is specified, only the content of the file is returned.
-			When "glob" is specified, the structure returned by the data source is a list of dicts with file data, for example:
+			When "glob" attribute is specified, the structure returned by the data source is a list of dicts that contain the content of the file and file metadata. For example:
+
 			` + "```json" + `
-			  [
-			    {
-			      "file_path": "path/file-a.txt",
-			      "file_name": "file-a.txt",
-			      "content": "foobar"
-			    },
-			    {
-			      "file_path": "path/file-b.txt",
-			      "file_name": "file-b.txt",
-			      "content": "x\\ny\\nz"
-			    }
-			  ]
+			[
+			  {
+			    "file_path": "path/file-a.txt",
+			    "file_name": "file-a.txt",
+			    "content": "foobar"
+			  },
+			  {
+			    "file_path": "path/file-b.txt",
+			    "file_name": "file-b.txt",
+			    "content": "x\\ny\\nz"
+			  }
+			]
 			` + "```",
 	}
 }
 
-func fetchTXTData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
-	path := params.Args.GetAttr("path")
-	if path.IsNull() || path.AsString() == "" {
-		return nil, hcl.Diagnostics{{
-			Severity: hcl.DiagError,
-			Summary:  "Failed to parse arguments",
-			Detail:   "path is required",
-		}}
-	}
-	f, err := os.Open(path.AsString())
+func readTXTFile(path string) (plugin.Data, error) {
+	f, err := os.Open(path)
 	if err != nil {
 		return nil, hcl.Diagnostics{{
 			Severity: hcl.DiagError,
-			Summary:  "Failed to open txt file",
+			Summary:  "Failed to open a file",
 			Detail:   err.Error(),
 		}}
 	}
@@ -78,22 +72,21 @@ func fetchTXTData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 	if err != nil {
 		return nil, hcl.Diagnostics{{
 			Severity: hcl.DiagError,
-			Summary:  "Failed to read txt file",
+			Summary:  "Failed to read a file",
 			Detail:   err.Error(),
 		}}
 	}
 	return plugin.StringData(string(data)), nil
 }
 
-
-func readTXTFiles(ctx context.Context, pattern string, sep rune) (plugin.ListData, error) {
+func readTXTFiles(ctx context.Context, pattern string) (plugin.Data, error) {
 	paths, err := filepath.Glob(pattern)
 	if err != nil {
 		return nil, err
 	}
 	result := make(plugin.ListData, 0, len(paths))
 	for _, path := range paths {
-		fileData, err := readCSVFile(ctx, path, sep)
+		fileData, err := readTXTFile(path)
 		if err != nil {
 			return result, err
 		}
@@ -104,4 +97,50 @@ func readTXTFiles(ctx context.Context, pattern string, sep rune) (plugin.ListDat
 		})
 	}
 	return result, nil
+}
+
+func fetchTXTData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+
+	glob := params.Args.GetAttr("glob")
+	path := params.Args.GetAttr("path")
+
+	if !(path.IsNull() || path.AsString() == "") {
+		slog.Debug("Reading a file from the path", "path", path.AsString())
+		data, err := readTXTFile(path.AsString())
+		if err != nil {
+			slog.Error(
+				"Error while reading a file",
+				slog.String("path", path.AsString()),
+				slog.Any("error", err),
+			)
+			return nil, hcl.Diagnostics{{
+				Severity: hcl.DiagError,
+				Summary:  "Failed to read a file",
+				Detail:   err.Error(),
+			}}
+		}
+		return data, nil
+	} else if !glob.IsNull() && glob.AsString() != "" {
+		slog.Debug("Reading the files that match the glob pattern", "glob", glob.AsString())
+		data, err := readTXTFiles(ctx, glob.AsString())
+		if err != nil {
+			slog.Error(
+				"Error while reading the files",
+				slog.String("glob", glob.AsString()),
+				slog.Any("error", err),
+			)
+			return nil, hcl.Diagnostics{{
+				Severity: hcl.DiagError,
+				Summary:  "Failed to read the files",
+				Detail:   err.Error(),
+			}}
+		}
+		return data, nil
+	}
+	slog.Error("Either \"glob\" value or \"path\" value must be provided")
+	return nil, hcl.Diagnostics{{
+		Severity: hcl.DiagError,
+		Summary:  "Failed to parse provided arguments",
+		Detail:   "Either \"glob\" value or \"path\" value must be provided",
+	}}
 }
