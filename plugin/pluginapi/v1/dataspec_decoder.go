@@ -53,7 +53,6 @@ func decodeAttrSpec(src *AttrSpec) (*dataspec.AttrSpec, error) {
 	return &dataspec.AttrSpec{
 		Name:       src.GetName(),
 		Type:       t,
-		Required:   src.GetRequired(),
 		DefaultVal: def,
 		ExampleVal: ex,
 		Doc:        src.GetDoc(),

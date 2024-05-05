@@ -13,6 +13,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeTextContentProvider() *plugin.ContentProvider {
@@ -22,7 +23,7 @@ func makeTextContentProvider() *plugin.ContentProvider {
 			&dataspec.AttrSpec{
 				Name:       "value",
 				Type:       cty.String,
-				Required:   true,
+				Constraints: constraint.RequiredNonNull,
 				ExampleVal: cty.StringVal("Hello world!"),
 				Doc:        `A string to render. Can use go template syntax.`,
 			},

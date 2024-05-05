@@ -8,6 +8,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeElasticSearchDataSource() *plugin.DataSource {
@@ -17,85 +18,70 @@ func makeElasticSearchDataSource() *plugin.DataSource {
 			&dataspec.AttrSpec{
 				Name:     "base_url",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "cloud_id",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "api_key_str",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "api_key",
 				Type:     cty.List(cty.String),
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "basic_auth_username",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "basic_auth_password",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "bearer_auth",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "ca_certs",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
 				Name:     "index",
 				Type:     cty.String,
-				Required: true,
+				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
 				Name:     "id",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "query_string",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "query",
 				Type:     cty.Map(cty.DynamicPseudoType),
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "aggs",
 				Type:     cty.Map(cty.DynamicPseudoType),
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "only_hits",
 				Type:     cty.Bool,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "fields",
 				Type:     cty.List(cty.String),
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "size",
 				Type:     cty.Number,
-				Required: false,
-			},
+							},
 		},
 	}
 }

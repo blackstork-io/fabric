@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/elastic/kbclient"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 const (
@@ -25,95 +26,78 @@ func makeElasticSecurityCasesDataSource(loader KibanaClientLoaderFn) *plugin.Dat
 			&dataspec.AttrSpec{
 				Name:     "kibana_endpoint_url",
 				Type:     cty.String,
-				Required: true,
+				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
 				Name:     "api_key_str",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "api_key",
 				Type:     cty.List(cty.String),
-				Required: false,
-			},
+							},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
 				Name:     "space_id",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "assignees",
 				Type:     cty.List(cty.String),
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "default_search_operator",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "from",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "owner",
 				Type:     cty.List(cty.String),
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "reporters",
 				Type:     cty.List(cty.String),
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "search",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "search_fields",
 				Type:     cty.List(cty.String),
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "severity",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "sort_field",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "sort_order",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "status",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "tags",
 				Type:     cty.List(cty.String),
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "to",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "size",
 				Type:     cty.Number,
-				Required: false,
-			},
+							},
 		},
 	}
 }

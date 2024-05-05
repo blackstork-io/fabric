@@ -9,6 +9,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeTerraformStateLocalDataSource() *plugin.DataSource {
@@ -18,7 +19,7 @@ func makeTerraformStateLocalDataSource() *plugin.DataSource {
 			&dataspec.AttrSpec{
 				Name:       "path",
 				Type:       cty.String,
-				Required:   true,
+				Constraints: constraint.RequiredNonNull,
 				ExampleVal: cty.StringVal("path/to/terraform.tfstate"),
 			},
 		},

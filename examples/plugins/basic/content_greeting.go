@@ -9,6 +9,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 // makeGreetingContentProvider creates a new content provider that prints out a greeting message
@@ -18,11 +19,11 @@ func makeGreetingContentProvider() *plugin.ContentProvider {
 		// We only define the schema for the arguments
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "name",
-				Required:   true,
-				Doc:        `Name of the user`,
-				ExampleVal: cty.StringVal("John"),
-				Type:       cty.String,
+				Name:        "name",
+				Constraints: constraint.RequiredMeaningfull,
+				Doc:         `Name of the user`,
+				ExampleVal:  cty.StringVal("John"),
+				Type:        cty.String,
 			},
 		},
 		// Optional: We can also define the schema for the config

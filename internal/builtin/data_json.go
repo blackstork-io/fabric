@@ -12,6 +12,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeJSONDataSource() *plugin.DataSource {
@@ -21,7 +22,7 @@ func makeJSONDataSource() *plugin.DataSource {
 			&dataspec.AttrSpec{
 				Name:       "glob",
 				Type:       cty.String,
-				Required:   true,
+				Constraints: constraint.RequiredNonNull,
 				ExampleVal: cty.StringVal("reports/*_data.json"),
 				Doc:        `A pattern that selects the json files to be read`,
 			},

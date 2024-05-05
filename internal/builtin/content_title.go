@@ -10,6 +10,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 const (
@@ -23,16 +24,15 @@ func makeTitleContentProvider() *plugin.ContentProvider {
 		ContentFunc: genTitleContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "value",
-				Type:       cty.String,
-				Required:   true,
-				Doc:        `Title content`,
-				ExampleVal: cty.StringVal("Vulnerability Report"),
+				Name:        "value",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
+				Doc:         `Title content`,
+				ExampleVal:  cty.StringVal("Vulnerability Report"),
 			},
 			&dataspec.AttrSpec{
 				Name:       "absolute_size",
 				Type:       cty.Number,
-				Required:   false,
 				DefaultVal: cty.NullVal(cty.Number),
 				Doc: `
 					Sets the absolute size of the title.
@@ -42,7 +42,6 @@ func makeTitleContentProvider() *plugin.ContentProvider {
 			&dataspec.AttrSpec{
 				Name:       "relative_size",
 				Type:       cty.Number,
-				Required:   false,
 				DefaultVal: cty.NumberIntVal(0),
 				Doc: `
 					Adjusts the absolute size of the title.

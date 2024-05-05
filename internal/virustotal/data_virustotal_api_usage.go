@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/virustotal/client"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeVirusTotalAPIUsageDataSchema(loader ClientLoadFn) *plugin.DataSource {
@@ -20,30 +21,26 @@ func makeVirusTotalAPIUsageDataSchema(loader ClientLoadFn) *plugin.DataSource {
 			&dataspec.AttrSpec{
 				Name:     "api_key",
 				Type:     cty.String,
-				Required: true,
+				Constraints: constraint.RequiredNonNull,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
 				Name:     "user_id",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "group_id",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "start_date",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "end_date",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 		},
 	}
 }

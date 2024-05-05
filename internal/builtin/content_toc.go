@@ -27,29 +27,25 @@ func makeTOCContentProvider() *plugin.ContentProvider {
 			&dataspec.AttrSpec{
 				Name:       "start_level",
 				Type:       cty.Number,
-				Required:   false,
-				DefaultVal: cty.NumberIntVal(0),
+								DefaultVal: cty.NumberIntVal(0),
 				Doc:        `Largest header size which produces entries in the table of contents`,
 			},
 			&dataspec.AttrSpec{
 				Name:       "end_level",
 				Type:       cty.Number,
-				Required:   false,
-				DefaultVal: cty.NumberIntVal(2),
+								DefaultVal: cty.NumberIntVal(2),
 				Doc:        `Smallest header size which produces entries in the table of contents`,
 			},
 			&dataspec.AttrSpec{
 				Name:       "ordered",
 				Type:       cty.Bool,
-				Required:   false,
-				DefaultVal: cty.False,
+								DefaultVal: cty.False,
 				Doc:        `Whether to use ordered list for the contents`,
 			},
 			&dataspec.AttrSpec{
 				Name:     "scope",
 				Type:     cty.String,
-				Required: false,
-				Doc: `
+								Doc: `
 				Scope of the headers to evaluate.
 				Must be one of:
 				  "document" – look for headers in the whole document

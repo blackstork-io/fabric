@@ -86,7 +86,6 @@ func encodeAttr(src *dataspec.AttrSpec) (*AttrSpec, error) {
 		DefaultVal: dv,
 		ExampleVal: ev,
 		Doc:        src.Doc,
-		Required:   src.Required,
 	}, nil
 }
 

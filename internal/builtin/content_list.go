@@ -15,6 +15,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 const (
@@ -33,16 +34,15 @@ func makeListContentProvider() *plugin.ContentProvider {
 		ContentFunc: genListContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "item_template",
-				Type:       cty.String,
-				Required:   true,
-				ExampleVal: cty.StringVal(`[{{.Title}}]({{.URL}})`),
-				Doc:        "Go template for the item of the list",
+				Name:        "item_template",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
+				ExampleVal:  cty.StringVal(`[{{.Title}}]({{.URL}})`),
+				Doc:         "Go template for the item of the list",
 			},
 			&dataspec.AttrSpec{
 				Name:       "format",
 				Type:       cty.String,
-				Required:   false,
 				DefaultVal: cty.StringVal("unordered"),
 				Doc:        string(fmtDoc),
 			},

@@ -10,6 +10,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeTXTDataSource() *plugin.DataSource {
@@ -19,7 +20,7 @@ func makeTXTDataSource() *plugin.DataSource {
 			&dataspec.AttrSpec{
 				Name:       "path",
 				Type:       cty.String,
-				Required:   true,
+				Constraints: constraint.RequiredNonNull,
 				ExampleVal: cty.StringVal("path/to/file.txt"),
 			},
 		},

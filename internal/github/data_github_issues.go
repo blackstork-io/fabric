@@ -13,6 +13,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeGithubIssuesDataSchema(loader ClientLoaderFn) *plugin.DataSource {
@@ -22,65 +23,55 @@ func makeGithubIssuesDataSchema(loader ClientLoaderFn) *plugin.DataSource {
 			&dataspec.AttrSpec{
 				Name:     "github_token",
 				Type:     cty.String,
-				Required: true,
+				Constraints: constraint.RequiredNonNull,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
 				Name:     "repository",
 				Type:     cty.String,
-				Required: true,
+				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
 				Name:     "milestone",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "state",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "assignee",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "creator",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "mentioned",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "labels",
 				Type:     cty.List(cty.String),
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "sort",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "direction",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "since",
 				Type:     cty.String,
-				Required: false,
-			},
+							},
 			&dataspec.AttrSpec{
 				Name:     "limit",
 				Type:     cty.Number,
-				Required: false,
-			},
+							},
 		},
 	}
 }

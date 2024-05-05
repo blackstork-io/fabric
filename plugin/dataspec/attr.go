@@ -22,8 +22,7 @@ type AttrSpec struct {
 	DefaultVal cty.Value
 	ExampleVal cty.Value
 	Doc        string
-	// TODO: replace by constraints
-	Required    bool
+
 	Constraints constraint.Constraints
 	// If specified - value must be on of specified values
 	OneOf constraint.OneOf
@@ -96,37 +95,35 @@ func (a *AttrSpec) DocComment() hclwrite.Tokens {
 		}
 	} else if !min.IsNull() {
 		if a.Type.IsPrimitiveType() && a.Type == cty.Number {
-			fmt.Fprintf(&buf, "Must be >= %s", min.AsBigFloat().String())
+			fmt.Fprintf(&buf, "Must be >= %s\n", min.AsBigFloat().String())
 		} else {
 			min, _ := min.AsBigFloat().Uint64()
-			fmt.Fprintf(&buf, "Must have a length of at least %d", min)
+			fmt.Fprintf(&buf, "Must have a length of at least %d\n", min)
 		}
 	} else if !max.IsNull() {
 		if a.Type.IsPrimitiveType() && a.Type == cty.Number {
-			fmt.Fprintf(&buf, "Must be <= %s", max.AsBigFloat().String())
+			fmt.Fprintf(&buf, "Must be <= %s\n", max.AsBigFloat().String())
 		} else {
 			max, _ := max.AsBigFloat().Uint64()
-			fmt.Fprintf(&buf, "Must have a length of at most %d", max)
+			fmt.Fprintf(&buf, "Must have a length of at most %d\n", max)
 		}
 	}
-
-	if a.Required {
-		tokens = comment(
-			tokens,
-			fmt.Sprintf("Required %s. For example:", a.Type.FriendlyNameForConstraint()),
-		)
+	if a.Constraints.Is(constraint.Required) {
+		buf.WriteString("For example:")
 	} else {
 		if a.ExampleVal != cty.NilVal {
+			buf.WriteString("For example:\n")
 			f := hclwrite.NewEmptyFile()
 			f.Body().SetAttributeValue(a.Name, a.ExampleVal)
-			tokens = comment(tokens, "For example:\n"+string(hclwrite.Format(f.Bytes())))
-			tokens = appendCommentNewLine(tokens)
+			buf.Write(hclwrite.Format(f.Bytes()))
+			buf.WriteString("\n\n")
 		}
-		tokens = comment(
-			tokens,
-			fmt.Sprintf("Optional %s. Default value:", a.Type.FriendlyNameForConstraint()),
-		)
+		buf.WriteString("Default value:")
 	}
+	tokens = comment(
+		tokens,
+		buf.String(),
+	)
 	return tokens
 }
 
@@ -136,7 +133,7 @@ func (a *AttrSpec) WriteDoc(w *hclwrite.Body) {
 
 	// write the attribute
 	var val cty.Value
-	if a.Required {
+	if a.Constraints.Is(constraint.Required) {
 		val = a.ExampleVal
 		if val.IsNull() {
 			val = exampleValueForType(a.Type)

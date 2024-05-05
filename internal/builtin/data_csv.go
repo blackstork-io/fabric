@@ -13,6 +13,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeCSVDataSource() *plugin.DataSource {
@@ -22,8 +23,7 @@ func makeCSVDataSource() *plugin.DataSource {
 			&dataspec.AttrSpec{
 				Name:       "delimiter",
 				Type:       cty.String,
-				Required:   false,
-				DefaultVal: cty.StringVal(","),
+								DefaultVal: cty.StringVal(","),
 				Doc:        `Must be a one-character string`,
 			},
 		},
@@ -31,7 +31,7 @@ func makeCSVDataSource() *plugin.DataSource {
 			&dataspec.AttrSpec{
 				Name:       "path",
 				Type:       cty.String,
-				Required:   true,
+				Constraints: constraint.RequiredNonNull,
 				ExampleVal: cty.StringVal("path/to/file.csv"),
 			},
 		},

@@ -13,6 +13,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeImageContentProvider() *plugin.ContentProvider {
@@ -20,15 +21,14 @@ func makeImageContentProvider() *plugin.ContentProvider {
 		ContentFunc: genImageContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "src",
-				Type:       cty.String,
-				Required:   true,
-				ExampleVal: cty.StringVal("https://example.com/img.png"),
+				Name:        "src",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
+				ExampleVal:  cty.StringVal("https://example.com/img.png"),
 			},
 			&dataspec.AttrSpec{
 				Name:       "alt",
 				Type:       cty.String,
-				Required:   false,
 				ExampleVal: cty.StringVal("Text description of the image"),
 				// Not using empty string as DefaultVal here for semantical meaning
 			},

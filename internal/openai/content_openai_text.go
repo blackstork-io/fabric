@@ -15,6 +15,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/openai/client"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeOpenAITextContentSchema(loader ClientLoadFn) *plugin.ContentProvider {
@@ -23,35 +24,32 @@ func makeOpenAITextContentSchema(loader ClientLoadFn) *plugin.ContentProvider {
 			&dataspec.AttrSpec{
 				Name:       "system_prompt",
 				Type:       cty.String,
-				Required:   false,
-				ExampleVal: cty.StringVal("You are a security report summarizer"),
+								ExampleVal: cty.StringVal("You are a security report summarizer"),
 			},
 			&dataspec.AttrSpec{
 				Name:       "api_key",
 				Type:       cty.String,
-				Required:   true,
+				Constraints: constraint.RequiredNonNull,
 				ExampleVal: cty.StringVal("OPENAI_API_KEY"),
 			},
 			&dataspec.AttrSpec{
 				Name:       "organization_id",
 				Type:       cty.String,
-				Required:   false,
-				ExampleVal: cty.StringVal("YOUR_ORG_ID"),
+								ExampleVal: cty.StringVal("YOUR_ORG_ID"),
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
 				Name:       "prompt",
 				Type:       cty.String,
-				Required:   true,
+				Constraints: constraint.RequiredNonNull,
 				Doc:        `Go template of the prompt for an OpenAI model`,
 				ExampleVal: cty.StringVal("This is the report to be summarized: "),
 			},
 			&dataspec.AttrSpec{
 				Name:       "model",
 				Type:       cty.String,
-				Required:   false,
-				DefaultVal: cty.StringVal("gpt-3.5-turbo"),
+								DefaultVal: cty.StringVal("gpt-3.5-turbo"),
 			},
 		},
 		ContentFunc: genOpenAIText(loader),

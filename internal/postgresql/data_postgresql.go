@@ -13,6 +13,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makePostgreSQLDataSource() *plugin.DataSource {
@@ -22,21 +23,20 @@ func makePostgreSQLDataSource() *plugin.DataSource {
 				Name:       "database_url",
 				Type:       cty.String,
 				ExampleVal: cty.StringVal("postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"),
-				Required:   true,
+				Constraints: constraint.RequiredNonNull,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
 				Name:       "sql_query",
 				Type:       cty.String,
-				Required:   true,
+				Constraints: constraint.RequiredNonNull,
 				ExampleVal: cty.StringVal("SELECT * FROM example WHERE id=$1 OR age=$2"),
 			},
 			&dataspec.AttrSpec{
 				Name:       "sql_args",
 				Type:       cty.List(cty.DynamicPseudoType),
-				Required:   false,
-				ExampleVal: cty.ListVal([]cty.Value{cty.NumberIntVal(42), cty.NumberIntVal(24)}),
+								ExampleVal: cty.ListVal([]cty.Value{cty.NumberIntVal(42), cty.NumberIntVal(24)}),
 				Doc:        `Values for the prepared statement`,
 			},
 		},

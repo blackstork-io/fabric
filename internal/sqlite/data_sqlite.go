@@ -13,6 +13,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeSqliteDataSource() *plugin.DataSource {
@@ -21,7 +22,7 @@ func makeSqliteDataSource() *plugin.DataSource {
 			&dataspec.AttrSpec{
 				Name:       "database_uri",
 				Type:       cty.String,
-				Required:   true,
+				Constraints: constraint.RequiredNonNull,
 				ExampleVal: cty.StringVal("file:test.db"),
 			},
 		},
@@ -29,14 +30,13 @@ func makeSqliteDataSource() *plugin.DataSource {
 			&dataspec.AttrSpec{
 				Name:       "sql_query",
 				Type:       cty.String,
-				Required:   true,
+				Constraints: constraint.RequiredNonNull,
 				ExampleVal: cty.StringVal("SELECT * FROM example WHERE id=$1 OR age=$2"),
 			},
 			&dataspec.AttrSpec{
 				Name:       "sql_args",
 				Type:       cty.List(cty.DynamicPseudoType),
-				Required:   false,
-				ExampleVal: cty.ListVal([]cty.Value{cty.NumberIntVal(42), cty.NumberIntVal(24)}),
+								ExampleVal: cty.ListVal([]cty.Value{cty.NumberIntVal(42), cty.NumberIntVal(24)}),
 				Doc:        `Values for the prepared statement`,
 			},
 		},

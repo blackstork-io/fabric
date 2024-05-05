@@ -30,8 +30,7 @@ func makeFrontMatterContentProvider() *plugin.ContentProvider {
 			&dataspec.AttrSpec{
 				Name:       "format",
 				Type:       cty.String,
-				Required:   false,
-				Doc:        `Format of the frontmatter. Must be one of ` + utils.JoinSurround(", ", `"`, frontMatterAllowedFormats...),
+								Doc:        `Format of the frontmatter. Must be one of ` + utils.JoinSurround(", ", `"`, frontMatterAllowedFormats...),
 				DefaultVal: cty.StringVal("yaml"),
 			},
 			&dataspec.AttrSpec{
@@ -41,7 +40,6 @@ func makeFrontMatterContentProvider() *plugin.ContentProvider {
 				Arbitrary key-value map to be put in the frontmatter.
 
 				NOTE: Data from "query_result" replaces this value if present`,
-				Required:   false,
 				DefaultVal: cty.NullVal(cty.DynamicPseudoType),
 				ExampleVal: cty.ObjectVal(map[string]cty.Value{
 					"key": cty.StringVal("arbitrary value"),

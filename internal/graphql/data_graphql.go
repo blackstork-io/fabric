@@ -13,6 +13,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeGraphQLDataSource() *plugin.DataSource {
@@ -21,15 +22,14 @@ func makeGraphQLDataSource() *plugin.DataSource {
 			&dataspec.AttrSpec{
 				Name:       "url",
 				Type:       cty.String,
-				Required:   true,
+				Constraints: constraint.RequiredNonNull,
 				ExampleVal: cty.StringVal("https://example.com/graphql"),
 				Doc:        `API endpoint to perform GraphQL queries against`,
 			},
 			&dataspec.AttrSpec{
 				Name:       "auth_token",
 				Type:       cty.String,
-				Required:   false,
-				ExampleVal: cty.StringVal("<token>"),
+								ExampleVal: cty.StringVal("<token>"),
 				DefaultVal: cty.NullVal(cty.String),
 				Doc: `
 					Token to be sent to the server as "Authorization: Bearer" header.
@@ -41,7 +41,7 @@ func makeGraphQLDataSource() *plugin.DataSource {
 			&dataspec.AttrSpec{
 				Name:       "query",
 				Type:       cty.String,
-				Required:   true,
+				Constraints: constraint.RequiredNonNull,
 				Doc:        `GraphQL query`,
 				ExampleVal: cty.StringVal(`query{user{id, name}}`),
 			},
