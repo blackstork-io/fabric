@@ -11,7 +11,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 
-	"github.com/blackstork-io/fabric/pkg/utils"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
@@ -35,6 +35,17 @@ type AttrSpec struct {
 	Depricated string
 }
 
+func (a *AttrSpec) computeMinInclusive() cty.Value {
+	if !a.Constraints.Is(constraint.NonEmpty) || (a.Type.IsPrimitiveType() && a.Type == cty.Number) {
+		return a.MinInclusive
+	}
+	// we have constraint.NonEmpty constraint on a collection type
+	if a.MinInclusive.IsNull() || a.MinInclusive.LessThan(cty.NumberIntVal(1)).True() {
+		return cty.NumberIntVal(1)
+	}
+	return a.MinInclusive
+}
+
 func (a *AttrSpec) KeyForObjectSpec() string {
 	return a.Name
 }
@@ -47,6 +58,56 @@ func (a *AttrSpec) DocComment() hclwrite.Tokens {
 	tokens := comment(nil, a.Doc)
 	if len(tokens) != 0 {
 		tokens = appendCommentNewLine(tokens)
+	}
+
+	var buf strings.Builder
+	if a.Constraints.Is(constraint.Required) {
+		buf.WriteString("Required ")
+	} else {
+		buf.WriteString("Optional ")
+	}
+	if a.Constraints.Is(constraint.Integer) {
+		buf.WriteString("integer")
+	} else {
+		buf.WriteString(a.Type.FriendlyNameForConstraint())
+	}
+	buf.WriteString(".\n")
+
+	if !a.OneOf.IsEmpty() {
+		buf.WriteString("Must be one of: ")
+		buf.WriteString(a.OneOf.String())
+		buf.WriteString("\n")
+
+	}
+	min := a.computeMinInclusive()
+	max := a.MaxInclusive
+
+	if !min.IsNull() && !max.IsNull() {
+		if a.Type.IsPrimitiveType() && a.Type == cty.Number {
+			fmt.Fprintf(&buf, "Must be between %s and %s (inclusive)\n", min.AsBigFloat().String(), max.AsBigFloat().String())
+		} else {
+			min, _ := min.AsBigFloat().Uint64()
+			max, _ := max.AsBigFloat().Uint64()
+			if min == max {
+				fmt.Fprintf(&buf, "Must have a length of %d\n", min)
+			} else {
+				fmt.Fprintf(&buf, "Must have a length between %d and %d (inclusive)\n", min, max)
+			}
+		}
+	} else if !min.IsNull() {
+		if a.Type.IsPrimitiveType() && a.Type == cty.Number {
+			fmt.Fprintf(&buf, "Must be >= %s", min.AsBigFloat().String())
+		} else {
+			min, _ := min.AsBigFloat().Uint64()
+			fmt.Fprintf(&buf, "Must have a length of at least %d", min)
+		}
+	} else if !max.IsNull() {
+		if a.Type.IsPrimitiveType() && a.Type == cty.Number {
+			fmt.Fprintf(&buf, "Must be <= %s", max.AsBigFloat().String())
+		} else {
+			max, _ := max.AsBigFloat().Uint64()
+			fmt.Fprintf(&buf, "Must have a length of at most %d", max)
+		}
 	}
 
 	if a.Required {
@@ -167,19 +228,16 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 		} else if val.Type().IsPrimitiveType() && val.Type() == cty.String {
 			length = len(val.AsString())
 		}
+		min := a.computeMinInclusive()
+		max := a.MaxInclusive
 		if length != -1 {
 			length := int64(length)
+
 			// length-validating constraints
-			if a.Constraints.Is(constraint.NonEmpty) && length == 0 {
-				diags = append(diags, &hcl.Diagnostic{
-					Severity: hcl.DiagError,
-					Summary:  "Attribute must be non-empty",
-					Detail:   fmt.Sprintf("The attribute %q can't be an empty %s.", a.Name, a.Type.FriendlyNameForConstraint()),
-				})
-			}
-			if a.MinInclusive != cty.NilVal && a.MaxInclusive != cty.NilVal {
-				min := ctyToInt(a.MinInclusive)
-				max := ctyToInt(a.MaxInclusive)
+
+			if !min.IsNull() && !max.IsNull() {
+				min := ctyToInt(min)
+				max := ctyToInt(max)
 				if !(min <= length && length <= max) {
 					if min == max {
 						diags = append(diags, &hcl.Diagnostic{
@@ -195,8 +253,8 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 						})
 					}
 				}
-			} else if a.MinInclusive != cty.NilVal {
-				min := ctyToInt(a.MinInclusive)
+			} else if !min.IsNull() {
+				min := ctyToInt(min)
 				if length < min {
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
@@ -204,8 +262,8 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 						Detail:   fmt.Sprintf("The length of attribute %q must be >= %d", a.Name, min),
 					})
 				}
-			} else if a.MaxInclusive != cty.NilVal {
-				max := ctyToInt(a.MaxInclusive)
+			} else if !max.IsNull() {
+				max := ctyToInt(max)
 				if length > max {
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
@@ -214,10 +272,8 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 					})
 				}
 			}
-		}
-
-		// Numeric checks:
-		if val.Type().IsPrimitiveType() && val.Type() == cty.Number {
+		} else if val.Type().IsPrimitiveType() && val.Type() == cty.Number {
+			// Numeric checks:
 			if a.Constraints.Is(constraint.Integer) {
 				_, acc := val.AsBigFloat().Int64()
 				if acc != big.Exact {
@@ -229,140 +285,122 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 				}
 			}
 			// Range checks:
-			if a.MinInclusive != cty.NilVal && a.MaxInclusive != cty.NilVal {
-				if val.GreaterThanOrEqualTo(a.MinInclusive).And(val.LessThanOrEqualTo(a.MaxInclusive)).False() {
+			if !min.IsNull() && !max.IsNull() {
+				if val.GreaterThanOrEqualTo(min).And(val.LessThanOrEqualTo(max)).False() {
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
 						Summary:  "Attribute is not in range",
-						Detail:   fmt.Sprintf("The attribute %q must be in range [%s; %s] (inclusive)", a.Name, a.MinInclusive.AsBigFloat().String(), a.MaxInclusive.AsBigFloat().String()),
+						Detail:   fmt.Sprintf("The attribute %q must be in range [%s; %s] (inclusive)", a.Name, min.AsBigFloat().String(), max.AsBigFloat().String()),
 					})
 				}
-			} else if a.MinInclusive != cty.NilVal {
-				if val.GreaterThanOrEqualTo(a.MinInclusive).False() {
+			} else if !min.IsNull() {
+				if val.GreaterThanOrEqualTo(min).False() {
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
 						Summary:  "Attribute is not in range",
-						Detail:   fmt.Sprintf("The attribute %q must be >= %s", a.Name, a.MinInclusive.AsBigFloat().String()),
+						Detail:   fmt.Sprintf("The attribute %q must be >= %s", a.Name, min.AsBigFloat().String()),
 					})
 				}
-			} else if a.MaxInclusive != cty.NilVal {
-				if val.LessThanOrEqualTo(a.MaxInclusive).False() {
+			} else if !max.IsNull() {
+				if val.LessThanOrEqualTo(max).False() {
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
 						Summary:  "Attribute is not in range",
-						Detail:   fmt.Sprintf("The attribute %q must be <= %s", a.Name, a.MaxInclusive.AsBigFloat().String()),
+						Detail:   fmt.Sprintf("The attribute %q must be <= %s", a.Name, max.AsBigFloat().String()),
 					})
 				}
 			}
 		}
 	}
-	if !a.OneOf.IsEmpty() {
-		found := false
-		for _, possibleVal := range a.OneOf {
-			if possibleVal.Equals(val).True() {
-				found = true
-				break
-			}
-		}
-		if !found {
-			diags = append(diags, &hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "Attribute is not one of the allowed values",
-				Detail:   fmt.Sprintf("The attribute %q must be one of: %s", a.Name, a.OneOf),
-			})
-		}
+	if !a.OneOf.Validate(val) {
+		diags = append(diags, &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Attribute is not one of the allowed values",
+			Detail:   fmt.Sprintf("The attribute %q must be one of: %s", a.Name, a.OneOf),
+		})
 	}
 	return
 }
 
-func joinSummaries(diags hcl.Diagnostics) string {
-	return strings.Join(
-		utils.FnMap(diags, func(diag *hcl.Diagnostic) string { return diag.Summary }),
-		"; ",
-	)
-}
-
-func (a *AttrSpec) ValidateSpec() (errs []string) {
+func (a *AttrSpec) ValidateSpec() (errs diagnostics.Diag) {
 	if a.Constraints.Is(constraint.Required) {
-		//
-		// if a.ExampleVal == cty.NilVal {
-		// 	errs = append(errs, fmt.Sprintf("Missing example value on required attibute %q", a.Name))
-		// }
+		if a.ExampleVal == cty.NilVal {
+			errs.AddWarn(fmt.Sprintf("Missing example value on required attibute %q", a.Name), "")
+		}
 		if a.DefaultVal != cty.NilVal {
-			errs = append(errs, fmt.Sprintf("Default value is specified for the required attribute %q = %s", a.Name, a.DefaultVal.GoString()))
+			errs.Add(fmt.Sprintf("Default value is specified for the required attribute %q = %s", a.Name, a.DefaultVal.GoString()), "")
 		}
 	}
 
 	if a.Constraints.Is(constraint.Integer) && !(a.Type.Equals(cty.Number)) {
-		errs = append(errs, fmt.Sprintf("Integer constraint is specified for non-numeric attribute %q", a.Name))
+		errs.Add(fmt.Sprintf("Integer constraint is specified for non-numeric attribute %q", a.Name), "")
 	}
+	min := a.MinInclusive
 
-	if a.MinInclusive != cty.NilVal {
-		if (a.Type.IsPrimitiveType() && a.Type == cty.Bool) || (a.Type.IsCapsuleType()) {
-			errs = append(errs, fmt.Sprintf("MinValInclusive can't be specified for %s %q", a.Type.FriendlyName(), a.Name))
+	max := a.MaxInclusive
+	skipMinMaxRelativeCheck := false
+	for _, v := range []struct {
+		name string
+		val  cty.Value
+	}{{"MinInclusive", min}, {"MaxInclusive", max}} {
+		if v.val == cty.NilVal {
+			continue
 		}
-		if !(a.MinInclusive.Type().IsPrimitiveType() && a.MinInclusive.Type() == cty.Number) {
-			errs = append(errs, fmt.Sprintf("MinValInclusive specified for %q must be a number, not %s", a.Name, a.MinInclusive.Type().FriendlyName()))
+
+		if (a.Type.IsPrimitiveType() && a.Type == cty.Bool) || (a.Type.IsCapsuleType()) {
+			errs.Add(fmt.Sprintf("%s can't be specified for %s %q", v.name, a.Type.FriendlyName(), a.Name), "")
+			skipMinMaxRelativeCheck = true
+			continue
+		}
+		if !(v.val.Type().IsPrimitiveType() && v.val.Type() == cty.Number) {
+			errs.Add(fmt.Sprintf("%s specified for %q must be a number, not %s", v.name, a.Name, v.val.Type().FriendlyName()), "")
+			skipMinMaxRelativeCheck = true
+			continue
+		}
+		if v.val.IsNull() {
+			errs.Add(fmt.Sprintf("%s specified for %q must be non-null", v.name, a.Name), "")
+			skipMinMaxRelativeCheck = true
+			continue
 		}
 
 		if !(a.Type.Equals(cty.Number)) {
-			// Min is length, must be an int >=0
-			int, acc := a.MinInclusive.AsBigFloat().Int64()
+			// Min is length, must be an num >=0
+			num, acc := v.val.AsBigFloat().Int64()
 			if acc != big.Exact {
-				errs = append(errs, fmt.Sprintf("MinValInclusive specified for %q must be an integer", a.Name))
+				errs.Add(fmt.Sprintf("%s specified for %q must be an integer", v.name, a.Name), "")
 			}
-			if int < 0 {
-				errs = append(errs, fmt.Sprintf("MinValInclusive specified for %q must be >= 0", a.Name))
+			if num < 0 {
+				errs.Add(fmt.Sprintf("%s specified for %q must be >= 0", v.name, a.Name), "")
 			}
 		}
+	}
 
-	}
-	if a.MaxInclusive != cty.NilVal {
-		if (a.Type.IsPrimitiveType() && a.Type == cty.Bool) || (a.Type.IsCapsuleType()) {
-			errs = append(errs, fmt.Sprintf("MaxValInclusive can't be specified for %s %q", a.Type.FriendlyName(), a.Name))
-		}
-		if !(a.MaxInclusive.Type().IsPrimitiveType() && a.MaxInclusive.Type() == cty.Number) {
-			errs = append(errs, fmt.Sprintf("MaxValInclusive specified for %q must be a number, not %s", a.Name, a.MaxInclusive.Type().FriendlyName()))
-		}
-		if !(a.Type.Equals(cty.Number)) {
-			// Max is length, must be an int >=0
-			int, acc := a.MaxInclusive.AsBigFloat().Int64()
-			if acc != big.Exact {
-				errs = append(errs, fmt.Sprintf("MaxValInclusive specified for %q must be an integer", a.Name))
-			}
-			if int < 0 {
-				errs = append(errs, fmt.Sprintf("MaxValInclusive specified for %q must be >= 0", a.Name))
-			}
-		}
-	}
-	if len(errs) == 0 && a.MinInclusive != cty.NilVal && a.MaxInclusive != cty.NilVal {
+	if !skipMinMaxRelativeCheck && !min.IsNull() && !max.IsNull() {
 		// no errors - values are numbers and can be compared
-		if a.MinInclusive.LessThanOrEqualTo(a.MaxInclusive).False() {
-			errs = append(errs, fmt.Sprintf("%q: MaxValInclusive must be <= MaxValInclusive", a.Name))
+		if min.LessThanOrEqualTo(max).False() {
+			errs.Add(fmt.Sprintf("%q: MinInclusive must be <= MaxInclusive", a.Name), "")
 		}
 	}
 
 	if len(errs) == 0 {
 		if a.DefaultVal != cty.NilVal {
 			diags := a.ValidateValue(a.DefaultVal)
-			if diags.HasErrors() {
-				errs = append(errs,
-					fmt.Sprintf("Default value for attribute %q (%s) failed validation: %s",
-						a.Name,
-						a.DefaultVal.GoString(),
-						joinSummaries(diags),
-					))
+			prefix := fmt.Sprintf("Default value for attribute %q: ", a.Name)
+			for _, d := range diags {
+				if d.Severity == hcl.DiagError {
+					d.Summary = prefix + d.Summary
+					errs.Append(d)
+				}
 			}
 		}
 		if a.ExampleVal != cty.NilVal {
 			diags := a.ValidateValue(a.ExampleVal)
-			if diags.HasErrors() {
-				errs = append(errs,
-					fmt.Sprintf("Example value for attribute %q (%s) failed validation: %s",
-						a.Name,
-						a.ExampleVal.GoString(),
-						joinSummaries(diags),
-					))
+			prefix := fmt.Sprintf("Example value for attribute %q: ", a.Name)
+			for _, d := range diags {
+				if d.Severity == hcl.DiagError {
+					d.Summary = prefix + d.Summary
+					errs.Append(d)
+				}
 			}
 		}
 	}

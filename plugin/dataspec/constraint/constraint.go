@@ -2,7 +2,6 @@ package constraint
 
 import (
 	"bytes"
-	"fmt"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
@@ -32,13 +31,17 @@ const (
 	// If attribute is not a string - trim operation does nothing
 	TrimmedNonEmpty Constraints = NonEmpty | TrimSpace
 
+	// Attribute is not required, but (if specified) must be non-null, non-empty, strings are trimmed
+	Meaningfull Constraints = NonNull | TrimmedNonEmpty
+
 	// Attribute is required, non-null, non-empty, strings are trimmed
-	RequiredMeaningfull Constraints = Required | NonNull | TrimmedNonEmpty
+	RequiredMeaningfull Constraints = Required | Meaningfull
+
+	// Attribute is required and non-null
+	RequiredNonNull Constraints = Required | NonNull
 )
 
 type OneOf []cty.Value
-
-var _ fmt.Stringer = OneOf{}
 
 func (o OneOf) String() string {
 	f := hclwrite.NewFile()
@@ -51,4 +54,16 @@ func (o OneOf) String() string {
 
 func (o OneOf) IsEmpty() bool {
 	return len(o) == 0
+}
+
+func (o OneOf) Validate(val cty.Value) (valid bool) {
+	if len(o) == 0 {
+		return true
+	}
+	for _, el := range o {
+		if el.Equals(val).True() {
+			return true
+		}
+	}
+	return false
 }

@@ -4,6 +4,8 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
+
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
 // Root-only spec
@@ -35,6 +37,6 @@ func (*ObjDumpSpec) IsEmpty() bool {
 	return false
 }
 
-func (*ObjDumpSpec) ValidateSpec() (errs []string) {
+func (*ObjDumpSpec) ValidateSpec() (errs diagnostics.Diag) {
 	return
 }

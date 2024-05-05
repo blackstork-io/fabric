@@ -1,46 +1,105 @@
 package testtools
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
-type (
-	Assert func(diag *hcl.Diagnostic) bool
-)
-
-func IsError(diag *hcl.Diagnostic) bool {
-	return diag.Severity == hcl.DiagError
+type Assert interface {
+	Assert(diag *hcl.Diagnostic) bool
+	fmt.Stringer
 }
 
-func IsWarning(diag *hcl.Diagnostic) bool {
-	return diag.Severity == hcl.DiagWarning
+type severityAssert struct {
+	severity hcl.DiagnosticSeverity
 }
 
-func SummaryContains(substrs ...string) Assert {
-	return func(diag *hcl.Diagnostic) bool {
-		return contains(diag.Summary, substrs)
+func (s severityAssert) Assert(diag *hcl.Diagnostic) bool {
+	return diag.Severity == s.severity
+}
+
+// String implements Assert.
+func (s severityAssert) String() string {
+	switch s.severity {
+	case hcl.DiagError:
+		return "An error"
+	case hcl.DiagWarning:
+		return "A warning"
+	default:
+		return fmt.Sprintf("Severity to be equal to hcl.DiagnosticSeverity(%d)", s.severity)
 	}
 }
 
-func DetailContains(substrs ...string) Assert {
-	return func(diag *hcl.Diagnostic) bool {
-		return contains(diag.Detail, substrs)
-	}
+var _ Assert = (*severityAssert)(nil)
+
+var (
+	IsError   = severityAssert{hcl.DiagError}
+	IsWarning = severityAssert{hcl.DiagWarning}
+)
+
+type containsAssert struct {
+	isSummary bool // if false - detail
+	substrs   []string
 }
 
-func contains(str string, substrs []string) bool {
+func (c *containsAssert) Assert(diag *hcl.Diagnostic) bool {
+	var str string
+	if c.isSummary {
+		str = diag.Summary
+	} else {
+		str = diag.Detail
+	}
 	str = strings.ToLower(str)
-	for _, substr := range substrs {
+	for _, substr := range c.substrs {
 		if !strings.Contains(str, strings.ToLower(substr)) {
 			return false
 		}
 	}
 	return true
+}
+
+// String implements Assert.
+func (c *containsAssert) String() string {
+	var attrName string
+	if c.isSummary {
+		attrName = "Summary"
+	} else {
+		attrName = "Detail"
+	}
+
+	return fmt.Sprintf(
+		"%s to contain: %s",
+		attrName,
+		strings.Join(
+			utils.FnMap(
+				c.substrs,
+				func(s string) string {
+					return fmt.Sprintf("%q", s)
+				},
+			),
+			", ",
+		),
+	)
+}
+
+func SummaryContains(substrs ...string) Assert {
+	return &containsAssert{
+		isSummary: true,
+		substrs:   substrs,
+	}
+}
+
+func DetailContains(substrs ...string) Assert {
+	return &containsAssert{
+		isSummary: false,
+		substrs:   substrs,
+	}
 }
 
 func sliceRemove[T any](s []T, pos int) []T {
@@ -59,6 +118,22 @@ func compareDiags(t *testing.T, fm map[string]*hcl.File, diags diagnostics.Diag,
 	t.Helper()
 	if !matchBiject(diags, asserts) {
 		var buf strings.Builder
+		buf.WriteString("Expected ")
+		if len(asserts) == 0 {
+			buf.WriteString("no diagnostics\n")
+		} else if len(asserts) == 1 {
+			buf.WriteString("1 diagnostic:\n")
+		} else {
+			fmt.Fprintf(&buf, "%d diagnostics:\n", len(asserts))
+		}
+		for _, assertSet := range asserts {
+			fmt.Fprintln(&buf, "{")
+			for _, assert := range assertSet {
+				fmt.Fprintf(&buf, "    %s\n", assert)
+			}
+			fmt.Fprintln(&buf, "},")
+		}
+		buf.WriteString("\nGot:\n\n")
 		diagnostics.PrintDiags(&buf, diags, fm, false)
 		t.Fatalf("\n\n%s", buf.String())
 	}
@@ -78,7 +153,7 @@ nextDiag:
 				panic("assert set has length 0")
 			}
 			for _, assert := range assertSet {
-				if !assert(diag) {
+				if !assert.Assert(diag) {
 					continue nextAssertSet
 				}
 			}

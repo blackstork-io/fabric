@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclwrite"
+
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
 type rootSpecSigil struct{}
@@ -67,7 +69,7 @@ type Spec interface {
 	HcldecSpec() hcldec.Spec
 	WriteDoc(w *hclwrite.Body)
 	getSpec() Spec
-	ValidateSpec() []string
+	ValidateSpec() diagnostics.Diag
 }
 
 // Reperesents types that could be included as children in Object.
