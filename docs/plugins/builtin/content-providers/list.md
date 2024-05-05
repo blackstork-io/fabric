@@ -37,9 +37,8 @@ content list {
   # For example:
   item_template = "[{{.Title}}]({{.URL}})"
 
-  # Can be one of: "unordered", "ordered", "tasklist"
-  #
   # Optional string.
+  # Must be one of: "unordered", "ordered", "tasklist"
   # Default value:
   format = "unordered"
 }

@@ -33,6 +33,7 @@ func makeTitleContentProvider() *plugin.ContentProvider {
 			&dataspec.AttrSpec{
 				Name:       "absolute_size",
 				Type:       cty.Number,
+				Constraints: constraint.Integer,
 				DefaultVal: cty.NullVal(cty.Number),
 				Doc: `
 					Sets the absolute size of the title.
@@ -42,6 +43,7 @@ func makeTitleContentProvider() *plugin.ContentProvider {
 			&dataspec.AttrSpec{
 				Name:       "relative_size",
 				Type:       cty.Number,
+				Constraints: constraint.Integer,
 				DefaultVal: cty.NumberIntVal(0),
 				Doc: `
 					Adjusts the absolute size of the title.

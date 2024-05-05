@@ -31,9 +31,10 @@ The content provider supports the following execution parameters:
 
 ```hcl
 content frontmatter {
-  # Format of the frontmatter. Must be one of "yaml", "toml", "json"
+  # Format of the frontmatter.
   #
   # Optional string.
+  # Must be one of: "yaml", "toml", "json"
   # Default value:
   format = "yaml"
 

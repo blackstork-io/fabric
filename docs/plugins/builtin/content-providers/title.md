@@ -43,14 +43,14 @@ content title {
   # Sets the absolute size of the title.
   # If `null` – absoulute title size is determined from the document structure
   #
-  # Optional number.
+  # Optional integer.
   # Default value:
   absolute_size = null
 
   # Adjusts the absolute size of the title.
   # The value (which may be negative) is added to the `absolute_size` to produce the final title size
   #
-  # Optional number.
+  # Optional integer.
   # Default value:
   relative_size = 0
 }

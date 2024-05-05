@@ -21,17 +21,19 @@ func makeCSVDataSource() *plugin.DataSource {
 		DataFunc: fetchCSVData,
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "delimiter",
-				Type:       cty.String,
-				DefaultVal: cty.StringVal(","),
-				Doc:        `Must be a one-character string`,
+				Name:         "delimiter",
+				Type:         cty.String,
+				DefaultVal:   cty.StringVal(","),
+				MinInclusive: cty.NumberIntVal(1),
+				MaxInclusive: cty.NumberIntVal(1),
+				Doc:          `CSV field delimiter`,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
 				Name:        "path",
 				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
+				Constraints: constraint.RequiredMeaningfull,
 				ExampleVal:  cty.StringVal("path/to/file.csv"),
 			},
 		},
