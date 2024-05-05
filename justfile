@@ -23,6 +23,9 @@ test:
 test-pretty:
     gotestsum --format dots-v2 -- -timeout 10s -race -short -v ./...
 
+test-pretty-one testname:
+    gotestsum --format dots-v2 -- -timeout 10s -race -short -v ./... -run {{ testname }}
+
 test-all:
     go test -timeout 5m -race -v ./...
 
