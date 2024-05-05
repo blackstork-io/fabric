@@ -101,7 +101,7 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceTemplateRender() {
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
-	s.Equal("![](./3.png)", result.Content.Print())
+	s.Equal("![](./3.png)", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }
 
@@ -116,6 +116,6 @@ func (s *ImageGeneratorTestSuite) TestCallImageAltTemplateRender() {
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
-	s.Equal("![5 alt text](./3.png)", result.Content.Print())
+	s.Equal("![5 alt text](./3.png)", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }
