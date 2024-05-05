@@ -1,6 +1,7 @@
 package e2e_test
 
 import (
+	"bytes"
 	"fmt"
 	"log/slog"
 	"os"
@@ -40,8 +41,10 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 		if !diags.HasErrors() {
 			if !diags.Extend(eval.LoadPluginResolver(false)) && !diags.Extend(eval.LoadPluginRunner(ctx)) {
 				var diag diagnostics.Diag
-				res, diag = cmd.Render(ctx, eval.Blocks, eval.PluginCaller(), docName)
+				buf := bytes.NewBuffer(nil)
+				diag = cmd.Render(ctx, eval.Blocks, eval.PluginCaller(), docName, buf)
 				diags.Extend(diag)
+				res = buf.String()
 			}
 		}
 

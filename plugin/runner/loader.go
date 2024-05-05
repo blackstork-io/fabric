@@ -27,23 +27,30 @@ type loadedContentProvider struct {
 	*plugin.ContentProvider
 }
 
+type loadedPublisher struct {
+	plugin *plugin.Schema
+	*plugin.Publisher
+}
+
 type loader struct {
-	logger     *slog.Logger
-	binaryMap  map[string]string
-	builtin    *plugin.Schema
-	pluginMap  map[string]loadedPlugin
-	dataMap    map[string]loadedDataSource
-	contentMap map[string]loadedContentProvider
+	logger       *slog.Logger
+	binaryMap    map[string]string
+	builtin      *plugin.Schema
+	pluginMap    map[string]loadedPlugin
+	dataMap      map[string]loadedDataSource
+	contentMap   map[string]loadedContentProvider
+	publisherMap map[string]loadedPublisher
 }
 
 func makeLoader(binaryMap map[string]string, builtin *plugin.Schema, logger *slog.Logger) *loader {
 	return &loader{
-		logger:     logger,
-		binaryMap:  binaryMap,
-		builtin:    builtin,
-		pluginMap:  make(map[string]loadedPlugin),
-		dataMap:    make(map[string]loadedDataSource),
-		contentMap: make(map[string]loadedContentProvider),
+		logger:       logger,
+		binaryMap:    binaryMap,
+		builtin:      builtin,
+		pluginMap:    make(map[string]loadedPlugin),
+		dataMap:      make(map[string]loadedDataSource),
+		contentMap:   make(map[string]loadedContentProvider),
+		publisherMap: make(map[string]loadedPublisher),
 	}
 }
 
@@ -107,11 +114,28 @@ func (l *loader) registerContentProvider(name string, schema *plugin.Schema, cp 
 		ContentProvider: &plugin.ContentProvider{
 			Config: cp.Config,
 			Args:   cp.Args,
+			Doc:    cp.Doc,
+			Tags:   cp.Tags,
 			ContentFunc: func(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
 				return schema.ProvideContent(ctx, name, params)
 			},
 			InvocationOrder: cp.InvocationOrder,
 		},
+	}
+	return nil
+}
+
+func (l *loader) registerPublisher(name string, schema *plugin.Schema, pub *plugin.Publisher) hcl.Diagnostics {
+	if found, has := l.publisherMap[name]; has {
+		return hcl.Diagnostics{{
+			Severity: hcl.DiagError,
+			Summary:  "Duplicate publisher",
+			Detail:   fmt.Sprintf("Publisher %s provided by plugin %s@%s and %s@%s", name, schema.Name, schema.Version, found.plugin.Name, found.plugin.Version),
+		}}
+	}
+	l.publisherMap[name] = loadedPublisher{
+		plugin:    schema,
+		Publisher: pub,
 	}
 	return nil
 }
@@ -148,6 +172,11 @@ func (l *loader) registerPlugin(schema *plugin.Schema, closefn func() error) hcl
 	}
 	for name, provider := range schema.ContentProviders {
 		if diags := l.registerContentProvider(name, schema, provider); diags.HasErrors() {
+			return diags
+		}
+	}
+	for name, publisher := range schema.Publishers {
+		if diags := l.registerPublisher(name, schema, publisher); diags.HasErrors() {
 			return diags
 		}
 	}

@@ -10,6 +10,7 @@ message Schema {
     // Plugin components
     map<string, DataSourceSchema>       data_sources      = 3;
     map<string, ContentProviderSchema>  content_providers = 4;
+    map<string, PublisherSchema>        publishers        = 7;
     string                              doc               = 5;
     repeated string                     tags              = 6;
 }
@@ -33,4 +34,20 @@ message ContentProviderSchema {
     InvocationOrder invocation_order = 3;
     string          doc              = 6;
     repeated string tags             = 7;
+}
+
+
+enum OutputFormat {
+    OUTPUT_FORMAT_UNSPECIFIED = 0;
+    OUTPUT_FORMAT_MD          = 1;
+    OUTPUT_FORMAT_HTML        = 2;
+    OUTPUT_FORMAT_PDF         = 3;
+}
+
+message PublisherSchema {
+    Spec                  args            = 1;
+    Spec                  config          = 2;
+    string                doc             = 3;
+    repeated string       tags            = 4;
+    repeated OutputFormat allowed_formats = 5;
 }

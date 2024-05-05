@@ -12,6 +12,7 @@ const (
 	BlockKindDocument     = "document"
 	BlockKindConfig       = "config"
 	BlockKindContent      = "content"
+	BlockKindPublish      = "publish"
 	BlockKindData         = "data"
 	BlockKindMeta         = "meta"
 	BlockKindSection      = "section"

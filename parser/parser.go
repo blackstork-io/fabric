@@ -181,7 +181,7 @@ func parseBlockDefinitions(body *hclsyntax.Body) (res *DefinedBlocks, diags diag
 
 	for _, block := range body.Blocks {
 		switch block.Type {
-		case definitions.BlockKindData, definitions.BlockKindContent:
+		case definitions.BlockKindData, definitions.BlockKindContent, definitions.BlockKindPublish:
 			plugin, dgs := definitions.DefinePlugin(block, true)
 			if diags.Extend(dgs) {
 				continue
@@ -230,6 +230,7 @@ func parseBlockDefinitions(body *hclsyntax.Body) (res *DefinedBlocks, diags diag
 				[]string{
 					definitions.BlockKindData,
 					definitions.BlockKindContent,
+					definitions.BlockKindPublish,
 					definitions.BlockKindDocument,
 					definitions.BlockKindSection,
 					definitions.BlockKindConfig,

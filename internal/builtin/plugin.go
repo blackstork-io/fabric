@@ -28,5 +28,8 @@ func Plugin(version string) *plugin.Schema {
 			"table":       makeTableContentProvider(),
 			"frontmatter": makeFrontMatterContentProvider(),
 		},
+		Publishers: plugin.Publishers{
+			"local_file": makeLocalFilePublisher(),
+		},
 	}
 }

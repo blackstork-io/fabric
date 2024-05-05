@@ -40,10 +40,11 @@ func mapToCty(m map[string]map[string]cty.Value) (res map[string]cty.Value) {
 	return
 }
 
-func PluginMapToCty[V definitions.FabricBlock](plugins map[definitions.Key]V) (content, data cty.Value) {
+func PluginMapToCty[V definitions.FabricBlock](plugins map[definitions.Key]V) (content, data, publish cty.Value) {
 	// [plugin_kind][plugin_name][block_name]*definitions.Plugin
 
-	pluginMap := [2]map[string]map[string]cty.Value{
+	pluginMap := [3]map[string]map[string]cty.Value{
+		{},
 		{},
 		{},
 	}
@@ -54,13 +55,15 @@ func PluginMapToCty[V definitions.FabricBlock](plugins map[definitions.Key]V) (c
 			idx = 0
 		case definitions.BlockKindData:
 			idx = 1
+		case definitions.BlockKindPublish:
+			idx = 2
 		default:
 			panic("must be exhaustive")
 		}
 		blockNameToVal := mapGetOrInit(pluginMap[idx], k.PluginName)
 		blockNameToVal[k.BlockName] = definitions.ToCtyValue(v)
 	}
-	pluginKindToVal := [2]cty.Value{}
+	pluginKindToVal := [3]cty.Value{}
 
 	for idx, pl := range pluginMap {
 		if len(pl) == 0 {
@@ -68,15 +71,16 @@ func PluginMapToCty[V definitions.FabricBlock](plugins map[definitions.Key]V) (c
 		}
 		pluginKindToVal[idx] = cty.MapVal(mapToCty(pl))
 	}
-	return pluginKindToVal[0], pluginKindToVal[1]
+	return pluginKindToVal[0], pluginKindToVal[1], pluginKindToVal[2]
 }
 
 func (db *DefinedBlocks) AsValueMap() map[string]cty.Value {
-	content, data := PluginMapToCty(db.Plugins)
-	cfgContent, cfgData := PluginMapToCty(db.Config)
+	content, data, publish := PluginMapToCty(db.Plugins)
+	cfgContent, cfgData, cfgPublish := PluginMapToCty(db.Config)
 	config := cty.ObjectVal(map[string]cty.Value{
 		definitions.BlockKindContent: cfgContent,
 		definitions.BlockKindData:    cfgData,
+		definitions.BlockKindPublish: cfgPublish,
 	})
 
 	var sections cty.Value
@@ -94,6 +98,7 @@ func (db *DefinedBlocks) AsValueMap() map[string]cty.Value {
 		definitions.BlockKindData:    data,
 		definitions.BlockKindSection: sections,
 		definitions.BlockKindConfig:  config,
+		definitions.BlockKindPublish: publish,
 	}
 }
 

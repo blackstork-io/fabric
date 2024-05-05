@@ -100,3 +100,16 @@ func decodeInvocationOrder(src InvocationOrder) plugin.InvocationOrder {
 		return plugin.InvocationOrderUnspecified
 	}
 }
+
+func decodeOutputFormat(src OutputFormat) plugin.OutputFormat {
+	switch src {
+	case OutputFormat_OUTPUT_FORMAT_HTML:
+		return plugin.OutputFormatHTML
+	case OutputFormat_OUTPUT_FORMAT_MD:
+		return plugin.OutputFormatMD
+	case OutputFormat_OUTPUT_FORMAT_PDF:
+		return plugin.OutputFormatPDF
+	default:
+		return plugin.OutputFormatUnspecified
+	}
+}

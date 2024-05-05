@@ -79,3 +79,26 @@ func (srv *grpcServer) ProvideContent(ctx context.Context, req *ProvideContentRe
 		Diagnostics: encodeDiagnosticList(diags),
 	}, nil
 }
+
+func (srv *grpcServer) Publish(ctx context.Context, req *PublishRequest) (*PublishResponse, error) {
+	publisher := req.GetPublisher()
+	cfg, err := decodeCtyValue(req.GetConfig())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to decode config: %v", err)
+	}
+	args, err := decodeCtyValue(req.GetArgs())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to decode args: %v", err)
+	}
+	datactx := decodeMapData(req.GetDataContext())
+	format := decodeOutputFormat(req.GetFormat())
+	diags := srv.schema.Publish(ctx, publisher, &plugin.PublishParams{
+		Config:      cfg,
+		Args:        args,
+		DataContext: datactx,
+		Format:      format,
+	})
+	return &PublishResponse{
+		Diagnostics: encodeDiagnosticList(diags),
+	}, nil
+}

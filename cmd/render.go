@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"io"
@@ -13,9 +12,13 @@ import (
 	"github.com/blackstork-io/fabric/parser"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/printer"
+	"github.com/blackstork-io/fabric/printer/htmlprint"
+	"github.com/blackstork-io/fabric/printer/mdprint"
 )
 
-func Render(ctx context.Context, blocks *parser.DefinedBlocks, pluginCaller *parser.Caller, docName string) (results string, diags diagnostics.Diag) {
+func Render(ctx context.Context, blocks *parser.DefinedBlocks, pluginCaller *parser.Caller, docName string, w io.Writer) (diags diagnostics.Diag) {
 	doc, found := blocks.Documents[docName]
 	if !found {
 		diags.Add(
@@ -32,24 +35,57 @@ func Render(ctx context.Context, blocks *parser.DefinedBlocks, pluginCaller *par
 	if diags.Extend(diag) {
 		return
 	}
-
-	results, diag = pd.Render(ctx, pluginCaller)
+	content, _, diag := pd.Render(ctx, pluginCaller)
 	if diags.Extend(diag) {
 		return
+	}
+	var print printer.Printer
+	switch format {
+	case "md":
+		print = mdprint.New()
+	case "html":
+		print = htmlprint.New()
+	default:
+		diags.Add("Unsupported format", fmt.Sprintf("Format '%s' is not supported for stdout", format))
+		return
+	}
+	err := print.Print(w, content)
+	if err != nil {
+		diags.Add("Error while rendering", err.Error())
 	}
 	return
 }
 
-func writeResults(dest io.Writer, results string) (diags diagnostics.Diag) {
-	if len(results) == 0 {
-		diags.Add("Empty output", "No content was produced")
+func Publish(ctx context.Context, blocks *parser.DefinedBlocks, pluginCaller *parser.Caller, docName string) (diags diagnostics.Diag) {
+	doc, found := blocks.Documents[docName]
+	if !found {
+		diags.Add(
+			"Document not found",
+			fmt.Sprintf(
+				"Definition for document named '%s' not found",
+				docName,
+			),
+		)
 		return
 	}
-	w := bufio.NewWriter(dest)
-	w.WriteString(results)
-	_ = w.WriteByte('\n')
-	err := w.Flush()
-	diags.AppendErr(err, "Error while outputing result")
+
+	pd, diag := blocks.ParseDocument(doc)
+	if diags.Extend(diag) {
+		return
+	}
+	var defFormat plugin.OutputFormat
+	switch format {
+	case "md":
+		defFormat = plugin.OutputFormatMD
+	case "html":
+		defFormat = plugin.OutputFormatHTML
+	case "pdf":
+		defFormat = plugin.OutputFormatPDF
+	default:
+		diags.Add("Unsupported format", fmt.Sprintf("Format '%s' is not supported for publishing", format))
+		return
+	}
+	diags.Extend(pd.Publish(ctx, pluginCaller, defFormat))
 	return
 }
 
@@ -69,15 +105,6 @@ var renderCmd = &cobra.Command{
 			return fmt.Errorf("target should have the format '%s<name_of_the_document>'", docPrefix)
 		}
 
-		dest := os.Stdout
-		if outFile != "" {
-			dest, err = os.Create(outFile)
-			if err != nil {
-				return fmt.Errorf("can't create the out-file: %w", err)
-			}
-			defer dest.Close()
-		}
-
 		var diags diagnostics.Diag
 		eval := NewEvaluator()
 		defer func() {
@@ -93,24 +120,25 @@ var renderCmd = &cobra.Command{
 		if diags.Extend(eval.LoadPluginRunner(cmd.Context())) {
 			return
 		}
-		res, diag := Render(cmd.Context(), eval.Blocks, eval.PluginCaller(), target)
-		if diags.Extend(diag) {
-			return
+		if publish {
+			diags.Extend(Publish(cmd.Context(), eval.Blocks, eval.PluginCaller(), target))
+		} else {
+			diags.Extend(Render(cmd.Context(), eval.Blocks, eval.PluginCaller(), target, os.Stdout))
 		}
-		diags.Extend(
-			writeResults(dest, res),
-		)
 		return
 	},
 }
 
-var outFile string
+var (
+	publish bool
+	format  string
+)
 
 func init() {
 	rootCmd.AddCommand(renderCmd)
 
-	renderCmd.Flags().StringVar(&outFile, "out-file", "", "name of the output file where the rendered document must be saved to. If not set - the Markdown is printed to stdout")
-
+	renderCmd.Flags().BoolVar(&publish, "publish", false, "publish the rendered document")
+	renderCmd.Flags().StringVar(&format, "format", "md", "default output format of the document (md, html or pdf)")
 	renderCmd.SetUsageTemplate(UsageTemplate(
 		[2]string{"TARGET", "name of the document to be rendered as 'document.<name>'"},
 	))

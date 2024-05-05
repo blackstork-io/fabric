@@ -12,9 +12,10 @@ import (
 )
 
 type ParsedDocument struct {
-	Meta    *MetaBlock
-	Content []Renderable
-	Data    []*ParsedData
+	Meta       *MetaBlock
+	Content    []Renderable
+	Data       []*ParsedData
+	Publishers []*ParsedPublish
 }
 
 // result has a shape map[plugin_name]map[block_name]plugin_result.
@@ -56,14 +57,18 @@ func (d *ParsedDocument) evalData(ctx context.Context, caller evaluation.DataCal
 	return
 }
 
-func (d *ParsedDocument) Render(ctx context.Context, caller evaluation.PluginCaller) (result string, diags diagnostics.Diag) {
+func (d *ParsedDocument) Render(ctx context.Context, caller evaluation.PluginCaller) (
+	content plugin.Content,
+	data plugin.Data,
+	diags diagnostics.Diag,
+) {
 	dataResult, diags := d.evalData(ctx, caller)
 	if diags.HasErrors() {
 		return
 	}
-	res := new(evaluation.Result)
+	result := new(evaluation.Result)
 	document := plugin.ConvMapData{
-		BlockKindContent: res,
+		BlockKindContent: result,
 	}
 	if d.Meta != nil {
 		document[BlockKindMeta] = d.Meta.AsJQData()
@@ -76,7 +81,7 @@ func (d *ParsedDocument) Render(ctx context.Context, caller evaluation.PluginCal
 	posMap := make(map[int]uint32)
 	for i := range d.Content {
 		empty := new(plugin.ContentEmpty)
-		res.Add(empty, nil)
+		result.Add(empty, nil)
 		posMap[i] = empty.ID()
 	}
 	execList := make([]int, 0, len(d.Content))
@@ -92,10 +97,43 @@ func (d *ParsedDocument) Render(ctx context.Context, caller evaluation.PluginCal
 		content := d.Content[idx]
 		dataCtx.Delete(BlockKindSection)
 		diags.Extend(
-			content.Render(ctx, caller, dataCtx.Share(), res, posMap[idx]),
+			content.Render(ctx, caller, dataCtx.Share(), result, posMap[idx]),
 		)
 	}
-	res.Compact()
-	result = res.Print()
+	result.Compact()
+	return result, dataCtx.Share(), diags
+}
+
+func (d *ParsedDocument) Publish(ctx context.Context, caller evaluation.PluginCaller, defaultFormat plugin.OutputFormat) (diags diagnostics.Diag) {
+	if len(d.Publishers) == 0 {
+		diags.Add("No publishers", "Document has no publishers!")
+		return
+	}
+	_, data, diags := d.Render(ctx, caller)
+	if diags.HasErrors() {
+		return
+	}
+	for _, node := range d.Publishers {
+		format, diag := node.EvalQuery()
+		if diag.HasErrors() {
+			return
+		}
+		if format == plugin.OutputFormatUnspecified {
+			format = defaultFormat
+		}
+		diags.Extend(
+			caller.CallPublish(
+				ctx,
+				node.PluginName,
+				node.Config,
+				node.Invocation,
+				data.AsJQData().(plugin.MapData),
+				format,
+			),
+		)
+		if diags.HasErrors() {
+			return
+		}
+	}
 	return
 }

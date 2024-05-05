@@ -10,6 +10,7 @@ import (
 
 	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/printer/mdprint"
 )
 
 type ImageGeneratorTestSuite struct {
@@ -72,7 +73,7 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceValid() {
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
-	s.Equal("![](https://example.com/image.png)", result.Content.Print())
+	s.Equal("![](https://example.com/image.png)", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }
 
@@ -87,6 +88,6 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceValidWithAlt() {
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
-	s.Equal("![alt text](https://example.com/image.png)", result.Content.Print())
+	s.Equal("![alt text](https://example.com/image.png)", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }

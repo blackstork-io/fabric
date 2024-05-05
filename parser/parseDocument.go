@@ -20,7 +20,7 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 
 	for _, block := range d.Block.Body.Blocks {
 		switch block.Type {
-		case definitions.BlockKindContent, definitions.BlockKindData:
+		case definitions.BlockKindContent, definitions.BlockKindData, definitions.BlockKindPublish:
 			plugin, diag := definitions.DefinePlugin(block, false)
 			if diags.Extend(diag) {
 				continue
@@ -34,6 +34,8 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 				doc.Content = append(doc.Content, (*definitions.ParsedContent)(call))
 			case definitions.BlockKindData:
 				doc.Data = append(doc.Data, (*definitions.ParsedData)(call))
+			case definitions.BlockKindPublish:
+				doc.Publishers = append(doc.Publishers, (*definitions.ParsedPublish)(call))
 			default:
 				panic("must be exhaustive")
 			}
@@ -78,6 +80,7 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 					definitions.BlockKindData,
 					definitions.BlockKindMeta,
 					definitions.BlockKindSection,
+					definitions.BlockKindPublish,
 				},
 			))
 			continue

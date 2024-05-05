@@ -54,7 +54,8 @@ var dataSourceTemplValue string
 //go:embed plugin.md.gotempl
 var pluginTemplValue string
 
-// var pluginTempl *template.Template
+//go:embed publisher.md.gotempl
+var publisherTemplValue string
 
 type PluginResourceMeta struct {
 	Name         string   `json:"name"`
@@ -114,6 +115,31 @@ func generateContentProviderDocs(log *slog.Logger, p *plugin.Schema, outputDir s
 		err := renderContentProviderDoc(p, name, contentProvider, docPath)
 		if err != nil {
 			log.Error("Error while rendering a content provider doc", "plugin", p.Name, "contentProvider", name)
+			panic(err)
+		}
+	}
+}
+
+func generatePublisherDocs(log *slog.Logger, p *plugin.Schema, outputDir string) {
+	log.Info("Found publishers inside the plugin", "count", len(p.Publishers))
+
+	publishersDir := filepath.Join(outputDir, "publishers")
+
+	// Create a directory for plugin's publishers if it doesn't exist
+	err := os.MkdirAll(publishersDir, 0o766)
+	if err != nil {
+		log.Error("Can't create a directory", "path", publishersDir)
+		panic(err)
+	}
+
+	for name, publisher := range p.Publishers {
+		log.Info("Found a publisher", "name", name)
+
+		docFilename := fmt.Sprintf("%s.md", name)
+		docPath := filepath.Join(publishersDir, docFilename)
+		err := renderPublisherDoc(p, name, publisher, docPath)
+		if err != nil {
+			log.Error("Error while rendering a publisher doc", "plugin", p.Name, "publisher", name)
 			panic(err)
 		}
 	}
@@ -179,6 +205,35 @@ func marshalContentProvider(name string, p *plugin.ContentProvider) PluginResour
 	}
 }
 
+func marshalPublisher(name string, p *plugin.Publisher) PluginResourceMeta {
+	var configParams []string
+	configSpec, ok := p.Config.(dataspec.ObjectSpec)
+	if ok && configSpec != nil {
+		for _, s := range configSpec {
+			if itemName := dataspec.ItemName(s); itemName != "" {
+				configParams = append(configParams, itemName)
+			}
+		}
+	}
+	var arguments []string
+	argsSpec, ok := p.Args.(dataspec.ObjectSpec)
+	if ok && argsSpec != nil {
+		for _, s := range argsSpec {
+			if itemName := dataspec.ItemName(s); itemName != "" {
+				arguments = append(arguments, itemName)
+			}
+		}
+	}
+	sort.Strings(arguments)
+
+	return PluginResourceMeta{
+		Name:         name,
+		Type:         "publisher",
+		ConfigParams: configParams,
+		Arguments:    arguments,
+	}
+}
+
 func generateMetadataFile(plugins []*plugin.Schema, outputDir string) {
 	pluginDetails := make([]PluginDetails, len(plugins))
 
@@ -191,6 +246,9 @@ func generateMetadataFile(plugins []*plugin.Schema, outputDir string) {
 		}
 		for name, contentProvider := range p.ContentProviders {
 			resources = append(resources, marshalContentProvider(name, contentProvider))
+		}
+		for name, publisher := range p.Publishers {
+			resources = append(resources, marshalPublisher(name, publisher))
 		}
 
 		sort.Slice(resources, func(i, j int) bool {
@@ -283,6 +341,9 @@ func main() {
 		if len(p.ContentProviders) != 0 {
 			generateContentProviderDocs(log, p, pluginOutputDir)
 		}
+		if len(p.Publishers) != 0 {
+			generatePublisherDocs(log, p, pluginOutputDir)
+		}
 	}
 	generateMetadataFile(plugins, outputDir)
 }
@@ -313,6 +374,22 @@ func renderContentProviderDoc(pluginSchema *plugin.Schema, contentProviderName s
 		"short_desc":       shortDescription(contentProvider.Doc),
 	}
 	return base.ExecuteTemplate(f, "content-provider", templContext)
+}
+
+func renderPublisherDoc(pluginSchema *plugin.Schema, publisherName string, publisher *plugin.Publisher, fp string) error {
+	f, err := os.Create(fp)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	templContext := map[string]any{
+		"plugin":           pluginSchema,
+		"plugin_shortname": shortname(pluginSchema.Name),
+		"name":             publisherName,
+		"publisher":        publisher,
+	}
+	return base.ExecuteTemplate(f, "publisher", templContext)
 }
 
 func renderDataSourceDoc(pluginSchema *plugin.Schema, dataSourceName string, dataSource *plugin.DataSource, fp string) error {
@@ -375,6 +452,7 @@ func init() {
 			}),
 		}).
 		Parse(contentProviderTemplValue))
+	template.Must(base.New("publisher").Parse(publisherTemplValue))
 	template.Must(base.New("data-source").Parse(dataSourceTemplValue))
 	template.Must(base.New("plugin").Parse(pluginTemplValue))
 }

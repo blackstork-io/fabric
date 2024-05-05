@@ -56,6 +56,15 @@ func (c *Caller) pluginData(kind, name string) (pluginData, diagnostics.Diag) {
 			ConfigSpec:     plugin.Config,
 			InvocationSpec: plugin.Args,
 		}, nil
+	case "publish":
+		plugin, diag := c.plugins.Publisher(name)
+		if diag.HasErrors() {
+			return pluginData{}, diagnostics.Diag(diag)
+		}
+		return pluginData{
+			ConfigSpec:     plugin.Config,
+			InvocationSpec: plugin.Args,
+		}, nil
 	default:
 		return pluginData{}, diagnostics.Diag{
 			{
@@ -67,7 +76,7 @@ func (c *Caller) pluginData(kind, name string) (pluginData, diagnostics.Diag) {
 	}
 }
 
-func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evaluation.Configuration, invocation evaluation.Invocation, dataCtx plugin.MapData, contentID uint32) (res any, diags diagnostics.Diag) {
+func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evaluation.Configuration, invocation evaluation.Invocation, dataCtx plugin.MapData, contentID uint32, format plugin.OutputFormat) (res any, diags diagnostics.Diag) {
 	data, diags := c.pluginData(kind, name)
 	if diags.HasErrors() {
 		return
@@ -154,6 +163,20 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 		})
 		res = content
 		diags.ExtendHcl(diag)
+	case "publish":
+		if fabctx.Get(ctx).IsLinting() {
+			return
+		}
+		publisher, diag := c.plugins.Publisher(name)
+		if diags.ExtendHcl(diag) {
+			return
+		}
+		diags.ExtendHcl(publisher.Execute(ctx, &plugin.PublishParams{
+			Config:      configVal,
+			Args:        pluginArgs,
+			DataContext: dataCtx,
+			Format:      format,
+		}))
 	}
 	return
 }
@@ -161,7 +184,7 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 func (c *Caller) CallContent(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation, dataCtx plugin.MapData, contentID uint32) (result *plugin.ContentResult, diag diagnostics.Diag) {
 	var ok bool
 	var res any
-	res, diag = c.callPlugin(ctx, definitions.BlockKindContent, name, config, invocation, dataCtx, contentID)
+	res, diag = c.callPlugin(ctx, definitions.BlockKindContent, name, config, invocation, dataCtx, contentID, 0)
 	if diag.HasErrors() {
 		return
 	}
@@ -184,7 +207,7 @@ func (c *Caller) ContentInvocationOrder(ctx context.Context, name string) (order
 func (c *Caller) CallData(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation) (result plugin.Data, diag diagnostics.Diag) {
 	var ok bool
 	var res any
-	res, diag = c.callPlugin(ctx, definitions.BlockKindData, name, config, invocation, nil, 0)
+	res, diag = c.callPlugin(ctx, definitions.BlockKindData, name, config, invocation, nil, 0, 0)
 	if diag.HasErrors() {
 		return
 	}
@@ -193,4 +216,9 @@ func (c *Caller) CallData(ctx context.Context, name string, config evaluation.Co
 		panic("Incorrect plugin result type")
 	}
 	return
+}
+
+func (c *Caller) CallPublish(ctx context.Context, name string, config evaluation.Configuration, invocation evaluation.Invocation, dataCtx plugin.MapData, format plugin.OutputFormat) diagnostics.Diag {
+	_, diag := c.callPlugin(ctx, definitions.BlockKindPublish, name, config, invocation, dataCtx, 0, format)
+	return diag
 }

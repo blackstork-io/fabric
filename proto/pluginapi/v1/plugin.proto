@@ -12,6 +12,7 @@ service PluginService {
     rpc GetSchema(GetSchemaRequest) returns (GetSchemaResponse) {}
     rpc RetrieveData(RetrieveDataRequest) returns (RetrieveDataResponse) {}
     rpc ProvideContent(ProvideContentRequest) returns (ProvideContentResponse) {}
+    rpc Publish(PublishRequest) returns (PublishResponse) {}
 }
 
 message GetSchemaRequest {}
@@ -45,3 +46,14 @@ message ProvideContentResponse {
 }
 
 
+message PublishRequest {
+    string         publisher    = 1;
+    CtyValue       args         = 2;
+    CtyValue       config       = 3;
+    MapData        data_context = 4;
+    OutputFormat   format       = 5;
+}
+
+message PublishResponse {
+    repeated Diagnostic diagnostics = 1;
+}
