@@ -26,6 +26,7 @@
           "delimiter"
         ],
         "arguments": [
+          "glob",
           "path"
         ]
       },
@@ -53,7 +54,8 @@
         "name": "json",
         "type": "data-source",
         "arguments": [
-          "glob"
+          "glob",
+          "path"
         ]
       },
       {
@@ -118,6 +120,7 @@
         "name": "txt",
         "type": "data-source",
         "arguments": [
+          "glob",
           "path"
         ]
       }
