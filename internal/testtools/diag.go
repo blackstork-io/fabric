@@ -136,7 +136,6 @@ nextDiag:
 		for assertSetIdx, assertSet := range asserts {
 			for _, a := range assertSet {
 				if !a(diag) {
-					t.Logf("Assert didn't match the diagnostic")
 					continue nextAssertSet
 				}
 			}
