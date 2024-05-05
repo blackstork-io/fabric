@@ -30,7 +30,7 @@ func makeFrontMatterContentProvider() *plugin.ContentProvider {
 			&dataspec.AttrSpec{
 				Name:       "format",
 				Type:       cty.String,
-								Doc:        `Format of the frontmatter. Must be one of ` + utils.JoinSurround(", ", `"`, frontMatterAllowedFormats...),
+				Doc:        `Format of the frontmatter. Must be one of ` + utils.JoinSurround(", ", `"`, frontMatterAllowedFormats...),
 				DefaultVal: cty.StringVal("yaml"),
 			},
 			&dataspec.AttrSpec{

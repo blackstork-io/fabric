@@ -20,11 +20,11 @@ func makeJSONDataSource() *plugin.DataSource {
 		DataFunc: fetchJSONData,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "glob",
-				Type:       cty.String,
+				Name:        "glob",
+				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
-				ExampleVal: cty.StringVal("reports/*_data.json"),
-				Doc:        `A pattern that selects the json files to be read`,
+				ExampleVal:  cty.StringVal("reports/*_data.json"),
+				Doc:         `A pattern that selects the json files to be read`,
 			},
 		},
 		Doc: `

@@ -18,10 +18,10 @@ func makeTXTDataSource() *plugin.DataSource {
 		DataFunc: fetchTXTData,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "path",
-				Type:       cty.String,
+				Name:        "path",
+				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
-				ExampleVal: cty.StringVal("path/to/file.txt"),
+				ExampleVal:  cty.StringVal("path/to/file.txt"),
 			},
 		},
 		Doc: `Reads the file at "path" into a string`,

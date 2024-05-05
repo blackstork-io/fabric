@@ -21,23 +21,23 @@ func makeRSSDataSource() *plugin.DataSource {
 		DataFunc: fetchRSSData,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "url",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("https://www.elastic.co/security-labs/rss/feed.xml"),
+				Name:        "url",
+				Type:        cty.String,
+				ExampleVal:  cty.StringVal("https://www.elastic.co/security-labs/rss/feed.xml"),
 				Constraints: constraint.RequiredNonNull,
 			},
 		},
 		Config: dataspec.ObjectSpec{
 			&dataspec.BlockSpec{
-				Name:     "basic_auth",
-								Doc: `
+				Name: "basic_auth",
+				Doc: `
 					Authentication parameters used while accessing the rss source.
 				`,
 				Nested: &dataspec.ObjectSpec{
 					&dataspec.AttrSpec{
-						Name:       "username",
-						Type:       cty.String,
-						ExampleVal: cty.StringVal("user@example.com"),
+						Name:        "username",
+						Type:        cty.String,
+						ExampleVal:  cty.StringVal("user@example.com"),
 						Constraints: constraint.RequiredNonNull,
 					},
 					&dataspec.AttrSpec{

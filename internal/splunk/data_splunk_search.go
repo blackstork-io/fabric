@@ -20,45 +20,45 @@ func makeSplunkSearchDataSchema(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "auth_token",
-				Type:     cty.String,
+				Name:        "auth_token",
+				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
-				Name:     "host",
-				Type:     cty.String,
-							},
+				Name: "host",
+				Type: cty.String,
+			},
 			&dataspec.AttrSpec{
-				Name:     "deployment_name",
-				Type:     cty.String,
-							},
+				Name: "deployment_name",
+				Type: cty.String,
+			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "search_query",
-				Type:     cty.String,
+				Name:        "search_query",
+				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
-				Name:     "max_count",
-				Type:     cty.Number,
-							},
+				Name: "max_count",
+				Type: cty.Number,
+			},
 			&dataspec.AttrSpec{
-				Name:     "status_buckets",
-				Type:     cty.Number,
-							},
+				Name: "status_buckets",
+				Type: cty.Number,
+			},
 			&dataspec.AttrSpec{
-				Name:     "rf",
-				Type:     cty.List(cty.String),
-							},
+				Name: "rf",
+				Type: cty.List(cty.String),
+			},
 			&dataspec.AttrSpec{
-				Name:     "earliest_time",
-				Type:     cty.String,
-							},
+				Name: "earliest_time",
+				Type: cty.String,
+			},
 			&dataspec.AttrSpec{
-				Name:     "latest_time",
-				Type:     cty.String,
-							},
+				Name: "latest_time",
+				Type: cty.String,
+			},
 		},
 		DataFunc: fetchSplunkSearchData(loader),
 	}

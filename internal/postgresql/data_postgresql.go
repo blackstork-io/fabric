@@ -20,23 +20,23 @@ func makePostgreSQLDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "database_url",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"),
+				Name:        "database_url",
+				Type:        cty.String,
+				ExampleVal:  cty.StringVal("postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"),
 				Constraints: constraint.RequiredNonNull,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "sql_query",
-				Type:       cty.String,
+				Name:        "sql_query",
+				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
-				ExampleVal: cty.StringVal("SELECT * FROM example WHERE id=$1 OR age=$2"),
+				ExampleVal:  cty.StringVal("SELECT * FROM example WHERE id=$1 OR age=$2"),
 			},
 			&dataspec.AttrSpec{
 				Name:       "sql_args",
 				Type:       cty.List(cty.DynamicPseudoType),
-								ExampleVal: cty.ListVal([]cty.Value{cty.NumberIntVal(42), cty.NumberIntVal(24)}),
+				ExampleVal: cty.ListVal([]cty.Value{cty.NumberIntVal(42), cty.NumberIntVal(24)}),
 				Doc:        `Values for the prepared statement`,
 			},
 		},

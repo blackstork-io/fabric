@@ -17,10 +17,10 @@ func makeTerraformStateLocalDataSource() *plugin.DataSource {
 		Config: nil,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "path",
-				Type:       cty.String,
+				Name:        "path",
+				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
-				ExampleVal: cty.StringVal("path/to/terraform.tfstate"),
+				ExampleVal:  cty.StringVal("path/to/terraform.tfstate"),
 			},
 		},
 		DataFunc: fetchTerraformStateLocalData,

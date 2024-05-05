@@ -19,28 +19,28 @@ func makeVirusTotalAPIUsageDataSchema(loader ClientLoadFn) *plugin.DataSource {
 		DataFunc: fetchVirusTotalAPIUsageData(loader),
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "api_key",
-				Type:     cty.String,
+				Name:        "api_key",
+				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "user_id",
-				Type:     cty.String,
-							},
+				Name: "user_id",
+				Type: cty.String,
+			},
 			&dataspec.AttrSpec{
-				Name:     "group_id",
-				Type:     cty.String,
-							},
+				Name: "group_id",
+				Type: cty.String,
+			},
 			&dataspec.AttrSpec{
-				Name:     "start_date",
-				Type:     cty.String,
-							},
+				Name: "start_date",
+				Type: cty.String,
+			},
 			&dataspec.AttrSpec{
-				Name:     "end_date",
-				Type:     cty.String,
-							},
+				Name: "end_date",
+				Type: cty.String,
+			},
 		},
 	}
 }
