@@ -42,16 +42,18 @@ The data source supports the following configuration parameters:
 config data opencti {
   # API endpoint to perform GraphQL queries against
   #
-  # Required string. For example:
+  # Required string.
+  # For example:
   graphql_url = "https://example.com/graphql"
 
   # Token to be sent to the server as "Authorization: Bearer" header.
   # Empty or null tokens are not sent.
   #
+  # Optional string.
   # For example:
   # auth_token = "<token>"
-  #
-  # Optional string. Default value:
+  # 
+  # Default value:
   auth_token = null
 }
 ```
@@ -64,7 +66,8 @@ The data source supports the following parameters in the data blocks:
 data opencti {
   # GraphQL query
   #
-  # Required string. For example:
+  # Required string.
+  # For example:
   graphql_query = "query{user{id, name}}"
 }
 ```

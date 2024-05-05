@@ -31,15 +31,17 @@ The content provider supports the following execution parameters:
 
 ```hcl
 content code {
-  # Required string. For example:
+  # Required string.
+  # For example:
   value = "Text to be formatted as a code block"
 
   # Specifiy the language for syntax highlighting
   #
+  # Optional string.
   # For example:
   # language = "python3"
-  #
-  # Optional string. Default value:
+  # 
+  # Default value:
   language = ""
 }
 ```

@@ -41,19 +41,22 @@ The content provider supports the following configuration parameters:
 
 ```hcl
 config content openai_text {
+  # Optional string.
   # For example:
   # system_prompt = "You are a security report summarizer"
-  #
-  # Optional string. Default value:
+  # 
+  # Default value:
   system_prompt = null
 
-  # Required string. For example:
+  # Required string.
+  # For example:
   api_key = "OPENAI_API_KEY"
 
+  # Optional string.
   # For example:
   # organization_id = "YOUR_ORG_ID"
-  #
-  # Optional string. Default value:
+  # 
+  # Default value:
   organization_id = null
 }
 ```
@@ -66,10 +69,12 @@ The content provider supports the following execution parameters:
 content openai_text {
   # Go template of the prompt for an OpenAI model
   #
-  # Required string. For example:
+  # Required string.
+  # For example:
   prompt = "This is the report to be summarized: "
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   model = "gpt-3.5-turbo"
 }
 ```

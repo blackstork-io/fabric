@@ -49,7 +49,8 @@ The data source supports the following parameters in the data blocks:
 data json {
   # A pattern that selects the json files to be read
   #
-  # Required string. For example:
+  # Required string.
+  # For example:
   glob = "reports/*_data.json"
 }
 ```

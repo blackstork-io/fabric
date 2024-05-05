@@ -33,13 +33,15 @@ The content provider supports the following execution parameters:
 content frontmatter {
   # Format of the frontmatter. Must be one of "yaml", "toml", "json"
   #
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   format = "yaml"
 
   # Arbitrary key-value map to be put in the frontmatter.
   # 
   # NOTE: Data from "query_result" replaces this value if present
   #
+  # Optional any type.
   # For example:
   # content = {
   #   key = "arbitrary value"
@@ -47,8 +49,8 @@ content frontmatter {
   #     "can be nested" = 42
   #   }
   # }
-  #
-  # Optional any type. Default value:
+  # 
+  # Default value:
   content = null
 }
 ```

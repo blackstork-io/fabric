@@ -36,17 +36,20 @@ The content provider supports the following execution parameters:
 content toc {
   # Largest header size which produces entries in the table of contents
   #
-  # Optional number. Default value:
+  # Optional number.
+  # Default value:
   start_level = 0
 
   # Smallest header size which produces entries in the table of contents
   #
-  # Optional number. Default value:
+  # Optional number.
+  # Default value:
   end_level = 2
 
   # Whether to use ordered list for the contents
   #
-  # Optional bool. Default value:
+  # Optional bool.
+  # Default value:
   ordered = false
 
   # Scope of the headers to evaluate.
@@ -55,7 +58,8 @@ content toc {
   #   "section" – look for headers only in the current section
   #   "auto" – behaves as "section" if the "toc" block is inside of a section; else – behaves as "document"
   #
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   scope = "auto"
 }
 ```

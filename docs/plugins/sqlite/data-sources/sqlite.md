@@ -40,7 +40,8 @@ The data source supports the following configuration parameters:
 
 ```hcl
 config data sqlite {
-  # Required string. For example:
+  # Required string.
+  # For example:
   database_uri = "file:test.db"
 }
 ```
@@ -51,15 +52,17 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data sqlite {
-  # Required string. For example:
+  # Required string.
+  # For example:
   sql_query = "SELECT * FROM example WHERE id=$1 OR age=$2"
 
   # Values for the prepared statement
   #
+  # Optional list of any single type.
   # For example:
   # sql_args = [42, 24]
-  #
-  # Optional list of any single type. Default value:
+  # 
+  # Default value:
   sql_args = null
 }
 ```

@@ -45,7 +45,8 @@ The data source supports the following configuration parameters:
 config data csv {
   # Must be a one-character string
   #
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   delimiter = ","
 }
 ```
@@ -56,7 +57,8 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data csv {
-  # Required string. For example:
+  # Required string.
+  # For example:
   path = "path/to/file.csv"
 }
 ```

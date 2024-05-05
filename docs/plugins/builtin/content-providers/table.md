@@ -39,7 +39,8 @@ The content provider supports the following execution parameters:
 content table {
   # List of header and value go templates for each column
   #
-  # Required list of object. For example:
+  # Required list of object.
+  # For example:
   columns = [{
     header = "1st column header template"
     value  = "1st column values template"

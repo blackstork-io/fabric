@@ -37,13 +37,16 @@ The data source supports the following configuration parameters:
 
 ```hcl
 config data splunk_search {
-  # Required string. For example:
+  # Required string.
+  # For example:
   auth_token = "some string"
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   host = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   deployment_name = null
 }
 ```
@@ -54,22 +57,28 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data splunk_search {
-  # Required string. For example:
+  # Required string.
+  # For example:
   search_query = "some string"
 
-  # Optional number. Default value:
+  # Optional number.
+  # Default value:
   max_count = null
 
-  # Optional number. Default value:
+  # Optional number.
+  # Default value:
   status_buckets = null
 
-  # Optional list of string. Default value:
+  # Optional list of string.
+  # Default value:
   rf = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   earliest_time = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   latest_time = null
 }
 ```

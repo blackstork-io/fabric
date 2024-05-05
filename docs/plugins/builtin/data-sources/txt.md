@@ -30,7 +30,8 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data txt {
-  # Required string. For example:
+  # Required string.
+  # For example:
   path = "path/to/file.txt"
 }
 ```

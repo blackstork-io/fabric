@@ -30,12 +30,14 @@ config data rss {
   #
   # Optional
   basic_auth {
-    # Required string. For example:
+    # Required string.
+    # For example:
     username = "user@example.com"
 
     # Note: you can use function like "from_env()" to avoid storing credentials in plaintext
     #
-    # Required string. For example:
+    # Required string.
+    # For example:
     password = "passwd"
   }
 }
@@ -47,7 +49,8 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data rss {
-  # Required string. For example:
+  # Required string.
+  # For example:
   url = "https://www.elastic.co/security-labs/rss/feed.xml"
 }
 ```
