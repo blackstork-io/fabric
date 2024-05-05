@@ -20,6 +20,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/sqlite"
 	"github.com/blackstork-io/fabric/internal/stixview"
 	"github.com/blackstork-io/fabric/internal/terraform"
+	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/internal/virustotal"
 	"github.com/blackstork-io/fabric/plugin"
 )
@@ -82,11 +83,11 @@ func validateDataSource(t testing.TB, ds *plugin.DataSource) {
 	assert.NotEmpty(t, ds.DataFunc, "data source should have a data function")
 	if ds.Config != nil {
 		assert.False(t, ds.Config.IsEmpty(), "data source config should have at least one attribute")
-		assert.False(t, ds.Config.ValidateSpec().HasErrors(), "data source config validation errors")
+		testtools.AssertNoErrors(t, ds.Config.ValidateSpec(), nil, "data source config validation errors")
 	}
 	if ds.Args != nil {
 		assert.False(t, ds.Args.IsEmpty(), "data source args should have at least one attribute")
-		assert.False(t, ds.Args.ValidateSpec().HasErrors(), "data source args validation errors")
+		testtools.AssertNoErrors(t, ds.Args.ValidateSpec(), nil, "data source args validation errors")
 	}
 }
 
@@ -96,12 +97,12 @@ func validateContentProvider(t testing.TB, cp *plugin.ContentProvider) {
 	assert.NotEmpty(t, cp.ContentFunc, "content provider should have a content function")
 	if cp.Config != nil {
 		assert.False(t, cp.Config.IsEmpty(), "content provider config should have at least one attribute")
-		assert.False(t, cp.Config.ValidateSpec().HasErrors(), "content provider config validation errors")
+		testtools.AssertNoErrors(t, cp.Config.ValidateSpec(), nil, "content provider config validation errors")
 
 	}
 	if cp.Args != nil {
 		assert.False(t, cp.Args.IsEmpty(), "content provider args should have at least one attribute")
-		assert.False(t, cp.Args.ValidateSpec().HasErrors(), "content provider args validation errors")
+		testtools.AssertNoErrors(t, cp.Args.ValidateSpec(), nil, "content provider args validation errors")
 	}
 }
 

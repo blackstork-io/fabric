@@ -33,7 +33,7 @@ func makeRSSDataSource() *plugin.DataSource {
 				Doc: `
 					Authentication parameters used while accessing the rss source.
 				`,
-				Nested: &dataspec.ObjectSpec{
+				Nested: dataspec.ObjectSpec{
 					&dataspec.AttrSpec{
 						Name:        "username",
 						Type:        cty.String,

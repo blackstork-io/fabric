@@ -1,6 +1,7 @@
 package testtools
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
@@ -72,4 +73,19 @@ func Decode(t *testing.T, spec dataspec.RootSpec, body string) (v cty.Value, dia
 	v, diag = hcldec.Decode(f.Body, spec.HcldecSpec(), nil)
 	diags = append(diags, diag...)
 	return
+}
+
+func AssertNoErrors(t testing.TB, diags diagnostics.Diag, fileMap map[string]*hcl.File, msgs ...any) {
+	t.Helper()
+	if len(diags) == 0 {
+		return
+	}
+	var buf bytes.Buffer
+	diagnostics.PrintDiags(&buf, diags, fileMap, false)
+	msgs = append(msgs, buf.String())
+	if diags.HasErrors() {
+		t.Error(msgs...)
+	} else {
+		t.Log(msgs...)
+	}
 }
