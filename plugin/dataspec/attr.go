@@ -384,6 +384,9 @@ func (a *AttrSpec) ValidateSpec() (diags diagnostics.Diag) {
 			diag := a.ValidateValue(a.DefaultVal)
 			prefix := fmt.Sprintf("Default value for attribute %q: ", a.Name)
 			for _, d := range diag {
+				if d.Severity != hcl.DiagError {
+					continue
+				}
 				d.Summary = prefix + d.Summary
 				diags.Append(d)
 			}
@@ -392,6 +395,9 @@ func (a *AttrSpec) ValidateSpec() (diags diagnostics.Diag) {
 			diag := a.ValidateValue(a.ExampleVal)
 			prefix := fmt.Sprintf("Example value for attribute %q: ", a.Name)
 			for _, d := range diag {
+				if d.Severity != hcl.DiagError {
+					continue
+				}
 				d.Summary = prefix + d.Summary
 				diags.Append(d)
 			}
