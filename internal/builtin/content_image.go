@@ -80,13 +80,11 @@ func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (
 }
 
 func renderAsTemplate(name string, value string, datactx plugin.MapData) (string, error) {
-
 	if value == "" {
 		return "", nil
 	}
 
 	tmpl, err := template.New(name).Funcs(sprig.FuncMap()).Parse(value)
-
 	if err != nil {
 		return "", fmt.Errorf("failed to parse text template: %w", err)
 	}

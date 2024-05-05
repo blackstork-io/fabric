@@ -31,20 +31,20 @@ func makeTitleContentProvider() *plugin.ContentProvider {
 				ExampleVal:  cty.StringVal("Vulnerability Report"),
 			},
 			&dataspec.AttrSpec{
-				Name:       "absolute_size",
-				Type:       cty.Number,
+				Name:        "absolute_size",
+				Type:        cty.Number,
 				Constraints: constraint.Integer,
-				DefaultVal: cty.NullVal(cty.Number),
+				DefaultVal:  cty.NullVal(cty.Number),
 				Doc: `
 					Sets the absolute size of the title.
 					If ` + "`null`" + ` – absoulute title size is determined from the document structure
 				`,
 			},
 			&dataspec.AttrSpec{
-				Name:       "relative_size",
-				Type:       cty.Number,
+				Name:        "relative_size",
+				Type:        cty.Number,
 				Constraints: constraint.Integer,
-				DefaultVal: cty.NumberIntVal(0),
+				DefaultVal:  cty.NumberIntVal(0),
 				Doc: `
 					Adjusts the absolute size of the title.
 					The value (which may be negative) is added to the ` + "`absolute_size`" + ` to produce the final title size

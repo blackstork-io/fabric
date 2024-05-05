@@ -112,7 +112,7 @@ func validatePublisher(t testing.TB, pub *plugin.Publisher) {
 	assert.NotEmpty(t, pub.PublishFunc, "publisher should have a publish function")
 	if pub.Config != nil {
 		assert.False(t, pub.Config.IsEmpty(), "publisher config should have at least one attribute")
-		assert.Empty(t, pub.Config.Validate(), "publisher config validation errors")
+		testtools.AssertNoErrors(t, pub.Config.ValidateSpec(), nil, "publisher config validation errors")
 	}
 }
 
