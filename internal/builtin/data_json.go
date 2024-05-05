@@ -42,22 +42,22 @@ func makeJSONDataSource() *plugin.DataSource {
 			When "path" is specified, only the content of the file is returned.
 			When "glob" is specified, the structure returned by the data source is a list of dicts with file data, for example:
 			` + "```json" + `
-			  [
-			    {
-			      "file_path": "path/file-a.json",
-			      "file_name": "file-a.json",
-			      "content": {
-			        "foo": "bar"
-			      },
+			[
+			  {
+			    "file_path": "path/file-a.json",
+			    "file_name": "file-a.json",
+			    "content": {
+			      "foo": "bar"
 			    },
-			    {
-			      "file_path": "path/file-b.json",
-			      "file_name": "file-b.json",
-			      "content": [
-			        {"x": "y"}
-			      ],
-			    }
-			  ]
+			  },
+			  {
+			    "file_path": "path/file-b.json",
+			    "file_name": "file-b.json",
+			    "content": [
+			      {"x": "y"}
+			    ],
+			  }
+			]
 			` + "```",
 	}
 }
@@ -68,6 +68,7 @@ func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plug
 	path := params.Args.GetAttr("path")
 
 	if !(path.IsNull() || path.AsString() == "") {
+		slog.Debug("Reading a file from the provided path", "path", path.AsString())
 		data, err := readAndDecodeFile(path.AsString())
 		if err != nil {
 			slog.Error(
@@ -83,6 +84,7 @@ func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plug
 		}
 		return data, nil
 	} else if !(glob.IsNull() || glob.AsString() == "") {
+		slog.Debug("Reading the files that match a provided glob", "glob", glob.AsString())
 		data, err := readJSONFiles(ctx, glob.AsString())
 		if err != nil {
 			slog.Error(
@@ -92,7 +94,7 @@ func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plug
 			)
 			return nil, hcl.Diagnostics{{
 				Severity: hcl.DiagError,
-				Summary:  "Failed to read JSON files from glob",
+				Summary:  "Failed to read JSON files",
 				Detail:   err.Error(),
 			}}
 		}
@@ -139,8 +141,9 @@ func readJSONFiles(ctx context.Context, pattern string) (plugin.ListData, error)
 				return result, err
 			}
 			result = append(result, plugin.MapData{
-				"path":    plugin.StringData(path),
-				"content": content,
+				"file_path": plugin.StringData(path),
+				"file_name": plugin.StringData(filepath.Base(path)),
+				"content":   content,
 			})
 		}
 	}
