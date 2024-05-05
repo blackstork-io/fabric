@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -21,27 +22,40 @@ func makeJSONDataSource() *plugin.DataSource {
 			&dataspec.AttrSpec{
 				Name:       "glob",
 				Type:       cty.String,
-				Required:   true,
-				ExampleVal: cty.StringVal("reports/*_data.json"),
-				Doc:        `A pattern that selects the json files to be read`,
+				Required:   false,
+				ExampleVal: cty.StringVal("data/*_alerts.json"),
+				Doc:        `A glob pattern to select JSON files for reading`,
+			},
+			&dataspec.AttrSpec{
+				Name:       "path",
+				Type:       cty.String,
+				Required:   false,
+				ExampleVal: cty.StringVal("data/alerts.json"),
+				Doc:        `A file path to a JSON file to read`,
 			},
 		},
 		Doc: `
-			Imports and parses the files matching "glob".
-			Results are presented using the following structure:
+			Loads JSON files with the names that match a provided "glob" pattern or a single file from a provided path.
+
+			Either "glob" value or "path" value must be provided.
+
+			When "path" is specified, only the content of the file is returned.
+			When "glob" is specified, the structure returned by the data source is a list of dicts with file data, for example:
 			` + "```json" + `
 			  [
 			    {
-			      "filename": "<name of the file matched by glob>",
-			      "contents": {
-			        "contents of the file": "parsed as json"
+			      "file_path": "path/file-a.json",
+			      "file_name": "file-a.json",
+			      "content": {
+			        "foo": "bar"
 			      },
 			    },
 			    {
-			      "filename": "<next file>",
-			      "contents": {
-			        "next": "contents"
-			      },
+			      "file_path": "path/file-b.json",
+			      "file_name": "file-b.json",
+			      "content": [
+			        {"x": "y"}
+			      ],
 			    }
 			  ]
 			` + "```",
@@ -49,55 +63,85 @@ func makeJSONDataSource() *plugin.DataSource {
 }
 
 func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+
 	glob := params.Args.GetAttr("glob")
-	if glob.IsNull() || glob.AsString() == "" {
-		return nil, hcl.Diagnostics{{
-			Severity: hcl.DiagError,
-			Summary:  "Failed to parse arguments",
-			Detail:   "glob is required",
-		}}
+	path := params.Args.GetAttr("path")
+
+	if !(path.IsNull() || path.AsString() == "") {
+		data, err := readAndDecodeFile(path.AsString())
+		if err != nil {
+			slog.Error(
+				"Error while reading a JSON file",
+				slog.String("path", path.AsString()),
+				slog.Any("error", err),
+			)
+			return nil, hcl.Diagnostics{{
+				Severity: hcl.DiagError,
+				Summary:  "Failed to read a JSON file",
+				Detail:   err.Error(),
+			}}
+		}
+		return data, nil
+	} else if !(glob.IsNull() || glob.AsString() == "") {
+		data, err := readJSONFiles(ctx, glob.AsString())
+		if err != nil {
+			slog.Error(
+				"Error while reading the JSON files",
+				slog.String("glob", glob.AsString()),
+				slog.Any("error", err),
+			)
+			return nil, hcl.Diagnostics{{
+				Severity: hcl.DiagError,
+				Summary:  "Failed to read JSON files from glob",
+				Detail:   err.Error(),
+			}}
+		}
+		return data, nil
 	}
-	data, err := readJSONFiles(ctx, glob.AsString())
-	if err != nil {
-		return nil, hcl.Diagnostics{{
-			Severity: hcl.DiagError,
-			Summary:  "Failed to read json files",
-			Detail:   err.Error(),
-		}}
-	}
-	return data, nil
+
+	slog.Error("Either \"glob\" value or \"path\" value must be provided")
+	return nil, hcl.Diagnostics{{
+		Severity: hcl.DiagError,
+		Summary:  "Failed to parse arguments",
+		Detail:   "Either \"glob\" value or \"path\" value must be provided",
+	}}
 }
 
-func readJSONFiles(ctx context.Context, pattern string) (plugin.ListData, error) {
-	matchers, err := filepath.Glob(pattern)
+func readAndDecodeFile(path string) (plugin.Data, error) {
+	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
-	result := make(plugin.ListData, 0, len(matchers))
-	for _, matcher := range matchers {
+	defer file.Close()
+
+	var content jsonData
+	err = json.NewDecoder(file).Decode(&content)
+	if err != nil {
+		file.Close()
+		return nil, err
+	}
+	return content.data, nil
+}
+
+func readJSONFiles(ctx context.Context, pattern string) (plugin.ListData, error) {
+	paths, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil, err
+	}
+	result := make(plugin.ListData, 0, len(paths))
+	for _, path := range paths {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			file, err := os.Open(matcher)
+			content, err := readAndDecodeFile(path)
 			if err != nil {
-				return nil, err
-			}
-			var contents jsonData
-			err = json.NewDecoder(file).Decode(&contents)
-			if err != nil {
-				file.Close()
-				return nil, err
+				return result, err
 			}
 			result = append(result, plugin.MapData{
-				"filename": plugin.StringData(matcher),
-				"contents": contents.data,
+				"path":    plugin.StringData(path),
+				"content": content,
 			})
-
-			err = file.Close()
-			if err != nil {
-				return nil, err
-			}
 		}
 	}
 	return result, nil
