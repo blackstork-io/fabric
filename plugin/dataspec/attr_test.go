@@ -492,7 +492,7 @@ func TestValidation(t *testing.T) {
 				Constraints:  constraint.RequiredMeaningfull,
 				MinInclusive: cty.NumberFloatVal(1.5),
 				MaxInclusive: cty.NumberFloatVal(2.5),
-				Depricated:   "test deprication message",
+				Deprecated:   "test deprecation message",
 			},
 			inputVal: cty.NumberFloatVal(4.2),
 			asserts: [][]testtools.Assert{{
@@ -501,7 +501,7 @@ func TestValidation(t *testing.T) {
 			}, {
 				testtools.IsWarning,
 				testtools.SummaryContains("Deprecated"),
-				testtools.DetailContains("test deprication message"),
+				testtools.DetailContains("test deprecation message"),
 			}},
 		},
 		{

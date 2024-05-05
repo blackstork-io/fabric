@@ -75,8 +75,8 @@ func Decode(t *testing.T, spec dataspec.RootSpec, body string) (v cty.Value, dia
 	return
 }
 
-func AssertNoErrors(t testing.TB, diags diagnostics.Diag, fileMap map[string]*hcl.File, msgs ...any) {
-	t.Helper()
+func AssertNoErrors(tb testing.TB, diags diagnostics.Diag, fileMap map[string]*hcl.File, msgs ...any) {
+	tb.Helper()
 	if len(diags) == 0 {
 		return
 	}
@@ -84,8 +84,8 @@ func AssertNoErrors(t testing.TB, diags diagnostics.Diag, fileMap map[string]*hc
 	diagnostics.PrintDiags(&buf, diags, fileMap, false)
 	msgs = append(msgs, buf.String())
 	if diags.HasErrors() {
-		t.Error(msgs...)
+		tb.Error(msgs...)
 	} else {
-		t.Log(msgs...)
+		tb.Log(msgs...)
 	}
 }

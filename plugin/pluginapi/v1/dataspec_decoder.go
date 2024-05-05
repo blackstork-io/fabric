@@ -52,7 +52,10 @@ func decodeAttrSpec(src *AttrSpec) (*dataspec.AttrSpec, error) {
 	if err != nil {
 		return nil, err
 	}
-	oneof, err := utils.FnMapErr(src.OneOf, decodeCtyValue)
+	oneof, err := utils.FnMapErr(src.GetOneOf(), decodeCtyValue)
+	if err != nil {
+		return nil, err
+	}
 	min, err := decodeCtyValue(src.GetMinInclusive())
 	if err != nil {
 		return nil, err
@@ -67,11 +70,11 @@ func decodeAttrSpec(src *AttrSpec) (*dataspec.AttrSpec, error) {
 		DefaultVal:   def,
 		ExampleVal:   ex,
 		Doc:          src.GetDoc(),
-		Constraints:  constraint.Constraints(src.Constraints),
+		Constraints:  constraint.Constraints(src.GetConstraints()),
 		OneOf:        oneof,
 		MinInclusive: min,
 		MaxInclusive: max,
-		Depricated:   src.GetDepricated(),
+		Deprecated:   src.GetDeprecated(),
 	}, nil
 }
 

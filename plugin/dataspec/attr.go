@@ -30,8 +30,8 @@ type AttrSpec struct {
 	MinInclusive cty.Value
 	// For numbers - max value; for collections - max number of elements; for strings - max length
 	MaxInclusive cty.Value
-	// If specified – a deprication warning would appear if an attribute is specified is non-null
-	Depricated string
+	// If specified – a deprecation warning would appear if an attribute is specified and non-null
+	Deprecated string
 }
 
 func (a *AttrSpec) computeMinInclusive() cty.Value {
@@ -76,8 +76,8 @@ func (a *AttrSpec) DocComment() hclwrite.Tokens {
 		buf.WriteString("Must be one of: ")
 		buf.WriteString(a.OneOf.String())
 		buf.WriteString("\n")
-
 	}
+
 	min := a.computeMinInclusive()
 	max := a.MaxInclusive
 
@@ -210,11 +210,11 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 		}
 	} else {
 		// non null
-		if a.Depricated != "" {
+		if a.Deprecated != "" {
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagWarning,
 				Summary:  "Deprecated attribute",
-				Detail:   fmt.Sprintf("The attribute %q is deprecated: %s", a.Name, a.Depricated),
+				Detail:   fmt.Sprintf("The attribute %q is deprecated: %s", a.Name, a.Deprecated),
 			})
 		}
 
@@ -319,18 +319,18 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 	return
 }
 
-func (a *AttrSpec) ValidateSpec() (errs diagnostics.Diag) {
+func (a *AttrSpec) ValidateSpec() (diags diagnostics.Diag) {
 	if a.Constraints.Is(constraint.Required) {
 		if a.ExampleVal == cty.NilVal {
-			errs.AddWarn(fmt.Sprintf("Missing example value on required attibute %q", a.Name), "")
+			diags.AddWarn(fmt.Sprintf("Missing example value on required attibute %q", a.Name), "")
 		}
 		if a.DefaultVal != cty.NilVal {
-			errs.Add(fmt.Sprintf("Default value is specified for the required attribute %q = %s", a.Name, a.DefaultVal.GoString()), "")
+			diags.Add(fmt.Sprintf("Default value is specified for the required attribute %q = %s", a.Name, a.DefaultVal.GoString()), "")
 		}
 	}
 
 	if a.Constraints.Is(constraint.Integer) && !(a.Type.Equals(cty.Number)) {
-		errs.Add(fmt.Sprintf("Integer constraint is specified for non-numeric attribute %q", a.Name), "")
+		diags.Add(fmt.Sprintf("Integer constraint is specified for non-numeric attribute %q", a.Name), "")
 	}
 	min := a.MinInclusive
 
@@ -345,17 +345,17 @@ func (a *AttrSpec) ValidateSpec() (errs diagnostics.Diag) {
 		}
 
 		if (a.Type.IsPrimitiveType() && a.Type == cty.Bool) || (a.Type.IsCapsuleType()) {
-			errs.Add(fmt.Sprintf("%s can't be specified for %s %q", v.name, a.Type.FriendlyName(), a.Name), "")
+			diags.Add(fmt.Sprintf("%s can't be specified for %s %q", v.name, a.Type.FriendlyName(), a.Name), "")
 			skipMinMaxRelativeCheck = true
 			continue
 		}
 		if !(v.val.Type().IsPrimitiveType() && v.val.Type() == cty.Number) {
-			errs.Add(fmt.Sprintf("%s specified for %q must be a number, not %s", v.name, a.Name, v.val.Type().FriendlyName()), "")
+			diags.Add(fmt.Sprintf("%s specified for %q must be a number, not %s", v.name, a.Name, v.val.Type().FriendlyName()), "")
 			skipMinMaxRelativeCheck = true
 			continue
 		}
 		if v.val.IsNull() {
-			errs.Add(fmt.Sprintf("%s specified for %q must be non-null", v.name, a.Name), "")
+			diags.Add(fmt.Sprintf("%s specified for %q must be non-null", v.name, a.Name), "")
 			skipMinMaxRelativeCheck = true
 			continue
 		}
@@ -364,10 +364,10 @@ func (a *AttrSpec) ValidateSpec() (errs diagnostics.Diag) {
 			// Min is length, must be an num >=0
 			num, acc := v.val.AsBigFloat().Int64()
 			if acc != big.Exact {
-				errs.Add(fmt.Sprintf("%s specified for %q must be an integer", v.name, a.Name), "")
+				diags.Add(fmt.Sprintf("%s specified for %q must be an integer", v.name, a.Name), "")
 			}
 			if num < 0 {
-				errs.Add(fmt.Sprintf("%s specified for %q must be >= 0", v.name, a.Name), "")
+				diags.Add(fmt.Sprintf("%s specified for %q must be >= 0", v.name, a.Name), "")
 			}
 		}
 	}
@@ -375,29 +375,25 @@ func (a *AttrSpec) ValidateSpec() (errs diagnostics.Diag) {
 	if !skipMinMaxRelativeCheck && !min.IsNull() && !max.IsNull() {
 		// no errors - values are numbers and can be compared
 		if min.LessThanOrEqualTo(max).False() {
-			errs.Add(fmt.Sprintf("%q: MinInclusive must be <= MaxInclusive", a.Name), "")
+			diags.Add(fmt.Sprintf("%q: MinInclusive must be <= MaxInclusive", a.Name), "")
 		}
 	}
 
-	if len(errs) == 0 {
+	if len(diags) == 0 {
 		if a.DefaultVal != cty.NilVal {
-			diags := a.ValidateValue(a.DefaultVal)
+			diag := a.ValidateValue(a.DefaultVal)
 			prefix := fmt.Sprintf("Default value for attribute %q: ", a.Name)
-			for _, d := range diags {
-				if d.Severity == hcl.DiagError {
-					d.Summary = prefix + d.Summary
-					errs.Append(d)
-				}
+			for _, d := range diag {
+				d.Summary = prefix + d.Summary
+				diags.Append(d)
 			}
 		}
 		if a.ExampleVal != cty.NilVal {
-			diags := a.ValidateValue(a.ExampleVal)
+			diag := a.ValidateValue(a.ExampleVal)
 			prefix := fmt.Sprintf("Example value for attribute %q: ", a.Name)
-			for _, d := range diags {
-				if d.Severity == hcl.DiagError {
-					d.Summary = prefix + d.Summary
-					errs.Append(d)
-				}
+			for _, d := range diag {
+				d.Summary = prefix + d.Summary
+				diags.Append(d)
 			}
 		}
 	}

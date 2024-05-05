@@ -82,6 +82,9 @@ func encodeAttr(src *dataspec.AttrSpec) (*AttrSpec, error) {
 		return nil, err
 	}
 	oneof, err := utils.FnMapErr(src.OneOf, encodeCtyValue)
+	if err != nil {
+		return nil, err
+	}
 	min, err := encodeCtyValue(src.MinInclusive)
 	if err != nil {
 		return nil, err
@@ -100,7 +103,7 @@ func encodeAttr(src *dataspec.AttrSpec) (*AttrSpec, error) {
 		OneOf:        oneof,
 		MinInclusive: min,
 		MaxInclusive: max,
-		Depricated:   src.Depricated,
+		Deprecated:   src.Deprecated,
 	}, nil
 }
 
