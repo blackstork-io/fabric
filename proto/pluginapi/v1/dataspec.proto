@@ -21,7 +21,12 @@ message AttrSpec {
     CtyValue default_val = 3;
     CtyValue example_val = 4;
     string   doc         = 5;
-    bool     required    = 6;
+    // bool     required    = 6; // made obsolete by constraints system
+    uint32     constraints    = 7;
+    repeated CtyValue one_of = 8;
+    CtyValue min_inclusive = 9;
+    CtyValue max_inclusive = 10;
+    string depricated = 11;
 }
 
 message BlockSpec {

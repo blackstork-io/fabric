@@ -24,3 +24,17 @@ func FnMap[I, O any](s []I, fn func(I) O) []O {
 	}
 	return out
 }
+
+// Produce a new slice by applying (possibly erroring) function fn to items of the slice s.
+// Returns on the first error with nil slice.
+func FnMapErr[I, O any](s []I, fn func(I) (O, error)) (out []O, err error) {
+	out = make([]O, len(s))
+	for i, v := range s {
+		out[i], err = fn(v)
+		if err != nil {
+			out = nil
+			break
+		}
+	}
+	return
+}
