@@ -68,6 +68,7 @@ func Decode(t *testing.T, spec dataspec.RootSpec, body string) (v cty.Value, dia
 	if diags.ExtendHcl(diag) {
 		return
 	}
+
 	v, diag = hcldec.Decode(f.Body, spec.HcldecSpec(), nil)
 	diags = append(diags, diag...)
 	return
