@@ -23,7 +23,6 @@ func makeSqliteDataSource() *plugin.DataSource {
 				Name:        "database_uri",
 				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
-				ExampleVal:  cty.StringVal("file:test.db"),
 			},
 		},
 		Args: dataspec.ObjectSpec{
@@ -31,17 +30,13 @@ func makeSqliteDataSource() *plugin.DataSource {
 				Name:        "sql_query",
 				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
-				ExampleVal:  cty.StringVal("SELECT * FROM example WHERE id=$1 OR age=$2"),
 			},
 			&dataspec.AttrSpec{
-				Name:       "sql_args",
-				Type:       cty.List(cty.DynamicPseudoType),
-				ExampleVal: cty.ListVal([]cty.Value{cty.NumberIntVal(42), cty.NumberIntVal(24)}),
-				Doc:        `Values for the prepared statement`,
+				Name: "sql_args",
+				Type: cty.List(cty.DynamicPseudoType),
 			},
 		},
 		DataFunc: fetchSqliteData,
-		Doc:      `Produces query results from Sqlite`,
 	}
 }
 

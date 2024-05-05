@@ -2,7 +2,7 @@
 title: sqlite
 plugin:
   name: blackstork/sqlite
-  description: "Produces query results from Sqlite"
+  description: ""
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/sqlite/"
@@ -14,9 +14,6 @@ type: docs
 {{< breadcrumbs 2 >}}
 
 {{< plugin-resource-header "blackstork/sqlite" "sqlite" "v0.4.1" "sqlite" "data source" >}}
-
-## Description
-Produces query results from Sqlite
 
 ## Installation
 
@@ -42,7 +39,7 @@ The data source supports the following configuration parameters:
 config data sqlite {
   # Required string.
   # For example:
-  database_uri = "file:test.db"
+  database_uri = "some string"
 }
 ```
 
@@ -54,14 +51,9 @@ The data source supports the following parameters in the data blocks:
 data sqlite {
   # Required string.
   # For example:
-  sql_query = "SELECT * FROM example WHERE id=$1 OR age=$2"
+  sql_query = "some string"
 
-  # Values for the prepared statement
-  #
   # Optional list of any single type.
-  # For example:
-  # sql_args = [42, 24]
-  # 
   # Default value:
   sql_args = null
 }

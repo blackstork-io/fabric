@@ -20,11 +20,9 @@ func makeTerraformStateLocalDataSource() *plugin.DataSource {
 				Name:        "path",
 				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
-				ExampleVal:  cty.StringVal("path/to/terraform.tfstate"),
 			},
 		},
 		DataFunc: fetchTerraformStateLocalData,
-		Doc:      `Loads terraform state data`,
 	}
 }
 

@@ -23,18 +23,10 @@ func makeGraphQLDataSource() *plugin.DataSource {
 				Name:        "url",
 				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
-				ExampleVal:  cty.StringVal("https://example.com/graphql"),
-				Doc:         `API endpoint to perform GraphQL queries against`,
 			},
 			&dataspec.AttrSpec{
-				Name:       "auth_token",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("<token>"),
-				DefaultVal: cty.NullVal(cty.String),
-				Doc: `
-					Token to be sent to the server as "Authorization: Bearer" header.
-					Empty or null tokens are not sent.
-				`,
+				Name: "auth_token",
+				Type: cty.String,
 			},
 		},
 		Args: dataspec.ObjectSpec{
@@ -42,8 +34,6 @@ func makeGraphQLDataSource() *plugin.DataSource {
 				Name:        "query",
 				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
-				Doc:         `GraphQL query`,
-				ExampleVal:  cty.StringVal(`query{user{id, name}}`),
 			},
 		},
 		DataFunc: fetchGraphQLData,

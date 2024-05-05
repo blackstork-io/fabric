@@ -37,19 +37,11 @@ The data source supports the following configuration parameters:
 
 ```hcl
 config data graphql {
-  # API endpoint to perform GraphQL queries against
-  #
   # Required string.
   # For example:
-  url = "https://example.com/graphql"
+  url = "some string"
 
-  # Token to be sent to the server as "Authorization: Bearer" header.
-  # Empty or null tokens are not sent.
-  #
   # Optional string.
-  # For example:
-  # auth_token = "<token>"
-  # 
   # Default value:
   auth_token = null
 }
@@ -61,10 +53,8 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data graphql {
-  # GraphQL query
-  #
   # Required string.
   # For example:
-  query = "query{user{id, name}}"
+  query = "some string"
 }
 ```
