@@ -16,6 +16,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 	"github.com/blackstork-io/fabric/printer"
 	"github.com/blackstork-io/fabric/printer/htmlprint"
 	"github.com/blackstork-io/fabric/printer/mdprint"
@@ -28,11 +29,11 @@ func makeLocalFilePublisher() *plugin.Publisher {
 		Tags: []string{},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "path",
-				Doc:        "Path to the file",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("dist/output.md"),
-				Required:   true,
+				Name:        "path",
+				Doc:         "Path to the file",
+				Type:        cty.String,
+				ExampleVal:  cty.StringVal("dist/output.md"),
+				Constraints: constraint.Required,
 			},
 		},
 		AllowedFormats: []plugin.OutputFormat{plugin.OutputFormatMD, plugin.OutputFormatHTML, plugin.OutputFormatPDF},
