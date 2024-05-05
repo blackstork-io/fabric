@@ -80,8 +80,8 @@ func (d *Diag) ExtendHcl(diags hcl.Diagnostics) (haveAddedErrors bool) {
 
 // HasErrors returns true if the receiver contains any diagnostics of
 // severity DiagError.
-func (d *Diag) HasErrors() bool {
-	return (*hcl.Diagnostics)(d).HasErrors()
+func (d Diag) HasErrors() bool {
+	return (hcl.Diagnostics)(d).HasErrors()
 }
 
 // Creates diagnostic and appends it if err != nil.

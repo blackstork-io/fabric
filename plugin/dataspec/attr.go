@@ -116,7 +116,7 @@ func (a *AttrSpec) DocComment() hclwrite.Tokens {
 			f := hclwrite.NewEmptyFile()
 			f.Body().SetAttributeValue(a.Name, a.ExampleVal)
 			buf.Write(hclwrite.Format(f.Bytes()))
-			buf.WriteString("\n\n")
+			buf.WriteString("\n")
 		}
 		buf.WriteString("Default value:")
 	}
