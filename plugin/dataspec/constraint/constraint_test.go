@@ -10,9 +10,9 @@ import (
 // changing these would be backwards incompatible (for protobuf)
 func TestConstraints(t *testing.T) {
 	assert := assert.New(t)
-	assert.Equal(1, Required)
-	assert.Equal(2, NonNull)
-	assert.Equal(4, NonEmpty)
-	assert.Equal(8, TrimSpace)
-	assert.Equal(16, Integer)
+	assert.EqualValues(1, Required)
+	assert.EqualValues(2, NonNull)
+	assert.EqualValues(4, NonEmpty)
+	assert.EqualValues(8, TrimSpace)
+	assert.EqualValues(16, Integer)
 }
