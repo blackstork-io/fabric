@@ -24,7 +24,7 @@ type AttrSpec struct {
 	Doc        string
 
 	Constraints constraint.Constraints
-	// If specified - value must be on of specified values
+	// If set then value must be one of the specified values
 	OneOf constraint.OneOf
 	// For numbers - min value; for collections - min number of elements; for strings - min length
 	MinInclusive cty.Value
