@@ -9,9 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 func Test_makeCSVDataSchema(t *testing.T) {
@@ -28,7 +29,7 @@ func Test_fetchCSVData(t *testing.T) {
 		path          string
 		delimiter     string
 		expectedRes   plugin.Data
-		expectedDiags [][]testtools.Assert
+		expectedDiags diagtest.Asserts
 	}{
 		{
 			name:      "comma_delim",
@@ -88,18 +89,18 @@ func Test_fetchCSVData(t *testing.T) {
 		},
 		{
 			name: "empty_path",
-			expectedDiags: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.DetailContains(`length`, `"path"`, `>= 1`),
+			expectedDiags: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.DetailContains(`length`, `"path"`, `>= 1`),
 			}},
 		},
 		{
 			name:      "invalid_delimiter",
 			path:      "testdata/csv/comma.csv",
 			delimiter: "abc",
-			expectedDiags: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.DetailContains(
+			expectedDiags: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.DetailContains(
 					`The length`, `"delimiter"`, `exactly 1`,
 				),
 			}},
@@ -134,20 +135,20 @@ func Test_fetchCSVData(t *testing.T) {
 		{
 			name: "invalid_path",
 			path: "testdata/csv/does_not_exist.csv",
-			expectedDiags: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("Failed to read csv file"),
-				testtools.DetailContains("no such file or directory"),
+			expectedDiags: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("Failed to read csv file"),
+				diagtest.DetailContains("no such file or directory"),
 			}},
 		},
 
 		{
 			name: "invalid_csv",
 			path: "testdata/csv/invalid.csv",
-			expectedDiags: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("Failed to read csv file"),
-				testtools.DetailContains("wrong number of fields"),
+			expectedDiags: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("Failed to read csv file"),
+				diagtest.DetailContains("wrong number of fields"),
 			}},
 		},
 		{
@@ -172,19 +173,19 @@ func Test_fetchCSVData(t *testing.T) {
 			args := fmt.Sprintf("path = %q", tc.path)
 
 			var diags diagnostics.Diag
-			argVal, diag := testtools.Decode(t, p.DataSources["csv"].Args, args)
+			argVal, diag := plugintest.Decode(t, p.DataSources["csv"].Args, args)
 			diags.Extend(diag)
-			cfgVal, diag := testtools.Decode(t, p.DataSources["csv"].Config, config)
+			cfgVal, diag := plugintest.Decode(t, p.DataSources["csv"].Config, config)
 			diags.Extend(diag)
 			var data plugin.Data
 			if !diags.HasErrors() {
 				ctx := context.Background()
 				var dgs hcl.Diagnostics
 				data, dgs = p.RetrieveData(ctx, "csv", &plugin.RetrieveDataParams{Config: cfgVal, Args: argVal})
-				diags.ExtendHcl(dgs)
+				diags.Extend(dgs)
 			}
 			assert.Equal(t, tc.expectedRes, data)
-			testtools.CompareDiags(t, nil, diags, tc.expectedDiags)
+			tc.expectedDiags.AssertMatch(t, diags, nil)
 		})
 	}
 }

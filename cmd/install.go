@@ -29,7 +29,7 @@ var installCmd = &cobra.Command{
 			return
 		}
 		lockFile, stdDiags := eval.Resolver.Install(cmd.Context(), eval.LockFile, installUpgrade)
-		if diags.ExtendHcl(stdDiags) {
+		if diags.Extend(stdDiags) {
 			return
 		}
 		return resolver.SaveLockFileTo(defaultLockFile, lockFile)

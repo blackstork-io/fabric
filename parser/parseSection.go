@@ -116,7 +116,7 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 				continue
 			}
 			var meta definitions.MetaBlock
-			if diags.ExtendHcl(gohcl.DecodeBody(block.Body, nil, &meta)) {
+			if diags.Extend(gohcl.DecodeBody(block.Body, nil, &meta)) {
 				continue
 			}
 			res.Meta = &meta

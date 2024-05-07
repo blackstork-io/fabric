@@ -6,8 +6,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/blackstork-io/fabric/internal/testtools"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 type BlockQuoteTestSuite struct {
@@ -30,24 +31,24 @@ func (s *BlockQuoteTestSuite) TestSchema() {
 }
 
 func (s *BlockQuoteTestSuite) TestMissingText() {
-	testtools.DecodeAndAssert(s.T(), s.schema.Args, ``, [][]testtools.Assert{
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, ``, diagtest.Asserts{
 		{
-			testtools.IsError,
-			testtools.DetailContains(`The argument "value" is required`),
+			diagtest.IsError,
+			diagtest.DetailContains(`The argument "value" is required`),
 		},
 		{
-			testtools.IsError,
-			testtools.SummaryContains(`Attribute must be non-null`),
+			diagtest.IsError,
+			diagtest.SummaryContains(`Attribute must be non-null`),
 		},
 	})
 	return
 }
 
 func (s *BlockQuoteTestSuite) TestNullText() {
-	testtools.DecodeAndAssert(s.T(), s.schema.Args, `value = null`, [][]testtools.Assert{
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `value = null`, diagtest.Asserts{
 		{
-			testtools.IsError,
-			testtools.SummaryContains(`Attribute must be non-null`),
+			diagtest.IsError,
+			diagtest.SummaryContains(`Attribute must be non-null`),
 		},
 	})
 	return
@@ -55,7 +56,7 @@ func (s *BlockQuoteTestSuite) TestNullText() {
 
 func (s *BlockQuoteTestSuite) TestCallBlockquote() {
 	ctx := context.Background()
-	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		value = "Hello {{.name}}!"
 	`, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
@@ -74,7 +75,7 @@ func (s *BlockQuoteTestSuite) TestCallBlockquote() {
 
 func (s *BlockQuoteTestSuite) TestCallBlockquoteMultiline() {
 	ctx := context.Background()
-	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		value = "Hello\n{{.name}}\nfor you!"
 	`, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
@@ -93,7 +94,7 @@ func (s *BlockQuoteTestSuite) TestCallBlockquoteMultiline() {
 
 func (s *BlockQuoteTestSuite) TestCallBlockquoteMultilineDoubleNewline() {
 	ctx := context.Background()
-	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		value = "Hello\n{{.name}}\n\nfor you!"
 	`, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{

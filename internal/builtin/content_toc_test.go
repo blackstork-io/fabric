@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/printer/mdprint"
 )
 
@@ -40,7 +40,7 @@ func (s *TOCContentTestSuite) TestSimple() {
 		"ordered":     cty.NullVal(cty.Bool),
 		"scope":       cty.NullVal(cty.String),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	titleMeta := plugin.MapData{
 		"provider": plugin.StringData("title"),
@@ -100,7 +100,7 @@ func (s *TOCContentTestSuite) TestAdvanced() {
 		"ordered":     cty.True,
 		"scope":       cty.StringVal("document"),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	titleMeta := plugin.MapData{
 		"provider": plugin.StringData("title"),

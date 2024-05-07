@@ -8,8 +8,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/internal/testtools"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/printer/mdprint"
 )
 
@@ -46,7 +47,7 @@ func (s *TableGeneratorTestSuite) TestNilQueryResult() {
 			}),
 		}),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -72,7 +73,7 @@ func (s *TableGeneratorTestSuite) TestEmptyQueryResult() {
 			}),
 		}),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -98,7 +99,7 @@ func (s *TableGeneratorTestSuite) TestBasic() {
 			}),
 		}),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -133,7 +134,7 @@ func (s *TableGeneratorTestSuite) TestSprigTemplate() {
 			}),
 		}),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -166,9 +167,9 @@ func (s *TableGeneratorTestSuite) TestMissingHeader() {
 			}),
 		}),
 	})
-	testtools.ReencodeCTY(s.T(), s.schema.Args, val, [][]testtools.Assert{{
-		testtools.IsError,
-		testtools.DetailContains("attribute", "header", "required"),
+	plugintest.ReencodeCTY(s.T(), s.schema.Args, val, diagtest.Asserts{{
+		diagtest.IsError,
+		diagtest.DetailContains("attribute", "header", "required"),
 	}})
 }
 
@@ -185,7 +186,7 @@ func (s *TableGeneratorTestSuite) TestNilHeader() {
 			}),
 		}),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -224,7 +225,7 @@ func (s *TableGeneratorTestSuite) TestNilValue() {
 			}),
 		}),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -254,9 +255,9 @@ func (s *TableGeneratorTestSuite) TestNilColumns() {
 	val := cty.ObjectVal(map[string]cty.Value{
 		"columns": cty.NullVal(cty.List(cty.Object(map[string]cty.Type{}))),
 	})
-	testtools.ReencodeCTY(s.T(), s.schema.Args, val, [][]testtools.Assert{{
-		testtools.IsError,
-		testtools.SummaryContains("Attribute must be non-null"),
+	plugintest.ReencodeCTY(s.T(), s.schema.Args, val, diagtest.Asserts{{
+		diagtest.IsError,
+		diagtest.SummaryContains("Attribute must be non-null"),
 	}})
 }
 
@@ -264,7 +265,7 @@ func (s *TableGeneratorTestSuite) TestEmptyColumns() {
 	val := cty.ObjectVal(map[string]cty.Value{
 		"columns": cty.ListValEmpty(cty.Object(map[string]cty.Type{})),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -303,7 +304,7 @@ func (s *TableGeneratorTestSuite) TestInvalidHeaderTemplate() {
 			}),
 		}),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -342,7 +343,7 @@ func (s *TableGeneratorTestSuite) TestInvalidValueTemplate() {
 			}),
 		}),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,

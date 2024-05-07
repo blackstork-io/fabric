@@ -93,7 +93,7 @@ func (c *ParsedContent) EvalQuery(ctx context.Context, dataCtx *evaluation.DataC
 		},
 	}, nil)
 	c.Invocation.SetBody(utils.ToHclsyntaxBody(newBody))
-	if diags.ExtendHcl(dgs) {
+	if diags.Extend(dgs) {
 		return
 	}
 	query := val.GetAttr("query").AsString()
@@ -127,7 +127,7 @@ func (c *ParsedPublish) EvalQuery() (format plugin.OutputFormat, diags diagnosti
 		},
 	}, nil)
 	c.Invocation.SetBody(utils.ToHclsyntaxBody(newBody))
-	if diags.ExtendHcl(dgs) {
+	if diags.Extend(dgs) {
 		return
 	}
 	formatStr := val.GetAttr("format").AsString()

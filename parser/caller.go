@@ -137,7 +137,7 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 			return
 		}
 		source, diag := c.plugins.DataSource(name)
-		if diags.ExtendHcl(diag) {
+		if diags.Extend(diag) {
 			return
 		}
 		data, diag := source.Execute(ctx, &plugin.RetrieveDataParams{
@@ -145,14 +145,14 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 			Args:   pluginArgs,
 		})
 		res = data
-		diags.ExtendHcl(diag)
+		diags.Extend(diag)
 	case "content":
 		if fabctx.Get(ctx).IsLinting() {
 			res = ""
 			return
 		}
 		provider, diag := c.plugins.ContentProvider(name)
-		if diags.ExtendHcl(diag) {
+		if diags.Extend(diag) {
 			return
 		}
 		content, diag := provider.Execute(ctx, &plugin.ProvideContentParams{
@@ -162,16 +162,16 @@ func (c *Caller) callPlugin(ctx context.Context, kind, name string, config evalu
 			ContentID:   contentID,
 		})
 		res = content
-		diags.ExtendHcl(diag)
+		diags.Extend(diag)
 	case "publish":
 		if fabctx.Get(ctx).IsLinting() {
 			return
 		}
 		publisher, diag := c.plugins.Publisher(name)
-		if diags.ExtendHcl(diag) {
+		if diags.Extend(diag) {
 			return
 		}
-		diags.ExtendHcl(publisher.Execute(ctx, &plugin.PublishParams{
+		diags.Extend(publisher.Execute(ctx, &plugin.PublishParams{
 			Config:      configVal,
 			Args:        pluginArgs,
 			DataContext: dataCtx,

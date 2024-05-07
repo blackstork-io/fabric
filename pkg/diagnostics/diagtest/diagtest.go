@@ -1,6 +1,7 @@
-package testtools
+package diagtest
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"testing"
@@ -102,41 +103,51 @@ func DetailContains(substrs ...string) Assert {
 	}
 }
 
+type Asserts [][]Assert
+
+func (asserts Asserts) AssertMatch(tb testing.TB, diags []*hcl.Diagnostic, fileMap map[string]*hcl.File) {
+	tb.Helper()
+	if matchBiject(diags, asserts) {
+		return
+	}
+
+	var buf strings.Builder
+	buf.WriteString("Expected ")
+	switch len(asserts) {
+	case 0:
+		buf.WriteString("no diagnostics\n")
+	case 1:
+		buf.WriteString("1 diagnostic:\n")
+	default:
+		fmt.Fprintf(&buf, "%d diagnostics:\n", len(asserts))
+	}
+	for _, assertSet := range asserts {
+		fmt.Fprintln(&buf, "{")
+		for _, assert := range assertSet {
+			fmt.Fprintf(&buf, "    %s\n", assert)
+		}
+		fmt.Fprintln(&buf, "},")
+	}
+	buf.WriteString("\nGot ")
+	switch len(diags) {
+	case 0:
+		buf.WriteString("no diagnostics\n")
+	case 1:
+		buf.WriteString("1 diagnostic:\n")
+	default:
+		fmt.Fprintf(&buf, "%d diagnostics:\n", len(diags))
+	}
+	if len(diags) > 0 {
+		diagnostics.PrintDiags(&buf, diags, fileMap, false)
+	}
+	tb.Fatalf("\n\n%s", buf.String())
+}
+
 func sliceRemove[T any](s []T, pos int) []T {
 	var tmp T
 	s[pos] = s[len(s)-1]
 	s[len(s)-1] = tmp
 	return s[:len(s)-1]
-}
-
-func CompareDiags[D diagnostics.Generic](t *testing.T, fm map[string]*hcl.File, diags D, asserts [][]Assert) {
-	t.Helper()
-	compareDiags(t, fm, diagnostics.From(diags), asserts)
-}
-
-func compareDiags(t *testing.T, fm map[string]*hcl.File, diags diagnostics.Diag, asserts [][]Assert) {
-	t.Helper()
-	if !matchBiject(diags, asserts) {
-		var buf strings.Builder
-		buf.WriteString("Expected ")
-		if len(asserts) == 0 {
-			buf.WriteString("no diagnostics\n")
-		} else if len(asserts) == 1 {
-			buf.WriteString("1 diagnostic:\n")
-		} else {
-			fmt.Fprintf(&buf, "%d diagnostics:\n", len(asserts))
-		}
-		for _, assertSet := range asserts {
-			fmt.Fprintln(&buf, "{")
-			for _, assert := range assertSet {
-				fmt.Fprintf(&buf, "    %s\n", assert)
-			}
-			fmt.Fprintln(&buf, "},")
-		}
-		buf.WriteString("\nGot:\n\n")
-		diagnostics.PrintDiags(&buf, diags, fm, false)
-		t.Fatalf("\n\n%s", buf.String())
-	}
 }
 
 func matchBiject(diags diagnostics.Diag, asserts [][]Assert) bool {
@@ -166,4 +177,19 @@ nextDiag:
 	}
 
 	return true
+}
+
+func AssertNoErrors(tb testing.TB, diags []*hcl.Diagnostic, fileMap map[string]*hcl.File, msgs ...any) {
+	tb.Helper()
+	if len(diags) == 0 {
+		return
+	}
+	var buf bytes.Buffer
+	diagnostics.PrintDiags(&buf, diags, fileMap, false)
+	msgs = append(msgs, buf.String())
+	if hcl.Diagnostics(diags).HasErrors() {
+		tb.Error(msgs...)
+	} else {
+		tb.Log(msgs...)
+	}
 }

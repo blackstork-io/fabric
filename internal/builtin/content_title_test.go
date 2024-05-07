@@ -8,8 +8,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/internal/testtools"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/printer/mdprint"
 )
 
@@ -38,9 +39,9 @@ func (s *TitleTestSuite) TestMissingValue() {
 		"absolute_size": cty.NullVal(cty.Number),
 		"relative_size": cty.NullVal(cty.Number),
 	})
-	testtools.ReencodeCTY(s.T(), s.schema.Args, val, [][]testtools.Assert{{
-		testtools.IsError,
-		testtools.SummaryContains("Attribute must be non-null"),
+	plugintest.ReencodeCTY(s.T(), s.schema.Args, val, diagtest.Asserts{{
+		diagtest.IsError,
+		diagtest.SummaryContains("Attribute must be non-null"),
 	}})
 }
 
@@ -50,7 +51,7 @@ func (s *TitleTestSuite) TestTDefault() {
 		"absolute_size": cty.NullVal(cty.Number),
 		"relative_size": cty.NullVal(cty.Number),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -68,7 +69,7 @@ func (s *TitleTestSuite) TestWithTextMultiline() {
 		"absolute_size": cty.NullVal(cty.Number),
 		"relative_size": cty.NullVal(cty.Number),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -86,7 +87,7 @@ func (s *TitleTestSuite) TestWithSize() {
 		"absolute_size": cty.NumberIntVal(2),
 		"relative_size": cty.NullVal(cty.Number),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -104,7 +105,7 @@ func (s *TitleTestSuite) TestWithSizeTooBig() {
 		"absolute_size": cty.NumberIntVal(7),
 		"relative_size": cty.NullVal(cty.Number),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,

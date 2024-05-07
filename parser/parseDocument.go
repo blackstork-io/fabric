@@ -55,7 +55,7 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 				continue
 			}
 			var meta definitions.MetaBlock
-			if diags.ExtendHcl(gohcl.DecodeBody(block.Body, nil, &meta)) {
+			if diags.Extend(gohcl.DecodeBody(block.Body, nil, &meta)) {
 				continue
 			}
 			doc.Meta = &meta

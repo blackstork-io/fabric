@@ -70,7 +70,7 @@ func (t *titleInvocation) ParseInvocation(spec dataspec.RootSpec) (val cty.Value
 	}
 
 	val, diag := hcldec.Decode(body, spec.HcldecSpec(), nil)
-	diags.ExtendHcl(diag)
+	diags.Extend(diag)
 	return
 }
 

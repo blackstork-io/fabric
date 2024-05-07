@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/internal/testtools"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
@@ -18,7 +18,7 @@ func TestValidation(t *testing.T) {
 		obj         *dataspec.AttrSpec
 		inputVal    cty.Value
 		expectedVal cty.Value
-		asserts     [][]testtools.Assert
+		asserts     diagtest.Asserts
 	}{
 		{
 			name: "basicAttribute",
@@ -36,9 +36,9 @@ func TestValidation(t *testing.T) {
 				ExampleVal:  cty.StringVal("test"),
 				Constraints: constraint.Required,
 			},
-			asserts: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("Missing required argument"),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("Missing required argument"),
 			}},
 		},
 		{
@@ -49,14 +49,14 @@ func TestValidation(t *testing.T) {
 				ExampleVal:  cty.StringVal("test"),
 				Constraints: constraint.Required | constraint.NonNull,
 			},
-			asserts: [][]testtools.Assert{
+			asserts: diagtest.Asserts{
 				{
-					testtools.IsError,
-					testtools.SummaryContains("Missing required argument"),
+					diagtest.IsError,
+					diagtest.SummaryContains("Missing required argument"),
 				},
 				{
-					testtools.IsError,
-					testtools.SummaryContains("Attribute must be non-null"),
+					diagtest.IsError,
+					diagtest.SummaryContains("Attribute must be non-null"),
 				},
 			},
 		},
@@ -69,10 +69,10 @@ func TestValidation(t *testing.T) {
 				Constraints: constraint.Required | constraint.NonNull,
 			},
 			inputVal: cty.NullVal(cty.String),
-			asserts: [][]testtools.Assert{
+			asserts: diagtest.Asserts{
 				{
-					testtools.IsError,
-					testtools.SummaryContains("Attribute must be non-null"),
+					diagtest.IsError,
+					diagtest.SummaryContains("Attribute must be non-null"),
 				},
 			},
 		},
@@ -97,10 +97,10 @@ func TestValidation(t *testing.T) {
 			},
 			inputVal:    cty.StringVal(""),
 			expectedVal: cty.StringVal(""),
-			asserts: [][]testtools.Assert{
+			asserts: diagtest.Asserts{
 				{
-					testtools.IsError,
-					testtools.DetailContains("The length", ">= 1"),
+					diagtest.IsError,
+					diagtest.DetailContains("The length", ">= 1"),
 				},
 			},
 		},
@@ -124,10 +124,10 @@ func TestValidation(t *testing.T) {
 				Constraints: constraint.Required | constraint.TrimmedNonEmpty,
 			},
 			inputVal: cty.StringVal("   "),
-			asserts: [][]testtools.Assert{
+			asserts: diagtest.Asserts{
 				{
-					testtools.IsError,
-					testtools.DetailContains("The length", ">= 1"),
+					diagtest.IsError,
+					diagtest.DetailContains("The length", ">= 1"),
 				},
 			},
 		},
@@ -141,11 +141,11 @@ func TestValidation(t *testing.T) {
 				MinInclusive: cty.NumberIntVal(10),
 			},
 			inputVal: cty.StringVal("hello"),
-			asserts: [][]testtools.Assert{
+			asserts: diagtest.Asserts{
 				{
-					testtools.IsError,
-					testtools.SummaryContains("Attribute length is not in range"),
-					testtools.DetailContains(">=", "10"),
+					diagtest.IsError,
+					diagtest.SummaryContains("Attribute length is not in range"),
+					diagtest.DetailContains(">=", "10"),
 				},
 			},
 		},
@@ -159,11 +159,11 @@ func TestValidation(t *testing.T) {
 				MaxInclusive: cty.NumberIntVal(2),
 			},
 			inputVal: cty.StringVal("hello"),
-			asserts: [][]testtools.Assert{
+			asserts: diagtest.Asserts{
 				{
-					testtools.IsError,
-					testtools.SummaryContains("Attribute length is not in range"),
-					testtools.DetailContains("<=", "2"),
+					diagtest.IsError,
+					diagtest.SummaryContains("Attribute length is not in range"),
+					diagtest.DetailContains("<=", "2"),
 				},
 			},
 		},
@@ -178,11 +178,11 @@ func TestValidation(t *testing.T) {
 				MaxInclusive: cty.NumberIntVal(3),
 			},
 			inputVal: cty.StringVal("hello"),
-			asserts: [][]testtools.Assert{
+			asserts: diagtest.Asserts{
 				{
-					testtools.IsError,
-					testtools.SummaryContains("Attribute length is not in range"),
-					testtools.DetailContains("1", "3"),
+					diagtest.IsError,
+					diagtest.SummaryContains("Attribute length is not in range"),
+					diagtest.DetailContains("1", "3"),
 				},
 			},
 		},
@@ -210,11 +210,11 @@ func TestValidation(t *testing.T) {
 				MaxInclusive: cty.NumberIntVal(5),
 			},
 			inputVal: cty.StringVal("hello_123"),
-			asserts: [][]testtools.Assert{
+			asserts: diagtest.Asserts{
 				{
-					testtools.IsError,
-					testtools.SummaryContains("Attribute length is not in range"),
-					testtools.DetailContains("exactly", "5"),
+					diagtest.IsError,
+					diagtest.SummaryContains("Attribute length is not in range"),
+					diagtest.DetailContains("exactly", "5"),
 				},
 			},
 		},
@@ -228,9 +228,9 @@ func TestValidation(t *testing.T) {
 				MinInclusive: cty.NumberIntVal(10),
 				MaxInclusive: cty.NumberIntVal(1),
 			},
-			asserts: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("MinInclusive must be <= MaxInclusive"),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("MinInclusive must be <= MaxInclusive"),
 			}},
 			inputVal: cty.StringVal("hello_123"),
 		},
@@ -244,9 +244,9 @@ func TestValidation(t *testing.T) {
 				Constraints:  constraint.RequiredMeaningfull,
 				MinInclusive: cty.NumberIntVal(-1),
 			},
-			asserts: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("MinInclusive", "must be >= 0"),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("MinInclusive", "must be >= 0"),
 			}},
 			inputVal: cty.StringVal("hello_123"),
 		},
@@ -259,9 +259,9 @@ func TestValidation(t *testing.T) {
 				Constraints:  constraint.RequiredMeaningfull,
 				MaxInclusive: cty.NumberIntVal(-1),
 			},
-			asserts: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("MaxInclusive", "must be >= 0"),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("MaxInclusive", "must be >= 0"),
 			}},
 			inputVal: cty.StringVal("hello_123"),
 		},
@@ -295,10 +295,10 @@ func TestValidation(t *testing.T) {
 				},
 			},
 			inputVal: cty.StringVal("x"),
-			asserts: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("not one of"),
-				testtools.DetailContains(`"a", "b", "c"`),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("not one of"),
+				diagtest.DetailContains(`"a", "b", "c"`),
 			}},
 		},
 		{
@@ -323,10 +323,10 @@ func TestValidation(t *testing.T) {
 				MinInclusive: cty.NumberFloatVal(0.5),
 			},
 			inputVal: cty.NumberIntVal(0),
-			asserts: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("Attribute is not in range"),
-				testtools.DetailContains(`>=`),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("Attribute is not in range"),
+				diagtest.DetailContains(`>=`),
 			}},
 		},
 		{
@@ -351,9 +351,9 @@ func TestValidation(t *testing.T) {
 				MaxInclusive: cty.NumberFloatVal(2.5),
 			},
 			inputVal: cty.NumberFloatVal(2.7),
-			asserts: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("Attribute is not in range"),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("Attribute is not in range"),
 			}},
 		},
 		{
@@ -380,9 +380,9 @@ func TestValidation(t *testing.T) {
 				MaxInclusive: cty.NumberFloatVal(2.5),
 			},
 			inputVal: cty.NumberFloatVal(4.2),
-			asserts: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("Attribute is not in range"),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("Attribute is not in range"),
 			}},
 		},
 		{
@@ -397,7 +397,7 @@ func TestValidation(t *testing.T) {
 			},
 			inputVal:    cty.ListVal([]cty.Value{cty.NumberIntVal(1)}),
 			expectedVal: cty.ListVal([]cty.Value{cty.NumberIntVal(1)}),
-			asserts:     [][]testtools.Assert{},
+			asserts:     diagtest.Asserts{},
 		},
 		{
 			name: "length_check_2",
@@ -411,7 +411,7 @@ func TestValidation(t *testing.T) {
 			},
 			inputVal:    cty.ListVal([]cty.Value{cty.NumberIntVal(1), cty.NumberIntVal(2)}),
 			expectedVal: cty.ListVal([]cty.Value{cty.NumberIntVal(1), cty.NumberIntVal(2)}),
-			asserts:     [][]testtools.Assert{},
+			asserts:     diagtest.Asserts{},
 		},
 		{
 			name: "length_check_err",
@@ -424,9 +424,9 @@ func TestValidation(t *testing.T) {
 				MaxInclusive: cty.NumberIntVal(2),
 			},
 			inputVal: cty.ListVal([]cty.Value{cty.NumberIntVal(1), cty.NumberIntVal(2), cty.NumberIntVal(3)}),
-			asserts: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("length", "not in range"),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("length", "not in range"),
 			}},
 		},
 		{
@@ -440,14 +440,14 @@ func TestValidation(t *testing.T) {
 				MaxInclusive: cty.NumberFloatVal(1.5),
 			},
 			inputVal: cty.ListVal([]cty.Value{cty.NumberIntVal(1), cty.NumberIntVal(2), cty.NumberIntVal(3)}),
-			asserts: [][]testtools.Assert{
+			asserts: diagtest.Asserts{
 				{
-					testtools.IsError,
-					testtools.SummaryContains("MinInclusive", ">= 0"),
+					diagtest.IsError,
+					diagtest.SummaryContains("MinInclusive", ">= 0"),
 				},
 				{
-					testtools.IsError,
-					testtools.SummaryContains("MaxInclusive", "must be an integer"),
+					diagtest.IsError,
+					diagtest.SummaryContains("MaxInclusive", "must be an integer"),
 				},
 			},
 		},
@@ -462,9 +462,9 @@ func TestValidation(t *testing.T) {
 				MaxInclusive: cty.NumberIntVal(2),
 			},
 			inputVal: cty.ListVal([]cty.Value{cty.NumberIntVal(1), cty.NumberIntVal(2), cty.NumberIntVal(3)}),
-			asserts: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("must be an integer"),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("must be an integer"),
 			}},
 		},
 		{
@@ -478,9 +478,9 @@ func TestValidation(t *testing.T) {
 				MaxInclusive: cty.NumberIntVal(0),
 			},
 			inputVal: cty.ListVal([]cty.Value{cty.NumberIntVal(1), cty.NumberIntVal(2), cty.NumberIntVal(3)}),
-			asserts: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("MinInclusive must be <= MaxInclusive"),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("MinInclusive must be <= MaxInclusive"),
 			}},
 		},
 		{
@@ -495,13 +495,13 @@ func TestValidation(t *testing.T) {
 				Deprecated:   "test deprecation message",
 			},
 			inputVal: cty.NumberFloatVal(4.2),
-			asserts: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("Attribute is not in range"),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("Attribute is not in range"),
 			}, {
-				testtools.IsWarning,
-				testtools.SummaryContains("Deprecated"),
-				testtools.DetailContains("test deprecation message"),
+				diagtest.IsWarning,
+				diagtest.SummaryContains("Deprecated"),
+				diagtest.DetailContains("test deprecation message"),
 			}},
 		},
 		{
@@ -514,7 +514,7 @@ func TestValidation(t *testing.T) {
 			},
 			inputVal:    cty.NumberFloatVal(4),
 			expectedVal: cty.NumberFloatVal(4),
-			asserts:     [][]testtools.Assert{},
+			asserts:     diagtest.Asserts{},
 		},
 		{
 			name: "integer_constraint_violated",
@@ -525,9 +525,9 @@ func TestValidation(t *testing.T) {
 				Constraints: constraint.RequiredMeaningfull | constraint.Integer,
 			},
 			inputVal: cty.NumberFloatVal(4.3),
-			asserts: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("must be an integer"),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("must be an integer"),
 			}},
 		},
 		{
@@ -540,9 +540,9 @@ func TestValidation(t *testing.T) {
 				MaxInclusive: cty.NumberFloatVal(1),
 			},
 			inputVal: cty.NumberFloatVal(0),
-			asserts: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("Example value", "not in range"),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("Example value", "not in range"),
 			}},
 		},
 		{
@@ -554,9 +554,9 @@ func TestValidation(t *testing.T) {
 				Constraints:  constraint.Meaningfull,
 				MaxInclusive: cty.NumberFloatVal(1),
 			},
-			asserts: [][]testtools.Assert{{
-				testtools.IsError,
-				testtools.SummaryContains("Default value", "not in range"),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryContains("Default value", "not in range"),
 			}},
 		},
 		{
@@ -567,14 +567,14 @@ func TestValidation(t *testing.T) {
 				DefaultVal:  cty.NumberIntVal(2),
 				Constraints: constraint.Required,
 			},
-			asserts: [][]testtools.Assert{
+			asserts: diagtest.Asserts{
 				{
-					testtools.IsWarning,
-					testtools.SummaryContains("Missing example value"),
+					diagtest.IsWarning,
+					diagtest.SummaryContains("Missing example value"),
 				},
 				{
-					testtools.IsError,
-					testtools.SummaryContains("Default value is specified"),
+					diagtest.IsError,
+					diagtest.SummaryContains("Default value is specified"),
 				},
 			},
 		},
@@ -605,10 +605,10 @@ func TestValidation(t *testing.T) {
 				DefaultVal:  cty.StringVal("hello"),
 				Constraints: constraint.Integer,
 			},
-			asserts: [][]testtools.Assert{
+			asserts: diagtest.Asserts{
 				{
-					testtools.IsError,
-					testtools.SummaryContains("Integer constraint", "non-numeric"),
+					diagtest.IsError,
+					diagtest.SummaryContains("Integer constraint", "non-numeric"),
 				},
 			},
 		},
@@ -621,14 +621,14 @@ func TestValidation(t *testing.T) {
 				MinInclusive: cty.NumberIntVal(1),
 				MaxInclusive: cty.NumberIntVal(2),
 			},
-			asserts: [][]testtools.Assert{
+			asserts: diagtest.Asserts{
 				{
-					testtools.IsError,
-					testtools.SummaryContains("MinInclusive can't be specified"),
+					diagtest.IsError,
+					diagtest.SummaryContains("MinInclusive can't be specified"),
 				},
 				{
-					testtools.IsError,
-					testtools.SummaryContains("MaxInclusive can't be specified"),
+					diagtest.IsError,
+					diagtest.SummaryContains("MaxInclusive can't be specified"),
 				},
 			},
 		},
@@ -641,14 +641,14 @@ func TestValidation(t *testing.T) {
 				MinInclusive: cty.StringVal("1"),
 				MaxInclusive: cty.StringVal("2"),
 			},
-			asserts: [][]testtools.Assert{
+			asserts: diagtest.Asserts{
 				{
-					testtools.IsError,
-					testtools.SummaryContains("MinInclusive", "must be a number"),
+					diagtest.IsError,
+					diagtest.SummaryContains("MinInclusive", "must be a number"),
 				},
 				{
-					testtools.IsError,
-					testtools.SummaryContains("MaxInclusive", "must be a number"),
+					diagtest.IsError,
+					diagtest.SummaryContains("MaxInclusive", "must be a number"),
 				},
 			},
 		},
@@ -661,14 +661,14 @@ func TestValidation(t *testing.T) {
 				MinInclusive: cty.NullVal(cty.Number),
 				MaxInclusive: cty.NullVal(cty.Number),
 			},
-			asserts: [][]testtools.Assert{
+			asserts: diagtest.Asserts{
 				{
-					testtools.IsError,
-					testtools.SummaryContains("MinInclusive", "must be non-null"),
+					diagtest.IsError,
+					diagtest.SummaryContains("MinInclusive", "must be non-null"),
 				},
 				{
-					testtools.IsError,
-					testtools.SummaryContains("MaxInclusive", "must be non-null"),
+					diagtest.IsError,
+					diagtest.SummaryContains("MaxInclusive", "must be non-null"),
 				},
 			},
 		},
@@ -679,7 +679,7 @@ func TestValidation(t *testing.T) {
 			spec := dataspec.ObjectSpec{tc.obj}
 			diags := spec.ValidateSpec()
 			if diags.HasErrors() {
-				testtools.CompareDiags(t, nil, diags, tc.asserts)
+				tc.asserts.AssertMatch(t, diags, nil)
 				return
 			}
 
@@ -696,7 +696,7 @@ func TestValidation(t *testing.T) {
 			}
 			objVal, diag := dataspec.Decode(body, spec, nil)
 			diags.Extend(diag)
-			testtools.CompareDiags(t, nil, diags, tc.asserts)
+			tc.asserts.AssertMatch(t, diags, nil)
 			if diags.HasErrors() {
 				return
 			}

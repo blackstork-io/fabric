@@ -23,7 +23,7 @@ func (db *DefinedBlocks) resolve(expr hcl.Expression, expectedType cty.Type) (re
 	val, diag := expr.Value(&hcl.EvalContext{
 		Variables: db.AsValueMap(),
 	})
-	if diags.ExtendHcl(diag) {
+	if diags.Extend(diag) {
 		return
 	}
 	ty := val.Type()

@@ -33,7 +33,7 @@ func (c *Config) ParseConfig(spec dataspec.RootSpec) (val cty.Value, diags diagn
 	c.once.Do(func() {
 		var diag hcl.Diagnostics
 		c.value, diag = hcldec.Decode(c.Body, spec.HcldecSpec(), evaluation.NewEvalContext())
-		if diags.ExtendHcl(diag) {
+		if diags.Extend(diag) {
 			// don't let partially-decoded values live
 			c.value = cty.NilVal
 		}
