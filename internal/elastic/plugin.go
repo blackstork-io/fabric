@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	defaultUsername = "elastic"
-	defaultScrollStepSize  = 1000
+	defaultUsername       = "elastic"
+	defaultScrollStepSize = 1000
 )
 
 type KibanaClientLoaderFn func(url string, apiKey *string) kbclient.Client
