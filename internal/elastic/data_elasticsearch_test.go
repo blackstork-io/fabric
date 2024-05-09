@@ -520,6 +520,10 @@ func (s *IntegrationTestSuite) TestScrollSearchSteps() {
 		"fields":       cty.NullVal(cty.String),
 		"size":         cty.NumberIntVal(5),  // does not matter
 	})
+	// There are only 3 results, so with the size 5 and step size 1,
+	// we should hit 4 requests:
+	// - initial search request (1 result)
+	// - 3 scroll requests: 2 with 1 result and one with an empty result to break the loop
 	data, err := searchWithScrollConfigurable(s.client, args, 5, 1)
 
 	s.Require().Nil(err, fmt.Sprintf("Received diagnostics: %s", err))
