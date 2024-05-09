@@ -6,8 +6,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/blackstork-io/fabric/internal/testtools"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 func Test_makeInlineDataSchema(t *testing.T) {
@@ -23,7 +24,7 @@ func Test_fetchInlineData(t *testing.T) {
 			"inline": makeInlineDataSource(),
 		},
 	}
-	args := testtools.DecodeAndAssert(t, p.DataSources["inline"].Args, `
+	args := plugintest.DecodeAndAssert(t, p.DataSources["inline"].Args, `
         foo  = "bar"
         baz  = 1
         qux  = true
@@ -34,7 +35,7 @@ func Test_fetchInlineData(t *testing.T) {
                 plugh  = false
         }
         xyzzy = null
-    `, [][]testtools.Assert{})
+    `, diagtest.Asserts{})
 	data, diags := p.RetrieveData(context.Background(), "inline", &plugin.RetrieveDataParams{
 		Args: args,
 	})

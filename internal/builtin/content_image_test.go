@@ -6,8 +6,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/blackstork-io/fabric/internal/testtools"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/printer/mdprint"
 )
 
@@ -32,29 +33,29 @@ func (s *ImageGeneratorTestSuite) TestSchema() {
 }
 
 func (s *ImageGeneratorTestSuite) TestMissingImageSource() {
-	testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		src = null
 		alt = null
 		`,
-		[][]testtools.Assert{{
-			testtools.IsError,
-			testtools.SummaryContains("Attribute must be non-null"),
+		diagtest.Asserts{{
+			diagtest.IsError,
+			diagtest.SummaryContains("Attribute must be non-null"),
 		}})
 }
 
 func (s *ImageGeneratorTestSuite) TestCallImageSourceEmpty() {
-	testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		src = ""
 		alt = null
 		`,
-		[][]testtools.Assert{{
-			testtools.IsError,
-			testtools.DetailContains(`The length`, `"src"`, `>= 1`),
+		diagtest.Asserts{{
+			diagtest.IsError,
+			diagtest.DetailContains(`The length`, `"src"`, `>= 1`),
 		}})
 }
 
 func (s *ImageGeneratorTestSuite) TestCallImageSourceValid() {
-	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		src = "https://example.com/image.png"
 		`,
 		nil)
@@ -68,7 +69,7 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceValid() {
 }
 
 func (s *ImageGeneratorTestSuite) TestCallImageSourceValidWithAlt() {
-	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		src = "https://example.com/image.png"
 		alt = "alt text"
 		`,
@@ -83,7 +84,7 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceValidWithAlt() {
 }
 
 func (s *ImageGeneratorTestSuite) TestCallImageSourceTemplateRender() {
-	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		src = "./{{ add 1 2 }}.png"
 		`,
 		nil)
@@ -97,7 +98,7 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceTemplateRender() {
 }
 
 func (s *ImageGeneratorTestSuite) TestCallImageAltTemplateRender() {
-	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		src = "./{{ add 1 2 }}.png"
 		alt = "{{ add 2 3 }} alt text"
 		`,

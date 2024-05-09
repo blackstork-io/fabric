@@ -45,7 +45,7 @@ func NewEvaluator() *Evaluator {
 
 func (e *Evaluator) Cleanup(diags diagnostics.Diag) error {
 	if e.Runner != nil {
-		diags.ExtendHcl(e.Runner.Close())
+		diags.Extend(e.Runner.Close())
 	}
 	diagnostics.PrintDiags(os.Stderr, diags, e.FileMap, cliArgs.colorize)
 	// Errors have been already displayed
@@ -71,11 +71,11 @@ func (e *Evaluator) ParseFabricFiles(sourceDir fs.FS) (diags diagnostics.Diag) {
 func (e *Evaluator) LoadPluginRunner(ctx context.Context) diagnostics.Diag {
 	var diag diagnostics.Diag
 	binaryMap, diags := e.Resolver.Resolve(ctx, e.LockFile)
-	if diag.ExtendHcl(diags) {
+	if diag.Extend(diags) {
 		return diag
 	}
 	e.Runner, diags = runner.Load(binaryMap, builtin.Plugin(version), slog.Default())
-	diag.ExtendHcl(diags)
+	diag.Extend(diags)
 	return diag
 }
 

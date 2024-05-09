@@ -20,8 +20,8 @@ import (
 	"github.com/blackstork-io/fabric/internal/sqlite"
 	"github.com/blackstork-io/fabric/internal/stixview"
 	"github.com/blackstork-io/fabric/internal/terraform"
-	"github.com/blackstork-io/fabric/internal/testtools"
 	"github.com/blackstork-io/fabric/internal/virustotal"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -83,11 +83,11 @@ func validateDataSource(t testing.TB, ds *plugin.DataSource) {
 	assert.NotEmpty(t, ds.DataFunc, "data source should have a data function")
 	if ds.Config != nil {
 		assert.False(t, ds.Config.IsEmpty(), "data source config should have at least one attribute")
-		testtools.AssertNoErrors(t, ds.Config.ValidateSpec(), nil, "data source config validation errors")
+		diagtest.AssertNoErrors(t, ds.Config.ValidateSpec(), nil, "data source config validation errors")
 	}
 	if ds.Args != nil {
 		assert.False(t, ds.Args.IsEmpty(), "data source args should have at least one attribute")
-		testtools.AssertNoErrors(t, ds.Args.ValidateSpec(), nil, "data source args validation errors")
+		diagtest.AssertNoErrors(t, ds.Args.ValidateSpec(), nil, "data source args validation errors")
 	}
 }
 
@@ -97,12 +97,12 @@ func validateContentProvider(t testing.TB, cp *plugin.ContentProvider) {
 	assert.NotEmpty(t, cp.ContentFunc, "content provider should have a content function")
 	if cp.Config != nil {
 		assert.False(t, cp.Config.IsEmpty(), "content provider config should have at least one attribute")
-		testtools.AssertNoErrors(t, cp.Config.ValidateSpec(), nil, "content provider config validation errors")
+		diagtest.AssertNoErrors(t, cp.Config.ValidateSpec(), nil, "content provider config validation errors")
 
 	}
 	if cp.Args != nil {
 		assert.False(t, cp.Args.IsEmpty(), "content provider args should have at least one attribute")
-		testtools.AssertNoErrors(t, cp.Args.ValidateSpec(), nil, "content provider args validation errors")
+		diagtest.AssertNoErrors(t, cp.Args.ValidateSpec(), nil, "content provider args validation errors")
 	}
 }
 
@@ -112,7 +112,7 @@ func validatePublisher(t testing.TB, pub *plugin.Publisher) {
 	assert.NotEmpty(t, pub.PublishFunc, "publisher should have a publish function")
 	if pub.Config != nil {
 		assert.False(t, pub.Config.IsEmpty(), "publisher config should have at least one attribute")
-		testtools.AssertNoErrors(t, pub.Config.ValidateSpec(), nil, "publisher config validation errors")
+		diagtest.AssertNoErrors(t, pub.Config.ValidateSpec(), nil, "publisher config validation errors")
 	}
 }
 

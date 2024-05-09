@@ -29,7 +29,7 @@ func Decode(body hcl.Body, spec RootSpec, ctx *hcl.EvalContext) (val cty.Value, 
 		return hclBodyToVal(b, ctx)
 	}
 	v, diag := hcldec.Decode(body, spec.HcldecSpec(), ctx)
-	if diags.ExtendHcl(diag) {
+	if diags.Extend(diag) {
 		return
 	}
 	val = v
@@ -54,7 +54,7 @@ func hclBodyToVal(body *hclsyntax.Body, ctx *hcl.EvalContext) (val cty.Value, di
 
 	for name, attr := range body.Attributes {
 		attrVal, diag := attr.Expr.Value(ctx)
-		if diags.ExtendHcl(diag) {
+		if diags.Extend(diag) {
 			continue
 		}
 		obj[name] = attrVal

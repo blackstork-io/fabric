@@ -7,8 +7,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/internal/testtools"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 type CodeTestSuite struct {
@@ -35,8 +36,8 @@ func (s *CodeTestSuite) TestMissingValue() {
 		"value":    cty.NullVal(cty.String),
 		"language": cty.NullVal(cty.String),
 	})
-	testtools.ReencodeCTY(s.T(), s.schema.Args, val, [][]testtools.Assert{{
-		testtools.SummaryContains("Attribute must be non-null"),
+	plugintest.ReencodeCTY(s.T(), s.schema.Args, val, diagtest.Asserts{{
+		diagtest.SummaryContains("Attribute must be non-null"),
 	}})
 }
 
@@ -46,7 +47,7 @@ func (s *CodeTestSuite) TestCallCodeDefault() {
 		"value":    cty.StringVal(`Hello {{.name}}!`),
 		"language": cty.NullVal(cty.String),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
@@ -68,7 +69,7 @@ func (s *CodeTestSuite) TestCallCodeWithLanguage() {
 		"value":    cty.StringVal(`{"hello": "{{.name}}"}`),
 		"language": cty.StringVal("json"),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,

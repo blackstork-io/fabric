@@ -11,11 +11,7 @@ import (
 	"golang.org/x/term"
 )
 
-func PrintDiags[D interface{ ~[]*hcl.Diagnostic }](output io.Writer, diags D, fileMap map[string]*hcl.File, colorize bool) {
-	printDiags(output, Diag(diags), fileMap, colorize)
-}
-
-func printDiags(output io.Writer, diags Diag, fileMap map[string]*hcl.File, colorize bool) {
+func PrintDiags(output io.Writer, diags []*hcl.Diagnostic, fileMap map[string]*hcl.File, colorize bool) {
 	if len(diags) == 0 {
 		return
 	}

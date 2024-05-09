@@ -1,7 +1,6 @@
-package testtools
+package plugintest
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
@@ -11,6 +10,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
@@ -20,7 +20,7 @@ import (
 // in accordance to spec. Ugly hack, but there's over a 100 tests in need of
 // a rewrite that can't be automated with regex or similar.
 // New tests should use Decode and provide a string of hcl.
-func ReencodeCTY(t *testing.T, spec dataspec.RootSpec, val cty.Value, asserts [][]Assert) cty.Value {
+func ReencodeCTY(t *testing.T, spec dataspec.RootSpec, val cty.Value, asserts [][]diagtest.Assert) cty.Value {
 	t.Helper()
 	ty := val.Type()
 	if !(ty.IsMapType() || ty.IsObjectType()) {
@@ -43,16 +43,16 @@ const filename = "<inline-data>"
 
 // Decodes a string (representing content of a config/data/content block)
 // into cty.Value according to given spec (i.e. respecting default values)
-func DecodeAndAssert(t *testing.T, spec dataspec.RootSpec, body string, asserts [][]Assert) (v cty.Value) {
+func DecodeAndAssert(t *testing.T, spec dataspec.RootSpec, body string, asserts [][]diagtest.Assert) (v cty.Value) {
 	t.Helper()
 	var diags diagnostics.Diag
 	var fm map[string]*hcl.File
 	defer func() {
 		t.Helper()
-		CompareDiags(t, fm, diags, asserts)
+		diagtest.Asserts(asserts).AssertMatch(t, diags, fm)
 	}()
 	f, diag := hclsyntax.ParseConfig([]byte(body), filename, hcl.InitialPos)
-	if diags.ExtendHcl(diag) {
+	if diags.Extend(diag) {
 		return
 	}
 	fm = map[string]*hcl.File{
@@ -66,26 +66,11 @@ func DecodeAndAssert(t *testing.T, spec dataspec.RootSpec, body string, asserts 
 func Decode(t *testing.T, spec dataspec.RootSpec, body string) (v cty.Value, diags diagnostics.Diag) {
 	t.Helper()
 	f, diag := hclsyntax.ParseConfig([]byte(body), filename, hcl.InitialPos)
-	if diags.ExtendHcl(diag) {
+	if diags.Extend(diag) {
 		return
 	}
 
 	v, diag = hcldec.Decode(f.Body, spec.HcldecSpec(), nil)
 	diags = append(diags, diag...)
 	return
-}
-
-func AssertNoErrors(tb testing.TB, diags diagnostics.Diag, fileMap map[string]*hcl.File, msgs ...any) {
-	tb.Helper()
-	if len(diags) == 0 {
-		return
-	}
-	var buf bytes.Buffer
-	diagnostics.PrintDiags(&buf, diags, fileMap, false)
-	msgs = append(msgs, buf.String())
-	if diags.HasErrors() {
-		tb.Error(msgs...)
-	} else {
-		tb.Log(msgs...)
-	}
 }

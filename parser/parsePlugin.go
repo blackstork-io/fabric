@@ -92,7 +92,7 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 				}
 
 				var meta definitions.MetaBlock
-				if diags.ExtendHcl(gohcl.DecodeBody(blk.Body, nil, &meta)) {
+				if diags.Extend(gohcl.DecodeBody(blk.Body, nil, &meta)) {
 					break
 				}
 				res.Meta = &meta

@@ -215,7 +215,7 @@ func parseBlockDefinitions(body *hclsyntax.Body) (res *DefinedBlocks, diags diag
 			diags.Append(AddIfMissing(res.Config, *key, cfg))
 		case definitions.BlockKindGlobalConfig:
 			var globalCfg definitions.GlobalConfig
-			if diags.ExtendHcl(gohcl.DecodeBody(block.Body, nil, &globalCfg)) {
+			if diags.Extend(gohcl.DecodeBody(block.Body, nil, &globalCfg)) {
 				continue
 			}
 			if res.GlobalConfig != nil {
