@@ -3,6 +3,7 @@ package diagtest
 import (
 	"bytes"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
@@ -103,44 +104,102 @@ func DetailContains(substrs ...string) Assert {
 	}
 }
 
+type equalsAssert struct {
+	isSummary bool // if false - detail
+	str       string
+}
+
+func (e *equalsAssert) Assert(diag *hcl.Diagnostic) bool {
+	var str string
+	if e.isSummary {
+		str = diag.Summary
+	} else {
+		str = diag.Detail
+	}
+	return str == e.str
+}
+
+// String implements Assert.
+func (e *equalsAssert) String() string {
+	var attrName string
+	if e.isSummary {
+		attrName = "Summary"
+	} else {
+		attrName = "Detail"
+	}
+
+	return fmt.Sprintf(
+		"%s to be equal to: %s",
+		attrName,
+		e.str,
+	)
+}
+
+func SummaryEquals(str string) Assert {
+	return &equalsAssert{
+		isSummary: true,
+		str:       str,
+	}
+}
+
+func DetailEquals(str string) Assert {
+	return &equalsAssert{
+		isSummary: false,
+		str:       str,
+	}
+}
+
 type Asserts [][]Assert
+
+func formatCondensedDiag(sb *strings.Builder, d *hcl.Diagnostic) {
+	switch d.Severity {
+	case hcl.DiagError:
+		sb.WriteString("    [Severity]: Error\n")
+	case hcl.DiagWarning:
+		sb.WriteString("    [Severity]: Warning\n")
+	case hcl.DiagInvalid:
+		sb.WriteString("    [Severity]: Invalid\n")
+	default:
+		fmt.Fprintf(sb, "    [Severity]: hcl.DiagnosticSeverity(%d)\n", d.Severity)
+	}
+	fmt.Fprintf(sb, "    [Summary]: %s\n", d.Summary)
+	fmt.Fprintf(sb, "    [Detail]: %s\n", d.Detail)
+}
 
 func (asserts Asserts) AssertMatch(tb testing.TB, diags []*hcl.Diagnostic, fileMap map[string]*hcl.File) {
 	tb.Helper()
-	if matchBiject(diags, asserts) {
+	unmatchedDiags, unmatchedAsserts := matchBiject(diags, asserts)
+	if len(unmatchedDiags) == 0 && len(unmatchedAsserts) == 0 {
 		return
 	}
-
 	var buf strings.Builder
-	buf.WriteString("Expected ")
-	switch len(asserts) {
-	case 0:
-		buf.WriteString("no diagnostics\n")
-	case 1:
-		buf.WriteString("1 diagnostic:\n")
-	default:
-		fmt.Fprintf(&buf, "%d diagnostics:\n", len(asserts))
-	}
-	for _, assertSet := range asserts {
-		fmt.Fprintln(&buf, "{")
-		for _, assert := range assertSet {
-			fmt.Fprintf(&buf, "    %s\n", assert)
+
+	if len(unmatchedAsserts) != 0 {
+		buf.WriteString("Unmatched asserts:\n")
+		for _, assertSet := range unmatchedAsserts {
+			fmt.Fprintln(&buf, "{")
+			for _, assert := range assertSet {
+				fmt.Fprintf(&buf, "    %s\n", assert)
+			}
+			fmt.Fprintln(&buf, "},")
 		}
-		fmt.Fprintln(&buf, "},")
 	}
-	buf.WriteString("\nGot ")
-	switch len(diags) {
-	case 0:
-		buf.WriteString("no diagnostics\n")
-	case 1:
-		buf.WriteString("1 diagnostic:\n")
-	default:
-		fmt.Fprintf(&buf, "%d diagnostics:\n", len(diags))
+
+	if len(unmatchedDiags) != 0 {
+		buf.WriteString("Unmatched diags:\n")
+		if len(fileMap) != 0 {
+			// we have filemap, so we use fancy print that shows line ranges
+			diagnostics.PrintDiags(&buf, diags, fileMap, false)
+		} else {
+			// condensed format
+			for _, diag := range unmatchedDiags {
+				buf.WriteString("{\n")
+				formatCondensedDiag(&buf, diag)
+				buf.WriteString("},\n")
+			}
+		}
 	}
-	if len(diags) > 0 {
-		diagnostics.PrintDiags(&buf, diags, fileMap, false)
-	}
-	tb.Fatalf("\n\n%s", buf.String())
+	tb.Fatal(buf.String())
 }
 
 func sliceRemove[T any](s []T, pos int) []T {
@@ -150,33 +209,33 @@ func sliceRemove[T any](s []T, pos int) []T {
 	return s[:len(s)-1]
 }
 
-func matchBiject(diags diagnostics.Diag, asserts [][]Assert) bool {
-	dgs := []*hcl.Diagnostic(diags)
-	if len(dgs) != len(asserts) {
-		return false
-	}
+func matchBiject(d []*hcl.Diagnostic, a [][]Assert) (unmatchedDiags []*hcl.Diagnostic, unmatchedAsserts [][]Assert) {
+	unmatchedDiags = slices.Clone(d)
+	unmatchedAsserts = slices.Clone(a)
 
 nextDiag:
-	for _, diag := range dgs {
+	for diagIdx := 0; diagIdx < len(unmatchedDiags); {
 	nextAssertSet:
-		for assertSetIdx, assertSet := range asserts {
+		for assertSetIdx, assertSet := range unmatchedAsserts {
 			if len(assertSet) == 0 {
 				panic("assert set has length 0")
 			}
 			for _, assert := range assertSet {
-				if !assert.Assert(diag) {
+				if !assert.Assert(unmatchedDiags[diagIdx]) {
+					// This assert set doesn't match current diag
 					continue nextAssertSet
 				}
 			}
-			// all asserts in assert set have matched, remove
-			asserts = sliceRemove(asserts, assertSetIdx)
+			// all asserts in assert set have matched, remove both assert set and diag
+			unmatchedAsserts = sliceRemove(unmatchedAsserts, assertSetIdx)
+			unmatchedDiags = sliceRemove(unmatchedDiags, diagIdx)
+			// intentionally not incrementing diagIdx, sliceRemove replaces the deleted element with the last one
 			continue nextDiag
 		}
-		// can't find assert set matching this diag
-		return false
+		// can't find an assert set matching this diag
+		diagIdx += 1
 	}
-
-	return true
+	return
 }
 
 func AssertNoErrors(tb testing.TB, diags []*hcl.Diagnostic, fileMap map[string]*hcl.File, msgs ...any) {
