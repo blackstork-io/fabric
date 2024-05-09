@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
@@ -223,7 +224,7 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 		if val.Type().IsCollectionType() || val.Type().IsTupleType() {
 			length = val.LengthInt()
 		} else if val.Type().IsPrimitiveType() && val.Type() == cty.String {
-			length = len(val.AsString())
+			length = utf8.RuneCountInString(val.AsString())
 		}
 		min := a.computeMinInclusive()
 		max := a.MaxInclusive

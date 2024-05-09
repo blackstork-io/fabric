@@ -150,6 +150,19 @@ func TestValidation(t *testing.T) {
 			},
 		},
 		{
+			name: "Length_check_correct_utf8_multibyte",
+			obj: &dataspec.AttrSpec{
+				Name:         "test",
+				Type:         cty.String,
+				DefaultVal:   cty.StringVal(";"),
+				MinInclusive: cty.NumberIntVal(1),
+				MaxInclusive: cty.NumberIntVal(1),
+			},
+			inputVal:    cty.StringVal("😭"),
+			asserts:     diagtest.Asserts{},
+			expectedVal: cty.StringVal("😭"),
+		},
+		{
 			name: "Length_check_max",
 			obj: &dataspec.AttrSpec{
 				Name:         "test",
