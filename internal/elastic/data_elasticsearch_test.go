@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"testing"
@@ -18,6 +20,10 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 )
 
+const (
+	testIndex = "test_index"
+)
+
 // IntegrationTestSuite is a test suite to test integration with real elasticsearch
 type IntegrationTestSuite struct {
 	suite.Suite
@@ -29,6 +35,7 @@ type IntegrationTestSuite struct {
 }
 
 func TestIntegrationSuite(t *testing.T) {
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 	if testing.Short() {
 		t.Skip("skipping integration tests")
 	}
@@ -86,16 +93,16 @@ func (s *IntegrationTestSuite) SetupTest() {
 	dataList := []testDataObject{}
 	err = json.Unmarshal(file, &dataList)
 	s.Require().NoError(err, "failed to unmarshal data.json")
-	res, err := s.client.Indices.Create("test_index")
-	s.Require().NoError(err, "failed to create index test_index")
+	res, err := s.client.Indices.Create(testIndex)
+	s.Require().NoError(err, fmt.Sprintf("failed to create index %s", testIndex))
 	s.Require().Equal(http.StatusOK, res.StatusCode)
 	for _, data := range dataList {
 		dataBytes, err := json.Marshal(data)
 		s.Require().NoError(err, "failed to marshal data")
-		res, err := s.client.Create("test_index", data.ID, bytes.NewReader(dataBytes))
+		res, err := s.client.Create(testIndex, data.ID, bytes.NewReader(dataBytes))
 		s.Require().NoError(err, "failed to index data")
 		s.Require().False(res.IsError(), "failed to index data")
-		res, err = s.client.Index("test_index", bytes.NewReader(dataBytes), s.client.Index.WithDocumentID(data.ID))
+		res, err = s.client.Index(testIndex, bytes.NewReader(dataBytes), s.client.Index.WithDocumentID(data.ID))
 		s.Require().NoError(err, "failed to index data")
 		s.Require().False(res.IsError(), "failed to index data")
 	}
@@ -105,7 +112,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 }
 
 func (s *IntegrationTestSuite) TearDownTest() {
-	res, err := s.client.Indices.Delete([]string{"test_index"})
+	res, err := s.client.Indices.Delete([]string{testIndex})
 	s.Require().NoError(err, "failed to delete indices")
 	s.Require().False(res.IsError(), "failed to delete indices: %s", res.String())
 }
@@ -113,7 +120,7 @@ func (s *IntegrationTestSuite) TearDownTest() {
 func (s *IntegrationTestSuite) TestSearchDefaults() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"id":           cty.NullVal(cty.String),
-		"index":        cty.StringVal("test_index"),
+		"index":        cty.StringVal(testIndex),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.NullVal(cty.String),
 		"only_hits":    cty.NullVal(cty.Bool),
@@ -172,7 +179,7 @@ func (s *IntegrationTestSuite) TestSearchDefaults() {
 func (s *IntegrationTestSuite) TestSearchFields() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"id":           cty.NullVal(cty.String),
-		"index":        cty.StringVal("test_index"),
+		"index":        cty.StringVal(testIndex),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.NullVal(cty.String),
 		"only_hits":    cty.BoolVal(false),
@@ -229,7 +236,7 @@ func (s *IntegrationTestSuite) TestSearchFields() {
 func (s *IntegrationTestSuite) TestSearchQueryString() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"id":           cty.NullVal(cty.String),
-		"index":        cty.StringVal("test_index"),
+		"index":        cty.StringVal(testIndex),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.StringVal("type:foo"),
 		"only_hits":    cty.BoolVal(false),
@@ -283,7 +290,7 @@ func (s *IntegrationTestSuite) TestSearchQueryString() {
 func (s *IntegrationTestSuite) TestSearchQuery() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"id":    cty.NullVal(cty.String),
-		"index": cty.StringVal("test_index"),
+		"index": cty.StringVal(testIndex),
 		"query": cty.MapVal(map[string]cty.Value{
 			"match_all": cty.MapValEmpty(cty.DynamicPseudoType),
 		}),
@@ -351,7 +358,7 @@ func (s *IntegrationTestSuite) TestSearchQuery() {
 func (s *IntegrationTestSuite) TestSearchSize() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"id":           cty.NullVal(cty.String),
-		"index":        cty.StringVal("test_index"),
+		"index":        cty.StringVal(testIndex),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.NullVal(cty.String),
 		"only_hits":    cty.BoolVal(false),
@@ -393,7 +400,7 @@ func (s *IntegrationTestSuite) TestSearchSize() {
 func (s *IntegrationTestSuite) TestGetByID() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"id":           cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6"),
-		"index":        cty.StringVal("test_index"),
+		"index":        cty.StringVal(testIndex),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.NullVal(cty.String),
 		"only_hits":    cty.BoolVal(false),
@@ -428,7 +435,7 @@ func (s *IntegrationTestSuite) TestGetByID() {
 func (s *IntegrationTestSuite) TestGetByIDFields() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"id":           cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6"),
-		"index":        cty.StringVal("test_index"),
+		"index":        cty.StringVal(testIndex),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.NullVal(cty.String),
 		"only_hits":    cty.BoolVal(false),
@@ -460,7 +467,7 @@ func (s *IntegrationTestSuite) TestGetByIDFields() {
 func (s *IntegrationTestSuite) TestGetByIDNotFound() {
 	args := cty.ObjectVal(map[string]cty.Value{
 		"id":           cty.StringVal("00000000-0000-0000-0000-000000000000"),
-		"index":        cty.StringVal("test_index"),
+		"index":        cty.StringVal(testIndex),
 		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.NullVal(cty.String),
 		"only_hits":    cty.BoolVal(false),
@@ -474,7 +481,99 @@ func (s *IntegrationTestSuite) TestGetByIDNotFound() {
 	s.Nil(data)
 	s.Equal(hcl.Diagnostics{{
 		Severity: hcl.DiagError,
-		Summary:  "Failed to get data",
+		Summary:  "Failed to fetch data",
 		Detail:   "failed to get document: [404 Not Found] {\"_index\":\"test_index\",\"_id\":\"00000000-0000-0000-0000-000000000000\",\"found\":false}",
 	}}, diags)
+}
+
+func (s *IntegrationTestSuite) TestScrollSearch() {
+	args := cty.ObjectVal(map[string]cty.Value{
+		"id":           cty.NullVal(cty.String),
+		"index":        cty.StringVal(testIndex),
+		"query":        cty.NullVal(cty.DynamicPseudoType),
+		"query_string": cty.NullVal(cty.String),
+		"only_hits":    cty.BoolVal(false),
+		"aggs":         cty.NullVal(cty.DynamicPseudoType),
+		"fields":       cty.NullVal(cty.String),
+		"size":         cty.NumberIntVal(10000 + 1), // to force scroll search
+	})
+	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
+		Config: s.cfg,
+		Args:   args,
+	})
+	s.Require().Nil(diags, fmt.Sprintf("Received diagnostics: %s", diags))
+	dataMap := data.(plugin.MapData)
+	hitsEnvelope := dataMap["hits"].(plugin.MapData)
+	hits := hitsEnvelope["hits"].(plugin.ListData)
+
+	s.Equal(3, len(hits), fmt.Sprintf("Hits received: %s", hits))
+}
+
+func (s *IntegrationTestSuite) TestScrollSearchSteps() {
+	args := cty.ObjectVal(map[string]cty.Value{
+		"id":           cty.NullVal(cty.String),
+		"index":        cty.StringVal(testIndex),
+		"query":        cty.NullVal(cty.DynamicPseudoType),
+		"query_string": cty.NullVal(cty.String),
+		"only_hits":    cty.BoolVal(false),
+		"aggs":         cty.NullVal(cty.DynamicPseudoType),
+		"fields":       cty.NullVal(cty.String),
+		"size":         cty.NumberIntVal(5),  // does not matter
+	})
+	data, err := searchWithScrollConfigurable(s.client, args, 5, 1)
+
+	s.Require().Nil(err, fmt.Sprintf("Received diagnostics: %s", err))
+	dataMap := data.(plugin.MapData)
+	hitsEnvelope := dataMap["hits"].(plugin.MapData)
+	hits := hitsEnvelope["hits"].(plugin.ListData)
+
+	s.Equal(3, len(hits), fmt.Sprintf("Hits received: %s", hits))
+
+	raw, err := json.MarshalIndent(hitsEnvelope, "", "  ")
+	s.Require().NoError(err, "failed to marshal data: %v", err)
+	s.JSONEq(`{
+		"hits": [
+			{
+				"_id": "54f7a815-eac5-4f7c-a339-5fefd0f54967",
+				"_index": "test_index",
+				"_score": 1,
+				"_source": {
+					"active": false,
+					"age": 39,
+					"id": "54f7a815-eac5-4f7c-a339-5fefd0f54967",
+					"name": "Davidson",
+					"type": "foo"
+				}
+			},
+			{
+				"_id": "0c68e63d-daaa-4a62-92e6-e855bd144fb6",
+				"_index": "test_index",
+				"_score": 1,
+				"_source": {
+					"active": false,
+					"age": 20,
+					"id": "0c68e63d-daaa-4a62-92e6-e855bd144fb6",
+					"name": "Thompson",
+					"type": "bar"
+				}
+			},
+			{
+				"_id": "a117a5e6-23d0-4daa-be3c-a70900ca4163",
+				"_index": "test_index",
+				"_score": 1,
+				"_source": {
+					"active": true,
+					"age": 21,
+					"id": "a117a5e6-23d0-4daa-be3c-a70900ca4163",
+					"name": "Armstrong",
+					"type": "foo"
+				}
+			}
+		],
+		"max_score": 1,
+		"total": {
+			"relation": "eq",
+			"value": 3
+		}
+	}`, string(raw))
 }

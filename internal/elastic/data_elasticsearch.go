@@ -11,6 +11,11 @@ import (
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
+const (
+	defaultSearchResultsSize   = 1000
+	maxSimpleSearchResultsSize = 10000
+)
+
 func makeElasticSearchDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchElasticSearchData,
@@ -112,17 +117,42 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 		})
 	}
 
+	index := params.Args.GetAttr("index")
+	if index.IsNull() {
+		return nil, hcl.Diagnostics{{
+			Severity: hcl.DiagError,
+			Summary:  "Invalid arguments",
+			Detail:   "Index value is required",
+		}}
+	}
+
 	id := params.Args.GetAttr("id")
 	var data plugin.Data
 	if !id.IsNull() {
 		data, err = getByID(client.Get, params.Args)
 	} else {
-		data, err = search(client.Search, params.Args)
+		var size int = defaultSearchResultsSize
+		if sizeArg := params.Args.GetAttr("size"); !sizeArg.IsNull() {
+			size64, _ := sizeArg.AsBigFloat().Int64()
+			size = int(size64)
+			if size < 0 {
+				return nil, hcl.Diagnostics{{
+					Severity: hcl.DiagError,
+					Summary:  "Invalid arguments",
+					Detail:   "Size value must be greater or equal 0",
+				}}
+			}
+		}
+		if size <= maxSimpleSearchResultsSize {
+			data, err = search(client.Search, params.Args, size)
+		} else {
+			data, err = searchWithScroll(client, params.Args, size)
+		}
 	}
 	if err != nil {
 		return nil, diags.Extend(hcl.Diagnostics{{
 			Severity: hcl.DiagError,
-			Summary:  "Failed to get data",
+			Summary:  "Failed to fetch data",
 			Detail:   err.Error(),
 		}})
 	}
