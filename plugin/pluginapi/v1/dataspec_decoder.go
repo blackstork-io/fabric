@@ -3,7 +3,9 @@ package pluginapiv1
 import (
 	"fmt"
 
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func decodeRootSpec(src *Spec) (dataspec.RootSpec, error) {
@@ -50,13 +52,29 @@ func decodeAttrSpec(src *AttrSpec) (*dataspec.AttrSpec, error) {
 	if err != nil {
 		return nil, err
 	}
+	oneof, err := utils.FnMapErr(src.GetOneOf(), decodeCtyValue)
+	if err != nil {
+		return nil, err
+	}
+	min, err := decodeCtyValue(src.GetMinInclusive())
+	if err != nil {
+		return nil, err
+	}
+	max, err := decodeCtyValue(src.GetMaxInclusive())
+	if err != nil {
+		return nil, err
+	}
 	return &dataspec.AttrSpec{
-		Name:       src.GetName(),
-		Type:       t,
-		Required:   src.GetRequired(),
-		DefaultVal: def,
-		ExampleVal: ex,
-		Doc:        src.GetDoc(),
+		Name:         src.GetName(),
+		Type:         t,
+		DefaultVal:   def,
+		ExampleVal:   ex,
+		Doc:          src.GetDoc(),
+		Constraints:  constraint.Constraints(src.GetConstraints()),
+		OneOf:        oneof,
+		MinInclusive: min,
+		MaxInclusive: max,
+		Deprecated:   src.GetDeprecated(),
 	}, nil
 }
 

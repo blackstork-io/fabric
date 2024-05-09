@@ -13,27 +13,27 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeGraphQLDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "url",
-				Type:     cty.String,
-				Required: true,
+				Name:        "url",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
-				Name:     "auth_token",
-				Type:     cty.String,
-				Required: false,
+				Name: "auth_token",
+				Type: cty.String,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "query",
-				Type:     cty.String,
-				Required: true,
+				Name:        "query",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 		},
 		DataFunc: fetchGraphQLData,

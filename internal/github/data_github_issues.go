@@ -13,6 +13,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeGithubIssuesDataSchema(loader ClientLoaderFn) *plugin.DataSource {
@@ -20,66 +21,56 @@ func makeGithubIssuesDataSchema(loader ClientLoaderFn) *plugin.DataSource {
 		DataFunc: fetchGithubIssuesData(loader),
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "github_token",
-				Type:     cty.String,
-				Required: true,
+				Name:        "github_token",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "repository",
-				Type:     cty.String,
-				Required: true,
+				Name:        "repository",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
-				Name:     "milestone",
-				Type:     cty.String,
-				Required: false,
+				Name: "milestone",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "state",
-				Type:     cty.String,
-				Required: false,
+				Name: "state",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "assignee",
-				Type:     cty.String,
-				Required: false,
+				Name: "assignee",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "creator",
-				Type:     cty.String,
-				Required: false,
+				Name: "creator",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "mentioned",
-				Type:     cty.String,
-				Required: false,
+				Name: "mentioned",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "labels",
-				Type:     cty.List(cty.String),
-				Required: false,
+				Name: "labels",
+				Type: cty.List(cty.String),
 			},
 			&dataspec.AttrSpec{
-				Name:     "sort",
-				Type:     cty.String,
-				Required: false,
+				Name: "sort",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "direction",
-				Type:     cty.String,
-				Required: false,
+				Name: "direction",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "since",
-				Type:     cty.String,
-				Required: false,
+				Name: "since",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "limit",
-				Type:     cty.Number,
-				Required: false,
+				Name: "limit",
+				Type: cty.Number,
 			},
 		},
 	}

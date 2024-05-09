@@ -5,6 +5,8 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclwrite"
+
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
 // BlockSpec represents a nested block (hcldec.BlockSpec).
@@ -48,12 +50,12 @@ func (b *BlockSpec) HcldecSpec() hcldec.Spec {
 	}
 }
 
-func (b *BlockSpec) Validate() (errs []string) {
+func (b *BlockSpec) ValidateSpec() (errs diagnostics.Diag) {
 	switch st := b.Nested.(type) {
 	case ObjectSpec:
 	case *OpaqueSpec:
 	default:
-		errs = append(errs, fmt.Sprintf("invalid nesting: %T within Block spec", st))
+		errs.Add(fmt.Sprintf("invalid nesting: %T within Block spec", st), "")
 	}
 	return
 }

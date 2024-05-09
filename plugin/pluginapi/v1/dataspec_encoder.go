@@ -3,6 +3,7 @@ package pluginapiv1
 import (
 	"fmt"
 
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
@@ -80,13 +81,29 @@ func encodeAttr(src *dataspec.AttrSpec) (*AttrSpec, error) {
 	if err != nil {
 		return nil, err
 	}
+	oneof, err := utils.FnMapErr(src.OneOf, encodeCtyValue)
+	if err != nil {
+		return nil, err
+	}
+	min, err := encodeCtyValue(src.MinInclusive)
+	if err != nil {
+		return nil, err
+	}
+	max, err := encodeCtyValue(src.MaxInclusive)
+	if err != nil {
+		return nil, err
+	}
 	return &AttrSpec{
-		Name:       src.Name,
-		Type:       ty,
-		DefaultVal: dv,
-		ExampleVal: ev,
-		Doc:        src.Doc,
-		Required:   src.Required,
+		Name:         src.Name,
+		Type:         ty,
+		DefaultVal:   dv,
+		ExampleVal:   ev,
+		Doc:          src.Doc,
+		Constraints:  uint32(src.Constraints),
+		OneOf:        oneof,
+		MinInclusive: min,
+		MaxInclusive: max,
+		Deprecated:   src.Deprecated,
 	}, nil
 }
 

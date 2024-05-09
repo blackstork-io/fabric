@@ -8,6 +8,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeElasticSearchDataSource() *plugin.DataSource {
@@ -15,86 +16,71 @@ func makeElasticSearchDataSource() *plugin.DataSource {
 		DataFunc: fetchElasticSearchData,
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "base_url",
-				Type:     cty.String,
-				Required: false,
+				Name: "base_url",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "cloud_id",
-				Type:     cty.String,
-				Required: false,
+				Name: "cloud_id",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "api_key_str",
-				Type:     cty.String,
-				Required: false,
+				Name: "api_key_str",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "api_key",
-				Type:     cty.List(cty.String),
-				Required: false,
+				Name: "api_key",
+				Type: cty.List(cty.String),
 			},
 			&dataspec.AttrSpec{
-				Name:     "basic_auth_username",
-				Type:     cty.String,
-				Required: false,
+				Name: "basic_auth_username",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "basic_auth_password",
-				Type:     cty.String,
-				Required: false,
+				Name: "basic_auth_password",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "bearer_auth",
-				Type:     cty.String,
-				Required: false,
+				Name: "bearer_auth",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "ca_certs",
-				Type:     cty.String,
-				Required: false,
+				Name: "ca_certs",
+				Type: cty.String,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "index",
-				Type:     cty.String,
-				Required: true,
+				Name:        "index",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
-				Name:     "id",
-				Type:     cty.String,
-				Required: false,
+				Name: "id",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "query_string",
-				Type:     cty.String,
-				Required: false,
+				Name: "query_string",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "query",
-				Type:     cty.Map(cty.DynamicPseudoType),
-				Required: false,
+				Name: "query",
+				Type: cty.Map(cty.DynamicPseudoType),
 			},
 			&dataspec.AttrSpec{
-				Name:     "aggs",
-				Type:     cty.Map(cty.DynamicPseudoType),
-				Required: false,
+				Name: "aggs",
+				Type: cty.Map(cty.DynamicPseudoType),
 			},
 			&dataspec.AttrSpec{
-				Name:     "only_hits",
-				Type:     cty.Bool,
-				Required: false,
+				Name: "only_hits",
+				Type: cty.Bool,
 			},
 			&dataspec.AttrSpec{
-				Name:     "fields",
-				Type:     cty.List(cty.String),
-				Required: false,
+				Name: "fields",
+				Type: cty.List(cty.String),
 			},
 			&dataspec.AttrSpec{
-				Name:     "size",
-				Type:     cty.Number,
-				Required: false,
+				Name: "size",
+				Type: cty.Number,
 			},
 		},
 	}

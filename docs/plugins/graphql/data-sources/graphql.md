@@ -37,10 +37,12 @@ The data source supports the following configuration parameters:
 
 ```hcl
 config data graphql {
-  # Required string. For example:
+  # Required string.
+  # For example:
   url = "some string"
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   auth_token = null
 }
 ```
@@ -51,7 +53,8 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data graphql {
-  # Required string. For example:
+  # Required string.
+  # For example:
   query = "some string"
 }
 ```

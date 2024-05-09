@@ -13,27 +13,27 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makePostgreSQLDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "database_url",
-				Type:     cty.String,
-				Required: true,
+				Name:        "database_url",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "sql_query",
-				Type:     cty.String,
-				Required: true,
+				Name:        "sql_query",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
-				Name:     "sql_args",
-				Type:     cty.List(cty.DynamicPseudoType),
-				Required: false,
+				Name: "sql_args",
+				Type: cty.List(cty.DynamicPseudoType),
 			},
 		},
 		DataFunc: fetchSqliteData,

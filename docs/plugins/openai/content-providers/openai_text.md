@@ -38,13 +38,16 @@ The content provider supports the following configuration parameters:
 
 ```hcl
 config content openai_text {
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   system_prompt = null
 
-  # Required string. For example:
+  # Required string.
+  # For example:
   api_key = "some string"
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   organization_id = null
 }
 ```
@@ -55,10 +58,12 @@ The content provider supports the following execution parameters:
 
 ```hcl
 content openai_text {
-  # Required string. For example:
+  # Required string.
+  # For example:
   prompt = "some string"
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   model = null
 }
 ```

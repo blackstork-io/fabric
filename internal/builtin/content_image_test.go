@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/blackstork-io/fabric/internal/testtools"
@@ -39,27 +38,19 @@ func (s *ImageGeneratorTestSuite) TestMissingImageSource() {
 		`,
 		[][]testtools.Assert{{
 			testtools.IsError,
-			testtools.SummaryContains("Argument must be non-null"),
+			testtools.SummaryContains("Attribute must be non-null"),
 		}})
 }
 
 func (s *ImageGeneratorTestSuite) TestCallImageSourceEmpty() {
-	args := testtools.DecodeAndAssert(s.T(), s.schema.Args, `
+	testtools.DecodeAndAssert(s.T(), s.schema.Args, `
 		src = ""
 		alt = null
 		`,
-		nil)
-
-	ctx := context.Background()
-	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-	})
-	s.Nil(content)
-	s.Equal(hcl.Diagnostics{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "src is required",
-	}}, diags)
+		[][]testtools.Assert{{
+			testtools.IsError,
+			testtools.DetailContains(`The length`, `"src"`, `>= 1`),
+		}})
 }
 
 func (s *ImageGeneratorTestSuite) TestCallImageSourceValid() {

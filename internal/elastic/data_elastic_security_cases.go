@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/elastic/kbclient"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 const (
@@ -23,96 +24,79 @@ func makeElasticSecurityCasesDataSource(loader KibanaClientLoaderFn) *plugin.Dat
 		DataFunc: fetchElasticSecurityCases(loader),
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "kibana_endpoint_url",
-				Type:     cty.String,
-				Required: true,
+				Name:        "kibana_endpoint_url",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
-				Name:     "api_key_str",
-				Type:     cty.String,
-				Required: false,
+				Name: "api_key_str",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "api_key",
-				Type:     cty.List(cty.String),
-				Required: false,
+				Name: "api_key",
+				Type: cty.List(cty.String),
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "space_id",
-				Type:     cty.String,
-				Required: false,
+				Name: "space_id",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "assignees",
-				Type:     cty.List(cty.String),
-				Required: false,
+				Name: "assignees",
+				Type: cty.List(cty.String),
 			},
 			&dataspec.AttrSpec{
-				Name:     "default_search_operator",
-				Type:     cty.String,
-				Required: false,
+				Name: "default_search_operator",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "from",
-				Type:     cty.String,
-				Required: false,
+				Name: "from",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "owner",
-				Type:     cty.List(cty.String),
-				Required: false,
+				Name: "owner",
+				Type: cty.List(cty.String),
 			},
 			&dataspec.AttrSpec{
-				Name:     "reporters",
-				Type:     cty.List(cty.String),
-				Required: false,
+				Name: "reporters",
+				Type: cty.List(cty.String),
 			},
 			&dataspec.AttrSpec{
-				Name:     "search",
-				Type:     cty.String,
-				Required: false,
+				Name: "search",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "search_fields",
-				Type:     cty.List(cty.String),
-				Required: false,
+				Name: "search_fields",
+				Type: cty.List(cty.String),
 			},
 			&dataspec.AttrSpec{
-				Name:     "severity",
-				Type:     cty.String,
-				Required: false,
+				Name: "severity",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "sort_field",
-				Type:     cty.String,
-				Required: false,
+				Name: "sort_field",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "sort_order",
-				Type:     cty.String,
-				Required: false,
+				Name: "sort_order",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "status",
-				Type:     cty.String,
-				Required: false,
+				Name: "status",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "tags",
-				Type:     cty.List(cty.String),
-				Required: false,
+				Name: "tags",
+				Type: cty.List(cty.String),
 			},
 			&dataspec.AttrSpec{
-				Name:     "to",
-				Type:     cty.String,
-				Required: false,
+				Name: "to",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "size",
-				Type:     cty.Number,
-				Required: false,
+				Name: "size",
+				Type: cty.Number,
 			},
 		},
 	}

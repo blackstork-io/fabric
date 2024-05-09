@@ -9,6 +9,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeBlockQuoteContentProvider() *plugin.ContentProvider {
@@ -16,10 +17,10 @@ func makeBlockQuoteContentProvider() *plugin.ContentProvider {
 		ContentFunc: genBlockQuoteContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "value",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("Text to be formatted as a quote"),
-				Required:   true,
+				Name:        "value",
+				Type:        cty.String,
+				ExampleVal:  cty.StringVal("Text to be formatted as a quote"),
+				Constraints: constraint.RequiredNonNull,
 			},
 		},
 		Doc: "Formats text as a block quote",

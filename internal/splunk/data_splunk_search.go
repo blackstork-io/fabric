@@ -13,57 +13,51 @@ import (
 	"github.com/blackstork-io/fabric/internal/splunk/client"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeSplunkSearchDataSchema(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "auth_token",
-				Type:     cty.String,
-				Required: true,
+				Name:        "auth_token",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
-				Name:     "host",
-				Type:     cty.String,
-				Required: false,
+				Name: "host",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "deployment_name",
-				Type:     cty.String,
-				Required: false,
+				Name: "deployment_name",
+				Type: cty.String,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "search_query",
-				Type:     cty.String,
-				Required: true,
+				Name:        "search_query",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
-				Name:     "max_count",
-				Type:     cty.Number,
-				Required: false,
+				Name: "max_count",
+				Type: cty.Number,
 			},
 			&dataspec.AttrSpec{
-				Name:     "status_buckets",
-				Type:     cty.Number,
-				Required: false,
+				Name: "status_buckets",
+				Type: cty.Number,
 			},
 			&dataspec.AttrSpec{
-				Name:     "rf",
-				Type:     cty.List(cty.String),
-				Required: false,
+				Name: "rf",
+				Type: cty.List(cty.String),
 			},
 			&dataspec.AttrSpec{
-				Name:     "earliest_time",
-				Type:     cty.String,
-				Required: false,
+				Name: "earliest_time",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "latest_time",
-				Type:     cty.String,
-				Required: false,
+				Name: "latest_time",
+				Type: cty.String,
 			},
 		},
 		DataFunc: fetchSplunkSearchData(loader),

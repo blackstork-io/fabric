@@ -10,6 +10,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 const (
@@ -23,27 +24,27 @@ func makeTitleContentProvider() *plugin.ContentProvider {
 		ContentFunc: genTitleContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "value",
-				Type:       cty.String,
-				Required:   true,
-				Doc:        `Title content`,
-				ExampleVal: cty.StringVal("Vulnerability Report"),
+				Name:        "value",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
+				Doc:         `Title content`,
+				ExampleVal:  cty.StringVal("Vulnerability Report"),
 			},
 			&dataspec.AttrSpec{
-				Name:       "absolute_size",
-				Type:       cty.Number,
-				Required:   false,
-				DefaultVal: cty.NullVal(cty.Number),
+				Name:        "absolute_size",
+				Type:        cty.Number,
+				Constraints: constraint.Integer,
+				DefaultVal:  cty.NullVal(cty.Number),
 				Doc: `
 					Sets the absolute size of the title.
 					If ` + "`null`" + ` – absoulute title size is determined from the document structure
 				`,
 			},
 			&dataspec.AttrSpec{
-				Name:       "relative_size",
-				Type:       cty.Number,
-				Required:   false,
-				DefaultVal: cty.NumberIntVal(0),
+				Name:        "relative_size",
+				Type:        cty.Number,
+				Constraints: constraint.Integer,
+				DefaultVal:  cty.NumberIntVal(0),
 				Doc: `
 					Adjusts the absolute size of the title.
 					The value (which may be negative) is added to the ` + "`absolute_size`" + ` to produce the final title size

@@ -33,7 +33,8 @@ The content provider supports the following execution parameters:
 content text {
   # A string to render. Can use go template syntax.
   #
-  # Required string. For example:
+  # Required string.
+  # For example:
   value = "Hello world!"
 }
 ```

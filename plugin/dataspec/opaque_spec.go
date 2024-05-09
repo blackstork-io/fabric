@@ -4,6 +4,8 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
+
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
 // OpaqueSpec adds an ability to use any hcldec.Spec
@@ -32,6 +34,6 @@ func (o *OpaqueSpec) WriteDoc(w *hclwrite.Body) {
 	w.AppendUnstructuredTokens(tokens)
 }
 
-func (*OpaqueSpec) Validate() (errs []string) {
+func (*OpaqueSpec) ValidateSpec() (errs diagnostics.Diag) {
 	return
 }

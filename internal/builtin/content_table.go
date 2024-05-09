@@ -13,6 +13,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 type tableCellTmpl = *template.Template
@@ -42,7 +43,7 @@ func makeTableContentProvider() *plugin.ContentProvider {
 						"value":  cty.StringVal("..."),
 					}),
 				}),
-				Required: true,
+				Constraints: constraint.RequiredNonNull,
 			},
 		},
 		Doc: `

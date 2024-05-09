@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"slices"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
@@ -12,7 +11,6 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"gopkg.in/yaml.v3"
 
-	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
@@ -21,8 +19,6 @@ const (
 	frontMatterQueryResultKey = "query_result"
 )
 
-var frontMatterAllowedFormats = []string{"yaml", "toml", "json"}
-
 func makeFrontMatterContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genFrontMatterContent,
@@ -30,9 +26,13 @@ func makeFrontMatterContentProvider() *plugin.ContentProvider {
 			&dataspec.AttrSpec{
 				Name:       "format",
 				Type:       cty.String,
-				Required:   false,
-				Doc:        `Format of the frontmatter. Must be one of ` + utils.JoinSurround(", ", `"`, frontMatterAllowedFormats...),
+				Doc:        `Format of the frontmatter.`,
 				DefaultVal: cty.StringVal("yaml"),
+				OneOf: []cty.Value{
+					cty.StringVal("yaml"),
+					cty.StringVal("toml"),
+					cty.StringVal("json"),
+				},
 			},
 			&dataspec.AttrSpec{
 				Name: "content",
@@ -41,7 +41,6 @@ func makeFrontMatterContentProvider() *plugin.ContentProvider {
 				Arbitrary key-value map to be put in the frontmatter.
 
 				NOTE: Data from "query_result" replaces this value if present`,
-				Required:   false,
 				DefaultVal: cty.NullVal(cty.DynamicPseudoType),
 				ExampleVal: cty.ObjectVal(map[string]cty.Value{
 					"key": cty.StringVal("arbitrary value"),
@@ -110,9 +109,6 @@ func validateFrontMatterContentTree(datactx plugin.MapData, contentID uint32) er
 func parseFrontMatterArgs(args cty.Value, datactx plugin.MapData) (string, plugin.MapData, error) {
 	format := args.GetAttr("format").AsString()
 
-	if !slices.Contains(frontMatterAllowedFormats, format) {
-		return "", nil, fmt.Errorf("invalid format: %s", format)
-	}
 	var data plugin.Data
 	if datactx != nil {
 		if qr, ok := datactx[frontMatterQueryResultKey]; ok {

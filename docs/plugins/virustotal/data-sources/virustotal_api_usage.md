@@ -37,7 +37,8 @@ The data source supports the following configuration parameters:
 
 ```hcl
 config data virustotal_api_usage {
-  # Required string. For example:
+  # Required string.
+  # For example:
   api_key = "some string"
 }
 ```
@@ -48,16 +49,20 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data virustotal_api_usage {
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   user_id = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   group_id = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   start_date = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   end_date = null
 }
 ```

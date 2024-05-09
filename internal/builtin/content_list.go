@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 	"strings"
 	"text/template"
 
@@ -15,36 +14,33 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 const (
 	listQueryResultKey = "query_result"
 )
 
-var listAllowedFormats = []string{"unordered", "ordered", "tasklist"}
-
 func makeListContentProvider() *plugin.ContentProvider {
-	fmtDoc := fmt.Appendf(nil, "Can be one of: %q", listAllowedFormats[0])
-	for _, format := range listAllowedFormats[1:] {
-		fmtDoc = fmt.Appendf(fmtDoc, ", %q", format)
-	}
-
 	return &plugin.ContentProvider{
 		ContentFunc: genListContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "item_template",
-				Type:       cty.String,
-				Required:   true,
-				ExampleVal: cty.StringVal(`[{{.Title}}]({{.URL}})`),
-				Doc:        "Go template for the item of the list",
+				Name:        "item_template",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
+				ExampleVal:  cty.StringVal(`[{{.Title}}]({{.URL}})`),
+				Doc:         "Go template for the item of the list",
 			},
 			&dataspec.AttrSpec{
 				Name:       "format",
 				Type:       cty.String,
-				Required:   false,
 				DefaultVal: cty.StringVal("unordered"),
-				Doc:        string(fmtDoc),
+				OneOf: []cty.Value{
+					cty.StringVal("unordered"),
+					cty.StringVal("ordered"),
+					cty.StringVal("tasklist"),
+				},
 			},
 		},
 		Doc: "Produces a list of items",
@@ -79,9 +75,6 @@ func parseListContentArgs(params *plugin.ProvideContentParams) (string, *templat
 	itemTemplate := params.Args.GetAttr("item_template")
 	format := params.Args.GetAttr("format").AsString()
 
-	if !slices.Contains(listAllowedFormats, format) {
-		return "", nil, errors.New("invalid format: " + format)
-	}
 	tmpl, err := template.New("item").Funcs(sprig.FuncMap()).Parse(itemTemplate.AsString())
 	return format, tmpl, err
 }

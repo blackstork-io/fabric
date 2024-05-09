@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeRSSDataSource() *plugin.DataSource {
@@ -20,25 +21,24 @@ func makeRSSDataSource() *plugin.DataSource {
 		DataFunc: fetchRSSData,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "url",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("https://www.elastic.co/security-labs/rss/feed.xml"),
-				Required:   true,
+				Name:        "url",
+				Type:        cty.String,
+				ExampleVal:  cty.StringVal("https://www.elastic.co/security-labs/rss/feed.xml"),
+				Constraints: constraint.RequiredNonNull,
 			},
 		},
 		Config: dataspec.ObjectSpec{
 			&dataspec.BlockSpec{
-				Name:     "basic_auth",
-				Required: false,
+				Name: "basic_auth",
 				Doc: `
 					Authentication parameters used while accessing the rss source.
 				`,
-				Nested: &dataspec.ObjectSpec{
+				Nested: dataspec.ObjectSpec{
 					&dataspec.AttrSpec{
-						Name:       "username",
-						Type:       cty.String,
-						ExampleVal: cty.StringVal("user@example.com"),
-						Required:   true,
+						Name:        "username",
+						Type:        cty.String,
+						ExampleVal:  cty.StringVal("user@example.com"),
+						Constraints: constraint.RequiredNonNull,
 					},
 					&dataspec.AttrSpec{
 						Name:       "password",
@@ -47,7 +47,7 @@ func makeRSSDataSource() *plugin.DataSource {
 						Doc: `
 							Note: you can use function like "from_env()" to avoid storing credentials in plaintext
 						`,
-						Required: true,
+						Constraints: constraint.RequiredNonNull,
 					},
 				},
 			},

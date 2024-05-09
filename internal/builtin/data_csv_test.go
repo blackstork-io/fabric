@@ -90,7 +90,7 @@ func Test_fetchCSVData(t *testing.T) {
 			name: "empty_path",
 			expectedDiags: [][]testtools.Assert{{
 				testtools.IsError,
-				testtools.SummaryContains("path is required"),
+				testtools.DetailContains(`length`, `"path"`, `>= 1`),
 			}},
 		},
 		{
@@ -99,7 +99,9 @@ func Test_fetchCSVData(t *testing.T) {
 			delimiter: "abc",
 			expectedDiags: [][]testtools.Assert{{
 				testtools.IsError,
-				testtools.SummaryContains("delimiter must be a single character"),
+				testtools.DetailContains(
+					`The length`, `"delimiter"`, `exactly 1`,
+				),
 			}},
 		},
 		{

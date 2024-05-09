@@ -15,37 +15,35 @@ import (
 	"github.com/blackstork-io/fabric/internal/openai/client"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeOpenAITextContentSchema(loader ClientLoadFn) *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "system_prompt",
-				Type:     cty.String,
-				Required: false,
+				Name: "system_prompt",
+				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name:     "api_key",
-				Type:     cty.String,
-				Required: true,
+				Name:        "api_key",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
-				Name:     "organization_id",
-				Type:     cty.String,
-				Required: false,
+				Name: "organization_id",
+				Type: cty.String,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "prompt",
-				Type:     cty.String,
-				Required: true,
+				Name:        "prompt",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
-				Name:     "model",
-				Type:     cty.String,
-				Required: false,
+				Name: "model",
+				Type: cty.String,
 			},
 		},
 		ContentFunc: genOpenAIText(loader),

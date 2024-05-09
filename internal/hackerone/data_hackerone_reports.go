@@ -11,20 +11,21 @@ import (
 	"github.com/blackstork-io/fabric/internal/hackerone/client"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeHackerOneReportsDataSchema(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "api_username",
-				Type:     cty.String,
-				Required: true,
+				Name:        "api_username",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
-				Name:     "api_token",
-				Type:     cty.String,
-				Required: true,
+				Name:        "api_token",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 		},
 		Args: dataspec.ObjectSpec{

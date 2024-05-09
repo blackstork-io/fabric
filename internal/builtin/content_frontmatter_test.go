@@ -41,23 +41,10 @@ func (s *FrontMatterGeneratorTestSuite) TestInvalidFormat() {
 			"foo": cty.StringVal("bar"),
 		}),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
-	ctx := context.Background()
-	document := plugin.ContentSection{}
-	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"document": plugin.MapData{
-				"content": document.AsData(),
-			},
-		},
-	})
-	s.Nil(content)
-	s.Equal(hcl.Diagnostics{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "invalid format: invalid_type",
-	}}, diags)
+	testtools.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, [][]testtools.Assert{{
+		testtools.IsError,
+		testtools.SummaryContains("Attribute", "not one of"),
+	}})
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestContentAndQueryResultMissing() {

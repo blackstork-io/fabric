@@ -57,6 +57,15 @@ func (d *Diag) Add(summary, detail string) {
 	})
 }
 
+// Add new diagnostic warning.
+func (d *Diag) AddWarn(summary, detail string) {
+	*d = append(*d, &hcl.Diagnostic{
+		Severity: hcl.DiagWarning,
+		Summary:  summary,
+		Detail:   detail,
+	})
+}
+
 // Appends all diags to diagnostics, returns true if the just-appended diagnostics contain an error.
 func (d *Diag) Extend(diags Diag) (haveAddedErrors bool) {
 	*d = append(*d, diags...)
@@ -71,8 +80,8 @@ func (d *Diag) ExtendHcl(diags hcl.Diagnostics) (haveAddedErrors bool) {
 
 // HasErrors returns true if the receiver contains any diagnostics of
 // severity DiagError.
-func (d *Diag) HasErrors() bool {
-	return (*hcl.Diagnostics)(d).HasErrors()
+func (d Diag) HasErrors() bool {
+	return hcl.Diagnostics(d).HasErrors()
 }
 
 // Creates diagnostic and appends it if err != nil.

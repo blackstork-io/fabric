@@ -204,7 +204,7 @@ func (s *ListGeneratorTestSuite) TestMissingItemTemplate() {
 	})
 	testtools.ReencodeCTY(s.T(), s.schema.Args, val, [][]testtools.Assert{{
 		testtools.IsError,
-		testtools.SummaryContains("Argument must be non-null"),
+		testtools.SummaryContains("Attribute must be non-null"),
 	}})
 }
 
@@ -213,20 +213,10 @@ func (s *ListGeneratorTestSuite) TestInvalidFormat() {
 		"item_template": cty.StringVal("foo {{.}}"),
 		"format":        cty.StringVal("invalid"),
 	})
-	args := testtools.ReencodeCTY(s.T(), s.schema.Args, val, nil)
-	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"query_result": plugin.ListData{},
-		},
-	})
-	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse template",
-		Detail:   "invalid format: invalid",
-	}}, diags)
+	testtools.ReencodeCTY(s.T(), s.schema.Args, val, [][]testtools.Assert{{
+		testtools.IsError,
+		testtools.SummaryContains("Attribute is not one of the allowed values"),
+	}})
 }
 
 func (s *ListGeneratorTestSuite) TestMissingDataContext() {

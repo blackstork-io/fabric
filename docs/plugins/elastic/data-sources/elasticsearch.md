@@ -37,28 +37,36 @@ The data source supports the following configuration parameters:
 
 ```hcl
 config data elasticsearch {
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   base_url = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   cloud_id = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   api_key_str = null
 
-  # Optional list of string. Default value:
+  # Optional list of string.
+  # Default value:
   api_key = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   basic_auth_username = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   basic_auth_password = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   bearer_auth = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   ca_certs = null
 }
 ```
@@ -69,28 +77,36 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data elasticsearch {
-  # Required string. For example:
+  # Required string.
+  # For example:
   index = "some string"
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   id = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   query_string = null
 
-  # Optional map of any single type. Default value:
+  # Optional map of any single type.
+  # Default value:
   query = null
 
-  # Optional map of any single type. Default value:
+  # Optional map of any single type.
+  # Default value:
   aggs = null
 
-  # Optional bool. Default value:
+  # Optional bool.
+  # Default value:
   only_hits = null
 
-  # Optional list of string. Default value:
+  # Optional list of string.
+  # Default value:
   fields = null
 
-  # Optional number. Default value:
+  # Optional number.
+  # Default value:
   size = null
 }
 ```

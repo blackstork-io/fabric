@@ -8,27 +8,27 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeOpenCTIDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "graphql_url",
-				Type:     cty.String,
-				Required: true,
+				Name:        "graphql_url",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
-				Name:     "auth_token",
-				Type:     cty.String,
-				Required: false,
+				Name: "auth_token",
+				Type: cty.String,
 			},
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:     "graphql_query",
-				Type:     cty.String,
-				Required: true,
+				Name:        "graphql_query",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
 			},
 		},
 		DataFunc: fetchOpenCTIData,

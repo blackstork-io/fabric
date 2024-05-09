@@ -36,19 +36,22 @@ The content provider supports the following execution parameters:
 content title {
   # Title content
   #
-  # Required string. For example:
+  # Required string.
+  # For example:
   value = "Vulnerability Report"
 
   # Sets the absolute size of the title.
   # If `null` – absoulute title size is determined from the document structure
   #
-  # Optional number. Default value:
+  # Optional integer.
+  # Default value:
   absolute_size = null
 
   # Adjusts the absolute size of the title.
   # The value (which may be negative) is added to the `absolute_size` to produce the final title size
   #
-  # Optional number. Default value:
+  # Optional integer.
+  # Default value:
   relative_size = 0
 }
 ```

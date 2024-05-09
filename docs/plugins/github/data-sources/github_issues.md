@@ -37,7 +37,8 @@ The data source supports the following configuration parameters:
 
 ```hcl
 config data github_issues {
-  # Required string. For example:
+  # Required string.
+  # For example:
   github_token = "some string"
 }
 ```
@@ -48,37 +49,48 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data github_issues {
-  # Required string. For example:
+  # Required string.
+  # For example:
   repository = "some string"
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   milestone = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   state = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   assignee = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   creator = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   mentioned = null
 
-  # Optional list of string. Default value:
+  # Optional list of string.
+  # Default value:
   labels = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   sort = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   direction = null
 
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   since = null
 
-  # Optional number. Default value:
+  # Optional number.
+  # Default value:
   limit = null
 }
 ```

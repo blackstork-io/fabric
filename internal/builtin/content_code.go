@@ -9,6 +9,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeCodeContentProvider() *plugin.ContentProvider {
@@ -16,15 +17,14 @@ func makeCodeContentProvider() *plugin.ContentProvider {
 		ContentFunc: genCodeContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "value",
-				Type:       cty.String,
-				Required:   true,
-				ExampleVal: cty.StringVal("Text to be formatted as a code block"),
+				Name:        "value",
+				Type:        cty.String,
+				Constraints: constraint.RequiredNonNull,
+				ExampleVal:  cty.StringVal("Text to be formatted as a code block"),
 			},
 			&dataspec.AttrSpec{
 				Name:       "language",
 				Type:       cty.String,
-				Required:   false,
 				ExampleVal: cty.StringVal("python3"),
 				DefaultVal: cty.StringVal(""),
 				Doc:        `Specifiy the language for syntax highlighting`,

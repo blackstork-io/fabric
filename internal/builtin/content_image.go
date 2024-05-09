@@ -13,6 +13,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeImageContentProvider() *plugin.ContentProvider {
@@ -20,15 +21,14 @@ func makeImageContentProvider() *plugin.ContentProvider {
 		ContentFunc: genImageContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "src",
-				Type:       cty.String,
-				Required:   true,
-				ExampleVal: cty.StringVal("https://example.com/img.png"),
+				Name:        "src",
+				Type:        cty.String,
+				Constraints: constraint.RequiredMeaningfull,
+				ExampleVal:  cty.StringVal("https://example.com/img.png"),
 			},
 			&dataspec.AttrSpec{
 				Name:       "alt",
 				Type:       cty.String,
-				Required:   false,
 				ExampleVal: cty.StringVal("Text description of the image"),
 				// Not using empty string as DefaultVal here for semantical meaning
 			},
@@ -80,13 +80,11 @@ func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (
 }
 
 func renderAsTemplate(name string, value string, datactx plugin.MapData) (string, error) {
-
 	if value == "" {
 		return "", nil
 	}
 
 	tmpl, err := template.New(name).Funcs(sprig.FuncMap()).Parse(value)
-
 	if err != nil {
 		return "", fmt.Errorf("failed to parse text template: %w", err)
 	}

@@ -9,6 +9,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 // makeRandomNumbersDataSource creates a new data source for generating random numbers
@@ -18,14 +19,12 @@ func makeRandomNumbersDataSource() *plugin.DataSource {
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
 				Name:       "min",
-				Required:   false,
 				Type:       cty.Number,
 				Doc:        `Lower bound (inclusive)`,
 				DefaultVal: cty.NumberIntVal(0),
 			},
 			&dataspec.AttrSpec{
 				Name:       "max",
-				Required:   false,
 				Type:       cty.Number,
 				Doc:        `Upper bound (inclusive)`,
 				DefaultVal: cty.NumberIntVal(100),
@@ -34,10 +33,10 @@ func makeRandomNumbersDataSource() *plugin.DataSource {
 		// We define the schema for the arguments
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:       "length",
-				Required:   true,
-				Type:       cty.Number,
-				ExampleVal: cty.NumberIntVal(10),
+				Name:        "length",
+				Constraints: constraint.Integer | constraint.Required,
+				Type:        cty.Number,
+				ExampleVal:  cty.NumberIntVal(10),
 			},
 		},
 		// Optional: We can also define the schema for the config

@@ -31,13 +31,16 @@ The content provider supports the following execution parameters:
 
 ```hcl
 content image {
-  # Required string. For example:
+  # Required string.
+  # Must have a length of at least 1
+  # For example:
   src = "https://example.com/img.png"
 
+  # Optional string.
   # For example:
   # alt = "Text description of the image"
-  #
-  # Optional string. Default value:
+  # 
+  # Default value:
   alt = null
 }
 ```

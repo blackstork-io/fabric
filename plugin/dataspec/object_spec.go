@@ -5,6 +5,8 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclwrite"
+
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
 // Wraps hcldec.ObjectSpec
@@ -52,20 +54,22 @@ func (o ObjectSpec) WriteDoc(w *hclwrite.Body) {
 	}
 }
 
-func (o ObjectSpec) Validate() (errs []string) {
+func (o ObjectSpec) ValidateSpec() (errs diagnostics.Diag) {
 	names := make(map[string]struct{}, len(o))
 	for _, spec := range o {
 		if _, found := names[spec.KeyForObjectSpec()]; found {
-			errs = append(errs, fmt.Sprintf("name %q is repeated within ObjectSpec", spec.KeyForObjectSpec()))
+			errs.Add(fmt.Sprintf("name %q is repeated within ObjectSpec", spec.KeyForObjectSpec()), "")
 		} else {
 			names[spec.KeyForObjectSpec()] = struct{}{}
 		}
-		switch st := spec.getSpec().(type) {
+		sp := spec.getSpec()
+		errs = append(errs, sp.ValidateSpec()...)
+		switch st := sp.(type) {
 		case *AttrSpec:
 		case *BlockSpec:
 		case *OpaqueSpec:
 		default:
-			errs = append(errs, fmt.Sprintf("invalid nesting: %T within ObjectSpec", st))
+			errs.Add(fmt.Sprintf("invalid nesting: %T within ObjectSpec", st), "")
 		}
 	}
 	return
