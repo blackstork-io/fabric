@@ -131,7 +131,6 @@ func unpackSearchOptions(fn esapi.Search, args cty.Value) ([]func(*esapi.SearchR
 	opts := []func(*esapi.SearchRequest){
 		fn.WithIndex(index.AsString()),
 	}
-
 	if queryString := args.GetAttr("query_string"); !queryString.IsNull() {
 		opts = append(opts, fn.WithQuery(queryString.AsString()))
 	}
@@ -311,46 +310,9 @@ func searchWithScrollConfigurable(client *es.Client, args cty.Value, size int, s
 }
 
 func search(fn esapi.Search, args cty.Value, size int) (plugin.Data, error) {
-	index := args.GetAttr("index")
-	if index.IsNull() {
-		return nil, fmt.Errorf("index is required")
-	}
-	opts := []func(*esapi.SearchRequest){
-		fn.WithIndex(index.AsString()),
-	}
-	if queryString := args.GetAttr("query_string"); !queryString.IsNull() {
-		opts = append(opts, fn.WithQuery(queryString.AsString()))
-	}
-	body := map[string]any{}
-	if query := args.GetAttr("query"); !query.IsNull() {
-		raw, err := ctyjson.Marshal(query, query.Type())
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal query: %s", err)
-		}
-		body["query"] = json.RawMessage(raw)
-
-	}
-	if aggs := args.GetAttr("aggs"); !aggs.IsNull() {
-		raw, err := ctyjson.Marshal(aggs, aggs.Type())
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal aggs: %s", err)
-		}
-		body["aggs"] = json.RawMessage(raw)
-	}
-	if len(body) > 0 {
-		rawBody, err := json.Marshal(body)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal query: %s", err)
-		}
-		opts = append(opts, fn.WithBody(bytes.NewReader(rawBody)))
-	}
-	if fields := args.GetAttr("fields"); !fields.IsNull() {
-		fieldSlice := fields.AsValueSlice()
-		fieldStrings := make([]string, len(fieldSlice))
-		for i, v := range fieldSlice {
-			fieldStrings[i] = v.AsString()
-		}
-		opts = append(opts, fn.WithSource(fieldStrings...))
+	opts, err := unpackSearchOptions(fn, args)
+	if err != nil {
+		return nil, err
 	}
 	opts = append(opts, fn.WithSize(size))
 
