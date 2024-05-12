@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -26,10 +27,10 @@ func makeTerraformStateLocalDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchTerraformStateLocalData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+func fetchTerraformStateLocalData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 	path := params.Args.GetAttr("path")
 	if path.IsNull() || path.AsString() == "" {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
 			Detail:   "path is required",
@@ -37,7 +38,7 @@ func fetchTerraformStateLocalData(ctx context.Context, params *plugin.RetrieveDa
 	}
 	data, err := readTerraformStateFile(path.AsString())
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to read terraform state",
 			Detail:   err.Error(),

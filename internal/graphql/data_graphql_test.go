@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -212,7 +213,7 @@ func (s *GraphQLDataSourceTestSuite) TestCancellation() {
 	})
 	s.Nil(data)
 	s.Len(diags, 1)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to execute query",
 		Detail:   "failed to execute request: Post \"http://localhost\": context canceled",

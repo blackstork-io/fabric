@@ -8,6 +8,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/snyk/client"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
@@ -18,9 +19,10 @@ func makeSnykIssuesDataSource(loader ClientLoadFn) *plugin.DataSource {
 		DataFunc: fetchSnykIssues(loader),
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Doc:  "The Snyk API key",
-				Name: "api_key",
-				Type: cty.String,
+				Doc:    "The Snyk API key",
+				Name:   "api_key",
+				Type:   cty.String,
+				Secret: true,
 			},
 		},
 		Args: dataspec.ObjectSpec{
@@ -95,10 +97,10 @@ func makeSnykIssuesDataSource(loader ClientLoadFn) *plugin.DataSource {
 }
 
 func fetchSnykIssues(loader ClientLoadFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 		client, err := makeClient(loader, params.Config)
 		if err != nil {
-			return nil, hcl.Diagnostics{
+			return nil, diagnostics.Diag{
 				{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to create Snyk client",
@@ -110,7 +112,7 @@ func fetchSnykIssues(loader ClientLoadFn) plugin.RetrieveDataFunc {
 		if arg := params.Args.GetAttr("limit"); !arg.IsNull() {
 			n, _ := arg.AsBigFloat().Int64()
 			if n <= 0 {
-				return nil, hcl.Diagnostics{
+				return nil, diagnostics.Diag{
 					{
 						Severity: hcl.DiagError,
 						Summary:  "Invalid limit",
@@ -122,7 +124,7 @@ func fetchSnykIssues(loader ClientLoadFn) plugin.RetrieveDataFunc {
 		}
 		req, err := makeRequest(params.Args)
 		if err != nil {
-			return nil, hcl.Diagnostics{
+			return nil, diagnostics.Diag{
 				{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to create Snyk request",
@@ -134,7 +136,7 @@ func fetchSnykIssues(loader ClientLoadFn) plugin.RetrieveDataFunc {
 		for {
 			res, err := client.ListIssues(ctx, req)
 			if err != nil {
-				return nil, hcl.Diagnostics{
+				return nil, diagnostics.Diag{
 					{
 						Severity: hcl.DiagError,
 						Summary:  "Failed to list Snyk issues",
@@ -145,7 +147,7 @@ func fetchSnykIssues(loader ClientLoadFn) plugin.RetrieveDataFunc {
 			for _, v := range res.Data {
 				item, err := plugin.ParseDataAny(v)
 				if err != nil {
-					return nil, hcl.Diagnostics{
+					return nil, diagnostics.Diag{
 						{
 							Severity: hcl.DiagError,
 							Summary:  "Failed to parse Snyk issue",

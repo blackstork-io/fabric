@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
@@ -35,7 +36,7 @@ func (f OutputFormat) Ext() string {
 	return "." + f.String()
 }
 
-type PublishFunc func(ctx context.Context, params *PublishParams) hcl.Diagnostics
+type PublishFunc func(ctx context.Context, params *PublishParams) diagnostics.Diag
 
 type PublishParams struct {
 	Config      cty.Value
@@ -53,8 +54,8 @@ type Publisher struct {
 	AllowedFormats []OutputFormat
 }
 
-func (pub *Publisher) Validate() hcl.Diagnostics {
-	var diags hcl.Diagnostics
+func (pub *Publisher) Validate() diagnostics.Diag {
+	var diags diagnostics.Diag
 	if pub.PublishFunc == nil {
 		diags = append(diags, &hcl.Diagnostic{
 			Severity: hcl.DiagError,
@@ -72,15 +73,15 @@ func (pub *Publisher) Validate() hcl.Diagnostics {
 	return diags
 }
 
-func (pub *Publisher) Execute(ctx context.Context, params *PublishParams) hcl.Diagnostics {
+func (pub *Publisher) Execute(ctx context.Context, params *PublishParams) (diags diagnostics.Diag) {
 	if pub == nil {
-		return hcl.Diagnostics{{
+		return diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Missing Publisher schema",
 		}}
 	}
 	if pub.PublishFunc == nil {
-		return hcl.Diagnostics{{
+		return diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Incomplete Publisher schema",
 			Detail:   "Publish function not loaded",
@@ -91,8 +92,8 @@ func (pub *Publisher) Execute(ctx context.Context, params *PublishParams) hcl.Di
 
 type Publishers map[string]*Publisher
 
-func (pubs Publishers) Validate() hcl.Diagnostics {
-	var diags hcl.Diagnostics
+func (pubs Publishers) Validate() diagnostics.Diag {
+	var diags diagnostics.Diag
 	for name, provider := range pubs {
 		if provider == nil {
 			diags = append(diags, &hcl.Diagnostic{

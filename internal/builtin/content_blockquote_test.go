@@ -41,7 +41,6 @@ func (s *BlockQuoteTestSuite) TestMissingText() {
 			diagtest.SummaryContains(`Attribute must be non-null`),
 		},
 	})
-	return
 }
 
 func (s *BlockQuoteTestSuite) TestNullText() {
@@ -51,7 +50,6 @@ func (s *BlockQuoteTestSuite) TestNullText() {
 			diagtest.SummaryContains(`Attribute must be non-null`),
 		},
 	})
-	return
 }
 
 func (s *BlockQuoteTestSuite) TestCallBlockquote() {

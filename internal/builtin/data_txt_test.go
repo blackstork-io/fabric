@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -21,7 +22,7 @@ func Test_makeTXTDataSchema(t *testing.T) {
 func Test_fetchTXTData(t *testing.T) {
 	type result struct {
 		Data  plugin.Data
-		Diags hcl.Diagnostics
+		Diags diagnostics.Diag
 	}
 	tt := []struct {
 		name     string
@@ -38,7 +39,7 @@ func Test_fetchTXTData(t *testing.T) {
 		{
 			name: "empty_path",
 			expected: result{
-				Diags: hcl.Diagnostics{{
+				Diags: diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to parse arguments",
 					Detail:   "path is required",
@@ -49,7 +50,7 @@ func Test_fetchTXTData(t *testing.T) {
 			name: "invalid_path",
 			path: "testdata/txt/does_not_exist.txt",
 			expected: result{
-				Diags: hcl.Diagnostics{{
+				Diags: diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to open txt file",
 					Detail:   "open testdata/txt/does_not_exist.txt: no such file or directory",

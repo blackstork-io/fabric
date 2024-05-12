@@ -6,13 +6,14 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 type ContentProviders map[string]*ContentProvider
 
-func (cp ContentProviders) Validate() hcl.Diagnostics {
-	var diags hcl.Diagnostics
+func (cp ContentProviders) Validate() diagnostics.Diag {
+	var diags diagnostics.Diag
 	for name, provider := range cp {
 		if provider == nil {
 			diags = append(diags, &hcl.Diagnostic{
@@ -56,8 +57,8 @@ type ContentProvider struct {
 	InvocationOrder InvocationOrder
 }
 
-func (cg *ContentProvider) Validate() hcl.Diagnostics {
-	var diags hcl.Diagnostics
+func (cg *ContentProvider) Validate() diagnostics.Diag {
+	var diags diagnostics.Diag
 	if cg.ContentFunc == nil {
 		diags = append(diags, &hcl.Diagnostic{
 			Severity: hcl.DiagError,
@@ -75,15 +76,15 @@ func (cg *ContentProvider) Validate() hcl.Diagnostics {
 	return diags
 }
 
-func (cg *ContentProvider) Execute(ctx context.Context, params *ProvideContentParams) (*ContentResult, hcl.Diagnostics) {
+func (cg *ContentProvider) Execute(ctx context.Context, params *ProvideContentParams) (_ *ContentResult, diags diagnostics.Diag) {
 	if cg == nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Missing ContentProvider schema",
 		}}
 	}
 	if cg.ContentFunc == nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Incomplete ContentProviderSchema",
 			Detail:   "content provider function not loaded",
@@ -99,4 +100,4 @@ type ProvideContentParams struct {
 	ContentID   uint32
 }
 
-type ProvideContentFunc func(ctx context.Context, params *ProvideContentParams) (*ContentResult, hcl.Diagnostics)
+type ProvideContentFunc func(ctx context.Context, params *ProvideContentParams) (*ContentResult, diagnostics.Diag)

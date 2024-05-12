@@ -8,6 +8,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/nistnvd/client"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
@@ -23,8 +24,9 @@ func makeNistNvdCvesDataSource(loader ClientLoadFn) *plugin.DataSource {
 		DataFunc: fetchNistNvdCvesData(loader),
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name: "api_key",
-				Type: cty.String,
+				Name:   "api_key",
+				Type:   cty.String,
+				Secret: true,
 			},
 		},
 		Args: dataspec.ObjectSpec{
@@ -109,17 +111,17 @@ func makeNistNvdCvesDataSource(loader ClientLoadFn) *plugin.DataSource {
 }
 
 func fetchNistNvdCvesData(loader ClientLoadFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 		cli, err := parseConfig(params.Config, loader)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to parse configuration",
 			}}
 		}
 		req, err := parseListCVESRequest(params.Args)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to parse arguments",
 			}}
@@ -140,7 +142,7 @@ func fetchNistNvdCvesData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 		for {
 			res, err := cli.ListCVES(ctx, req)
 			if err != nil {
-				return nil, hcl.Diagnostics{{
+				return nil, diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to fetch data",
 				}}
@@ -148,7 +150,7 @@ func fetchNistNvdCvesData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 			for _, v := range res.Vulnerabilities {
 				data, err := plugin.ParseDataAny(v)
 				if err != nil {
-					return nil, hcl.Diagnostics{{
+					return nil, diagnostics.Diag{{
 						Severity: hcl.DiagError,
 						Summary:  "Failed to parse data",
 					}}

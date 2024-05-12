@@ -75,6 +75,7 @@ func decodeAttrSpec(src *AttrSpec) (*dataspec.AttrSpec, error) {
 		MinInclusive: min,
 		MaxInclusive: max,
 		Deprecated:   src.GetDeprecated(),
+		Secret:       src.GetSecret(),
 	}, nil
 }
 

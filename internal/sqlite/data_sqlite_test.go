@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -22,7 +23,7 @@ func TestSqliteDataSchema(t *testing.T) {
 func TestSqliteDataCall(t *testing.T) {
 	type result struct {
 		data  plugin.Data
-		diags hcl.Diagnostics
+		diags diagnostics.Diag
 	}
 	tt := []struct {
 		name     string
@@ -38,7 +39,7 @@ func TestSqliteDataCall(t *testing.T) {
 				"database_uri": cty.StringVal(""),
 			}),
 			expected: result{
-				diags: hcl.Diagnostics{
+				diags: diagnostics.Diag{
 					{
 						Severity: hcl.DiagError,
 						Summary:  "Invalid configuration",
@@ -53,7 +54,7 @@ func TestSqliteDataCall(t *testing.T) {
 				"database_uri": cty.NullVal(cty.String),
 			}),
 			expected: result{
-				diags: hcl.Diagnostics{
+				diags: diagnostics.Diag{
 					{
 						Severity: hcl.DiagError,
 						Summary:  "Invalid configuration",
@@ -71,7 +72,7 @@ func TestSqliteDataCall(t *testing.T) {
 				"sql_query": cty.StringVal(""),
 			}),
 			expected: result{
-				diags: hcl.Diagnostics{
+				diags: diagnostics.Diag{
 					{
 						Severity: hcl.DiagError,
 						Summary:  "Invalid arguments",
@@ -89,7 +90,7 @@ func TestSqliteDataCall(t *testing.T) {
 				"sql_query": cty.NullVal(cty.String),
 			}),
 			expected: result{
-				diags: hcl.Diagnostics{
+				diags: diagnostics.Diag{
 					{
 						Severity: hcl.DiagError,
 						Summary:  "Invalid arguments",
@@ -236,7 +237,7 @@ func TestSqliteDataCall(t *testing.T) {
 				return dsn
 			},
 			expected: result{
-				diags: hcl.Diagnostics{
+				diags: diagnostics.Diag{
 					{
 						Severity: hcl.DiagError,
 						Summary:  "Failed to query database",
@@ -261,7 +262,7 @@ func TestSqliteDataCall(t *testing.T) {
 				return dsn
 			},
 			expected: result{
-				diags: hcl.Diagnostics{
+				diags: diagnostics.Diag{
 					{
 						Severity: hcl.DiagError,
 						Summary:  "Failed to query database",
@@ -302,7 +303,7 @@ func TestSqliteDataCall(t *testing.T) {
 				return dsn
 			},
 			expected: result{
-				diags: hcl.Diagnostics{{
+				diags: diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to query database",
 					Detail:   "context canceled",

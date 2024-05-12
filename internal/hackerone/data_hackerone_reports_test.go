@@ -11,6 +11,7 @@ import (
 
 	"github.com/blackstork-io/fabric/internal/hackerone/client"
 	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/hackerone/client"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -344,7 +345,7 @@ func (s *ReportsDataSourceTestSuite) TestInvalid() {
 		}),
 	})
 	s.Nil(res)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
 		Detail:   "at least one of program or inbox_ids must be provided",
@@ -407,7 +408,7 @@ func (s *ReportsDataSourceTestSuite) TestInvalidConfig() {
 		}),
 	})
 	s.Nil(res)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to create client",
 		Detail:   "api_username is required in configuration",

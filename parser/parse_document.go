@@ -31,11 +31,13 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 			}
 			switch block.Type {
 			case definitions.BlockKindContent:
-				doc.Content = append(doc.Content, (*definitions.ParsedContent)(call))
+				doc.Content = append(doc.Content, &definitions.ParsedContent{
+					Plugin: call,
+				})
 			case definitions.BlockKindData:
-				doc.Data = append(doc.Data, (*definitions.ParsedData)(call))
+				doc.Data = append(doc.Data, call)
 			case definitions.BlockKindPublish:
-				doc.Publishers = append(doc.Publishers, (*definitions.ParsedPublish)(call))
+				doc.Publish = append(doc.Publish, call)
 			default:
 				panic("must be exhaustive")
 			}
@@ -69,7 +71,9 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 			if diags.Extend(diag) {
 				continue
 			}
-			doc.Content = append(doc.Content, parsedSection)
+			doc.Content = append(doc.Content, &definitions.ParsedContent{
+				Section: parsedSection,
+			})
 		default:
 			diags.Append(definitions.NewNestingDiag(
 				d.Block.Type,

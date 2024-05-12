@@ -294,7 +294,7 @@ func main() {
 	flags.Parse(os.Args[1:])
 	// load all plugins
 	plugins := []*plugin.Schema{
-		builtin.Plugin(version),
+		builtin.Plugin(version, nil, nil),
 		elastic.Plugin(version, nil),
 		github.Plugin(version, nil),
 		graphql.Plugin(version),

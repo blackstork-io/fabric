@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -21,7 +22,7 @@ func Test_terraformStateLocalDataSchema(t *testing.T) {
 func Test_fetchTerraformStateLocalData_Call(t *testing.T) {
 	type result struct {
 		data  plugin.Data
-		diags hcl.Diagnostics
+		diags diagnostics.Diag
 	}
 	tt := []struct {
 		name     string
@@ -32,7 +33,7 @@ func Test_fetchTerraformStateLocalData_Call(t *testing.T) {
 			name: "notfound",
 			path: "testdata/notfound.tfstate",
 			expected: result{
-				diags: hcl.Diagnostics{
+				diags: diagnostics.Diag{
 					{
 						Severity: hcl.DiagError,
 						Summary:  "Failed to read terraform state",
@@ -45,7 +46,7 @@ func Test_fetchTerraformStateLocalData_Call(t *testing.T) {
 			name: "empty_path",
 			path: "",
 			expected: result{
-				diags: hcl.Diagnostics{
+				diags: diagnostics.Diag{
 					{
 						Severity: hcl.DiagError,
 						Summary:  "Failed to parse arguments",

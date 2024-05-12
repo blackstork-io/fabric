@@ -33,6 +33,8 @@ type AttrSpec struct {
 	MaxInclusive cty.Value
 	// If specified – a deprecation warning would appear if an attribute is specified and non-null
 	Deprecated string
+	// If set then the value is hidden in logs
+	Secret bool
 }
 
 func (a *AttrSpec) computeMinInclusive() cty.Value {

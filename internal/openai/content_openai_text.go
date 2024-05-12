@@ -13,6 +13,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/openai/client"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -29,6 +30,7 @@ func makeOpenAITextContentSchema(loader ClientLoadFn) *plugin.ContentProvider {
 				Name:        "api_key",
 				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
+				Secret:      true,
 			},
 			&dataspec.AttrSpec{
 				Name: "organization_id",
@@ -51,10 +53,10 @@ func makeOpenAITextContentSchema(loader ClientLoadFn) *plugin.ContentProvider {
 }
 
 func genOpenAIText(loader ClientLoadFn) plugin.ProvideContentFunc {
-	return func(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
+	return func(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
 		cli, err := makeClient(loader, params.Config)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to create client",
 				Detail:   err.Error(),
@@ -62,7 +64,7 @@ func genOpenAIText(loader ClientLoadFn) plugin.ProvideContentFunc {
 		}
 		result, err := renderText(ctx, cli, params.Config, params.Args, params.DataContext)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to generate text",
 				Detail:   err.Error(),

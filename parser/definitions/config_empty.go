@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
@@ -34,8 +33,8 @@ func (c *ConfigEmpty) ParseConfig(spec dataspec.RootSpec) (val cty.Value, diags 
 		},
 	}
 
-	var diag hcl.Diagnostics
-	val, diag = hcldec.Decode(emptyBody, spec.HcldecSpec(), nil)
+	var diag diagnostics.Diag
+	val, diag = dataspec.Decode(emptyBody, spec, nil)
 	for _, d := range diag {
 		d.Summary = fmt.Sprintf("Missing required configuration: %s", d.Summary)
 	}

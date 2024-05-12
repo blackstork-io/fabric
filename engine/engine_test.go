@@ -1,74 +1,198 @@
-package e2e_test
+package engine
 
 import (
-	"bytes"
-	"fmt"
 	"log/slog"
 	"os"
-	"strings"
 	"testing"
-	"testing/fstest"
 
-	"github.com/stretchr/testify/assert"
-
-	"github.com/blackstork-io/fabric/cmd"
-	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
-	"github.com/blackstork-io/fabric/pkg/fabctx"
+	"github.com/blackstork-io/fabric/plugin"
 )
 
-func renderTest(t *testing.T, testName string, files []string, docName string, expectedResult []string, diagAsserts diagtest.Asserts) {
-	t.Helper()
-	t.Run(testName, func(t *testing.T) {
-		t.Parallel()
-		t.Helper()
-
-		sourceDir := fstest.MapFS{}
-		for i, content := range files {
-			sourceDir[fmt.Sprintf("file_%d.fabric", i)] = &fstest.MapFile{
-				Data: []byte(content),
-				Mode: 0o777,
-			}
-		}
-		eval := cmd.NewEvaluator()
-		defer func() {
-			eval.Cleanup(nil)
-		}()
-
-		var res string
-		diags := eval.ParseFabricFiles(sourceDir)
-		ctx := fabctx.New(fabctx.NoSignals)
-		if !diags.HasErrors() {
-			if !diags.Extend(eval.LoadPluginResolver(false)) && !diags.Extend(eval.LoadPluginRunner(ctx)) {
-				var diag diagnostics.Diag
-				buf := bytes.NewBuffer(nil)
-				diag = cmd.Render(ctx, eval.Blocks, eval.PluginCaller(), docName, buf)
-				diags.Extend(diag)
-				res = buf.String()
-			}
-		}
-
-		if len(expectedResult) == 0 {
-			// so nil == []string{}
-			assert.Empty(t, res)
-		} else {
-			assert.EqualValues(
-				t,
-				strings.Join(expectedResult, "\n\n"),
-				res,
-			)
-		}
-		diagAsserts.AssertMatch(t, diags, eval.FileMap)
-	})
-}
-
-func TestE2ERender(t *testing.T) {
+func TestEngineFetchData(t *testing.T) {
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 		AddSource: true,
 		Level:     slog.LevelWarn,
 	})))
+	fetchDataTest(
+		t, "Basic",
+		[]string{
+			`
+			document "hello" {
+				data inline "test" {
+					hello = "world"
+				}
 
-	t.Parallel()
+				content text {
+					text = "hello"
+				}
+			}
+			`,
+		},
+		"document.hello.data.inline.test",
+		plugin.MapData{
+			"hello": plugin.StringData("world"),
+		},
+		[][]diagtest.Assert{},
+	)
+	fetchDataTest(
+		t, "Basic",
+		[]string{
+			`
+			data inline "test" {
+				hello = "world"
+			}
+			document "hello" {
+				content text {
+					text = "hello"
+				}
+			}
+			`,
+		},
+		"data.inline.test",
+		plugin.MapData{
+			"hello": plugin.StringData("world"),
+		},
+		[][]diagtest.Assert{},
+	)
+}
+
+func TestEngineLint(t *testing.T) {
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		AddSource: true,
+		Level:     slog.LevelWarn,
+	})))
+	fullLintTest(
+		t, "Ref loop",
+		[]string{
+			`
+			document "test-doc" {
+				content ref {
+					base = content.ref.actual_block
+				}
+			}
+			`,
+			`
+			content ref "ref_a" {
+				base = content.ref.ref_b
+			}
+
+			content ref "ref_b" {
+				base = content.ref.ref_c
+			}
+
+			content ref "ref_c" {
+				base = content.ref.ref_a
+			}
+
+			content ref "actual_block" {
+				base = content.ref.ref_a
+			}
+			`,
+		},
+		[][]diagtest.Assert{
+			{diagtest.IsError, diagtest.SummaryContains("Circular reference detected")},
+		},
+	)
+	fullLintTest(
+		t, "Data ref name warning",
+		[]string{
+			`
+			data inline "name" {
+				inline {
+					a = "1"
+				}
+			}
+			document "test-doc" {
+				data ref {
+					base = data.inline.name
+				}
+				data ref {
+					base = data.inline.name
+				}
+			}
+			`,
+		},
+		[][]diagtest.Assert{
+			{diagtest.IsWarning, diagtest.SummaryContains("Data conflict")},
+		},
+	)
+
+	limitedLintTest(
+		t, "Unknown plugins are fine in limited lint",
+		[]string{
+			`
+			document "doc1" {
+				data made_up_data_source "name1" {
+
+				}
+			}
+			document "doc2" {
+				content made_up_content_provider "name2" {
+
+				}
+			}
+			`,
+		},
+		[][]diagtest.Assert{},
+	)
+	fullLintTest(
+		t, "Unknown plugins generate diags in full lint",
+		[]string{
+			`
+			document "doc1" {
+				data made_up_data_source "name1" {
+
+				}
+			}
+			document "doc2" {
+				content made_up_content_provider "name2" {
+
+				}
+			}
+			`,
+		},
+		[][]diagtest.Assert{
+			{diagtest.IsError, diagtest.SummaryContains("Missing datasource")},
+			{diagtest.IsError, diagtest.SummaryContains("Missing content provider")},
+		},
+	)
+	limitedLintTest(
+		t, "Unknown config is fine in limited lint",
+		[]string{
+			`
+			document "doc1" {
+				data inline "name1" {
+					config {}
+				}
+			}
+			`,
+		},
+		[][]diagtest.Assert{},
+	)
+
+	fullLintTest(
+		t, "Unknown config generate diags in full lint",
+		[]string{
+			`
+			document "doc1" {
+				data inline "name1" {
+					config {}
+				}
+			}
+			`,
+		},
+		[][]diagtest.Assert{
+			{diagtest.IsWarning, diagtest.DetailContains("support configuration")},
+		},
+	)
+}
+
+func TestEngineRenderContent(t *testing.T) {
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		AddSource: true,
+		Level:     slog.LevelWarn,
+	})))
 	renderTest(
 		t, "Basic",
 		[]string{

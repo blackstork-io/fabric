@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -94,10 +95,10 @@ func parseTOCArgs(args cty.Value) (*tocArgs, error) {
 	}, nil
 }
 
-func genTOC(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
+func genTOC(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
 	args, err := parseTOCArgs(params.Args)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
 			Detail:   err.Error(),
@@ -105,7 +106,7 @@ func genTOC(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.C
 	}
 	titles, err := parseContentTitles(params.DataContext, args.startLevel, args.endLevel, args.scope)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse content titles",
 			Detail:   err.Error(),

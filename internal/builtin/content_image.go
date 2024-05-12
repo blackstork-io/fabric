@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -37,10 +38,10 @@ func makeImageContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
+func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
 	src := params.Args.GetAttr("src")
 	if src.IsNull() || src.AsString() == "" {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
 			Detail:   "src is required",
@@ -53,7 +54,7 @@ func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (
 
 	srcStr, err := renderAsTemplate("src", src.AsString(), params.DataContext)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to render src value as a template",
 			Detail:   err.Error(),
@@ -62,7 +63,7 @@ func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (
 
 	altStr, err := renderAsTemplate("alt", alt.AsString(), params.DataContext)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to render alt value as a template",
 			Detail:   err.Error(),
@@ -79,7 +80,7 @@ func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (
 	}, nil
 }
 
-func renderAsTemplate(name string, value string, datactx plugin.MapData) (string, error) {
+func renderAsTemplate(name, value string, datactx plugin.MapData) (string, error) {
 	if value == "" {
 		return "", nil
 	}

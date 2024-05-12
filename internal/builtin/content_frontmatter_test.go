@@ -8,10 +8,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
-	"github.com/blackstork-io/fabric/printer/mdprint"
+	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
 type FrontMatterGeneratorTestSuite struct {
@@ -24,7 +25,7 @@ func TestFrontMatterGeneratorSuite(t *testing.T) {
 }
 
 func (s *FrontMatterGeneratorTestSuite) SetupSuite() {
-	s.schema = Plugin("")
+	s.schema = Plugin("", nil, nil)
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestSchema() {
@@ -66,7 +67,7 @@ func (s *FrontMatterGeneratorTestSuite) TestContentAndQueryResultMissing() {
 		},
 	})
 	s.Nil(content)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
 		Detail:   "query_result and content are nil",
@@ -117,7 +118,7 @@ func (s *FrontMatterGeneratorTestSuite) TestContentAndDataContextNil() {
 		},
 	})
 	s.Nil(content)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
 		Detail:   "query_result and content are nil",

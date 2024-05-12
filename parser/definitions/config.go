@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
@@ -31,8 +30,8 @@ var _ evaluation.Configuration = (*Config)(nil)
 // ParseConfig implements Configuration.
 func (c *Config) ParseConfig(spec dataspec.RootSpec) (val cty.Value, diags diagnostics.Diag) {
 	c.once.Do(func() {
-		var diag hcl.Diagnostics
-		c.value, diag = hcldec.Decode(c.Body, spec.HcldecSpec(), evaluation.NewEvalContext())
+		var diag diagnostics.Diag
+		c.value, diag = dataspec.Decode(c.Body, spec, evaluation.NewEvalContext())
 		if diags.Extend(diag) {
 			// don't let partially-decoded values live
 			c.value = cty.NilVal

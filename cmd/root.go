@@ -1,98 +1,105 @@
 package cmd
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
-	"runtime/debug"
-	"slices"
 	"strings"
 
 	"github.com/golang-cz/devslog"
 	"github.com/lmittmann/tint"
 	"github.com/mattn/go-colorable"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/sdk/instrumentation"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/term"
 
-	"github.com/blackstork-io/fabric/pkg/fabctx"
-	"github.com/blackstork-io/fabric/pkg/utils"
+	"github.com/blackstork-io/fabric/cmd/internal/fabctx"
+	"github.com/blackstork-io/fabric/cmd/internal/multilog"
+	"github.com/blackstork-io/fabric/cmd/internal/telemetry"
 )
 
-// Overridden by goreleaser.
 var (
-	version = ""
-	builtBy = "golang"
+	tracer      trace.Tracer
+	rootSpan    trace.Span
+	rootCleanup func(context.Context) error
+	rootCtx     context.Context
+	cliArgs     = struct {
+		sourceDir string
+		colorize  bool
+		debug     bool
+	}{}
+	rawArgs = struct {
+		sourceDir string
+		logOutput string
+		logLevel  string
+		verbose   bool
+		colorize  bool
+		debug     bool
+	}{}
+	debugDir = ".fabric/debug"
+	env      = struct {
+		otelpEnabled bool
+		otelpURL     string
+	}{
+		otelpEnabled: false,
+		otelpURL:     "https://otelp.blackstork.io",
+	}
 )
 
-type logLevels struct {
-	Names []string
-	Vals  []slog.Level
-}
+func init() {
+	rootCmd.PersistentFlags().StringVar(&rawArgs.sourceDir, "source-dir", ".", "a path to a directory with *.fabric files")
+	rootCmd.PersistentFlags().StringVar(&rawArgs.logOutput, "log-format", "plain", "format of the logs (plain or json)")
+	rootCmd.PersistentFlags().StringVar(
+		&rawArgs.logLevel, "log-level", "info",
+		fmt.Sprintf("logging level (%s)", validLogLevels.String()),
+	)
+	rootCmd.PersistentFlags().BoolVar(&rawArgs.colorize, "color", true, "enables colorizing the logs and diagnostics (if supported by the terminal and log format)")
+	rootCmd.PersistentFlags().BoolVarP(&rawArgs.verbose, "verbose", "v", false, "a shortcut to --log-level debug")
+	rootCmd.PersistentFlags().BoolVar(&rawArgs.debug, "debug", false, "enables debug mode")
 
-func (ll *logLevels) Find(name string) (level slog.Level, err error) {
-	nameKey := strings.ToLower(strings.TrimSpace(rawArgs.logLevel))
-	idx := slices.Index(ll.Names, nameKey)
-	if idx == -1 {
-		err = fmt.Errorf("unknown log level '%s'", name)
-		return
+	if otelpURL := os.Getenv("FABRIC_OTELP_URL"); otelpURL != "" {
+		env.otelpURL = otelpURL
 	}
-	return ll.Vals[idx], nil
-}
-
-func (ll *logLevels) String() string {
-	return utils.JoinSurround(", ", "'", ll.Names...)
-}
-
-var validLogLevels = logLevels{
-	Names: []string{
-		"debug",
-		"info",
-		"warn",
-		"error",
-	},
-	Vals: []slog.Level{
-		slog.LevelDebug,
-		slog.LevelInfo,
-		slog.LevelWarn,
-		slog.LevelError,
-	},
-}
-
-func validateDir(what, dir string) error {
-	info, err := os.Stat(dir)
-	switch {
-	case err == nil:
-	case errors.Is(err, os.ErrNotExist):
-		return fmt.Errorf("failed to open %s: path '%s' doesn't exist", what, dir)
-	case errors.Is(err, os.ErrPermission):
-		return fmt.Errorf("failed to open %s: permission to access path '%s' denied", what, dir)
-	default:
-		return fmt.Errorf("failed to open %s: path '%s': %w", what, dir, err)
+	if os.Getenv("FABRIC_OTELP_ENABLED") == "true" {
+		env.otelpEnabled = true
 	}
-	if !info.IsDir() {
-		return fmt.Errorf("failed to open %s: path '%s' is not a directory", what, dir)
-	}
-	return nil
 }
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "fabric",
-	Version: version,
-
-	PersistentPreRunE: func(_ *cobra.Command, _ []string) (err error) {
+	Use: "fabric",
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) (err error) {
+		ctx := cmd.Context()
+		if rawArgs.debug {
+			rootCleanup, err = telemetry.SetupStdout(ctx, debugDir, version)
+		} else if env.otelpEnabled {
+			rootCleanup, err = telemetry.SetupOtelp(ctx, env.otelpURL, version)
+		}
+		if err != nil {
+			return err
+		}
+		defer func() {
+			rootCtx = ctx
+		}()
+		tracer = otel.Tracer("fabric/cmd")
+		ctx, rootSpan = tracer.Start(ctx, "Command", trace.WithAttributes(
+			attribute.String("command", cmd.Name()),
+		))
 		err = validateDir("source dir", rawArgs.sourceDir)
 		if err != nil {
 			return
 		}
 		cliArgs.sourceDir = rawArgs.sourceDir
-
 		cliArgs.colorize = rawArgs.colorize && term.IsTerminal(int(os.Stderr.Fd()))
-
 		var level slog.Level
-		if rawArgs.verbose {
+		if rawArgs.verbose || rawArgs.debug {
 			level = slog.LevelDebug
 		} else {
 			level, err = validLogLevels.Find(rawArgs.logLevel)
@@ -105,9 +112,7 @@ var rootCmd = &cobra.Command{
 			// add source if in debug mode
 			AddSource: level == slog.LevelDebug,
 		}
-
 		var handler slog.Handler
-
 		switch strings.ToLower(strings.TrimSpace(rawArgs.logOutput)) {
 		case "plain":
 			if cliArgs.colorize && level <= slog.LevelDebug {
@@ -138,11 +143,31 @@ var rootCmd = &cobra.Command{
 		default:
 			return fmt.Errorf("unknown log output '%s'", rawArgs.logOutput)
 		}
-		slog.SetDefault(slog.New(handler))
-		slog.Debug("Logging enabled")
-		if strings.Contains(version, "-dev") {
-			slog.Warn("This is a dev version of the software!", "version", version)
+		var logger *slog.Logger
+		if env.otelpEnabled || rawArgs.debug {
+			logger = slog.New(multilog.Handler{
+				Level: level,
+				Handlers: []slog.Handler{
+					handler,
+					otelslog.NewHandler(
+						otelslog.WithInstrumentationScope(instrumentation.Scope{
+							Name:    "github.com/blackstork-io/fabric",
+							Version: version,
+						}),
+					),
+				},
+			})
+		} else {
+			logger = slog.New(handler)
 		}
+		logger = logger.With("command", cmd.Name())
+		slog.SetDefault(logger)
+		slog.SetLogLoggerLevel(slog.LevelDebug)
+		slog.DebugContext(ctx, "Run")
+		if strings.Contains(version, "-dev") {
+			slog.WarnContext(ctx, "This is a dev version of the software!", "version", version)
+		}
+		cmd.SetContext(ctx)
 		return nil
 	},
 }
@@ -150,73 +175,33 @@ var rootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	err := rootCmd.ExecuteContext(fabctx.New())
+	var ctx context.Context = fabctx.New()
+	exitCode := 0
+	err := recoverExecute(ctx, rootCmd)
 	if err != nil {
-		os.Exit(1)
+		exitCode = 1
 	}
-}
-
-var cliArgs = struct {
-	sourceDir string
-	colorize  bool
-}{}
-
-var rawArgs = struct {
-	sourceDir string
-	logOutput string
-	logLevel  string
-	verbose   bool
-	colorize  bool
-}{}
-
-func init() {
-	rootCmd.PersistentFlags().StringVar(&rawArgs.sourceDir, "source-dir", ".", "a path to a directory with *.fabric files")
-	rootCmd.PersistentFlags().StringVar(&rawArgs.logOutput, "log-format", "plain", "format of the logs (plain or json)")
-	rootCmd.PersistentFlags().StringVar(
-		&rawArgs.logLevel, "log-level", "info",
-		fmt.Sprintf("logging level (%s)", validLogLevels.String()),
-	)
-	rootCmd.PersistentFlags().BoolVar(&rawArgs.colorize, "color", true, "enables colorizing the logs and diagnostics (if supported by the terminal and log format)")
-	rootCmd.PersistentFlags().BoolVarP(&rawArgs.verbose, "verbose", "v", false, "a shortcut to --log-level debug")
-
-	if builtBy == "goreleaser" {
-		// version is set by goreleaser
-		return
-	}
-
-	version = fmt.Sprintf(
-		"%s+builtBy.%s",
-		versionFromBuildInfo(),
-		builtBy,
-	)
-}
-
-func versionFromBuildInfo() (version string) {
-	version = "v0.0.0-dev"
-	info, ok := debug.ReadBuildInfo()
-	if !ok || info == nil {
-		return
-	}
-	if info.Main.Version != "(devel)" {
-		version = info.Main.Version
-		if !strings.HasPrefix(version, "v") {
-			version = "v" + version
+	if rootSpan != nil {
+		if err != nil {
+			rootSpan.RecordError(err)
+			rootSpan.SetStatus(codes.Error, err.Error())
+		} else {
+			rootSpan.SetStatus(codes.Ok, "success")
 		}
-		return
+		rootSpan.End()
 	}
-	// It's a dev version not built by goreleaser, add extra info
-	dirtyIdx := slices.IndexFunc(info.Settings, func(s debug.BuildSetting) bool {
-		return s.Key == "vcs.modified"
-	})
-	if dirtyIdx != -1 && info.Settings[dirtyIdx].Value == "true" {
-		version += "+dirty"
+	if rootCleanup != nil {
+		rootCleanup(rootCtx)
 	}
+	os.Exit(exitCode)
+}
 
-	shaIdx := slices.IndexFunc(info.Settings, func(s debug.BuildSetting) bool {
-		return s.Key == "vcs.revision"
-	})
-	if shaIdx != -1 {
-		version = fmt.Sprintf("%s+rev.%s", version, info.Settings[shaIdx].Value)
-	}
-	return
+func recoverExecute(ctx context.Context, cmd *cobra.Command) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.ErrorContext(rootCtx, "Panic", "error", r)
+			err = fmt.Errorf("panic: %v", r)
+		}
+	}()
+	return cmd.ExecuteContext(ctx)
 }

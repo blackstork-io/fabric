@@ -9,6 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/hackerone/client"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -26,6 +27,7 @@ func makeHackerOneReportsDataSchema(loader ClientLoadFn) *plugin.DataSource {
 				Name:        "api_token",
 				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
+				Secret:      true,
 			},
 		},
 		Args: dataspec.ObjectSpec{
@@ -219,10 +221,10 @@ func makeHackerOneReportsDataSchema(loader ClientLoadFn) *plugin.DataSource {
 }
 
 func fetchHackerOneReports(loader ClientLoadFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 		cli, err := makeClient(loader, params.Config)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to create client",
 				Detail:   err.Error(),
@@ -230,7 +232,7 @@ func fetchHackerOneReports(loader ClientLoadFn) plugin.RetrieveDataFunc {
 		}
 		req, err := parseHackerOneReportsArgs(params.Args)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to parse arguments",
 				Detail:   err.Error(),
@@ -241,7 +243,7 @@ func fetchHackerOneReports(loader ClientLoadFn) plugin.RetrieveDataFunc {
 		if req.PageNumber != nil {
 			res, err := cli.GetAllReports(ctx, req)
 			if err != nil {
-				return nil, hcl.Diagnostics{{
+				return nil, diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to fetch reports",
 					Detail:   err.Error(),
@@ -257,7 +259,7 @@ func fetchHackerOneReports(loader ClientLoadFn) plugin.RetrieveDataFunc {
 				req.PageNumber = client.Int(page)
 				res, err := cli.GetAllReports(ctx, req)
 				if err != nil {
-					return nil, hcl.Diagnostics{{
+					return nil, diagnostics.Diag{{
 						Severity: hcl.DiagError,
 						Summary:  "Failed to fetch reports",
 						Detail:   err.Error(),
@@ -274,7 +276,7 @@ func fetchHackerOneReports(loader ClientLoadFn) plugin.RetrieveDataFunc {
 		}
 		dst, err := plugin.ParseDataAny(data)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to parse data",
 				Detail:   err.Error(),

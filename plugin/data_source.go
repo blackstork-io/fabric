@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
@@ -39,10 +40,10 @@ type DataSource struct {
 	Config   dataspec.RootSpec
 }
 
-func (ds *DataSource) Validate() hcl.Diagnostics {
-	var diags hcl.Diagnostics
+func (ds *DataSource) Validate() diagnostics.Diag {
+	var diags diagnostics.Diag
 	if ds.DataFunc == nil {
-		diags = append(diags, &hcl.Diagnostic{
+		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Incomplete DataSourceSchema",
 			Detail:   "DataSource function not loaded",
@@ -51,14 +52,14 @@ func (ds *DataSource) Validate() hcl.Diagnostics {
 	return diags
 }
 
-func (ds *DataSource) Execute(ctx context.Context, params *RetrieveDataParams) (Data, hcl.Diagnostics) {
+func (ds *DataSource) Execute(ctx context.Context, params *RetrieveDataParams) (_ Data, diags diagnostics.Diag) {
 	if ds == nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Missing DataSource schema",
 		}}
 	}
-	diags := ds.Validate()
+	diags = ds.Validate()
 	if diags.HasErrors() {
 		return nil, diags
 	}
@@ -70,4 +71,4 @@ type RetrieveDataParams struct {
 	Args   cty.Value
 }
 
-type RetrieveDataFunc func(ctx context.Context, params *RetrieveDataParams) (Data, hcl.Diagnostics)
+type RetrieveDataFunc func(ctx context.Context, params *RetrieveDataParams) (Data, diagnostics.Diag)

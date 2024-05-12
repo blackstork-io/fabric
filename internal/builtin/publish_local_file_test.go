@@ -14,7 +14,7 @@ import (
 )
 
 func Test_makeLocalFilePublisher(t *testing.T) {
-	schema := makeLocalFilePublisher()
+	schema := makeLocalFilePublisher(nil, nil)
 	assert.NotNil(t, schema.Doc)
 	assert.NotNil(t, schema.Tags)
 	assert.NotNil(t, schema.Args)
@@ -27,6 +27,7 @@ func Test_makeLocalFilePublisher(t *testing.T) {
 }
 
 func Test_publishLocalFileMD(t *testing.T) {
+	schema := makeLocalFilePublisher(nil, nil)
 	dir := t.TempDir()
 	titleMeta := plugin.MapData{
 		"provider": plugin.StringData("title"),
@@ -59,7 +60,7 @@ func Test_publishLocalFileMD(t *testing.T) {
 			},
 		},
 	}
-	diags := publishLocalFile(context.Background(), params)
+	diags := schema.Execute(context.Background(), params)
 	require.Empty(t, diags)
 	bytes, err := os.ReadFile(filepath.Join(dir, "test_document.md"))
 	require.NoError(t, err)
@@ -68,6 +69,7 @@ func Test_publishLocalFileMD(t *testing.T) {
 }
 
 func Test_publishLocalFileHTML(t *testing.T) {
+	schema := makeLocalFilePublisher(nil, nil)
 	dir := t.TempDir()
 	titleMeta := plugin.MapData{
 		"provider": plugin.StringData("title"),
@@ -100,7 +102,7 @@ func Test_publishLocalFileHTML(t *testing.T) {
 			},
 		},
 	}
-	diags := publishLocalFile(context.Background(), params)
+	diags := schema.Execute(context.Background(), params)
 	require.Empty(t, diags)
 	bytes, err := os.ReadFile(filepath.Join(dir, "test_document.html"))
 	require.NoError(t, err)
@@ -110,6 +112,7 @@ func Test_publishLocalFileHTML(t *testing.T) {
 }
 
 func Test_publishLocalFile_invalidPath(t *testing.T) {
+	schema := makeLocalFilePublisher(nil, nil)
 	params := &plugin.PublishParams{
 		Format: plugin.OutputFormatMD,
 		Args: cty.ObjectVal(map[string]cty.Value{
@@ -129,6 +132,6 @@ func Test_publishLocalFile_invalidPath(t *testing.T) {
 			},
 		},
 	}
-	diags := publishLocalFile(context.Background(), params)
+	diags := schema.Execute(context.Background(), params)
 	require.NotEmpty(t, diags)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -29,28 +30,33 @@ func makeElasticSearchDataSource() *plugin.DataSource {
 				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name: "api_key_str",
-				Type: cty.String,
+				Name:   "api_key_str",
+				Type:   cty.String,
+				Secret: true,
 			},
 			&dataspec.AttrSpec{
-				Name: "api_key",
-				Type: cty.List(cty.String),
+				Name:   "api_key",
+				Type:   cty.List(cty.String),
+				Secret: true,
 			},
 			&dataspec.AttrSpec{
 				Name: "basic_auth_username",
 				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name: "basic_auth_password",
-				Type: cty.String,
+				Name:   "basic_auth_password",
+				Type:   cty.String,
+				Secret: true,
 			},
 			&dataspec.AttrSpec{
-				Name: "bearer_auth",
-				Type: cty.String,
+				Name:   "bearer_auth",
+				Type:   cty.String,
+				Secret: true,
 			},
 			&dataspec.AttrSpec{
-				Name: "ca_certs",
-				Type: cty.String,
+				Name:   "ca_certs",
+				Type:   cty.String,
+				Secret: true,
 			},
 		},
 		Args: dataspec.ObjectSpec{
@@ -91,26 +97,26 @@ func makeElasticSearchDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 	client, err := makeSearchClient(params.Config)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to create elasticsearch client",
 			Detail:   err.Error(),
 		}}
 	}
-	var diags hcl.Diagnostics
+	var diags diagnostics.Diag
 	if (params.Args.GetAttr("only_hits").IsNull() || params.Args.GetAttr("only_hits").True()) &&
 		!params.Args.GetAttr("aggs").IsNull() {
 		if params.Args.GetAttr("query").IsNull() && params.Args.GetAttr("query_string").IsNull() {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Invalid arguments",
 				Detail:   "Aggregations are not supported without a query or query_string",
 			}}
 		}
-		diags = diags.Append(&hcl.Diagnostic{
+		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
 			Summary:  "Aggregations are not supported",
 			Detail:   "Aggregations are not supported when only_hits is true",
@@ -119,7 +125,7 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 
 	index := params.Args.GetAttr("index")
 	if index.IsNull() {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid arguments",
 			Detail:   "Index value is required",
@@ -136,7 +142,7 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 			size64, _ := sizeArg.AsBigFloat().Int64()
 			size = int(size64)
 			if size < 0 {
-				return nil, hcl.Diagnostics{{
+				return nil, diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Invalid arguments",
 					Detail:   "Size value must be greater or equal 0",
@@ -150,11 +156,11 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 		}
 	}
 	if err != nil {
-		return nil, diags.Extend(hcl.Diagnostics{{
+		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to fetch data",
 			Detail:   err.Error(),
-		}})
+		})
 	}
 	return data, diags
 }

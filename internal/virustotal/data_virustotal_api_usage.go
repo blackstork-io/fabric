@@ -9,6 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/virustotal/client"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -22,6 +23,7 @@ func makeVirusTotalAPIUsageDataSchema(loader ClientLoadFn) *plugin.DataSource {
 				Name:        "api_key",
 				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
+				Secret:      true,
 			},
 		},
 		Args: dataspec.ObjectSpec{
@@ -46,10 +48,10 @@ func makeVirusTotalAPIUsageDataSchema(loader ClientLoadFn) *plugin.DataSource {
 }
 
 func fetchVirusTotalAPIUsageData(loader ClientLoadFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 		cli, err := makeClient(loader, params.Config)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to create client",
 				Detail:   err.Error(),
@@ -57,7 +59,7 @@ func fetchVirusTotalAPIUsageData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 		}
 		args, err := parseAPIUsageArgs(params.Args)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to parse arguments",
 				Detail:   err.Error(),
@@ -77,7 +79,7 @@ func fetchVirusTotalAPIUsageData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 
 			res, err := cli.GetUserAPIUsage(ctx, req)
 			if err != nil {
-				return nil, hcl.Diagnostics{{
+				return nil, diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to fetch data",
 					Detail:   err.Error(),
@@ -97,7 +99,7 @@ func fetchVirusTotalAPIUsageData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 
 			res, err := cli.GetGroupAPIUsage(ctx, req)
 			if err != nil {
-				return nil, hcl.Diagnostics{{
+				return nil, diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to fetch data",
 					Detail:   err.Error(),
@@ -107,7 +109,7 @@ func fetchVirusTotalAPIUsageData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 		}
 		result, err := plugin.ParseDataMapAny(data)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to parse data",
 				Detail:   err.Error(),

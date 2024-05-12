@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -28,10 +29,10 @@ func makeTXTDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchTXTData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+func fetchTXTData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 	path := params.Args.GetAttr("path")
 	if path.IsNull() || path.AsString() == "" {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
 			Detail:   "path is required",
@@ -39,7 +40,7 @@ func fetchTXTData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 	}
 	f, err := os.Open(path.AsString())
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to open txt file",
 			Detail:   err.Error(),
@@ -48,7 +49,7 @@ func fetchTXTData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 	defer f.Close()
 	data, err := io.ReadAll(f)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to read txt file",
 			Detail:   err.Error(),

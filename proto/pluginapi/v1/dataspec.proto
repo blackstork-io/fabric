@@ -27,6 +27,7 @@ message AttrSpec {
     CtyValue min_inclusive = 9;
     CtyValue max_inclusive = 10;
     string deprecated = 11;
+    bool     secret   = 12;
 }
 
 message BlockSpec {

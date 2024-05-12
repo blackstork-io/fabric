@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -24,6 +25,7 @@ func makeGithubIssuesDataSchema(loader ClientLoaderFn) *plugin.DataSource {
 				Name:        "github_token",
 				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
+				Secret:      true,
 			},
 		},
 		Args: dataspec.ObjectSpec{
@@ -77,10 +79,10 @@ func makeGithubIssuesDataSchema(loader ClientLoaderFn) *plugin.DataSource {
 }
 
 func fetchGithubIssuesData(loader ClientLoaderFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 		tkn, err := parseIssuesConfig(params.Config)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to parse configuration",
 				Detail:   err.Error(),
@@ -88,7 +90,7 @@ func fetchGithubIssuesData(loader ClientLoaderFn) plugin.RetrieveDataFunc {
 		}
 		opts, err := parseIssuesArgs(params.Args)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to parse arguments",
 				Detail:   err.Error(),
@@ -102,7 +104,7 @@ func fetchGithubIssuesData(loader ClientLoaderFn) plugin.RetrieveDataFunc {
 			opts.opts.PerPage = pageSize
 			issuesPage, resp, err := client.ListByRepo(context.Background(), opts.owner, opts.name, opts.opts)
 			if err != nil {
-				return nil, hcl.Diagnostics{{
+				return nil, diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to list issues",
 					Detail:   err.Error(),
@@ -111,7 +113,7 @@ func fetchGithubIssuesData(loader ClientLoaderFn) plugin.RetrieveDataFunc {
 			for _, issue := range issuesPage {
 				encoded, err := encodeGithubIssue(issue)
 				if err != nil {
-					return nil, hcl.Diagnostics{{
+					return nil, diagnostics.Diag{{
 						Severity: hcl.DiagError,
 						Summary:  "Failed to encode issue",
 						Detail:   err.Error(),

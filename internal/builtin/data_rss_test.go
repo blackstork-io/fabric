@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -140,7 +141,7 @@ func Test_fetchRSSData(t *testing.T) {
 
 	type result struct {
 		Data  plugin.Data
-		Diags hcl.Diagnostics
+		Diags diagnostics.Diag
 	}
 
 	ValidRssData := plugin.MapData{
@@ -219,7 +220,7 @@ func Test_fetchRSSData(t *testing.T) {
 			},
 
 			expected: result{
-				Diags: hcl.Diagnostics{{
+				Diags: diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to parse the feed",
 					Detail:   "http error: 401 Unauthorized",
@@ -241,7 +242,7 @@ func Test_fetchRSSData(t *testing.T) {
 			name: "invalid_path",
 			url:  "does_not_exist.rss",
 			expected: result{
-				Diags: hcl.Diagnostics{{
+				Diags: diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to parse the feed",
 					Detail:   "http error: 404 Not Found",

@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
@@ -28,16 +29,16 @@ func makeInlineDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchInlineData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+func fetchInlineData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 	if params.Args.IsNull() {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
 			Detail:   "inline data is required",
 		}}
 	}
 	if !params.Args.Type().IsMapType() && !params.Args.Type().IsObjectType() {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
 			Detail:   "inline data must be a map",

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -25,8 +26,9 @@ func makeGraphQLDataSource() *plugin.DataSource {
 				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
-				Name: "auth_token",
-				Type: cty.String,
+				Name:   "auth_token",
+				Type:   cty.String,
+				Secret: true,
 			},
 		},
 		Args: dataspec.ObjectSpec{
@@ -40,10 +42,10 @@ func makeGraphQLDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchGraphQLData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+func fetchGraphQLData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 	url := params.Config.GetAttr("url")
 	if url.IsNull() || url.AsString() == "" {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse config",
 			Detail:   "url is required",
@@ -55,7 +57,7 @@ func fetchGraphQLData(ctx context.Context, params *plugin.RetrieveDataParams) (p
 	}
 	query := params.Args.GetAttr("query")
 	if query.IsNull() || query.AsString() == "" {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
 			Detail:   "query is required",
@@ -64,7 +66,7 @@ func fetchGraphQLData(ctx context.Context, params *plugin.RetrieveDataParams) (p
 
 	result, err := queryGraphQL(ctx, url.AsString(), query.AsString(), authToken.AsString())
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to execute query",
 			Detail:   err.Error(),

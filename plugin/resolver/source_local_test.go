@@ -170,9 +170,7 @@ func TestLocalSource_Lookup(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			source := LocalSource{
-				Path: tt.fields.Path,
-			}
+			source := NewLocal(tt.fields.Path, nil, nil)
 			got, err := source.Lookup(tt.args.ctx, tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LocalSource.Lookup() error = %v, wantErr %v", err, tt.wantErr)
@@ -337,9 +335,7 @@ func TestLocalSource_Resolve(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			source := LocalSource{
-				Path: tt.fields.Path,
-			}
+			source := NewLocal(tt.fields.Path, nil, nil)
 			got, err := source.Resolve(tt.args.ctx, tt.args.name, tt.args.version, tt.args.checksums)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LocalSource.Resolve() error = %v, wantErr %v", err, tt.wantErr)
