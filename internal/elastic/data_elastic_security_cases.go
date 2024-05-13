@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	minSize     = 1
-	defaultSize = 10
+	minCasesSize     = 1
+	defaultCasesSize = 10
 )
 
 func makeElasticSecurityCasesDataSource(loader KibanaClientLoaderFn) *plugin.DataSource {
@@ -120,11 +120,11 @@ func fetchElasticSecurityCases(loader KibanaClientLoaderFn) plugin.RetrieveDataF
 				Detail:   err.Error(),
 			}}
 		}
-		size := defaultSize
+		size := defaultCasesSize
 		if attr := params.Args.GetAttr("size"); !attr.IsNull() {
 			num, _ := attr.AsBigFloat().Int64()
 			size = int(num)
-			if size < minSize {
+			if size < minCasesSize {
 				return nil, hcl.Diagnostics{{
 					Severity: hcl.DiagError,
 					Summary:  "Invalid size",

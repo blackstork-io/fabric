@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
+	"time"
 
 	es "github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
@@ -17,8 +19,8 @@ import (
 )
 
 const (
-	defaultBaseURL  = "http://localhost:9200"
-	defaultUsername = "elastic"
+	defaultUsername       = "elastic"
+	defaultScrollStepSize = 1000
 )
 
 type KibanaClientLoaderFn func(url string, apiKey *string) kbclient.Client
@@ -121,7 +123,7 @@ func getByID(fn esapi.Get, args cty.Value) (plugin.Data, error) {
 	return data, nil
 }
 
-func search(fn esapi.Search, args cty.Value) (plugin.Data, error) {
+func unpackSearchOptions(fn esapi.Search, args cty.Value) ([]func(*esapi.SearchRequest), error) {
 	index := args.GetAttr("index")
 	if index.IsNull() {
 		return nil, fmt.Errorf("index is required")
@@ -155,13 +157,6 @@ func search(fn esapi.Search, args cty.Value) (plugin.Data, error) {
 		}
 		opts = append(opts, fn.WithBody(bytes.NewReader(rawBody)))
 	}
-	if size := args.GetAttr("size"); !size.IsNull() {
-		n, _ := size.AsBigFloat().Int64()
-		if n < 0 {
-			return nil, fmt.Errorf("size must be greater than 0")
-		}
-		opts = append(opts, fn.WithSize(int(n)))
-	}
 	if fields := args.GetAttr("fields"); !fields.IsNull() {
 		fieldSlice := fields.AsValueSlice()
 		fieldStrings := make([]string, len(fieldSlice))
@@ -170,6 +165,157 @@ func search(fn esapi.Search, args cty.Value) (plugin.Data, error) {
 		}
 		opts = append(opts, fn.WithSource(fieldStrings...))
 	}
+	return opts, nil
+}
+
+func unpackResponse(response *esapi.Response) (plugin.MapData, error) {
+	// Read the response
+	raw, err := io.ReadAll(response.Body)
+	defer response.Body.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read the search response: %s", err)
+	}
+	data, err := plugin.UnmarshalJSONData(raw)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal the search response: %s", err)
+	}
+	mapData, ok := data.(plugin.MapData)
+	if !ok {
+		return nil, fmt.Errorf("unexpected search result type: %T", data)
+	}
+	return mapData, nil
+}
+
+func searchWithScroll(client *es.Client, args cty.Value, size int) (plugin.Data, error) {
+	return searchWithScrollConfigurable(client, args, size, defaultScrollStepSize)
+}
+
+func searchWithScrollConfigurable(client *es.Client, args cty.Value, size int, stepSize int) (plugin.Data, error) {
+
+	// First scroll request to obtain `_scroll_id`
+	scrollTTL := time.Minute * 2 // 2mins
+	// just in case the size is smaller than the step size
+	reqSize := min(size, stepSize)
+
+	requestsCounter := 0
+
+	opts, err := unpackSearchOptions(client.Search, args)
+	if err != nil {
+		return nil, err
+	}
+	opts = append(opts, client.Search.WithScroll(scrollTTL))
+	opts = append(opts, client.Search.WithSize(reqSize))
+
+	slog.Debug(
+		"Sending an initial scroll search request",
+		"size", reqSize,
+		"scroll_ttl", scrollTTL,
+	)
+	requestsCounter += 1
+	res, err := client.Search(opts...)
+	if err != nil {
+		return nil, err
+	} else if res.IsError() {
+		return nil, fmt.Errorf("failed to perform a search: %s", res.String())
+	}
+
+	firstData, err := unpackResponse(res)
+	if err != nil {
+		return nil, err
+	}
+	scrollIDRaw, ok := firstData["_scroll_id"]
+	if !ok {
+		return nil, fmt.Errorf("error while getting scroll id value: %s", firstData)
+	}
+	scrollID := scrollIDRaw.(plugin.StringData)
+
+	hitsEnvelope, ok := firstData["hits"].(plugin.MapData)
+	if !ok {
+		return nil, fmt.Errorf("unexpected hits envelope value type: %T", firstData)
+	}
+	hits, ok := hitsEnvelope["hits"].(plugin.ListData)
+	if !ok {
+		return nil, fmt.Errorf("unexpected hits value type: %T", firstData)
+	}
+	allHits := make(plugin.ListData, 0, len(hits))
+	allHits = append(allHits, hits...)
+
+	for {
+		if len(allHits) >= size {
+			break
+		}
+
+		// just in case the leftover size is smaller than the step size
+		reqSize := min((size - len(allHits)), stepSize)
+		if reqSize <= 0 {
+			break
+		}
+
+		slog.Debug(
+			"Sending a scroll search request",
+			"scroll_id", scrollID,
+			"scroll_ttl", scrollTTL,
+			"size", reqSize,
+			"hits_count", len(allHits),
+		)
+		requestsCounter += 1
+		res, err = client.Scroll(
+			client.Scroll.WithScrollID(string(scrollID)),
+			client.Scroll.WithScroll(scrollTTL),
+		)
+
+		if err != nil {
+			return nil, err
+		} else if res.IsError() {
+			return nil, fmt.Errorf("failed to perform a scroll search: %s", res.String())
+		}
+
+		scrollData, err := unpackResponse(res)
+
+		if err != nil {
+			return nil, err
+		}
+		scrollIDRaw, ok = scrollData["_scroll_id"]
+		if !ok {
+			return nil, fmt.Errorf("error while getting scroll id value: %s", scrollData)
+		}
+		scrollID = scrollIDRaw.(plugin.StringData)
+
+		hitsEnvelope, ok := scrollData["hits"].(plugin.MapData)
+		if !ok {
+			return nil, fmt.Errorf("unexpected hits envelope value type: %T", firstData)
+		}
+		hits, ok := hitsEnvelope["hits"].(plugin.ListData)
+		if !ok {
+			return nil, fmt.Errorf("unexpected hits value type: %T", scrollData)
+		}
+
+		if len(hits) == 0 {
+			break
+		}
+		allHits = append(allHits, hits...)
+	}
+
+	slog.Debug(
+		"Scroll search finished",
+		"hits_count", len(allHits),
+		"requests_count", requestsCounter,
+	)
+	if onlyHits := args.GetAttr("only_hits"); onlyHits.IsNull() || onlyHits.True() {
+		return allHits, nil
+	}
+	// Update and return the first returned data to keep the aggregations
+	hitsEnvelope["hits"] = allHits
+	return firstData, nil
+}
+
+func search(fn esapi.Search, args cty.Value, size int) (plugin.Data, error) {
+	opts, err := unpackSearchOptions(fn, args)
+	if err != nil {
+		return nil, err
+	}
+	opts = append(opts, fn.WithSize(size))
+
 	res, err := fn(opts...)
 	if err != nil {
 		return nil, err
@@ -190,7 +336,8 @@ func search(fn esapi.Search, args cty.Value) (plugin.Data, error) {
 	return data, nil
 }
 
-func extractHits(data plugin.Data) (plugin.Data, error) {
+func extractHits(data plugin.Data) (plugin.ListData, error) {
+	// Unpack the result as a map
 	m, ok := data.(plugin.MapData)
 	if !ok {
 		return nil, fmt.Errorf("unexpected search result type: %T", data)
@@ -199,9 +346,10 @@ func extractHits(data plugin.Data) (plugin.Data, error) {
 	if !ok {
 		return nil, fmt.Errorf("unexpected search result type: %T", data)
 	}
+	// Unpack "hits" value as a map
 	m, ok = data.(plugin.MapData)
 	if !ok {
 		return nil, fmt.Errorf("unexpected search result type: %T", data)
 	}
-	return m["hits"], nil
+	return m["hits"].(plugin.ListData), nil
 }
