@@ -24,6 +24,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/openai"
 	"github.com/blackstork-io/fabric/internal/opencti"
 	"github.com/blackstork-io/fabric/internal/postgresql"
+	"github.com/blackstork-io/fabric/internal/snyk"
 	"github.com/blackstork-io/fabric/internal/splunk"
 	"github.com/blackstork-io/fabric/internal/sqlite"
 	"github.com/blackstork-io/fabric/internal/stixview"
@@ -307,6 +308,7 @@ func main() {
 		splunk.Plugin(version, nil),
 		stixview.Plugin(version),
 		nistnvd.Plugin(version, nil),
+		snyk.Plugin(version, nil),
 	}
 	// generate markdown for each plugin
 	for _, p := range plugins {

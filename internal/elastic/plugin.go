@@ -191,7 +191,6 @@ func searchWithScroll(client *es.Client, args cty.Value, size int) (plugin.Data,
 }
 
 func searchWithScrollConfigurable(client *es.Client, args cty.Value, size int, stepSize int) (plugin.Data, error) {
-
 	// First scroll request to obtain `_scroll_id`
 	scrollTTL := time.Minute * 2 // 2mins
 	// just in case the size is smaller than the step size
@@ -271,7 +270,6 @@ func searchWithScrollConfigurable(client *es.Client, args cty.Value, size int, s
 		}
 
 		scrollData, err := unpackResponse(res)
-
 		if err != nil {
 			return nil, err
 		}

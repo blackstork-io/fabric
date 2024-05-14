@@ -100,3 +100,9 @@ builds:
     binary: "plugins/blackstork/stixview@{{ .Version }}"
     ldflags: "-X main.version={{.Version}}"
     no_unique_dist_dir: true
+
+  - id: snyk
+    main: ./internal/snyk/cmd
+    binary: "plugins/blackstork/snyk@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    no_unique_dist_dir: true
