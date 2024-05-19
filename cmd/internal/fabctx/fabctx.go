@@ -117,6 +117,7 @@ func New(options ...Option) *FabCtx {
 				cleanupCancel(fmt.Errorf("got termination request (forceful)"))
 			default:
 				slog.ErrorContext(&ctx, "Rough exit (3 interrupts received, probably deadlocked)")
+				panic("rough exit")
 			}
 			caught++
 		}

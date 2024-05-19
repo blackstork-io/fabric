@@ -53,26 +53,6 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugin.MapData,
 		if diags.Extend(diag) {
 			return nil, diags
 		}
-		// // skip the content if no result is returned
-		// if res == nil {
-		// 	continue
-		// }
-		// // set the default location if it is not set
-		// if res.Location == nil {
-		// 	res.Location = &plugin.Location{
-		// 		Index: posMap[idx],
-		// 	}
-		// }
-		// // add the content to the result
-		// err := section.Add(res.Content, res.Location)
-		// if err != nil {
-		// 	diags.Append(&hcl.Diagnostic{
-		// 		Severity: hcl.DiagError,
-		// 		Summary:  "Failed to add content to the section",
-		// 		Detail:   err.Error(),
-		// 	})
-		// 	return nil, diags
-		// }
 	}
 	// compact the content tree to remove empty content nodes
 	section.Compact()

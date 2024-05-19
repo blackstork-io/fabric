@@ -37,13 +37,6 @@ func makeCodeContentProvider() *plugin.ContentProvider {
 
 func genCodeContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
 	value := params.Args.GetAttr("value")
-	// if value.IsNull() {
-	// 	return nil, diagnostics.Diag{{
-	// 		Severity: hcl.DiagError,
-	// 		Summary:  "Failed to parse arguments",
-	// 		Detail:   "value is required",
-	// 	}}
-	// }
 	lang := params.Args.GetAttr("language")
 	text, err := genTextContentText(value.AsString(), params.DataContext)
 	if err != nil {
