@@ -26,6 +26,13 @@ var RepeatedError = &hcl.Diagnostic{
 	Extra:    repeatedError{},
 }
 
+// Attach this as an .Extra on diagnostic to enhance the error message for gojq errors.
+// Diagnostic must include Subject pointing to the `attribute = "value"` line.
+type GoJQError struct {
+	Err   error
+	Query string
+}
+
 func FindByExtra[T any](diags Diag) *hcl.Diagnostic {
 	for _, diag := range diags {
 		if _, found := hcl.DiagnosticExtra[T](diag); found {
@@ -64,6 +71,15 @@ func (d *Diag) AddWarn(summary, detail string) {
 		Summary:  summary,
 		Detail:   detail,
 	})
+}
+
+// Set the subject for diagnostics if it's not already specified.
+func (d *Diag) DefaultSubject(rng *hcl.Range) {
+	for _, diag := range *d {
+		if diag.Subject == nil {
+			diag.Subject = rng
+		}
+	}
 }
 
 // Appends all diags to diagnostics, returns true if the just-appended diagnostics contain an error.

@@ -17,13 +17,18 @@ type Query struct {
 }
 
 func (q *Query) EvalQuery(ctx context.Context, dataCtx plugin.MapData) (plugin.Data, diagnostics.Diag) {
-	jqQuery, err := gojq.Parse(q.Value.AsString())
+	query := q.Value.AsString()
+	jqQuery, err := gojq.Parse(query)
 	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse the query",
 			Detail:   err.Error(),
 			Subject:  &q.SrcRange,
+			Extra: diagnostics.GoJQError{
+				Err:   err,
+				Query: query,
+			},
 		}}
 	}
 
@@ -34,11 +39,28 @@ func (q *Query) EvalQuery(ctx context.Context, dataCtx plugin.MapData) (plugin.D
 			Summary:  "Failed to compile the query",
 			Detail:   err.Error(),
 			Subject:  &q.SrcRange,
+			Extra: diagnostics.GoJQError{
+				Err:   err,
+				Query: query,
+			},
 		}}
 	}
 	res, hasResult := code.Run(dataCtx.Any()).Next()
 	if !hasResult {
 		return nil, nil
+	}
+	var ok bool
+	if err, ok = res.(error); ok {
+		return nil, diagnostics.Diag{{
+			Severity: hcl.DiagError,
+			Summary:  "Failed to run the query",
+			Detail:   err.Error(),
+			Subject:  &q.SrcRange,
+			Extra: diagnostics.GoJQError{
+				Err:   err,
+				Query: query,
+			},
+		}}
 	}
 	result, err := plugin.ParseDataAny(res)
 	if err != nil {
