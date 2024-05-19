@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,12 +16,12 @@ func TestResolver_Install(t *testing.T) {
 	}, WithSources(source))
 	require.Len(t, diags, 0)
 	require.NotNil(t, resolver)
-	source.EXPECT().Lookup(context.Background(), Name{"blackstork", "sqlite"}).Return([]Version{
+	source.EXPECT().Lookup(mock.Anything, Name{"blackstork", "sqlite"}).Return([]Version{
 		mustVersion(t, "1.0.0"),
 		mustVersion(t, "1.0.1"),
 		mustVersion(t, "1.0.2"),
 	}, nil)
-	source.EXPECT().Resolve(context.Background(), Name{"blackstork", "sqlite"}, mustVersion(t, "1.0.2"), []Checksum(nil)).Return(&ResolvedPlugin{
+	source.EXPECT().Resolve(mock.Anything, Name{"blackstork", "sqlite"}, mustVersion(t, "1.0.2"), []Checksum(nil)).Return(&ResolvedPlugin{
 		BinaryPath: "/blackstork/sqlite/1.0.2",
 		Checksums: []Checksum{
 			mustChecksum(t, "archive:linux:amd64:lgNgp5LO81yt1boBsiaNsJCzLWD9r5ovW+el5k/dDZ8="),
@@ -43,12 +44,12 @@ func TestResolver_Install(t *testing.T) {
 	}, lockFile)
 	source.AssertExpectations(t)
 	// again with checksums
-	source.EXPECT().Lookup(context.Background(), Name{"blackstork", "sqlite"}).Return([]Version{
+	source.EXPECT().Lookup(mock.Anything, Name{"blackstork", "sqlite"}).Return([]Version{
 		mustVersion(t, "1.0.0"),
 		mustVersion(t, "1.0.1"),
 		mustVersion(t, "1.0.2"),
 	}, nil)
-	source.EXPECT().Resolve(context.Background(), Name{"blackstork", "sqlite"}, mustVersion(t, "1.0.2"), lockFile.Plugins[0].Checksums).Return(&ResolvedPlugin{
+	source.EXPECT().Resolve(mock.Anything, Name{"blackstork", "sqlite"}, mustVersion(t, "1.0.2"), lockFile.Plugins[0].Checksums).Return(&ResolvedPlugin{
 		BinaryPath: "/blackstork/sqlite/1.0.2",
 		Checksums: []Checksum{
 			mustChecksum(t, "archive:linux:amd64:lgNgp5LO81yt1boBsiaNsJCzLWD9r5ovW+el5k/dDZ8="),
@@ -80,7 +81,7 @@ func TestResolver_InstallError(t *testing.T) {
 	require.Len(t, diags, 0)
 	require.NotNil(t, resolver)
 	// missing plugin
-	source.EXPECT().Lookup(context.Background(), Name{"blackstork", "sqlite"}).Return([]Version{}, nil)
+	source.EXPECT().Lookup(mock.Anything, Name{"blackstork", "sqlite"}).Return([]Version{}, nil)
 	lockFile, diags := resolver.Install(context.Background(), &LockFile{}, false)
 	require.Len(t, diags, 1)
 	require.Nil(t, lockFile)
@@ -94,7 +95,7 @@ func TestResolver_Resolve(t *testing.T) {
 	}, WithSources(source))
 	require.Len(t, diags, 0)
 	require.NotNil(t, resolver)
-	source.EXPECT().Resolve(context.Background(), Name{"blackstork", "sqlite"}, mustVersion(t, "1.0.2"), []Checksum{
+	source.EXPECT().Resolve(mock.Anything, Name{"blackstork", "sqlite"}, mustVersion(t, "1.0.2"), []Checksum{
 		mustChecksum(t, "archive:linux:amd64:lgNgp5LO81yt1boBsiaNsJCzLWD9r5ovW+el5k/dDZ8="),
 		mustChecksum(t, "binary:linux:amd64:lgNgp5LO81yt1boBsiaNsJCzLWD9r5ovW+el5k/dDZ8="),
 	}).Return(&ResolvedPlugin{

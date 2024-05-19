@@ -1,95 +1,38 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
-	"io"
+	"log/slog"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel/attribute"
 
-	"github.com/blackstork-io/fabric/parser"
+	"github.com/blackstork-io/fabric/engine"
+	"github.com/blackstork-io/fabric/internal/builtin"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
-	"github.com/blackstork-io/fabric/printer"
-	"github.com/blackstork-io/fabric/printer/htmlprint"
-	"github.com/blackstork-io/fabric/printer/mdprint"
+	"github.com/blackstork-io/fabric/print"
+	"github.com/blackstork-io/fabric/print/htmlprint"
+	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
-func Render(ctx context.Context, blocks *parser.DefinedBlocks, pluginCaller *parser.Caller, docName string, w io.Writer) (diags diagnostics.Diag) {
-	doc, found := blocks.Documents[docName]
-	if !found {
-		diags.Add(
-			"Document not found",
-			fmt.Sprintf(
-				"Definition for document named '%s' not found",
-				docName,
-			),
-		)
-		return
-	}
+var (
+	publish bool
+	format  string
+)
 
-	pd, diag := blocks.ParseDocument(doc)
-	if diags.Extend(diag) {
-		return
-	}
-	content, _, diag := pd.Render(ctx, pluginCaller)
-	if diags.Extend(diag) {
-		return
-	}
-	var print printer.Printer
-	switch format {
-	case "md":
-		print = mdprint.New()
-	case "html":
-		print = htmlprint.New()
-	default:
-		diags.Add("Unsupported format", fmt.Sprintf("Format '%s' is not supported for stdout", format))
-		return
-	}
-	err := print.Print(w, content)
-	if err != nil {
-		diags.Add("Error while rendering", err.Error())
-	}
-	return
+func init() {
+	rootCmd.AddCommand(renderCmd)
+	renderCmd.Flags().BoolVar(&publish, "publish", false, "publish the rendered document")
+	renderCmd.Flags().StringVar(&format, "format", "md", "default output format of the document (md, html or pdf)")
+	renderCmd.SetUsageTemplate(UsageTemplate(
+		[2]string{"TARGET", "name of the document to be rendered as 'document.<name>'"},
+	))
 }
 
-func Publish(ctx context.Context, blocks *parser.DefinedBlocks, pluginCaller *parser.Caller, docName string) (diags diagnostics.Diag) {
-	doc, found := blocks.Documents[docName]
-	if !found {
-		diags.Add(
-			"Document not found",
-			fmt.Sprintf(
-				"Definition for document named '%s' not found",
-				docName,
-			),
-		)
-		return
-	}
-
-	pd, diag := blocks.ParseDocument(doc)
-	if diags.Extend(diag) {
-		return
-	}
-	var defFormat plugin.OutputFormat
-	switch format {
-	case "md":
-		defFormat = plugin.OutputFormatMD
-	case "html":
-		defFormat = plugin.OutputFormatHTML
-	case "pdf":
-		defFormat = plugin.OutputFormatPDF
-	default:
-		diags.Add("Unsupported format", fmt.Sprintf("Format '%s' is not supported for publishing", format))
-		return
-	}
-	diags.Extend(pd.Publish(ctx, pluginCaller, defFormat))
-	return
-}
-
-// renderCmd represents the render command
 var renderCmd = &cobra.Command{
 	Use:   "render TARGET",
 	Short: "Render the document",
@@ -104,42 +47,59 @@ var renderCmd = &cobra.Command{
 		default:
 			return fmt.Errorf("target should have the format '%s<name_of_the_document>'", docPrefix)
 		}
-
+		ctx := cmd.Context()
 		var diags diagnostics.Diag
-		eval := NewEvaluator()
+		eng := engine.New(
+			engine.WithLogger(slog.Default()),
+			engine.WithTracer(tracer),
+			engine.WithBuiltIn(builtin.Plugin(version, slog.Default(), tracer)),
+		)
 		defer func() {
-			err = eval.Cleanup(diags)
+			diag := eng.Cleanup()
+			if diags.Extend(diag) {
+				err = diags
+				cmd.SilenceErrors = true
+				cmd.SilenceUsage = true
+			}
+			eng.PrintDiagnostics(os.Stderr, diags, cliArgs.colorize)
 		}()
-		diags = eval.ParseFabricFiles(os.DirFS(cliArgs.sourceDir))
-		if diags.HasErrors() {
-			return
+		diag := eng.ParseDir(ctx, os.DirFS(cliArgs.sourceDir))
+		if diags.Extend(diag) {
+			return diags
 		}
-		if diags.Extend(eval.LoadPluginResolver(false)) {
-			return
+		diag = eng.LoadPluginResolver(ctx, false)
+		if diags.Extend(diag) {
+			return diags
 		}
-		if diags.Extend(eval.LoadPluginRunner(cmd.Context())) {
-			return
+		diag = eng.LoadPluginRunner(ctx)
+		if diags.Extend(diag) {
+			return diags
 		}
+		var content plugin.Content
 		if publish {
-			diags.Extend(Publish(cmd.Context(), eval.Blocks, eval.PluginCaller(), target))
+			content, _, diag = eng.Publish(ctx, target)
 		} else {
-			diags.Extend(Render(cmd.Context(), eval.Blocks, eval.PluginCaller(), target, os.Stdout))
+			content, _, diag = eng.RenderContent(ctx, target)
 		}
-		return
+		if diags.Extend(diag) {
+			return diags
+		}
+		var printer print.Printer
+		switch format {
+		case "md":
+			printer = mdprint.New()
+		case "html":
+			printer = htmlprint.New()
+		default:
+			diags.Add("Unsupported format", fmt.Sprintf("Format '%s' is not supported for stdout", format))
+			return
+		}
+		printer = print.WithLogging(printer, slog.Default(), slog.String("format", format))
+		printer = print.WithTracing(printer, tracer, attribute.String("format", format))
+		err = printer.Print(ctx, os.Stdout, content)
+		if err != nil {
+			diags.AppendErr(err, "Error while printing")
+		}
+		return nil
 	},
-}
-
-var (
-	publish bool
-	format  string
-)
-
-func init() {
-	rootCmd.AddCommand(renderCmd)
-
-	renderCmd.Flags().BoolVar(&publish, "publish", false, "publish the rendered document")
-	renderCmd.Flags().StringVar(&format, "format", "md", "default output format of the document (md, html or pdf)")
-	renderCmd.SetUsageTemplate(UsageTemplate(
-		[2]string{"TARGET", "name of the document to be rendered as 'document.<name>'"},
-	))
 }

@@ -8,10 +8,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
-	"github.com/blackstork-io/fabric/printer/mdprint"
+	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
 type TableGeneratorTestSuite struct {
@@ -205,7 +206,7 @@ func (s *TableGeneratorTestSuite) TestNilHeader() {
 		},
 	})
 	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
 		Detail:   "missing header in table cell",
@@ -244,7 +245,7 @@ func (s *TableGeneratorTestSuite) TestNilValue() {
 		},
 	})
 	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
 		Detail:   "missing value in table cell",
@@ -284,7 +285,7 @@ func (s *TableGeneratorTestSuite) TestEmptyColumns() {
 		},
 	})
 	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
 		Detail:   "columns must not be empty",
@@ -323,7 +324,7 @@ func (s *TableGeneratorTestSuite) TestInvalidHeaderTemplate() {
 		},
 	})
 	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
 		Detail:   "failed to parse header template: template: header:1: bad character U+007D '}'",
@@ -362,7 +363,7 @@ func (s *TableGeneratorTestSuite) TestInvalidValueTemplate() {
 		},
 	})
 	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
 		Detail:   "failed to parse value template: template: value:1: bad character U+007D '}'",

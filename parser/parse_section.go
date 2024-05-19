@@ -100,7 +100,9 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 			if diags.Extend(diag) {
 				continue
 			}
-			res.Content = append(res.Content, (*definitions.ParsedContent)(call))
+			res.Content = append(res.Content, &definitions.ParsedContent{
+				Plugin: call,
+			})
 		case definitions.BlockKindMeta:
 			if origMeta != nil {
 				diags.Append(&hcl.Diagnostic{
@@ -132,7 +134,9 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 			if diags.Extend(diag) {
 				continue
 			}
-			res.Content = append(res.Content, parsedSubSection)
+			res.Content = append(res.Content, &definitions.ParsedContent{
+				Section: parsedSubSection,
+			})
 		}
 	}
 

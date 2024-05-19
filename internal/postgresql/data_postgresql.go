@@ -11,6 +11,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -23,6 +24,7 @@ func makePostgreSQLDataSource() *plugin.DataSource {
 				Name:        "database_url",
 				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
+				Secret:      true,
 			},
 		},
 		Args: dataspec.ObjectSpec{
@@ -77,10 +79,10 @@ func parseSqliteArgs(args cty.Value) (string, []any, error) {
 	return sqlQuery.AsString(), argsResult, nil
 }
 
-func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 	dbURL, err := parseSqliteConfig(params.Config)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid configuration",
 			Detail:   err.Error(),
@@ -88,7 +90,7 @@ func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 	}
 	sqlQuery, sqlArgs, err := parseSqliteArgs(params.Args)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid arguments",
 			Detail:   err.Error(),
@@ -97,7 +99,7 @@ func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to open database",
 			Detail:   err.Error(),
@@ -106,7 +108,7 @@ func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 	defer db.Close()
 	rows, err := db.QueryContext(ctx, sqlQuery, sqlArgs...)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to query database",
 			Detail:   err.Error(),
@@ -115,7 +117,7 @@ func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 	// read columns
 	columns, err := rows.Columns()
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to get column names",
 			Detail:   err.Error(),
@@ -133,7 +135,7 @@ func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 		}
 		err = rows.Scan(columnPtrArr...)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to scan row",
 				Detail:   err.Error(),
@@ -150,7 +152,7 @@ func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 		result = append(result, row)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to read rows",
 			Detail:   err.Error(),

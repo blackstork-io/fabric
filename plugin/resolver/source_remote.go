@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"mime"
 	"net/http"
 	"os"
@@ -16,6 +17,11 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
+	tracenoop "go.opentelemetry.io/otel/trace/noop"
 )
 
 const (
@@ -24,9 +30,8 @@ const (
 	regAPITimeout   = 10 * time.Second
 )
 
-// RemoteSource is a plugin source that looks up plugins from a remote registry.
-// The registry should implement the Fabric Registry API.
-type RemoteSource struct {
+// RemoteOptions represents the options for the remote source.
+type RemoteOptions struct {
 	// BaseURL is the base URL of the registry.
 	BaseURL string
 	// DownloadDir is the directory where the plugins are downloaded.
@@ -34,6 +39,40 @@ type RemoteSource struct {
 	// UserAgent is the http user agent to use for the requests.
 	// Useful for debugging and statistics on the registry side.
 	UserAgent string
+	// Tracer is the tracer to use for tracing.
+	Tracer trace.Tracer
+	// Logger is the logger to use for logging.
+	Logger *slog.Logger
+}
+
+// RemoteSource is a plugin source that looks up plugins from a remote registry.
+// The registry should implement the Fabric Registry API.
+type RemoteSource struct {
+	baseURL     string
+	downloadDir string
+	userAgent   string
+	tracer      trace.Tracer
+	logger      *slog.Logger
+}
+
+// NewRemote creates a new RemoteSource with the given options.
+// If the logger is nil, then a new logger is created with no output.
+// If the tracer is nil, then a new no-op tracer is used.
+func NewRemote(options RemoteOptions) *RemoteSource {
+	if options.Logger == nil {
+		options.Logger = slog.New(slog.NewTextHandler(io.Discard, nil))
+	}
+	if options.Tracer == nil {
+		options.Tracer = tracenoop.Tracer{}
+	}
+	options.Logger = options.Logger.With("source", "remote")
+	return &RemoteSource{
+		baseURL:     options.BaseURL,
+		downloadDir: options.DownloadDir,
+		userAgent:   options.UserAgent,
+		tracer:      options.Tracer,
+		logger:      options.Logger,
+	}
 }
 
 // regVersion represents a version of a plugin in the registry
@@ -67,7 +106,20 @@ func (err regError) Error() string {
 }
 
 // Lookup returns the versions found of the plugin with the given name.
-func (source RemoteSource) Lookup(ctx context.Context, name Name) ([]Version, error) {
+func (source RemoteSource) Lookup(ctx context.Context, name Name) (_ []Version, err error) {
+	ctx, span := source.tracer.Start(ctx, "RemoteSource.Lookup",
+		trace.WithAttributes(
+			attribute.String("name", name.String()),
+		),
+	)
+	source.logger.DebugContext(ctx, "Looking up plugin", "name", name)
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+	}()
 	versions, err := source.fetchVersions(ctx, name)
 	if err != nil {
 		if rerr, ok := err.(regError); ok && rerr.Code == "not_found" {
@@ -90,8 +142,8 @@ func (source RemoteSource) Lookup(ctx context.Context, name Name) ([]Version, er
 
 // call makes a http request to the registry with the given timeout.
 func (source RemoteSource) call(req *http.Request, timeout time.Duration) (*http.Response, error) {
-	if source.UserAgent != "" {
-		req.Header.Set("User-Agent", source.UserAgent)
+	if source.userAgent != "" {
+		req.Header.Set("User-Agent", source.userAgent)
 	}
 	client := &http.Client{
 		Timeout: timeout,
@@ -100,7 +152,16 @@ func (source RemoteSource) call(req *http.Request, timeout time.Duration) (*http
 }
 
 // decodeBody decodes the http response from the registry into the provided value.
-func (source RemoteSource) decodeBody(resp *http.Response, v interface{}) error {
+func (source RemoteSource) decodeBody(ctx context.Context, resp *http.Response, v interface{}) (err error) {
+	ctx, span := source.tracer.Start(ctx, "RemoteSource.decodeBody")
+	source.logger.DebugContext(ctx, "Decoding response body")
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+	}()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		var errResp struct {
 			Error regError `json:"error"`
@@ -114,8 +175,21 @@ func (source RemoteSource) decodeBody(resp *http.Response, v interface{}) error 
 }
 
 // fetchVersions looks up the plugin versions in the registry.
-func (source RemoteSource) fetchVersions(ctx context.Context, name Name) ([]regVersion, error) {
-	url := fmt.Sprintf("%s/v1/plugins/%s/%s/versions", source.BaseURL, name.Namespace(), name.Short())
+func (source RemoteSource) fetchVersions(ctx context.Context, name Name) (_ []regVersion, err error) {
+	ctx, span := source.tracer.Start(ctx, "RemoteSource.fetchVersions",
+		trace.WithAttributes(
+			attribute.String("name", name.String()),
+		),
+	)
+	source.logger.DebugContext(ctx, "Fetching plugin versions", "name", name)
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+	}()
+	url := fmt.Sprintf("%s/v1/plugins/%s/%s/versions", source.baseURL, name.Namespace(), name.Short())
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -129,14 +203,28 @@ func (source RemoteSource) fetchVersions(ctx context.Context, name Name) ([]regV
 	var respData struct {
 		Versions []regVersion `json:"versions"`
 	}
-	if err := source.decodeBody(resp, &respData); err != nil {
+	if err := source.decodeBody(ctx, resp, &respData); err != nil {
 		return nil, err
 	}
 	return respData.Versions, nil
 }
 
 // Resolve returns the binary path and checksum for the given plugin version.
-func (source RemoteSource) Resolve(ctx context.Context, name Name, version Version, checksums []Checksum) (*ResolvedPlugin, error) {
+func (source RemoteSource) Resolve(ctx context.Context, name Name, version Version, checksums []Checksum) (_ *ResolvedPlugin, err error) {
+	ctx, span := source.tracer.Start(ctx, "RemoteSource.Resolve",
+		trace.WithAttributes(
+			attribute.String("name", name.String()),
+			attribute.String("version", version.String()),
+		),
+	)
+	source.logger.DebugContext(ctx, "Resolving plugin", "name", name, "version", version)
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+	}()
 	downloadInfo, err := source.fetchDownloadInfo(ctx, name, version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get plugin from the registry: %w", err)
@@ -145,9 +233,23 @@ func (source RemoteSource) Resolve(ctx context.Context, name Name, version Versi
 }
 
 // fetchDownloadInfo resolves the download info for sthe given plugin version from the registry.
-func (source RemoteSource) fetchDownloadInfo(ctx context.Context, name Name, version Version) (*regDownloadInfo, error) {
+func (source RemoteSource) fetchDownloadInfo(ctx context.Context, name Name, version Version) (_ *regDownloadInfo, err error) {
+	ctx, span := source.tracer.Start(ctx, "RemoteSource.fetchDownloadInfo",
+		trace.WithAttributes(
+			attribute.String("name", name.String()),
+			attribute.String("version", version.String()),
+		),
+	)
+	source.logger.DebugContext(ctx, "Fetching plugin download info", "name", name, "version", version)
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+	}()
 	url := fmt.Sprintf("%s/v1/plugins/%s/%s/%s/download/%s/%s",
-		source.BaseURL,
+		source.baseURL,
 		name.Namespace(),
 		name.Short(),
 		version.String(),
@@ -165,15 +267,29 @@ func (source RemoteSource) fetchDownloadInfo(ctx context.Context, name Name, ver
 	}
 	defer resp.Body.Close()
 	var info regDownloadInfo
-	if err := source.decodeBody(resp, &info); err != nil {
+	if err := source.decodeBody(ctx, resp, &info); err != nil {
 		return nil, err
 	}
 	return &info, nil
 }
 
 // fetchChecksums fetches the plugin checksums from the registry.
-func (source RemoteSource) fetchChecksums(ctx context.Context, name Name, version Version) ([]Checksum, error) {
-	url := fmt.Sprintf("%s/v1/plugins/%s/%s/%s/checksums", source.BaseURL, name.Namespace(), name.Short(), version.String())
+func (source RemoteSource) fetchChecksums(ctx context.Context, name Name, version Version) (_ []Checksum, err error) {
+	ctx, span := source.tracer.Start(ctx, "RemoteSource.fetchChecksums",
+		trace.WithAttributes(
+			attribute.String("name", name.String()),
+			attribute.String("version", version.String()),
+		),
+	)
+	source.logger.DebugContext(ctx, "Fetching plugin checksums", "name", name, "version", version)
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+	}()
+	url := fmt.Sprintf("%s/v1/plugins/%s/%s/%s/checksums", source.baseURL, name.Namespace(), name.Short(), version.String())
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -187,7 +303,7 @@ func (source RemoteSource) fetchChecksums(ctx context.Context, name Name, versio
 	var respData struct {
 		Checksums []Checksum `json:"checksums"`
 	}
-	if err := source.decodeBody(resp, &respData); err != nil {
+	if err := source.decodeBody(ctx, resp, &respData); err != nil {
 		return nil, err
 	}
 	return respData.Checksums, nil
@@ -195,6 +311,20 @@ func (source RemoteSource) fetchChecksums(ctx context.Context, name Name, versio
 
 // download downloads the plugin from the registry and returns the binary path and checksum.
 func (source RemoteSource) download(ctx context.Context, name Name, version Version, info *regDownloadInfo, checksums []Checksum) (_ *ResolvedPlugin, err error) {
+	ctx, span := source.tracer.Start(ctx, "RemoteSource.download",
+		trace.WithAttributes(
+			attribute.String("name", name.String()),
+			attribute.String("version", version.String()),
+		),
+	)
+	source.logger.InfoContext(ctx, "Downloading plugin", "name", name, "version", version)
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+		}
+		span.End()
+	}()
 	// If the checksums are not provided it means plugin version is not locked and we need to fetch the checksums from the registry.
 	if len(checksums) == 0 {
 		var err error
@@ -310,7 +440,7 @@ func (source RemoteSource) extract(name Name, version Version, archive io.Reader
 	if found == nil {
 		return "", "", fmt.Errorf("plugin binary not found in tar.gz file")
 	}
-	binaryPath := filepath.Join(source.DownloadDir, name.Namespace(), filepath.Base(found.Name))
+	binaryPath := filepath.Join(source.downloadDir, name.Namespace(), filepath.Base(found.Name))
 	checksumPath := strings.TrimSuffix(binaryPath, ".exe") + "_checksums.txt"
 	if err := os.MkdirAll(filepath.Dir(binaryPath), 0o755); err != nil {
 		return "", "", fmt.Errorf("failed to create plugin directory: %w", err)

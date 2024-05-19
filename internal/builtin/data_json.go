@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -49,10 +50,10 @@ func makeJSONDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 	glob := params.Args.GetAttr("glob")
 	if glob.IsNull() || glob.AsString() == "" {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
 			Detail:   "glob is required",
@@ -60,7 +61,7 @@ func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plug
 	}
 	data, err := readJSONFiles(ctx, glob.AsString())
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to read json files",
 			Detail:   err.Error(),

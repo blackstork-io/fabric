@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -44,21 +45,21 @@ func makeRandomNumbersDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchRandomNumbers(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+func fetchRandomNumbers(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 	min := params.Config.GetAttr("min")
 	max := params.Config.GetAttr("max")
 
 	// validating the arguments
 	length := params.Args.GetAttr("length")
 	if length.IsNull() {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
 			Detail:   "length is required",
 		}}
 	}
 	if min.GreaterThan(max).True() {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse config",
 			Detail:   "min is greater than max",

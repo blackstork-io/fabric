@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -180,7 +179,7 @@ func Test_fetchCSVData(t *testing.T) {
 			var data plugin.Data
 			if !diags.HasErrors() {
 				ctx := context.Background()
-				var dgs hcl.Diagnostics
+				var dgs diagnostics.Diag
 				data, dgs = p.RetrieveData(ctx, "csv", &plugin.RetrieveDataParams{Config: cfgVal, Args: argVal})
 				diags.Extend(dgs)
 			}

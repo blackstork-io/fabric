@@ -9,7 +9,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
-	"github.com/blackstork-io/fabric/printer/mdprint"
+	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
 type ImageGeneratorTestSuite struct {

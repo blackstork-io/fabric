@@ -8,10 +8,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
-	"github.com/blackstork-io/fabric/printer/mdprint"
+	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
 type ListGeneratorTestSuite struct {
@@ -47,7 +48,7 @@ func (s *ListGeneratorTestSuite) TestNilQueryResult() {
 		DataContext: plugin.MapData{},
 	})
 	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to render template",
 		Detail:   "query_result is required in data context",
@@ -68,7 +69,7 @@ func (s *ListGeneratorTestSuite) TestNonArrayQueryResult() {
 		},
 	})
 	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to render template",
 		Detail:   "query_result must be an array",
@@ -231,7 +232,7 @@ func (s *ListGeneratorTestSuite) TestMissingDataContext() {
 		Args: args,
 	})
 	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to render template",
 		Detail:   "data context is required",

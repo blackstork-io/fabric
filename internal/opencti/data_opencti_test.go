@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -90,7 +91,7 @@ func (s *OpenCTIDataSourceTestSuite) TestFailRequest() {
 		}),
 	})
 	s.Nil(data)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to execute query",
 		Detail:   "unexpected status code: 404",
@@ -127,7 +128,7 @@ func (s *OpenCTIDataSourceTestSuite) TestInvalidQuery() {
 		}),
 	})
 	s.Nil(data)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Invalid GraphQL query",
 		Detail:   "external: field: stixCoreRelationshipsInvalid not defined on type: Query, locations: [], path: [query]",
@@ -186,7 +187,7 @@ func (s *OpenCTIDataSourceTestSuite) TestNullURL() {
 		}),
 	})
 	s.Nil(data)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse config",
 		Detail:   "graphql_url is required",
@@ -205,7 +206,7 @@ func (s *OpenCTIDataSourceTestSuite) TestEmptyURL() {
 		}),
 	})
 	s.Nil(data)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse config",
 		Detail:   "graphql_url is required",
@@ -224,7 +225,7 @@ func (s *OpenCTIDataSourceTestSuite) TestEmptyQuery() {
 		}),
 	})
 	s.Nil(data)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
 		Detail:   "graphql_query is required",
@@ -243,7 +244,7 @@ func (s *OpenCTIDataSourceTestSuite) TestNullQuery() {
 		}),
 	})
 	s.Nil(data)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
 		Detail:   "graphql_query is required",
@@ -263,7 +264,7 @@ func (s *OpenCTIDataSourceTestSuite) TestCancellation() {
 		}),
 	})
 	s.Nil(data)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to execute query",
 		Detail:   "Post \"http://localhost\": context canceled",
@@ -319,7 +320,7 @@ func (s *OpenCTIDataSourceTestSuite) TestCancellation() {
 
 // func (s *OpenCTIDataSourceTestSuite) TestFailRequest() {
 // 	want := plugininterface.Result{
-// 		Diags: hcl.Diagnostics{
+// 		Diags: diagnostics.Diag{
 // 			{
 // 				Severity: hcl.DiagError,
 // 				Summary:  "Failed to execute query",
@@ -348,7 +349,7 @@ func (s *OpenCTIDataSourceTestSuite) TestCancellation() {
 
 // func (s *OpenCTIDataSourceTestSuite) TestInvalidQuery() {
 // 	want := plugininterface.Result{
-// 		Diags: hcl.Diagnostics{
+// 		Diags: diagnostics.Diag{
 // 			{
 // 				Severity: hcl.DiagError,
 // 				Summary:  "Invalid GraphQL query",

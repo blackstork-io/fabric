@@ -1,11 +1,15 @@
 package runner
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 
 	"github.com/hashicorp/hcl/v2"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -16,9 +20,25 @@ type Runner struct {
 	publisherMap map[string]loadedPublisher
 }
 
-func Load(binaryMap map[string]string, builtin *plugin.Schema, logger *slog.Logger) (*Runner, hcl.Diagnostics) {
-	loader := makeLoader(binaryMap, builtin, logger)
-	if diags := loader.loadAll(); diags.HasErrors() {
+func Load(
+	ctx context.Context,
+	binaryMap map[string]string,
+	builtin *plugin.Schema,
+	logger *slog.Logger,
+	tracer trace.Tracer,
+) (_ *Runner, diags diagnostics.Diag) {
+	ctx, span := tracer.Start(ctx, "runner.Load")
+	defer func() {
+		if diags.HasErrors() {
+			span.RecordError(diags)
+			span.SetStatus(codes.Error, diags.Error())
+		}
+		span.End()
+	}()
+	logger = logger.With("component", "runner")
+	logger.DebugContext(ctx, "Loading plugins")
+	loader := makeLoader(binaryMap, builtin, logger, tracer)
+	if diags = loader.loadAll(ctx); diags.HasErrors() {
 		return nil, diags
 	}
 	return &Runner{
@@ -29,44 +49,32 @@ func Load(binaryMap map[string]string, builtin *plugin.Schema, logger *slog.Logg
 	}, nil
 }
 
-func (m *Runner) DataSource(name string) (*plugin.DataSource, hcl.Diagnostics) {
-	source, has := m.dataMap[name]
-	if !has {
-		return nil, hcl.Diagnostics{{
-			Severity: hcl.DiagError,
-			Summary:  fmt.Sprintf("Missing data source '%s'", name),
-			Detail:   fmt.Sprintf("'%s' not found in any plugin", name),
-		}}
+func (m *Runner) DataSource(name string) (*plugin.DataSource, bool) {
+	source, ok := m.dataMap[name]
+	if !ok {
+		return nil, false
 	}
-	return source.DataSource, nil
+	return source.DataSource, true
 }
 
-func (m *Runner) ContentProvider(name string) (*plugin.ContentProvider, hcl.Diagnostics) {
-	provider, has := m.contentMap[name]
-	if !has {
-		return nil, hcl.Diagnostics{{
-			Severity: hcl.DiagError,
-			Summary:  fmt.Sprintf("Missing content provider '%s'", name),
-			Detail:   fmt.Sprintf("'%s' not found in any plugin", name),
-		}}
+func (m *Runner) ContentProvider(name string) (*plugin.ContentProvider, bool) {
+	provider, ok := m.contentMap[name]
+	if !ok {
+		return nil, false
 	}
-	return provider.ContentProvider, nil
+	return provider.ContentProvider, true
 }
 
-func (m *Runner) Publisher(name string) (*plugin.Publisher, hcl.Diagnostics) {
-	publisher, has := m.publisherMap[name]
-	if !has {
-		return nil, hcl.Diagnostics{{
-			Severity: hcl.DiagError,
-			Summary:  fmt.Sprintf("Missing publisher '%s'", name),
-			Detail:   fmt.Sprintf("'%s' not found in any plugin", name),
-		}}
+func (m *Runner) Publisher(name string) (*plugin.Publisher, bool) {
+	publisher, ok := m.publisherMap[name]
+	if !ok {
+		return nil, false
 	}
-	return publisher.Publisher, nil
+	return publisher.Publisher, true
 }
 
-func (m *Runner) Close() hcl.Diagnostics {
-	var diags hcl.Diagnostics
+func (m *Runner) Close() diagnostics.Diag {
+	var diags diagnostics.Diag
 	for _, p := range m.pluginMap {
 		if err := p.closefn(); err != nil {
 			diags = append(diags, &hcl.Diagnostic{

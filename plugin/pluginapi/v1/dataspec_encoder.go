@@ -104,6 +104,7 @@ func encodeAttr(src *dataspec.AttrSpec) (*AttrSpec, error) {
 		MinInclusive: min,
 		MaxInclusive: max,
 		Deprecated:   src.Deprecated,
+		Secret:       src.Secret,
 	}, nil
 }
 

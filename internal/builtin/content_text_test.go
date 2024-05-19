@@ -8,10 +8,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
-	"github.com/blackstork-io/fabric/printer/mdprint"
+	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
 type TextTestSuite struct {
@@ -88,7 +89,7 @@ func (s *TextTestSuite) TestCallInvalidTemplate() {
 		},
 	})
 	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to render text",
 		Detail:   "failed to parse text template: template: text:1: bad character U+007D '}'",

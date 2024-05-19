@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -47,10 +48,10 @@ func makeListContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
+func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
 	format, tmpl, err := parseListContentArgs(params)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse template",
 			Detail:   err.Error(),
@@ -58,7 +59,7 @@ func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 	}
 	result, err := renderListContent(format, tmpl, params.DataContext)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to render template",
 			Detail:   err.Error(),

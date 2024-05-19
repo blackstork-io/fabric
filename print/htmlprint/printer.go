@@ -2,6 +2,7 @@ package htmlprint
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
 	"encoding/json"
 	"fmt"
@@ -17,12 +18,11 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/blackstork-io/fabric/plugin"
-	"github.com/blackstork-io/fabric/printer/mdprint"
+	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
 //go:embed document.gotempl
 var documentTemplStr string
-
 var templ = template.Must(template.New("document").Parse(documentTemplStr))
 
 const (
@@ -44,30 +44,45 @@ type Data struct {
 	CSSSources  []template.URL
 }
 
+// Printer is the interface for printing html content.
 type Printer struct {
-	md *mdprint.Printer
+	md mdprint.Printer
 }
 
-func New() *Printer {
-	return &Printer{
-		md: mdprint.New(),
+// New creates a new html printer.
+func New() Printer {
+	return Printer{mdprint.New()}
+}
+
+// PrintString is a helper function to print html content to a string.
+func PrintString(el plugin.Content) string {
+	buf := bytes.NewBuffer(nil)
+	if err := Print(buf, el); err != nil {
+		return ""
 	}
+	return buf.String()
 }
 
-func (p *Printer) Print(w io.Writer, el plugin.Content) error {
+// Print is a helper function to print html content to a writer.
+func Print(w io.Writer, el plugin.Content) error {
+	p := New()
+	return p.Print(context.Background(), w, el)
+}
+
+func (p Printer) Print(ctx context.Context, w io.Writer, el plugin.Content) (err error) {
 	data := Data{
 		Title: "Untitled",
 	}
 	if title, ok := p.firstTitle(el); ok {
 		data.Title = title
 	}
-	err := p.evalFrontmatter(&data, el)
+	err = p.evalFrontmatter(&data, el)
 	if err != nil {
 		return err
 	}
 
 	buf := bytes.NewBuffer(nil)
-	if err := p.md.Print(buf, el); err != nil {
+	if err := p.md.Print(ctx, buf, el); err != nil {
 		return err
 	}
 	md := goldmark.New(
@@ -88,7 +103,7 @@ func (p *Printer) Print(w io.Writer, el plugin.Content) error {
 	return templ.Execute(w, data)
 }
 
-func (p *Printer) evalFrontmatter(data *Data, el plugin.Content) error {
+func (p Printer) evalFrontmatter(data *Data, el plugin.Content) error {
 	fm, ok := p.extractFrontmatter(el)
 	if ok {
 		parsed, err := p.parseFrontmatter(fm)
@@ -125,7 +140,7 @@ func (p *Printer) evalFrontmatter(data *Data, el plugin.Content) error {
 	return nil
 }
 
-func (p *Printer) firstTitle(el plugin.Content) (string, bool) {
+func (p Printer) firstTitle(el plugin.Content) (string, bool) {
 	switch el := el.(type) {
 	case *plugin.ContentSection:
 		for _, c := range el.Children {
@@ -144,7 +159,7 @@ func (p *Printer) firstTitle(el plugin.Content) (string, bool) {
 	return "", false
 }
 
-func (p *Printer) extractFrontmatter(el plugin.Content) (*plugin.ContentElement, bool) {
+func (p Printer) extractFrontmatter(el plugin.Content) (*plugin.ContentElement, bool) {
 	section, ok := el.(*plugin.ContentSection)
 	if !ok {
 		return nil, false
@@ -163,7 +178,7 @@ func (p *Printer) extractFrontmatter(el plugin.Content) (*plugin.ContentElement,
 	return nil, false
 }
 
-func (p *Printer) parseFrontmatter(fm *plugin.ContentElement) (result map[string]any, err error) {
+func (p Printer) parseFrontmatter(fm *plugin.ContentElement) (result map[string]any, err error) {
 	str := fm.Markdown
 	switch {
 	case strings.HasPrefix(str, "{"):

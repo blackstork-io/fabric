@@ -7,7 +7,7 @@ import (
 )
 
 func TestPluginSchema(t *testing.T) {
-	schema := Plugin("1.2.3")
+	schema := Plugin("1.2.3", nil, nil)
 	assert.Equal(t, "blackstork/builtin", schema.Name)
 	assert.Equal(t, "1.2.3", schema.Version)
 	assert.NotNil(t, schema.DataSources["csv"])

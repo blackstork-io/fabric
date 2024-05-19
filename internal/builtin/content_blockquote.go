@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -27,11 +28,11 @@ func makeBlockQuoteContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genBlockQuoteContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
+func genBlockQuoteContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
 	value := params.Args.GetAttr("value").AsString()
 	text, err := genTextContentText(value, params.DataContext)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to render blockquote",
 			Detail:   err.Error(),

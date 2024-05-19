@@ -8,10 +8,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
-	"github.com/blackstork-io/fabric/printer/mdprint"
+	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
 type TitleTestSuite struct {
@@ -113,7 +114,7 @@ func (s *TitleTestSuite) TestWithSizeTooBig() {
 			"name": plugin.StringData("World"),
 		},
 	})
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
 		Detail:   "absolute_size must be between 0 and 5",

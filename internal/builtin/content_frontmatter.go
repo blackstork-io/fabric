@@ -11,6 +11,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"gopkg.in/yaml.v3"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
@@ -54,9 +55,9 @@ func makeFrontMatterContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
+func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
 	if err := validateFrontMatterContentTree(params.DataContext, params.ContentID); err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Error while validating frontmatter constraints",
 			Detail:   err.Error(),
@@ -64,7 +65,7 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 	}
 	format, m, err := parseFrontMatterArgs(params.Args, params.DataContext)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
 			Detail:   err.Error(),
@@ -72,7 +73,7 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 	}
 	result, err := renderFrontMatterContent(format, m)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to render frontmatter",
 			Detail:   err.Error(),

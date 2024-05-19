@@ -11,8 +11,9 @@ import (
 
 	"github.com/blackstork-io/fabric/internal/openai/client"
 	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/openai/client"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
-	"github.com/blackstork-io/fabric/printer/mdprint"
+	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
 type OpenAITextContentTestSuite struct {
@@ -145,7 +146,7 @@ func (s *OpenAITextContentTestSuite) TestMissingPrompt() {
 		DataContext: plugin.MapData{},
 	})
 	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to generate text",
 		Detail:   "prompt is required in invocation",
@@ -167,7 +168,7 @@ func (s *OpenAITextContentTestSuite) TestMissingAPIKey() {
 		DataContext: plugin.MapData{},
 	})
 	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to create client",
 		Detail:   "api_key is required in configuration",
@@ -193,7 +194,7 @@ func (s *OpenAITextContentTestSuite) TestFailingClient() {
 		DataContext: plugin.MapData{},
 	})
 	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to generate text",
 		Detail:   "openai[error_type]: error_message",
@@ -217,7 +218,7 @@ func (s *OpenAITextContentTestSuite) TestCancellation() {
 		DataContext: plugin.MapData{},
 	})
 	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to generate text",
 		Detail:   "context canceled",
@@ -244,7 +245,7 @@ func (s *OpenAITextContentTestSuite) TestErrorEncoding() {
 		DataContext: plugin.MapData{},
 	})
 	s.Nil(result)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to generate text",
 		Detail:   "openai[invalid_request_error]: message of error",

@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -60,10 +61,10 @@ func makeTitleContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
+func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
 	value := params.Args.GetAttr("value")
 	if value.IsNull() {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
 			Detail:   "value is required",
@@ -82,7 +83,7 @@ func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (
 		titleSize = minAbsoluteTitleSize
 	}
 	if titleSize < minAbsoluteTitleSize || titleSize > maxAbsoluteTitleSize {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
 			Detail:   fmt.Sprintf("absolute_size must be between %d and %d", minAbsoluteTitleSize, maxAbsoluteTitleSize),
@@ -91,7 +92,7 @@ func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (
 
 	text, err := genTextContentText(value.AsString(), params.DataContext)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to render value",
 			Detail:   err.Error(),

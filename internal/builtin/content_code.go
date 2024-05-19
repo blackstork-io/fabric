@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -34,19 +35,12 @@ func makeCodeContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genCodeContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, hcl.Diagnostics) {
+func genCodeContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
 	value := params.Args.GetAttr("value")
-	// if value.IsNull() {
-	// 	return nil, hcl.Diagnostics{{
-	// 		Severity: hcl.DiagError,
-	// 		Summary:  "Failed to parse arguments",
-	// 		Detail:   "value is required",
-	// 	}}
-	// }
 	lang := params.Args.GetAttr("language")
 	text, err := genTextContentText(value.AsString(), params.DataContext)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to render code",
 			Detail:   err.Error(),

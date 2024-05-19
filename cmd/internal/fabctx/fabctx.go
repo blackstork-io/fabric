@@ -9,10 +9,11 @@ import (
 	"time"
 )
 
+// FabCtx is a context that can be used to cancel the main context and trigger cleanup.
+// It is used to handle graceful shutdowns for the fabric CLI.
 type FabCtx struct {
 	mainCtx    context.Context
 	cleanupCtx context.Context
-	linting    bool
 }
 
 var _ context.Context = (*FabCtx)(nil)
@@ -44,7 +45,7 @@ func Get(ctx context.Context) *FabCtx {
 	if fc == nil {
 		return nil
 	}
-	if fc, ok := ctx.(*FabCtx); ok {
+	if fc, ok := fc.(*FabCtx); ok {
 		return fc
 	}
 	return nil
@@ -68,14 +69,6 @@ func (ctx *FabCtx) CleanupCtx() context.Context {
 	return ctx.cleanupCtx
 }
 
-func (ctx *FabCtx) IsLinting() bool {
-	if ctx == nil {
-		slog.Warn("IsLinting was called on a nil ptr!")
-		return false
-	}
-	return ctx.linting
-}
-
 type fabCtxOpts struct {
 	signals bool
 }
@@ -84,12 +77,6 @@ type Option func(*fabCtxOpts)
 
 func NoSignals(opts *fabCtxOpts) {
 	opts.signals = false
-}
-
-func WithLinting(parent *FabCtx) *FabCtx {
-	ctx := *parent
-	ctx.linting = true
-	return &ctx
 }
 
 // Returns a cli-appropriate context (cancelable by ctrl+c).
@@ -123,14 +110,14 @@ func New(options ...Option) *FabCtx {
 		for range c {
 			switch caught {
 			case 0:
-				slog.Warn("Received os.Interrupt")
+				slog.WarnContext(&ctx, "Received os.Interrupt")
 				mainCancel(fmt.Errorf("got termination request (gentle)"))
 			case 1:
-				slog.Error("Received second os.Interrupt")
+				slog.ErrorContext(&ctx, "Received second os.Interrupt")
 				cleanupCancel(fmt.Errorf("got termination request (forceful)"))
 			default:
-				slog.Error("Rough exit (3 interrupts received, probably deadlocked)")
-				os.Exit(1)
+				slog.ErrorContext(&ctx, "Rough exit (3 interrupts received, probably deadlocked)")
+				panic("rough exit")
 			}
 			caught++
 		}

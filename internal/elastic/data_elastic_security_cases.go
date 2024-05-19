@@ -9,6 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/elastic/kbclient"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -29,12 +30,14 @@ func makeElasticSecurityCasesDataSource(loader KibanaClientLoaderFn) *plugin.Dat
 				Constraints: constraint.RequiredNonNull,
 			},
 			&dataspec.AttrSpec{
-				Name: "api_key_str",
-				Type: cty.String,
+				Name:   "api_key_str",
+				Type:   cty.String,
+				Secret: true,
 			},
 			&dataspec.AttrSpec{
-				Name: "api_key",
-				Type: cty.List(cty.String),
+				Name:   "api_key",
+				Type:   cty.List(cty.String),
+				Secret: true,
 			},
 		},
 		Args: dataspec.ObjectSpec{
@@ -103,10 +106,10 @@ func makeElasticSecurityCasesDataSource(loader KibanaClientLoaderFn) *plugin.Dat
 }
 
 func fetchElasticSecurityCases(loader KibanaClientLoaderFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 		client, err := parseSecurityCasesConfig(loader, params.Config)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to parse configuration",
 				Detail:   err.Error(),
@@ -114,7 +117,7 @@ func fetchElasticSecurityCases(loader KibanaClientLoaderFn) plugin.RetrieveDataF
 		}
 		req, err := parseSecurityCasesArgs(params.Args)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to parse arguments",
 				Detail:   err.Error(),
@@ -125,7 +128,7 @@ func fetchElasticSecurityCases(loader KibanaClientLoaderFn) plugin.RetrieveDataF
 			num, _ := attr.AsBigFloat().Int64()
 			size = int(num)
 			if size < minCasesSize {
-				return nil, hcl.Diagnostics{{
+				return nil, diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Invalid size",
 					Detail:   "size must be greater than 0",
@@ -138,7 +141,7 @@ func fetchElasticSecurityCases(loader KibanaClientLoaderFn) plugin.RetrieveDataF
 		for {
 			res, err := client.ListSecurityCases(ctx, req)
 			if err != nil {
-				return nil, hcl.Diagnostics{{
+				return nil, diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to list security cases",
 					Detail:   err.Error(),
@@ -147,7 +150,7 @@ func fetchElasticSecurityCases(loader KibanaClientLoaderFn) plugin.RetrieveDataF
 			for _, c := range res.Cases {
 				data, err := plugin.ParseDataAny(c)
 				if err != nil {
-					return nil, hcl.Diagnostics{{
+					return nil, diagnostics.Diag{{
 						Severity: hcl.DiagError,
 						Summary:  "Failed to parse security case",
 						Detail:   err.Error(),

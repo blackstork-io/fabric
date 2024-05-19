@@ -11,6 +11,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/splunk/client"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -23,6 +24,7 @@ func makeSplunkSearchDataSchema(loader ClientLoadFn) *plugin.DataSource {
 				Name:        "auth_token",
 				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
+				Secret:      true,
 			},
 			&dataspec.AttrSpec{
 				Name: "host",
@@ -65,10 +67,10 @@ func makeSplunkSearchDataSchema(loader ClientLoadFn) *plugin.DataSource {
 }
 
 func fetchSplunkSearchData(loader ClientLoadFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 		cli, err := makeClient(loader, params.Config)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to create client",
 				Detail:   err.Error(),
@@ -77,7 +79,7 @@ func fetchSplunkSearchData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 
 		result, err := search(cli, ctx, params.Args)
 		if err != nil {
-			return nil, hcl.Diagnostics{{
+			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to search",
 				Detail:   err.Error(),

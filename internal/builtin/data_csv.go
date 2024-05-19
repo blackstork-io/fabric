@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -59,11 +60,11 @@ func makeCSVDataSource() *plugin.DataSource {
 	}
 }
 
-func getDelim(config cty.Value) (r rune, diags hcl.Diagnostics) {
+func getDelim(config cty.Value) (r rune, diags diagnostics.Diag) {
 	delim := config.GetAttr("delimiter").AsString()
 	delimRune, runeLen := utf8.DecodeRuneInString(delim)
 	if runeLen == 0 || len(delim) != runeLen {
-		diags = hcl.Diagnostics{{
+		diags = diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "delimiter must be a single character",
 		}}
@@ -73,10 +74,10 @@ func getDelim(config cty.Value) (r rune, diags hcl.Diagnostics) {
 	return
 }
 
-func fetchCSVData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+func fetchCSVData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 	path := params.Args.GetAttr("path").AsString()
 	if path == "" {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "path is required",
 		}}
@@ -87,7 +88,7 @@ func fetchCSVData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 	}
 	data, err := readCSVFile(ctx, path, delim)
 	if err != nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to read csv file",
 			Detail:   err.Error(),

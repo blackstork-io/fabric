@@ -8,6 +8,7 @@ import (
 	"github.com/mmcdole/gofeed"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -55,7 +56,7 @@ func makeRSSDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, hcl.Diagnostics) {
+func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 	fp := gofeed.NewParser()
 	url := params.Args.GetAttr("url").AsString()
 
@@ -72,7 +73,7 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 
 	feed, err := fp.ParseURLWithContext(url, ctx)
 	if err != nil {
-		return nil, hcl.Diagnostics{&hcl.Diagnostic{
+		return nil, diagnostics.Diag{&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse the feed",
 			Detail:   err.Error(),

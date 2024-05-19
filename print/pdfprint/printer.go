@@ -2,6 +2,7 @@ package pdfprint
 
 import (
 	"bytes"
+	"context"
 	"image/color"
 	"io"
 
@@ -11,23 +12,29 @@ import (
 	"github.com/yuin/goldmark/parser"
 
 	"github.com/blackstork-io/fabric/plugin"
-	"github.com/blackstork-io/fabric/printer/mdprint"
+	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
+// Printer is the interface for printing pdf content.
 type Printer struct {
-	md *mdprint.Printer
+	md mdprint.Printer
 }
 
-func New() *Printer {
-	return &Printer{
-		md: mdprint.New(),
-	}
+// New creates a new pdf printer.
+func New() Printer {
+	return Printer{mdprint.New()}
 }
 
-func (p *Printer) Print(w io.Writer, el plugin.Content) error {
+// Print is a helper function to print pdf content to a writer.
+func Print(w io.Writer, el plugin.Content) error {
+	p := New()
+	return p.Print(context.Background(), w, el)
+}
+
+func (p Printer) Print(ctx context.Context, w io.Writer, el plugin.Content) (err error) {
 	p.removeFrontatter(el)
 	buf := bytes.NewBuffer(nil)
-	if err := p.md.Print(buf, el); err != nil {
+	if err := p.md.Print(ctx, buf, el); err != nil {
 		return err
 	}
 	md := goldmark.New(
@@ -52,7 +59,7 @@ func (p *Printer) Print(w io.Writer, el plugin.Content) error {
 	return md.Convert(buf.Bytes(), w)
 }
 
-func (p *Printer) removeFrontatter(el plugin.Content) bool {
+func (p Printer) removeFrontatter(el plugin.Content) bool {
 	section, ok := el.(*plugin.ContentSection)
 	if !ok {
 		return false

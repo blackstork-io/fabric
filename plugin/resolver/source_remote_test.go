@@ -49,10 +49,10 @@ func TestRemoteSourceLookup(t *testing.T) {
 		}`))
 	}))
 	defer srv.Close()
-	source := RemoteSource{
+	source := NewRemote(RemoteOptions{
 		BaseURL:   srv.URL,
 		UserAgent: "test/0.1",
-	}
+	})
 	versions, err := source.Lookup(context.Background(), Name{"blackstork", "sqlite"})
 	assert.NoError(t, err)
 	assert.Equal(t, []Version{
@@ -72,9 +72,9 @@ func TestRemoteSourceLookupError(t *testing.T) {
 		}`))
 	}))
 	defer srv.Close()
-	source := RemoteSource{
+	source := NewRemote(RemoteOptions{
 		BaseURL: srv.URL,
-	}
+	})
 	versions, err := source.Lookup(context.Background(), Name{"blackstork", "sqlite"})
 	assert.EqualError(t, err, "plugin not found")
 	assert.Nil(t, versions)
@@ -167,21 +167,21 @@ func TestRemoteSourceResolve(t *testing.T) {
 		}
 	}))
 	defer srv.Close()
-	source := RemoteSource{
+	source := NewRemote(RemoteOptions{
 		BaseURL:     srv.URL,
 		UserAgent:   "test/0.1",
 		DownloadDir: t.TempDir(),
-	}
+	})
 	// without checksums input
 	plugin, err := source.Resolve(context.Background(), Name{"blackstork", "sqlite"}, mustVersion(t, "1.0.0"), nil)
 	require.NoError(t, err)
 	assert.Equal(t, checksums, plugin.Checksums)
-	assert.Equal(t, filepath.Join(source.DownloadDir, "blackstork/sqlite@1.0.0"), plugin.BinaryPath)
+	assert.Equal(t, filepath.Join(source.downloadDir, "blackstork/sqlite@1.0.0"), plugin.BinaryPath)
 	// pass with valid checksums input
 	plugin, err = source.Resolve(context.Background(), Name{"blackstork", "sqlite"}, mustVersion(t, "1.0.0"), checksums)
 	require.NoError(t, err)
 	assert.Equal(t, checksums, plugin.Checksums)
-	assert.Equal(t, filepath.Join(source.DownloadDir, "blackstork/sqlite@1.0.0"), plugin.BinaryPath)
+	assert.Equal(t, filepath.Join(source.downloadDir, "blackstork/sqlite@1.0.0"), plugin.BinaryPath)
 	// fail with invalid checksums input
 	plugin, err = source.Resolve(context.Background(), Name{"blackstork", "sqlite"}, mustVersion(t, "1.0.0"), []Checksum{
 		{

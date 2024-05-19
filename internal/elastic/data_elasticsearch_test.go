@@ -17,6 +17,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/elasticsearch"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -479,7 +480,7 @@ func (s *IntegrationTestSuite) TestGetByIDNotFound() {
 		Args:   args,
 	})
 	s.Nil(data)
-	s.Equal(hcl.Diagnostics{{
+	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to fetch data",
 		Detail:   "failed to get document: [404 Not Found] {\"_index\":\"test_index\",\"_id\":\"00000000-0000-0000-0000-000000000000\",\"found\":false}",

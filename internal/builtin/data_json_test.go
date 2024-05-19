@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -21,7 +22,7 @@ func Test_makeJSONDataSchema(t *testing.T) {
 func Test_fetchJSONData(t *testing.T) {
 	type result struct {
 		Data  plugin.Data
-		Diags hcl.Diagnostics
+		Diags diagnostics.Diag
 	}
 	tt := []struct {
 		name     string
@@ -32,7 +33,7 @@ func Test_fetchJSONData(t *testing.T) {
 			name: "invalid_json_file",
 			glob: "testdata/json/invalid.txt",
 			expected: result{
-				Diags: hcl.Diagnostics{{
+				Diags: diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to read json files",
 					Detail:   "invalid character 'i' looking for beginning of object key string",
@@ -42,7 +43,7 @@ func Test_fetchJSONData(t *testing.T) {
 		{
 			name: "empty_glob",
 			expected: result{
-				Diags: hcl.Diagnostics{{
+				Diags: diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to parse arguments",
 					Detail:   "glob is required",

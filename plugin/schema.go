@@ -6,6 +6,8 @@ import (
 	"slices"
 
 	"github.com/hashicorp/hcl/v2"
+
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
 type Schema struct {
@@ -18,8 +20,8 @@ type Schema struct {
 	Publishers       Publishers
 }
 
-func (p *Schema) Validate() hcl.Diagnostics {
-	var diags hcl.Diagnostics
+func (p *Schema) Validate() diagnostics.Diag {
+	var diags diagnostics.Diag
 	if p.Name == "" {
 		diags = append(diags, &hcl.Diagnostic{
 			Severity: hcl.DiagError,
@@ -46,16 +48,16 @@ func (p *Schema) Validate() hcl.Diagnostics {
 	return diags
 }
 
-func (p *Schema) RetrieveData(ctx context.Context, name string, params *RetrieveDataParams) (Data, hcl.Diagnostics) {
+func (p *Schema) RetrieveData(ctx context.Context, name string, params *RetrieveDataParams) (_ Data, diags diagnostics.Diag) {
 	if p == nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "No schema",
 			Detail:   "No schema defined",
 		}}
 	}
 	if p.DataSources == nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "No data sources",
 			Detail:   "No data sources defined in schema",
@@ -63,7 +65,7 @@ func (p *Schema) RetrieveData(ctx context.Context, name string, params *Retrieve
 	}
 	source, ok := p.DataSources[name]
 	if !ok || source == nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Data source not found",
 			Detail:   fmt.Sprintf("Data source '%s' not found in schema", name),
@@ -72,16 +74,16 @@ func (p *Schema) RetrieveData(ctx context.Context, name string, params *Retrieve
 	return source.Execute(ctx, params)
 }
 
-func (p *Schema) ProvideContent(ctx context.Context, name string, params *ProvideContentParams) (*ContentResult, hcl.Diagnostics) {
+func (p *Schema) ProvideContent(ctx context.Context, name string, params *ProvideContentParams) (_ *ContentResult, diags diagnostics.Diag) {
 	if p == nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "No schema",
 			Detail:   "No schema defined",
 		}}
 	}
 	if p.ContentProviders == nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "No content providers",
 			Detail:   "No content providers defined in schema",
@@ -89,7 +91,7 @@ func (p *Schema) ProvideContent(ctx context.Context, name string, params *Provid
 	}
 	provider, ok := p.ContentProviders[name]
 	if !ok || provider == nil {
-		return nil, hcl.Diagnostics{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Content provider not found",
 			Detail:   fmt.Sprintf("Content provider '%s' not found in schema", name),
@@ -107,16 +109,16 @@ func (p *Schema) ProvideContent(ctx context.Context, name string, params *Provid
 	return result, diags
 }
 
-func (p *Schema) Publish(ctx context.Context, name string, params *PublishParams) hcl.Diagnostics {
+func (p *Schema) Publish(ctx context.Context, name string, params *PublishParams) (diags diagnostics.Diag) {
 	if p == nil {
-		return hcl.Diagnostics{{
+		return diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "No schema",
 			Detail:   "No schema defined",
 		}}
 	}
 	if p.Publishers == nil {
-		return hcl.Diagnostics{{
+		return diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "No publishers",
 			Detail:   "No publishers defined in schema",
@@ -124,14 +126,14 @@ func (p *Schema) Publish(ctx context.Context, name string, params *PublishParams
 	}
 	publisher, ok := p.Publishers[name]
 	if !ok || publisher == nil {
-		return hcl.Diagnostics{{
+		return diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Publisher not found",
 			Detail:   fmt.Sprintf("Publisher '%s' not found in schema", name),
 		}}
 	}
 	if !slices.Contains(publisher.AllowedFormats, params.Format) {
-		return hcl.Diagnostics{{
+		return diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid format",
 			Detail:   fmt.Sprintf("Publisher '%s' does not support format '%s'", name, params.Format),

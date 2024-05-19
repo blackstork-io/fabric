@@ -77,10 +77,12 @@ func (t *titleInvocation) ParseInvocation(spec dataspec.RootSpec) (val cty.Value
 func NewTitle(title *hclsyntax.Attribute, resolver ConfigResolver) *ParsedContent {
 	pluginName := "title"
 	return &ParsedContent{
-		PluginName: pluginName,
-		Config:     resolver(BlockKindContent, pluginName),
-		Invocation: &titleInvocation{
-			Expression: title.Expr,
+		Plugin: &ParsedPlugin{
+			PluginName: pluginName,
+			Config:     resolver(BlockKindContent, pluginName),
+			Invocation: &titleInvocation{
+				Expression: title.Expr,
+			},
 		},
 	}
 }

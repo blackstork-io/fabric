@@ -14,6 +14,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -80,7 +81,7 @@ func (s *IntegrationTestSuite) TestEmptyDatabaseURL() {
 	})
 	s.Nil(data)
 
-	s.Equal(diags, hcl.Diagnostics{{
+	s.Equal(diags, diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Invalid configuration",
 		Detail:   "database_url is required",
@@ -95,7 +96,7 @@ func (s *IntegrationTestSuite) TestNilDatabaseURL() {
 	})
 	s.Nil(data)
 
-	s.Equal(diags, hcl.Diagnostics{{
+	s.Equal(diags, diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Invalid configuration",
 		Detail:   "database_url is required",
@@ -114,7 +115,7 @@ func (s *IntegrationTestSuite) TestEmptySQLQuery() {
 	})
 	s.Nil(data)
 
-	s.Equal(diags, hcl.Diagnostics{{
+	s.Equal(diags, diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Invalid arguments",
 		Detail:   "sql_query is required",
@@ -133,7 +134,7 @@ func (s *IntegrationTestSuite) TestNilSQLQuery() {
 	})
 	s.Nil(data)
 
-	s.Equal(diags, hcl.Diagnostics{{
+	s.Equal(diags, diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Invalid arguments",
 		Detail:   "sql_query is required",
@@ -243,7 +244,7 @@ func (s *IntegrationTestSuite) TestSelectWithMissingArgs() {
 		}),
 	})
 	s.Nil(data)
-	s.Equal(diags, hcl.Diagnostics{{
+	s.Equal(diags, diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to query database",
 		Detail:   "pq: there is no parameter $1",
@@ -263,7 +264,7 @@ func (s *IntegrationTestSuite) TestCancellation() {
 		}),
 	})
 	s.Nil(data)
-	s.Equal(diags, hcl.Diagnostics{{
+	s.Equal(diags, diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to query database",
 		Detail:   "context canceled",

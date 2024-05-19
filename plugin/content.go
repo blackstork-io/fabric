@@ -85,6 +85,15 @@ type ContentSection struct {
 	meta     *ContentMeta
 }
 
+func NewSection(contentID uint32) *ContentSection {
+	return &ContentSection{
+		idStore: &idStore{
+			id: contentID,
+		},
+		id: contentID,
+	}
+}
+
 // Add content to the content tree.
 func (c *ContentSection) Add(content Content, loc *Location) error {
 	return addContent(c, content, loc)
