@@ -34,9 +34,11 @@ var dataCmd = &cobra.Command{
 			engine.WithBuiltIn(builtin.Plugin(version, slog.Default(), tracer)),
 		)
 		defer func() {
-			diag := eng.Cleanup()
-			if diags.Extend(diag) {
+			diags.Extend(eng.Cleanup())
+			if diags.HasErrors() {
 				err = diags
+				cmd.SilenceErrors = true
+				cmd.SilenceUsage = true
 			}
 			eng.PrintDiagnostics(os.Stderr, diags, cliArgs.colorize)
 		}()
