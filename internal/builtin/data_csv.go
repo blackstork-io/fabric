@@ -5,7 +5,9 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"io"
+	"log/slog"
 	"os"
+	"path/filepath"
 	"unicode/utf8"
 
 	"github.com/hashicorp/hcl/v2"
@@ -14,7 +16,6 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
-	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeCSVDataSource() *plugin.DataSource {
@@ -32,29 +33,63 @@ func makeCSVDataSource() *plugin.DataSource {
 		},
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:        "path",
-				Type:        cty.String,
-				Constraints: constraint.RequiredMeaningfull,
-				ExampleVal:  cty.StringVal("path/to/file.csv"),
+				Name:       "glob",
+				Type:       cty.String,
+				ExampleVal: cty.StringVal("path/to/file*.csv"),
+				Doc:        `A glob pattern to select CSV files to read`,
+			},
+			&dataspec.AttrSpec{
+				Name:       "path",
+				Type:       cty.String,
+				ExampleVal: cty.StringVal("path/to/file.csv"),
+				Doc:        `A file path to a CSV file to read`,
 			},
 		},
 		Doc: `
-		Imports and parses a csv file.
+		Loads CSV files with the names that match a provided "glob" pattern or a single file from a provided path.
 
-		We assume the table has a header and turn each line into a map based on the header titles.
+		Either "glob" or "path" attribute must be set.
 
-		For example following table
+		When "path" attribute is specified, the data source returns only the content of a file.
+		When "glob" attribute is specified, the data source returns a list of dicts that contain the content of a file and file's metadata.
+
+		Note: the data source assumes that CSV file has a header and turns each line into a map with column titles as keys.
+
+		For example, CSV file with the following data:
 
 		| column_A | column_B | column_C |
 		| -------- | -------- | -------- |
-		| Test     | true     | 42       |
-		| Line 2   | false    | 4.2      |
+		| Foo      | true     | 42       |
+		| Bar      | false    | 4.2      |
 
-		will be represented as the following structure:
+		will be represented as the following data structure:
 		` + "```json" + `
 		[
-		  {"column_A": "Test", "column_B": true, "column_C": 42},
-		  {"column_A": "Line 2", "column_B": false, "column_C": 4.2}
+		  {"column_A": "Foo", "column_B": true, "column_C": 42},
+		  {"column_A": "Bar", "column_B": false, "column_C": 4.2}
+		]
+		` + "```" + `
+
+		When "glob" is used and multiple files match the pattern, the data source will return a list of dicts, for example:
+
+		` + "```json" + `
+		[
+		  {
+		    "file_path": "path/file-a.csv",
+		    "file_name": "file-a.csv",
+		    "content": [
+		      {"column_A": "Foo", "column_B": true, "column_C": 42},
+		      {"column_A": "Bar", "column_B": false, "column_C": 4.2}
+		    ]
+		  },
+		  {
+		    "file_path": "path/file-b.csv",
+		    "file_name": "file-b.csv",
+		    "content": [
+		      {"column_C": "Baz", "column_D": 1},
+		      {"column_C": "Clu", "column_D": 2}
+		    ]
+		  },
 		]
 		` + "```",
 	}
@@ -75,78 +110,129 @@ func getDelim(config cty.Value) (r rune, diags diagnostics.Diag) {
 }
 
 func fetchCSVData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	path := params.Args.GetAttr("path").AsString()
-	if path == "" {
-		return nil, diagnostics.Diag{{
-			Severity: hcl.DiagError,
-			Summary:  "path is required",
-		}}
-	}
-	delim, diags := getDelim(params.Config)
-	if diags != nil {
-		return nil, diags
-	}
-	data, err := readCSVFile(ctx, path, delim)
+	glob := params.Args.GetAttr("glob")
+	path := params.Args.GetAttr("path")
+
+	delim, err := getDelim(params.Config)
 	if err != nil {
-		return nil, diagnostics.Diag{{
-			Severity: hcl.DiagError,
-			Summary:  "Failed to read csv file",
-			Detail:   err.Error(),
-		}}
+		slog.Error("Error while getting a delimiter value", slog.Any("error", err))
+		return nil, err
 	}
-	return data, nil
+
+	if !(path.IsNull() || path.AsString() == "") {
+		slog.Debug("Reading a file from a path", "path", path.AsString())
+		data, err := readAndDecodeCSVFile(ctx, path.AsString(), delim)
+		if err != nil {
+			slog.Error(
+				"Error while reading a CSV file",
+				slog.String("path", path.AsString()),
+				slog.Any("error", err),
+			)
+			return nil, diagnostics.Diag{{
+				Severity: hcl.DiagError,
+				Summary:  "Failed to read a file",
+				Detail:   err.Error(),
+			}}
+		}
+		return data, nil
+	} else if !glob.IsNull() && glob.AsString() != "" {
+		slog.Debug("Reading the files that match a glob pattern", "glob", glob.AsString())
+		data, err := readCSVFiles(ctx, glob.AsString(), delim)
+		if err != nil {
+			slog.Error(
+				"Error while reading the CSV files",
+				slog.String("glob", glob.AsString()),
+				slog.Any("error", err),
+			)
+			return nil, diagnostics.Diag{{
+				Severity: hcl.DiagError,
+				Summary:  "Failed to read the files",
+				Detail:   err.Error(),
+			}}
+		}
+		return data, nil
+	}
+	slog.Error("Either \"glob\" value or \"path\" value must be provided")
+	return nil, diagnostics.Diag{{
+		Severity: hcl.DiagError,
+		Summary:  "Failed to parse provided arguments",
+		Detail:   "Either \"glob\" value or \"path\" value must be provided",
+	}}
 }
 
-func readCSVFile(ctx context.Context, path string, sep rune) (plugin.ListData, error) {
+func readCSVFiles(ctx context.Context, pattern string, delimiter rune) (plugin.ListData, error) {
+	paths, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil, err
+	}
+	result := make(plugin.ListData, 0, len(paths))
+	for _, path := range paths {
+		fileData, err := readAndDecodeCSVFile(ctx, path, delimiter)
+		if err != nil {
+			return result, err
+		}
+		result = append(result, plugin.MapData{
+			"file_path": plugin.StringData(path),
+			"file_name": plugin.StringData(filepath.Base(path)),
+			"content":   fileData,
+		})
+	}
+	return result, nil
+}
+
+func readAndDecodeCSVFile(ctx context.Context, path string, delimiter rune) (plugin.ListData, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-	r := csv.NewReader(f)
-	r.Comma = sep
-	result := make(plugin.ListData, 0)
-	headers, err := r.Read()
+
+	rowMaps := make(plugin.ListData, 0)
+
+	reader := csv.NewReader(f)
+	reader.Comma = delimiter
+
+	headers, err := reader.Read()
 	if err == io.EOF {
-		return result, nil
+		return rowMaps, nil
 	} else if err != nil {
 		return nil, err
 	}
+
 	for {
 		select {
 		case <-ctx.Done(): // stop reading if the context is canceled
 			return nil, ctx.Err()
 		default:
-			row, err := r.Read()
+			row, err := reader.Read()
 			if err == io.EOF {
-				return result, nil
+				return rowMaps, nil
 			} else if err != nil {
 				return nil, err
 			}
-
-			m := make(plugin.MapData, len(headers))
+			rowMap := make(plugin.MapData, len(headers))
 			for j, header := range headers {
 				if header == "" {
 					continue
 				}
 				if j >= len(row) {
-					m[header] = nil
+					rowMap[header] = nil
 					continue
 				}
 				if row[j] == "true" {
-					m[header] = plugin.BoolData(true)
+					rowMap[header] = plugin.BoolData(true)
 				} else if row[j] == "false" {
-					m[header] = plugin.BoolData(false)
+					rowMap[header] = plugin.BoolData(false)
 				} else {
 					n := json.Number(row[j])
 					if f, err := n.Float64(); err == nil {
-						m[header] = plugin.NumberData(f)
+						rowMap[header] = plugin.NumberData(f)
 					} else {
-						m[header] = plugin.StringData(row[j])
+						rowMap[header] = plugin.StringData(row[j])
 					}
 				}
 			}
-			result = append(result, m)
+			rowMaps = append(rowMaps, rowMap)
 		}
 	}
 }
