@@ -439,6 +439,21 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
+
+brews:
+  - name: fabric
+    alternative_names:
+      - "fabric@{{ .Version }}"
+    ids:
+      - fabric
+    description: "An open-source command-line tool for reporting workflow automation and a configuration language for reusable templates"
+    homepage: "https://blackstork.io/fabric/"
+    license: Apache-2.0
+    repository:
+      owner: blackstork-io
+      name: homebrew-tools
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+
 release:
   extra_files:
     - glob: ./.tmp/plugins.json
