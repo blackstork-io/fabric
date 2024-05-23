@@ -2,7 +2,7 @@
 title: txt
 plugin:
   name: blackstork/builtin
-  description: "Reads the file at \"path\" into a string"
+  description: "Loads TXT files with the names that match a provided \"glob\" pattern or a single file from a provided path"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -16,7 +16,26 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "txt" "data source" >}}
 
 ## Description
-Reads the file at "path" into a string
+Loads TXT files with the names that match a provided "glob" pattern or a single file from a provided path.
+
+Either "glob" or "path" attribute must be set.
+
+When "path" attribute is specified, the data source returns only the content of a file.
+When "glob" attribute is specified, the data source returns a list of dicts that contain the content of a file and file's metadata. For example:
+```json
+[
+  {
+    "file_path": "path/file-a.txt",
+    "file_name": "file-a.txt",
+    "content": "foobar"
+  },
+  {
+    "file_path": "path/file-b.txt",
+    "file_name": "file-b.txt",
+    "content": "x\\ny\\nz"
+  }
+]
+```
 
 The data source is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 
@@ -30,8 +49,22 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data txt {
-  # Required string.
+  # A glob pattern to select TXT files to read
+  #
+  # Optional string.
   # For example:
-  path = "path/to/file.txt"
+  # glob = "path/to/file*.txt"
+  # 
+  # Default value:
+  glob = null
+
+  # A file path to a TXT file to read
+  #
+  # Optional string.
+  # For example:
+  # path = "path/to/file.txt"
+  # 
+  # Default value:
+  path = null
 }
 ```

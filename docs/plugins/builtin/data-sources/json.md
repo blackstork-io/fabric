@@ -2,7 +2,7 @@
 title: json
 plugin:
   name: blackstork/builtin
-  description: "Imports and parses the files matching \"glob\""
+  description: "Loads JSON files with the names that match a provided \"glob\" pattern or a single file from a provided path"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -16,23 +16,29 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "json" "data source" >}}
 
 ## Description
-Imports and parses the files matching "glob".
-Results are presented using the following structure:
+Loads JSON files with the names that match a provided "glob" pattern or a single file from a provided path.
+
+Either "glob" or "path" attribute must be set.
+
+When "path" attribute is specified, the data source returns only the content of a file.
+When "glob" attribute is specified, the data source returns a list of dicts that contain the content of a file and file's metadata. For example:
 ```json
-  [
-    {
-      "filename": "<name of the file matched by glob>",
-      "contents": {
-        "contents of the file": "parsed as json"
-      },
+[
+  {
+    "file_path": "path/file-a.json",
+    "file_name": "file-a.json",
+    "content": {
+      "foo": "bar"
     },
-    {
-      "filename": "<next file>",
-      "contents": {
-        "next": "contents"
-      },
-    }
-  ]
+  },
+  {
+    "file_path": "path/file-b.json",
+    "file_name": "file-b.json",
+    "content": [
+      {"x": "y"}
+    ],
+  }
+]
 ```
 
 The data source is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
@@ -47,10 +53,22 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data json {
-  # A pattern that selects the json files to be read
+  # A glob pattern to select JSON files to read
   #
-  # Required string.
+  # Optional string.
   # For example:
-  glob = "reports/*_data.json"
+  # glob = "path/to/file*.json"
+  # 
+  # Default value:
+  glob = null
+
+  # A file path to a JSON file to read
+  #
+  # Optional string.
+  # For example:
+  # path = "path/to/file.json"
+  # 
+  # Default value:
+  path = null
 }
 ```
