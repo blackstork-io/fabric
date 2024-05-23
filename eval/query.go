@@ -11,12 +11,12 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 )
 
-type Query struct {
+type JqQuery struct {
 	Value    cty.Value
 	SrcRange hcl.Range
 }
 
-func (q *Query) EvalQuery(ctx context.Context, dataCtx plugin.MapData) (plugin.Data, diagnostics.Diag) {
+func (q *JqQuery) EvalQuery(ctx context.Context, dataCtx plugin.MapData) (plugin.Data, diagnostics.Diag) {
 	query := q.Value.AsString()
 	jqQuery, err := gojq.Parse(query)
 	if err != nil {

@@ -17,7 +17,7 @@ import (
 type PluginContentAction struct {
 	*PluginAction
 	Provider *plugin.ContentProvider
-	Query    *Query
+	Query    *JqQuery
 }
 
 func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugin.MapData, doc, parent *plugin.ContentSection, contentID uint32) (*plugin.ContentResult, diagnostics.Diag) {
@@ -81,7 +81,7 @@ func LoadPluginContentAction(providers ContentProviders, node *definitions.Parse
 		return nil, diags
 	}
 	body := node.Invocation.GetBody()
-	var query *Query
+	var query *JqQuery
 	if attr, found := body.Attributes["query"]; found {
 		value, newBody, stdDiag := hcldec.PartialDecode(body, &hcldec.ObjectSpec{
 			"query": &hcldec.AttrSpec{
@@ -94,7 +94,7 @@ func LoadPluginContentAction(providers ContentProviders, node *definitions.Parse
 			return
 		}
 		node.Invocation.SetBody(utils.ToHclsyntaxBody(newBody))
-		query = &Query{
+		query = &JqQuery{
 			Value:    value.GetAttr("query"),
 			SrcRange: attr.SrcRange,
 		}
