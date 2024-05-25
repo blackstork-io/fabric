@@ -24,7 +24,7 @@ func makeImageContentProvider() *plugin.ContentProvider {
 			&dataspec.AttrSpec{
 				Name:        "src",
 				Type:        cty.String,
-				Constraints: constraint.RequiredMeaningfull,
+				Constraints: constraint.RequiredMeaningful,
 				ExampleVal:  cty.StringVal("https://example.com/img.png"),
 			},
 			&dataspec.AttrSpec{
