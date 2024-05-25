@@ -114,9 +114,6 @@ type Response struct {
 	MimeType string
 }
 
-// func parseBodyAccordingToMimeType(body string) (plugin.Data, error) {
-// }
-
 func SendRequest(ctx context.Context, r *Request) (*Response, error) {
 	var u *url.URL
 	var err error
@@ -270,7 +267,5 @@ func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, versi
 	} else {
 		result = plugin.StringData(response.Body)
 	}
-	slog.Debug("Success", "result", result)
-
 	return result, nil
 }
