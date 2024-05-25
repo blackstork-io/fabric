@@ -3,8 +3,6 @@ package builtin
 import (
 	"context"
 	"encoding/csv"
-	"encoding/json"
-	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -13,6 +11,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/builtin/utils"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -187,52 +186,8 @@ func readAndDecodeCSVFile(ctx context.Context, path string, delimiter rune) (plu
 	}
 	defer f.Close()
 
-	rowMaps := make(plugin.ListData, 0)
-
 	reader := csv.NewReader(f)
 	reader.Comma = delimiter
 
-	headers, err := reader.Read()
-	if err == io.EOF {
-		return rowMaps, nil
-	} else if err != nil {
-		return nil, err
-	}
-
-	for {
-		select {
-		case <-ctx.Done(): // stop reading if the context is canceled
-			return nil, ctx.Err()
-		default:
-			row, err := reader.Read()
-			if err == io.EOF {
-				return rowMaps, nil
-			} else if err != nil {
-				return nil, err
-			}
-			rowMap := make(plugin.MapData, len(headers))
-			for j, header := range headers {
-				if header == "" {
-					continue
-				}
-				if j >= len(row) {
-					rowMap[header] = nil
-					continue
-				}
-				if row[j] == "true" {
-					rowMap[header] = plugin.BoolData(true)
-				} else if row[j] == "false" {
-					rowMap[header] = plugin.BoolData(false)
-				} else {
-					n := json.Number(row[j])
-					if f, err := n.Float64(); err == nil {
-						rowMap[header] = plugin.NumberData(f)
-					} else {
-						rowMap[header] = plugin.StringData(row[j])
-					}
-				}
-			}
-			rowMaps = append(rowMaps, rowMap)
-		}
-	}
+	return utils.ParseCSVContent(ctx, reader)
 }
