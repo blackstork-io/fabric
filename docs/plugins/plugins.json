@@ -39,6 +39,19 @@
         ]
       },
       {
+        "name": "http",
+        "type": "data-source",
+        "arguments": [
+          "basic_auth",
+          "body",
+          "headers",
+          "insecure",
+          "method",
+          "timeout",
+          "url"
+        ]
+      },
+      {
         "name": "image",
         "type": "content-provider",
         "arguments": [
