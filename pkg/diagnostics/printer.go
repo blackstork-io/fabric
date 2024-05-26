@@ -56,7 +56,7 @@ func PrintDiags(output io.Writer, diags []*hcl.Diagnostic, fileMap map[string]*h
 	}
 }
 
-var heredocRe = regexp.MustCompile(`^[^=]*=\s*<<`)
+var heredocRe = regexp.MustCompile(`^\s*<<`)
 
 // Rewrites diag and fileMap to improve the error message for GoJQError on a best-effort basis.
 func improveJQError(gojqErr GoJQError, diag *hcl.Diagnostic, fileMap map[string]*hcl.File) {
