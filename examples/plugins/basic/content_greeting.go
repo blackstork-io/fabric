@@ -21,7 +21,7 @@ func makeGreetingContentProvider() *plugin.ContentProvider {
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
 				Name:        "name",
-				Constraints: constraint.RequiredMeaningfull,
+				Constraints: constraint.RequiredMeaningful,
 				Doc:         `Name of the user`,
 				ExampleVal:  cty.StringVal("John"),
 				Type:        cty.String,

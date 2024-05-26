@@ -32,10 +32,10 @@ const (
 	TrimmedNonEmpty Constraints = NonEmpty | TrimSpace
 
 	// Attribute is not required, but (if specified) must be non-null, non-empty, strings are trimmed
-	Meaningfull Constraints = NonNull | TrimmedNonEmpty
+	Meaningful Constraints = NonNull | TrimmedNonEmpty
 
 	// Attribute is required, non-null, non-empty, strings are trimmed
-	RequiredMeaningfull Constraints = Required | Meaningfull
+	RequiredMeaningful Constraints = Required | Meaningful
 
 	// Attribute is required and non-null
 	RequiredNonNull Constraints = Required | NonNull
