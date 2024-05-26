@@ -13,3 +13,30 @@ func ToHclsyntaxBody(body hcl.Body) *hclsyntax.Body {
 	}
 	return hclsyntaxBody
 }
+
+func EvalContextByVar(ctx *hcl.EvalContext, name string) *hcl.EvalContext {
+	for ; ctx != nil; ctx = ctx.Parent() {
+		if ctx.Variables == nil {
+			continue
+		}
+		_, found := ctx.Variables[name]
+		if found {
+			return ctx
+		}
+
+	}
+	return nil
+}
+
+func EvalContextByFunc(ctx *hcl.EvalContext, name string) *hcl.EvalContext {
+	for ; ctx != nil; ctx = ctx.Parent() {
+		if ctx.Functions == nil {
+			continue
+		}
+		_, found := ctx.Functions[name]
+		if found {
+			return ctx
+		}
+	}
+	return nil
+}

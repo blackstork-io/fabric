@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/parser/definitions"
+	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
@@ -17,10 +19,11 @@ import (
 type PluginContentAction struct {
 	*PluginAction
 	Provider *plugin.ContentProvider
-	Query    *JqQuery
+	Query    definitions.Query
 }
 
-func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugin.MapData, doc, parent *plugin.ContentSection, contentID uint32) (*plugin.ContentResult, diagnostics.Diag) {
+func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugin.MapData, doc, parent *plugin.ContentSection, contentID uint32) (res *plugin.ContentResult, diags diagnostics.Diag) {
+	var diag diagnostics.Diag
 	contentMap := plugin.MapData{}
 	if action.PluginAction.Meta != nil {
 		contentMap[definitions.BlockKindMeta] = action.PluginAction.Meta.AsJQData()
@@ -30,20 +33,21 @@ func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx pl
 	dataCtx[definitions.BlockKindDocument] = docData
 	dataCtx[definitions.BlockKindContent] = contentMap
 	if action.Query != nil {
-		data, diag := action.Query.EvalQuery(ctx, dataCtx)
-		if diag.HasErrors() {
-			return nil, diag
+		var queryRes plugin.Data
+		queryRes, diag = action.Query.Eval(ctx, dataCtx)
+		if diags.Extend(diag) {
+			return
 		}
-		dataCtx["query_result"] = data
+		dataCtx["query_result"] = queryRes
 	}
-	res, diags := action.Provider.Execute(ctx, &plugin.ProvideContentParams{
+	res, diag = action.Provider.Execute(ctx, &plugin.ProvideContentParams{
 		Config:      action.Config,
 		Args:        action.Args,
 		DataContext: dataCtx,
 		ContentID:   contentID,
 	})
-	if diags.HasErrors() {
-		return nil, diags
+	if diags.Extend(diag) {
+		return
 	}
 	if res.Location == nil {
 		res.Location = &plugin.Location{
@@ -81,23 +85,26 @@ func LoadPluginContentAction(providers ContentProviders, node *definitions.Parse
 		return nil, diags
 	}
 	body := node.Invocation.GetBody()
-	var query *JqQuery
-	if attr, found := body.Attributes["query"]; found {
+	var query definitions.Query
+
+	if _, found := body.Attributes["query"]; found {
+		evalCtx, queriesObj := dataquery.QueryContext(evaluation.EvalContext())
+		evalCtx = dataquery.JqEvalContext(evalCtx)
+
 		value, newBody, stdDiag := hcldec.PartialDecode(body, &hcldec.ObjectSpec{
 			"query": &hcldec.AttrSpec{
 				Name:     "query",
-				Type:     cty.String,
+				Type:     dataquery.JqQueryType.Type(),
 				Required: true,
 			},
-		}, nil)
+		}, evalCtx)
 		if diags.Extend(stdDiag) {
 			return
 		}
 		node.Invocation.SetBody(utils.ToHclsyntaxBody(newBody))
-		query = &JqQuery{
-			Value:    value.GetAttr("query"),
-			SrcRange: attr.SrcRange,
-		}
+		queryIdx := dataquery.JqQueryType.MustFromCty(value.GetAttr("query"))
+		// there will be only one query with index 0, but we are working with it properly
+		query = queriesObj.Take()[*queryIdx].Query
 	}
 	var args cty.Value
 	args, diag := node.Invocation.ParseInvocation(cp.Args)

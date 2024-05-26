@@ -27,7 +27,7 @@ var RepeatedError = &hcl.Diagnostic{
 }
 
 // Attach this as an .Extra on diagnostic to enhance the error message for gojq errors.
-// Diagnostic must include Subject pointing to the `attribute = "value"` line.
+// Diagnostic must include Subject pointing to the query expression.
 type GoJQError struct {
 	Err   error
 	Query string

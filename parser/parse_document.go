@@ -17,6 +17,7 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 	}
 
 	var origMeta *hcl.Range
+	var origVars *hcl.Range
 
 	for _, block := range d.Block.Body.Blocks {
 		switch block.Type {
@@ -41,6 +42,25 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 			default:
 				panic("must be exhaustive")
 			}
+		case definitions.BlockKindVars:
+			if origVars != nil {
+				diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "Vars block redefinition",
+					Detail: fmt.Sprintf(
+						"%s block allows at most one vars block, original vars block was defined at %s:%d",
+						d.Block.Type, origMeta.Filename, origMeta.Start.Line,
+					),
+					Subject: block.DefRange().Ptr(),
+					Context: d.Block.Body.Range().Ptr(),
+				})
+				continue
+			}
+			origVars = block.DefRange().Ptr()
+
+			var diag diagnostics.Diag
+			doc.Vars, diag = parseVars(block)
+			diags.Extend(diag)
 
 		case definitions.BlockKindMeta:
 			if origMeta != nil {

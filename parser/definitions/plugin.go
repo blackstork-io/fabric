@@ -8,6 +8,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/encapsulator"
 )
 
 type Plugin struct {
@@ -64,10 +65,10 @@ func (p *Plugin) GetHCLBlock() *hcl.Block {
 	return p.Block.AsHCLBlock()
 }
 
-var ctyPluginType = capsuleTypeFor[Plugin]()
+var ctyPluginType = encapsulator.New[Plugin]("plugin")
 
 func (p *Plugin) CtyType() cty.Type {
-	return ctyPluginType
+	return ctyPluginType.Type()
 }
 
 func DefinePlugin(block *hclsyntax.Block, atTopLevel bool) (plugin *Plugin, diags diagnostics.Diag) {

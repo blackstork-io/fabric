@@ -6,6 +6,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/encapsulator"
 )
 
 // Document and section are very similar conceptually.
@@ -21,10 +22,10 @@ func (d *Document) GetHCLBlock() *hcl.Block {
 	return d.Block.AsHCLBlock()
 }
 
-var ctyDocumentType = capsuleTypeFor[Document]()
+var ctyDocumentType = encapsulator.New[Document]("document")
 
 func (d *Document) CtyType() cty.Type {
-	return ctyDocumentType
+	return ctyDocumentType.Type()
 }
 
 func DefineDocument(block *hclsyntax.Block) (doc *Document, diags diagnostics.Diag) {

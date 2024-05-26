@@ -7,8 +7,8 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-func Test_NewEvalContext(t *testing.T) {
-	ctx := NewEvalContext()
+func Test_EvalContext(t *testing.T) {
+	ctx := EvalContext()
 	assert.NotNil(t, ctx)
 	assert.NotNil(t, ctx.Functions)
 	assert.NotNil(t, ctx.Functions["from_env_variable"])
@@ -16,7 +16,7 @@ func Test_NewEvalContext(t *testing.T) {
 
 func Test_makeFromEnvVariableFunc(t *testing.T) {
 	t.Setenv("TEST_KEY", "test_value")
-	fn := makeFromEnvVariableFunc()
+	fn := makeFromEnvVariableFunc
 	val, err := fn.Call([]cty.Value{cty.StringVal("TEST_KEY")})
 	assert.Nil(t, err)
 	assert.Equal(t, cty.StringVal("test_value"), val)

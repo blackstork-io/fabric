@@ -14,6 +14,7 @@ import (
 
 type Document struct {
 	Meta          *definitions.MetaBlock
+	Vars          definitions.ParsedVars
 	DataBlocks    []*PluginDataAction
 	ContentBlocks []*Content
 	PublishBlocks []*PluginPublishAction
@@ -60,6 +61,11 @@ func (doc *Document) RenderContent(ctx context.Context) (plugin.Content, plugin.
 		definitions.BlockKindData:     data,
 		definitions.BlockKindDocument: docData,
 	}
+	diag := ApplyVars(ctx, doc.Vars, dataCtx)
+	if diags.Extend(diag) {
+		return nil, nil, diags
+	}
+
 	result := plugin.NewSection(0)
 	// create a position map for content blocks
 	posMap := make(map[int]uint32)
@@ -126,6 +132,7 @@ func (doc *Document) Publish(ctx context.Context) (plugin.Content, plugin.Data, 
 func LoadDocument(plugins Plugins, node *definitions.ParsedDocument) (_ *Document, diags diagnostics.Diag) {
 	block := Document{
 		Meta: node.Meta,
+		Vars: node.Vars,
 	}
 	dataNames := make(map[[2]string]struct{})
 	for _, child := range node.Data {
