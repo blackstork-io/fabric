@@ -154,7 +154,9 @@ func SendRequest(ctx context.Context, r *Request) (*Response, error) {
 	}
 
 	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: r.SkipVerify}
+	transport.TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: r.SkipVerify, //nolint:gosec,G402
+	}
 	client := &http.Client{Transport: transport, Timeout: r.Timeout}
 
 	slog.Debug("Sending a HTTP request", "url", r.Url, "method", r.Method, "insecure", r.SkipVerify)
