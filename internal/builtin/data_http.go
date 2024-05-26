@@ -54,11 +54,10 @@ func makeHTTPDataSource(version string) *plugin.DataSource {
 				Doc:        "If set to `true`, disabled verification of the server's certificate.",
 			},
 			&dataspec.AttrSpec{
-				Name:        "timeout_secs",
-				Type:        cty.Number,
-				DefaultVal:  cty.NumberIntVal(15),
-				Constraints: constraint.NonNull,
-				Doc:         "The timeout for the request in seconds. Accepts fractional values.",
+				Name:       "timeout",
+				Type:       cty.String,
+				DefaultVal: cty.StringVal("30s"),
+				Doc:        "The duration of a timeout for a request. Accepts numbers, with optional fractions and a unit suffix. For example, valid values would be: 1.5s, 30s, 2m, 2m30s, or 1h",
 			},
 			&dataspec.AttrSpec{
 				Name:       "headers",
@@ -159,7 +158,13 @@ func SendRequest(ctx context.Context, r *Request) (*Response, error) {
 	}
 	client := &http.Client{Transport: transport, Timeout: r.Timeout}
 
-	slog.Debug("Sending a HTTP request", "url", r.Url, "method", r.Method, "insecure", r.SkipVerify)
+	slog.Debug(
+		"Sending a HTTP request",
+		"url", r.Url,
+		"method", r.Method,
+		"insecure", r.SkipVerify,
+		"timeout", r.Timeout,
+	)
 
 	res, err := client.Do(request)
 	if err != nil {
@@ -203,12 +208,22 @@ func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, versi
 	url := params.Args.GetAttr("url").AsString()
 	method := params.Args.GetAttr("method").AsString()
 	insecure := params.Args.GetAttr("insecure").True()
-	timeoutSecs, _ := params.Args.GetAttr("timeout_secs").AsBigFloat().Float64()
+
+	timeout, err := time.ParseDuration(params.Args.GetAttr("timeout").AsString())
+	if err != nil {
+		return nil, diagnostics.Diag{
+			{
+				Severity: hcl.DiagError,
+				Summary:  "Failed to parse a timeout duraction value",
+				Detail:   err.Error(),
+			},
+		}
+	}
 
 	var req = Request{
 		Url:        url,
 		Method:     method,
-		Timeout:    time.Duration(timeoutSecs * float64(time.Second)),
+		Timeout:    timeout,
 		SkipVerify: insecure,
 		Headers:    make(map[string]string),
 		Body:       nil,
