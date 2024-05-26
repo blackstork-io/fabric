@@ -9,7 +9,6 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 )
 
-
 func ParseCSVContent(ctx context.Context, reader *csv.Reader) (plugin.ListData, error) {
 	rowMaps := make(plugin.ListData, 0)
 
