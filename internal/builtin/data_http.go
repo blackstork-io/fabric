@@ -68,8 +68,8 @@ func makeHTTPDataSource(version string) *plugin.DataSource {
 			},
 			&dataspec.AttrSpec{
 				Name:       "body",
-				Type:       cty.Map(cty.String),
-				DefaultVal: cty.NullVal(cty.Map(cty.String)),
+				Type:       cty.String,
+				DefaultVal: cty.NullVal(cty.String),
 				Doc:        `Request body`,
 			},
 			&dataspec.BlockSpec{
