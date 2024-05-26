@@ -53,6 +53,7 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 	}
 
 	var origMeta *hcl.Range
+	var origVars *hcl.Range
 	var refBase hclsyntax.Expression
 
 	var validChildren []string
@@ -123,6 +124,25 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 			}
 			res.Meta = &meta
 			origMeta = block.DefRange().Ptr()
+		case definitions.BlockKindVars:
+			if origVars != nil {
+				diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "Vars block redefinition",
+					Detail: fmt.Sprintf(
+						"%s block allows at most one vars block, original vars block was defined at %s:%d",
+						section.Block.Type, origMeta.Filename, origMeta.Start.Line,
+					),
+					Subject: block.DefRange().Ptr(),
+					Context: section.Block.Body.Range().Ptr(),
+				})
+				continue
+			}
+			origVars = block.DefRange().Ptr()
+
+			var diag diagnostics.Diag
+			res.Vars, diag = ParseVars(block)
+			diags.Extend(diag)
 		case definitions.BlockKindSection:
 			subSection, diag := definitions.DefineSection(block, false)
 			if diags.Extend(diag) {

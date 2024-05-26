@@ -12,7 +12,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
-func parseVars(block *hclsyntax.Block) (vars []*hclsyntax.Attribute, diags diagnostics.Diag) {
+func ParseVars(block *hclsyntax.Block) (vars []*hclsyntax.Attribute, diags diagnostics.Diag) {
 	for _, subblock := range block.Body.Blocks {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,

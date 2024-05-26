@@ -22,6 +22,7 @@ type ParsedSection struct {
 	Meta    *MetaBlock
 	Title   *ParsedContent
 	Content []*ParsedContent
+	Vars    ParsedVars
 }
 
 func (s ParsedSection) Name() string {

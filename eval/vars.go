@@ -67,6 +67,9 @@ func ctyToData(queriesObj *definitions.Queries, val cty.Value, path []any) plugi
 
 // Evaluates `variables` and stores the results in `dataCtx` under the key "vars".
 func ApplyVars(ctx context.Context, variables definitions.ParsedVars, dataCtx plugin.MapData) (diags diagnostics.Diag) {
+	if len(variables) == 0 {
+		return
+	}
 	var vars plugin.MapData
 
 	varsData := dataCtx["vars"]

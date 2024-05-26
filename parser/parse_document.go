@@ -59,7 +59,7 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 			origVars = block.DefRange().Ptr()
 
 			var diag diagnostics.Diag
-			doc.Vars, diag = parseVars(block)
+			doc.Vars, diag = ParseVars(block)
 			diags.Extend(diag)
 
 		case definitions.BlockKindMeta:
