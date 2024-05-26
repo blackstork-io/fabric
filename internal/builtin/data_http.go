@@ -266,6 +266,8 @@ func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, versi
 	if response.MimeType == "text/csv" {
 		reader := csv.NewReader(bytes.NewBuffer(response.Body))
 		reader.Comma = ',' // Use `,` as a delimiter by default
+
+		slog.Debug("Parsing fetched data as CSV", "mime-type", response.MimeType)
 		result, err = utils.ParseCSVContent(ctx, reader)
 		if err != nil {
 			return nil, diagnostics.Diag{
@@ -277,6 +279,9 @@ func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, versi
 			}
 		}
 	} else if response.MimeType == "application/json" {
+
+		slog.Debug("Parsing fetched data as JSON", "mime-type", response.MimeType)
+
 		result, err = plugin.UnmarshalJSONData(response.Body)
 		if err != nil {
 			return nil, diagnostics.Diag{
@@ -288,6 +293,7 @@ func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, versi
 			}
 		}
 	} else {
+		slog.Debug("Returning fetched data as text", "mime-type", response.MimeType)
 		result = plugin.StringData(response.Body)
 	}
 	return result, nil
