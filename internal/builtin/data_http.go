@@ -48,19 +48,6 @@ func makeHTTPDataSource(version string) *plugin.DataSource {
 				Doc: "HTTP method for the request. Allowed methods are `GET`, `POST` and `HEAD`",
 			},
 			&dataspec.AttrSpec{
-				Name:       "basic_auth_username",
-				Type:       cty.String,
-				DefaultVal: cty.NullVal(cty.String),
-				Doc:        `A basic authentication username`,
-			},
-			&dataspec.AttrSpec{
-				Name:       "basic_auth_password",
-				Type:       cty.String,
-				Secret:     true,
-				DefaultVal: cty.NullVal(cty.String),
-				Doc:        `A basic authentication password`,
-			},
-			&dataspec.AttrSpec{
 				Name:       "insecure",
 				Type:       cty.Bool,
 				DefaultVal: cty.BoolVal(false),
@@ -84,6 +71,29 @@ func makeHTTPDataSource(version string) *plugin.DataSource {
 				Type:       cty.Map(cty.String),
 				DefaultVal: cty.NullVal(cty.Map(cty.String)),
 				Doc:        `Request body`,
+			},
+			&dataspec.BlockSpec{
+				Name: "basic_auth",
+				Doc: `
+					Basic authentication credentials to be used for HTTP request.
+				`,
+				Nested: dataspec.ObjectSpec{
+					&dataspec.AttrSpec{
+						Name:        "username",
+						Type:        cty.String,
+						ExampleVal:  cty.StringVal("user@example.com"),
+						Constraints: constraint.RequiredNonNull,
+					},
+					&dataspec.AttrSpec{
+						Name:       "password",
+						Type:       cty.String,
+						ExampleVal: cty.StringVal("passwd"),
+						Doc: `
+							Note: you can use function like "from_env_var()" to avoid storing credentials in plaintext
+						`,
+						Constraints: constraint.RequiredNonNull,
+					},
+				},
 			},
 		},
 		Doc: `
@@ -190,12 +200,8 @@ func fetchHTTPDataWrapper(version string) plugin.RetrieveDataFunc {
 func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, version string) (plugin.Data, diagnostics.Diag) {
 	url := params.Args.GetAttr("url").AsString()
 	method := params.Args.GetAttr("method").AsString()
-	authUsername := params.Args.GetAttr("basic_auth_username")
-	authPassword := params.Args.GetAttr("basic_auth_username")
 	insecure := params.Args.GetAttr("insecure").True()
 	timeoutSecs, _ := params.Args.GetAttr("timeout_secs").AsBigFloat().Float64()
-	headers := params.Args.GetAttr("headers")
-	body := params.Args.GetAttr("body")
 
 	var req = Request{
 		Url:        url,
@@ -206,20 +212,20 @@ func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, versi
 		Body:       nil,
 	}
 
-	if !authUsername.IsNull() && authUsername.AsString() != "" {
-		req.BasicAuthUsername = StringPtr(authUsername.AsString())
+	basicAuth := params.Args.GetAttr("basic_auth")
+	if !basicAuth.IsNull() {
+		req.BasicAuthUsername = StringPtr(basicAuth.GetAttr("username").AsString())
+		req.BasicAuthPassword = StringPtr(basicAuth.GetAttr("password").AsString())
 	}
 
-	if !authPassword.IsNull() && authPassword.AsString() != "" {
-		req.BasicAuthPassword = StringPtr(authPassword.AsString())
-	}
-
+	headers := params.Args.GetAttr("headers")
 	if !headers.IsNull() {
 		for k, v := range headers.AsValueMap() {
 			req.Headers[k] = v.AsString()
 		}
 	}
 
+	body := params.Args.GetAttr("body")
 	if !body.IsNull() && body.AsString() != "" {
 		req.Body = StringPtr(body.AsString())
 	}
