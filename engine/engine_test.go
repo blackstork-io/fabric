@@ -519,7 +519,7 @@ func TestEngineRenderContent(t *testing.T) {
 		"test-doc",
 		[]string{},
 		diagtest.Asserts{
-			{diagtest.IsError, diagtest.SummaryContains("No fabric files found")},
+			{diagtest.IsError, diagtest.SummaryContains("No valid fabric files found")},
 		},
 	)
 	renderTest(
