@@ -12,8 +12,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
-	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/mmcdole/gofeed"
 	"github.com/stretchr/testify/assert"
 	"github.com/zclconf/go-cty/cty"
@@ -32,57 +30,6 @@ func Test_makeRSSDataSchema(t *testing.T) {
 		assert.NotNil(schema.Config)
 		assert.NotNil(schema.Args)
 		assert.NotNil(schema.DataFunc)
-	})
-
-	t.Run("config_parses", func(t *testing.T) {
-		t.Parallel()
-
-		assert := assert.New(t)
-		schema := makeRSSDataSource()
-		cfg, diags := hclsyntax.ParseConfig([]byte(`
-			basic_auth {
-				username = "example_username"
-				password = "example_password"
-			}
-		`), "", hcl.InitialPos)
-		assert.Empty(diags)
-
-		val, diags := hcldec.Decode(cfg.Body, schema.Config.HcldecSpec(), nil)
-		assert.Empty(diags)
-		username := val.GetAttr("basic_auth").GetAttr("username").AsString()
-
-		assert.Equal("example_username", username, val.GoString())
-	})
-	t.Run("config_errors_if_partial", func(t *testing.T) {
-		t.Parallel()
-
-		assert := assert.New(t)
-		schema := makeRSSDataSource()
-		cfg, diags := hclsyntax.ParseConfig([]byte(`
-			basic_auth {
-				username = "example_username"
-			}
-		`), "", hcl.InitialPos)
-		assert.Empty(diags)
-
-		_, diags = hcldec.Decode(cfg.Body, schema.Config.HcldecSpec(), nil)
-		assert.True(diags.HasErrors())
-	})
-
-	t.Run("config_ok_empty", func(t *testing.T) {
-		t.Parallel()
-
-		assert := assert.New(t)
-		schema := makeRSSDataSource()
-		cfg, diags := hclsyntax.ParseConfig([]byte(`
-
-		`), "", hcl.InitialPos)
-		assert.Empty(diags)
-
-		val, diags := hcldec.Decode(cfg.Body, schema.Config.HcldecSpec(), nil)
-		assert.Empty(diags)
-		auth := val.GetAttr("basic_auth")
-		assert.True(auth.IsNull())
 	})
 }
 
@@ -222,7 +169,44 @@ func Test_fetchRSSData(t *testing.T) {
 			expected: result{
 				Diags: diagnostics.Diag{{
 					Severity: hcl.DiagError,
-					Summary:  "Failed to parse the feed",
+					Summary:  "Failed to fetch the feed",
+					Detail:   "http error: 401 Unauthorized",
+				}},
+			},
+		},
+		{
+			name: "empty_auth",
+			url:  "basic-auth",
+			auth: &gofeed.Auth{},
+			expected: result{
+				Diags: diagnostics.Diag{{
+					Severity: hcl.DiagError,
+					Summary:  "Failed to fetch the feed",
+					Detail:   "http error: 401 Unauthorized",
+				}},
+			},
+		},
+		{
+			name: "incomplete_auth",
+			url:  "basic-auth",
+			auth: &gofeed.Auth{
+				Username: "user",
+			},
+			expected: result{
+				Diags: diagnostics.Diag{{
+					Severity: hcl.DiagError,
+					Summary:  "Failed to fetch the feed",
+					Detail:   "http error: 401 Unauthorized",
+				}},
+			},
+		},
+		{
+			name: "absent_auth",
+			url:  "basic-auth",
+			expected: result{
+				Diags: diagnostics.Diag{{
+					Severity: hcl.DiagError,
+					Summary:  "Failed to fetch the feed",
 					Detail:   "http error: 401 Unauthorized",
 				}},
 			},
@@ -244,7 +228,7 @@ func Test_fetchRSSData(t *testing.T) {
 			expected: result{
 				Diags: diagnostics.Diag{{
 					Severity: hcl.DiagError,
-					Summary:  "Failed to parse the feed",
+					Summary:  "Failed to fetch the feed",
 					Detail:   "http error: 404 Not Found",
 				}},
 			},
@@ -260,26 +244,24 @@ func Test_fetchRSSData(t *testing.T) {
 					"rss": makeRSSDataSource(),
 				},
 			}
-			params := &plugin.RetrieveDataParams{
-				Args: cty.ObjectVal(map[string]cty.Value{
-					"url": cty.StringVal(addr + tc.url),
-				}),
-			}
+
+			args := make(map[string]cty.Value)
+
+			args["url"] = cty.StringVal(addr + tc.url)
+
 			if tc.auth != nil {
-				params.Config = cty.ObjectVal(map[string]cty.Value{
-					"basic_auth": cty.ObjectVal(map[string]cty.Value{
-						"username": cty.StringVal(tc.auth.Username),
-						"password": cty.StringVal(tc.auth.Password),
-					}),
+				args["basic_auth"] = cty.ObjectVal(map[string]cty.Value{
+					"username": cty.StringVal(tc.auth.Username),
+					"password": cty.StringVal(tc.auth.Password),
 				})
 			} else {
-				params.Config = cty.ObjectVal(map[string]cty.Value{
-					"basic_auth": cty.NullVal(cty.Object(map[string]cty.Type{
-						"username": cty.String,
-						"password": cty.String,
-					})),
-				})
+				args["basic_auth"] = cty.NullVal(cty.Object(map[string]cty.Type{
+					"username": cty.String,
+					"password": cty.String,
+				}))
 			}
+
+			params := &plugin.RetrieveDataParams{Args: cty.ObjectVal(args)}
 
 			data, diags := p.RetrieveData(context.Background(), "rss", params)
 			assert.Equal(tc.expected, result{data, diags})

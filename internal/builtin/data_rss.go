@@ -27,12 +27,10 @@ func makeRSSDataSource() *plugin.DataSource {
 				ExampleVal:  cty.StringVal("https://www.elastic.co/security-labs/rss/feed.xml"),
 				Constraints: constraint.RequiredNonNull,
 			},
-		},
-		Config: dataspec.ObjectSpec{
 			&dataspec.BlockSpec{
 				Name: "basic_auth",
 				Doc: `
-					Authentication parameters used while accessing the rss source.
+					Basic authentication credentials to be used for HTTP request.
 				`,
 				Nested: dataspec.ObjectSpec{
 					&dataspec.AttrSpec{
@@ -46,7 +44,7 @@ func makeRSSDataSource() *plugin.DataSource {
 						Type:       cty.String,
 						ExampleVal: cty.StringVal("passwd"),
 						Doc: `
-							Note: you can use function like "from_env()" to avoid storing credentials in plaintext
+							Note: you can use function like "from_env_var()" to avoid storing credentials in plaintext
 						`,
 						Constraints: constraint.RequiredNonNull,
 					},
@@ -60,7 +58,7 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 	fp := gofeed.NewParser()
 	url := params.Args.GetAttr("url").AsString()
 
-	basicAuth := params.Config.GetAttr("basic_auth")
+	basicAuth := params.Args.GetAttr("basic_auth")
 	if !basicAuth.IsNull() {
 		fp.AuthConfig = &gofeed.Auth{
 			Username: basicAuth.GetAttr("username").AsString(),
@@ -75,7 +73,7 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 	if err != nil {
 		return nil, diagnostics.Diag{&hcl.Diagnostic{
 			Severity: hcl.DiagError,
-			Summary:  "Failed to parse the feed",
+			Summary:  "Failed to fetch the feed",
 			Detail:   err.Error(),
 		}}
 	}
