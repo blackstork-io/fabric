@@ -34,7 +34,7 @@ data rss {
   # For example:
   url = "https://www.elastic.co/security-labs/rss/feed.xml"
 
-  # Basic authentication credentials to be used for HTTP request.
+  # Basic authentication credentials to be used in a HTTP request fetching RSS feed.
   #
   # Optional
   basic_auth {
