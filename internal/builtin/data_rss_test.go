@@ -27,7 +27,7 @@ func Test_makeRSSDataSchema(t *testing.T) {
 
 		assert := assert.New(t)
 		schema := makeRSSDataSource()
-		assert.NotNil(schema.Config)
+		assert.Nil(schema.Config)
 		assert.NotNil(schema.Args)
 		assert.NotNil(schema.DataFunc)
 	})
