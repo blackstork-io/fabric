@@ -30,7 +30,7 @@ func makeRSSDataSource() *plugin.DataSource {
 			&dataspec.BlockSpec{
 				Name: "basic_auth",
 				Doc: `
-					Basic authentication credentials to be used for HTTP request.
+					Basic authentication credentials to be used in a HTTP request fetching RSS feed.
 				`,
 				Nested: dataspec.ObjectSpec{
 					&dataspec.AttrSpec{
