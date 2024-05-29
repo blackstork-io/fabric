@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/assert"
 
-	circularRefDetector "github.com/blackstork-io/fabric/pkg/cirularRefDetector"
+	"github.com/blackstork-io/fabric/pkg/circularRefDetector"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 

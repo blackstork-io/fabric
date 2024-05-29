@@ -21,14 +21,14 @@ type PluginContentAction struct {
 }
 
 func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugin.MapData, doc, parent *plugin.ContentSection, contentID uint32) (*plugin.ContentResult, diagnostics.Diag) {
-	contenMap := plugin.MapData{}
+	contentMap := plugin.MapData{}
 	if action.PluginAction.Meta != nil {
-		contenMap[definitions.BlockKindMeta] = action.PluginAction.Meta.AsJQData()
+		contentMap[definitions.BlockKindMeta] = action.PluginAction.Meta.AsJQData()
 	}
 	docData := dataCtx[definitions.BlockKindDocument]
 	docData.(plugin.MapData)[definitions.BlockKindContent] = doc.AsData()
 	dataCtx[definitions.BlockKindDocument] = docData
-	dataCtx[definitions.BlockKindContent] = contenMap
+	dataCtx[definitions.BlockKindContent] = contentMap
 	if action.Query != nil {
 		data, diag := action.Query.EvalQuery(ctx, dataCtx)
 		if diag.HasErrors() {
