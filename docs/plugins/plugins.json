@@ -89,10 +89,8 @@
       {
         "name": "rss",
         "type": "data-source",
-        "config_params": [
-          "basic_auth"
-        ],
         "arguments": [
+          "basic_auth",
           "url"
         ]
       },
