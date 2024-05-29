@@ -34,12 +34,12 @@ func makeJSONDataSource() *plugin.DataSource {
 			},
 		},
 		Doc: `
-		Loads JSON files with the names that match a provided "glob" pattern or a single file from a provided path.
+		Loads JSON files with the names that match a provided ` + "`glob`" + `pattern or a single file from a provided ` + "`path`" + `value.
 
-		Either "glob" or "path" attribute must be set.
+		Either ` + "`glob`" + `or ` + "`path`" + `attribute must be set.
 
-		When "path" attribute is specified, the data source returns only the content of a file.
-		When "glob" attribute is specified, the data source returns a list of dicts that contain the content of a file and file's metadata. For example:
+		When ` + "`path`" + `attribute is specified, the data source returns only the content of a file.
+		When ` + "`glob`" + `attribute is specified, the data source returns a list of dicts that contain the content of a file and file's metadata. For example:
 		` + "```json" + `
 		[
 		  {

@@ -168,8 +168,8 @@ func ParseDir(dir fs.FS) (*DefinedBlocks, map[string]*hcl.File, diagnostics.Diag
 
 	if len(fileMap) == 0 {
 		diags.Add(
-			"No fabric files found",
-			fmt.Sprintf("There are no *.fabric files at '%s'", dir),
+			"No valid fabric files found",
+			fmt.Sprintf("No valid *.fabric files found at '%s'", dir),
 		)
 	}
 
