@@ -11,7 +11,7 @@ import (
 
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/parser/evaluation"
-	circularRefDetector "github.com/blackstork-io/fabric/pkg/cirularRefDetector"
+	"github.com/blackstork-io/fabric/pkg/circularRefDetector"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/utils"
 )
@@ -160,7 +160,7 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 	res.Invocation = invocation
 
 	// Future-proofing: be careful when refactoring, the rest of the program
-	// (specifically the ref handeling) relies on res.invocation being *evaluation.BlockInvocation
+	// (specifically the ref handling) relies on res.invocation being *evaluation.BlockInvocation
 	_, ok := res.Invocation.(*evaluation.BlockInvocation)
 	if !ok {
 		panic("Plugin invocation must be block invocation")
@@ -189,7 +189,7 @@ func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAtt
 		})
 		return
 	case configAttr != nil:
-		// config attr referensing top-level config block
+		// config attr referencing top-level config block
 		cfg, diag := Resolve[*definitions.Config](db, configAttr.Expr)
 		if diags.Extend(diag) {
 			return

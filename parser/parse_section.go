@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 
 	"github.com/blackstork-io/fabric/parser/definitions"
-	circularRefDetector "github.com/blackstork-io/fabric/pkg/cirularRefDetector"
+	"github.com/blackstork-io/fabric/pkg/circularRefDetector"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/utils"
 )

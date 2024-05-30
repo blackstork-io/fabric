@@ -107,7 +107,7 @@ func (d *Diag) AppendErr(err error, summary string) (haveAddedErrors bool) {
 	return
 }
 
-// AppendErr and appendErr together can't be inlined. We're forbiding go from inlining
+// AppendErr and appendErr together can't be inlined. We're forbidding go from inlining
 // appendErr into AppendErr and thus preventing AppendErr inlining.
 //
 //go:noinline
