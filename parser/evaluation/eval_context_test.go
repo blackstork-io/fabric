@@ -8,19 +8,20 @@ import (
 )
 
 func Test_EvalContext(t *testing.T) {
-	ctx := EvalContext()
+	ctx := buildEvalContext()
 	assert.NotNil(t, ctx)
-	assert.NotNil(t, ctx.Functions)
-	assert.NotNil(t, ctx.Functions["from_env_variable"])
+	assert.Nil(t, ctx.Functions)
 }
 
-func Test_makeFromEnvVariableFunc(t *testing.T) {
+func Test_EnvVars(t *testing.T) {
+	assert := assert.New(t)
 	t.Setenv("TEST_KEY", "test_value")
-	fn := makeFromEnvVariableFunc
-	val, err := fn.Call([]cty.Value{cty.StringVal("TEST_KEY")})
-	assert.Nil(t, err)
-	assert.Equal(t, cty.StringVal("test_value"), val)
-	val, err = fn.Call([]cty.Value{cty.StringVal("NON_EXISTENT_KEY")})
-	assert.Nil(t, err)
-	assert.Equal(t, cty.StringVal(""), val)
+	ctx := buildEvalContext()
+	env := ctx.Variables["env"]
+	assert.NotNil(env)
+	assert.True(cty.Map(cty.String).Equals(env.Type()))
+	envMap := env.AsValueMap()
+	assert.True(envMap["NON_EXISTENT_KEY"].IsNull())
+	assert.False(envMap["TEST_KEY"].IsNull())
+	assert.Equal("test_value", envMap["TEST_KEY"].AsString())
 }

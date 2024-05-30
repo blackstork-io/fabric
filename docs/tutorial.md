@@ -203,13 +203,13 @@ Fabric fetched the `blackstork/openai` plugin release from the plugin registry a
 
 ### Configuration
 
-[`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}}) content provider requires an OpenAI API key. The key can be set in the provider's configuration block. It's recommended to store credentials and API keys separately from Fabric code, and using the `from_env_variable` function to read the key from the `OPENAI_API_KEY` environment variable.
+[`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}}) content provider requires an OpenAI API key. The key can be set in the provider's configuration block. It's recommended to store credentials and API keys separately from Fabric code, and using the `env` object to read the key from the `OPENAI_API_KEY` environment variable.
 
 The `config` block for the `openai_text` content provider would look like this:
 
 ```hcl
 config content openai_text {
-  api_key = from_env_variable("OPENAI_API_KEY")
+  api_key = env.OPENAI_API_KEY
 }
 ```
 
@@ -253,7 +253,7 @@ fabric {
 }
 
 config content openai_text {
-  api_key = from_env_variable("OPENAI_API_KEY")
+  api_key = env.OPENAI_API_KEY
 }
 
 document "greeting" {
