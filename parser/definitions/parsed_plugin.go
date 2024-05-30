@@ -4,7 +4,6 @@ import (
 	"github.com/blackstork-io/fabric/parser/evaluation"
 )
 
-// TODO: update all references to this type (vars)
 type ParsedPlugin struct {
 	PluginName string
 	BlockName  string

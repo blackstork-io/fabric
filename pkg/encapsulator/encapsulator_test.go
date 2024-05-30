@@ -119,20 +119,20 @@ func TestDecoderErrors(t *testing.T) {
 
 	i, err := d.FromCty(cty.NullVal(e.CtyType()))
 	assert.Nil(i)
-	assert.ErrorIs(err, encapsulator.NullValErr)
+	assert.ErrorIs(err, encapsulator.ErrNullVal)
 
 	i, err = d.FromCty(cty.UnknownVal(e.CtyType()))
 	assert.Nil(i)
-	assert.ErrorIs(err, encapsulator.UnknownValErr)
+	assert.ErrorIs(err, encapsulator.ErrUnknownVal)
 
 	i, err = d.FromCty(cty.StringVal(""))
 	assert.Nil(i)
-	assert.ErrorIs(err, encapsulator.WrongTypeErr)
+	assert.ErrorIs(err, encapsulator.ErrWrongType)
 
 	capsule := cty.Capsule("other type", reflect.TypeFor[string]())
 	str := "hi"
 
 	i, err = d.FromCty(cty.CapsuleVal(capsule, &str))
 	assert.Nil(i)
-	assert.ErrorIs(err, encapsulator.WrongTypeErr)
+	assert.ErrorIs(err, encapsulator.ErrWrongType)
 }

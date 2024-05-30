@@ -71,12 +71,14 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 		refBase = base.Expr
 		validChildren = []string{
 			definitions.BlockKindMeta,
+			definitions.BlockKindVars,
 		}
 	} else {
 		validChildren = []string{
 			definitions.BlockKindContent,
 			definitions.BlockKindMeta,
 			definitions.BlockKindSection,
+			definitions.BlockKindVars,
 		}
 	}
 	validChildrenSet := utils.SliceToSet(validChildren)

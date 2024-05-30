@@ -103,6 +103,7 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 					definitions.BlockKindContent,
 					definitions.BlockKindData,
 					definitions.BlockKindMeta,
+					definitions.BlockKindVars,
 					definitions.BlockKindSection,
 					definitions.BlockKindPublish,
 				},

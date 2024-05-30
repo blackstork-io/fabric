@@ -37,8 +37,8 @@ func (pv *ParsedVars) Empty() bool {
 	return pv == nil || len(pv.Variables) == 0
 }
 
-// MergeWithBaseVars handles merging with vars from ref base
-// Shadowing has different rules, and will be handled at the evaluation stage
+// MergeWithBaseVars handles merging with vars from ref base.
+// Shadowing has different rules, and will be handled at the evaluation stage.
 func (pv *ParsedVars) MergeWithBaseVars(baseVars *ParsedVars) *ParsedVars {
 	if pv.Empty() {
 		return baseVars

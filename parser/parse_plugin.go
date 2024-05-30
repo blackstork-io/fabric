@@ -97,21 +97,15 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 				}
 				res.Meta = &meta
 			case definitions.BlockKindVars:
+				if plugin.Kind() != definitions.BlockKindContent {
+					// pass vars to data block to deal with
+					return false
+				}
 				if res.Vars != nil {
 					diags.Append(&hcl.Diagnostic{
 						Severity: hcl.DiagWarning,
 						Summary:  "More than one vars block",
 						Detail:   "No more than one vars block is allowed. Only the first one will be used.",
-						Subject:  blk.DefRange().Ptr(),
-						Context:  plugin.Block.Range().Ptr(),
-					})
-					break
-				}
-				if plugin.Kind() != definitions.BlockKindContent {
-					diags.Append(&hcl.Diagnostic{
-						Severity: hcl.DiagError,
-						Summary:  "Inapplicable var nesting",
-						Detail:   "Vars block is only allowed in content providers, sections, and documents.",
 						Subject:  blk.DefRange().Ptr(),
 						Context:  plugin.Block.Range().Ptr(),
 					})
@@ -306,21 +300,13 @@ func hclBlockKey(b *hclsyntax.Block) string {
 }
 
 func updateRefBody(ref, base *hclsyntax.Body) {
-	// TODO: actually these explicitly ignored attributes and blocks were removed
-	// while the base itself was parsed
 	for k, v := range base.Attributes {
-		switch k {
-		case definitions.AttrRefBase, definitions.BlockKindConfig:
+		if _, found := ref.Attributes[k]; found {
 			continue
-		default:
-			if _, found := ref.Attributes[k]; found {
-				continue
-			}
-			ref.Attributes[k] = v
 		}
+		ref.Attributes[k] = v
 	}
-	refBlocks := make(map[string]struct{}, len(ref.Blocks)+1)
-	refBlocks[definitions.BlockKindConfig] = struct{}{} // to prevent us from copying the anonymous config block
+	refBlocks := make(map[string]struct{}, len(ref.Blocks))
 	for _, b := range ref.Blocks {
 		refBlocks[hclBlockKey(b)] = struct{}{}
 	}

@@ -1,6 +1,7 @@
 package parexec
 
 import (
+	"log/slog"
 	"sync"
 	"sync/atomic"
 )
@@ -17,7 +18,7 @@ type Command uint8
 const (
 	// Continue async execution (zero-value).
 	CmdProceed = Command(iota)
-	// Try to stop as soon as possible (start canceling new tasks and stop scheduling alreday submitted).
+	// Try to stop as soon as possible (start canceling new tasks and stop scheduling already submitted).
 	CmdStop
 )
 
@@ -80,7 +81,7 @@ func (pe *Executor[T]) Unlock() {
 
 // Releases the exclusive access to the state captured by the `processor` func of the executor.
 // Tasks are able to return their results to the processor function again.
-// Addidionally resets the stopped status of the executor, making it possible to shedule and run new tasks.
+// Additionally resets the stopped status of the executor, making it possible to shedule and run new tasks.
 func (pe *Executor[T]) UnlockResume() {
 	chPtr := pe.stopC.Load()
 	if chPtr == &closedChan {
@@ -90,9 +91,9 @@ func (pe *Executor[T]) UnlockResume() {
 	pe.cond.L.Unlock()
 }
 
-// Wait unill all scheduled parallel tasks are done (or cancelled), then acquire the lock
+// Wait until all scheduled parallel tasks are done (or cancelled), then acquire the lock
 // that guarantees exclusive access to the state captured by the `processor` func of the executor.
-// Returns wheather the executor was stopped (result function returned parexec.CmdStop).
+// Returns whether the executor was stopped (result function returned parexec.CmdStop).
 func (pe *Executor[T]) WaitDoneAndLock() (wasStopped bool) {
 	pe.cond.L.Lock()
 	for pe.tasks.Load() != 0 {
@@ -120,7 +121,7 @@ func (pe *Executor[T]) taskDone() {
 // must be called under mutex.
 func (pe *Executor[T]) stopExecutor() {
 	ch := pe.stopC.Swap(&closedChan)
-	if ch != &closedChan { // we're the frist task that called stopExecutor
+	if ch != &closedChan { // we're the first task that called stopExecutor
 		close(*ch)
 	}
 }
@@ -141,7 +142,8 @@ func (pe *Executor[T]) execute(idx int, fn func() T) {
 			pe.limiter.Return()
 		}
 		// TODO: do something with panic
-		_ = recover()
+		p := recover()
+		slog.Error("Panic in the parallel executor!", "panic:", p)
 	}()
 	if limiterActive {
 		pe.limiter.Take()
@@ -194,7 +196,7 @@ func GoWithArgs[I1, I2, T any](pe *Executor[T], fn func(I1, I2) T) func(I1, I2) 
 // Applies func fn to the references of the elements of slice in [Executor] and returns the results
 // T into executor's "processor" function.
 // Note: when the results of the execution are collected by the processor func of the executor
-// indexes of slice items would be contigous and ordered
+// indexes of slice items would be contiguous and ordered
 // Safety: the array must not be modified until the executor is done!
 func MapRef[I, T any](pe *Executor[T], slice []I, fn func(*I) T) {
 	if len(slice) == 0 || pe.isStopped() {
@@ -211,7 +213,7 @@ func MapRef[I, T any](pe *Executor[T], slice []I, fn func(*I) T) {
 // Applies func fn to the copies of the elements of slice in [Executor] and returns the results
 // T into executor's "processor" function.
 // Note: when the results of the execution are collected by the processor func of the executor
-// indexes of slice items would be contigous and ordered.
+// indexes of slice items would be contiguous and ordered.
 func Map[I, T any](pe *Executor[T], input []I, fn func(I) T) {
 	if len(input) == 0 || pe.isStopped() {
 		return
@@ -228,7 +230,7 @@ func Map[I, T any](pe *Executor[T], input []I, fn func(I) T) {
 // T into executor's "processor" function.
 // Function returns when the `input` channel is closed or [Executor] is stopped
 // Note: when the results of the execution are collected by the processor func of the executor
-// indexes of slice items would be ordered, but __not__ contigous.
+// indexes of slice items would be ordered, but __not__ contiguous.
 func MapChan[I, T any](pe *Executor[T], inputC <-chan I, fn func(I) T) (consumedFully bool) {
 	stopC := pe.getStopC()
 	for {

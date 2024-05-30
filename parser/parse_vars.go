@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"slices"
 
 	"github.com/hashicorp/hcl/v2"
@@ -18,7 +17,7 @@ func ParseVars(block *hclsyntax.Block) (parsed *definitions.ParsedVars, diags di
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
 			Summary:  "Unsupported nesting",
-			Detail:   fmt.Sprintf(`%s block does not support nested blocks, did you mean to use nested maps?`, definitions.BlockKindVars),
+			Detail:   `Vars block does not support nested blocks, did you mean to use nested maps?`,
 			Subject:  subBlock.Range().Ptr(),
 		})
 	}

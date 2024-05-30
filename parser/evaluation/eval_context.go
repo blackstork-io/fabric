@@ -19,10 +19,8 @@ func buildEnvVarMap() cty.Value {
 		slog.Error("Error reading .env file", "err", err)
 	}
 	envMap := make(map[string]cty.Value, len(envFromFile)+len(envVars))
-	if envFromFile != nil {
-		for k, v := range envFromFile {
-			envMap[k] = cty.StringVal(v)
-		}
+	for k, v := range envFromFile {
+		envMap[k] = cty.StringVal(v)
 	}
 	for k, v := range envFromFile {
 		envMap[k] = cty.StringVal(v)

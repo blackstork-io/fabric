@@ -87,11 +87,10 @@ func validateLabelsLength(block *hclsyntax.Block, maxLabels int, labelUsage stri
 		} else {
 			labelUsage = block.Type
 		}
-		// XXX: Is having more labels a hard error or a warning?
 		return &hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  fmt.Sprintf("Invalid %s block", block.Type),
-			Detail:   fmt.Sprintf("Too many lables, usage: '%s'", labelUsage),
+			Detail:   fmt.Sprintf("Too many labels, usage: '%s'", labelUsage),
 			Subject:  hcl.RangeBetween(block.LabelRanges[maxLabels], block.LabelRanges[len(block.LabelRanges)-1]).Ptr(),
 			Context:  block.DefRange().Ptr(),
 		}

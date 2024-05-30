@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	NullValErr    = errors.New("null value")
-	UnknownValErr = errors.New("unknown value")
-	WrongTypeErr  = errors.New("wrong type")
+	ErrNullVal    = errors.New("null value")
+	ErrUnknownVal = errors.New("unknown value")
+	ErrWrongType  = errors.New("wrong type")
 )
 
 // Non-generic decoder interface
@@ -63,23 +63,23 @@ func (d *decoderCore) GoType() reflect.Type {
 func (d *decoderCore) fromCty(v cty.Value) (any, error) {
 	v, _ = v.Unmark()
 	if v.IsNull() {
-		return nil, NullValErr
+		return nil, ErrNullVal
 	}
 	if !v.IsKnown() {
-		return nil, UnknownValErr
+		return nil, ErrUnknownVal
 	}
 	ty := v.Type()
 	if !ty.IsCapsuleType() {
 		return nil, fmt.Errorf(
 			"%w: expected encapsulated %s, got %s",
-			WrongTypeErr, d.goType, ty.FriendlyName(),
+			ErrWrongType, d.goType, ty.FriendlyName(),
 		)
 	}
 	ety := reflect.PointerTo(ty.EncapsulatedType())
 	if !ety.AssignableTo(d.goType) {
 		return nil, fmt.Errorf(
 			"%w: expected assignable to %s, got %s",
-			WrongTypeErr, d.goType, ety,
+			ErrWrongType, d.goType, ety,
 		)
 	}
 	return v.EncapsulatedValue(), nil

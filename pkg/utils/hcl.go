@@ -23,7 +23,6 @@ func EvalContextByVar(ctx *hcl.EvalContext, name string) *hcl.EvalContext {
 		if found {
 			return ctx
 		}
-
 	}
 	return nil
 }
