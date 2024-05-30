@@ -12,35 +12,80 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
-func ParseVars(block *hclsyntax.Block) (parsed *definitions.ParsedVars, diags diagnostics.Diag) {
-	for _, subBlock := range block.Body.Blocks {
-		diags.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagWarning,
-			Summary:  "Unsupported nesting",
-			Detail:   `Vars block does not support nested blocks, did you mean to use nested maps?`,
-			Subject:  subBlock.Range().Ptr(),
-		})
+func ParseVars(block *hclsyntax.Block, localVar *hclsyntax.Attribute) (parsed *definitions.ParsedVars, diags diagnostics.Diag) {
+	if block == nil && localVar == nil {
+		parsed = &definitions.ParsedVars{}
+		return
+	}
+	if block != nil && localVar != nil {
+		localVarInVars := block.Body.Attributes[definitions.LocalVarName]
+		if localVarInVars != nil {
+			diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Local var redefinition",
+				Detail:   "Local var is defined both in vars block and as a separate attribute",
+				Subject:  localVar.Range().Ptr(),
+				Context:  block.Body.Range().Ptr(),
+			})
+		} else {
+			diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagWarning,
+				Summary:  "Local var specified together with vars block",
+				Detail: "It is recommended to use either vars block or local var, not both. " +
+					"You can define a variable `local` in the vars block to achieve the same effect.",
+				Subject: localVar.Range().Ptr(),
+			})
+		}
+	}
+	var varCount int
+	if block != nil {
+		for _, subBlock := range block.Body.Blocks {
+			diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagWarning,
+				Summary:  "Unsupported nesting",
+				Detail:   `Vars block does not support nested blocks, did you mean to use nested maps?`,
+				Subject:  subBlock.Range().Ptr(),
+			})
+		}
+		varCount = len(block.Body.Attributes)
 	}
 
+	if localVar != nil {
+		varCount++
+	}
 	evalCtx := dataquery.JqEvalContext(evaluation.EvalContext())
-	vars := make([]*definitions.Variable, 0, len(block.Body.Attributes))
+	vars := make([]*definitions.Variable, 0, varCount)
 
-	for _, attr := range block.Body.Attributes {
-		val, diag := attr.Expr.Value(evalCtx)
-		if diags.Extend(diag) {
-			continue
+	if block != nil {
+		for _, attr := range block.Body.Attributes {
+			val, diag := attr.Expr.Value(evalCtx)
+			if diags.Extend(diag) {
+				continue
+			}
+			vars = append(vars, &definitions.Variable{
+				Name:      attr.Name,
+				NameRange: attr.NameRange,
+				Val:       val,
+				ValRange:  attr.Expr.Range(),
+			})
 		}
-		vars = append(vars, &definitions.Variable{
-			Name:      attr.Name,
-			NameRange: attr.NameRange,
-			Val:       val,
-			ValRange:  attr.Expr.Range(),
-		})
 	}
 	// ordered by definition
 	slices.SortFunc(vars, func(a, b *definitions.Variable) int {
 		return a.NameRange.Start.Byte - b.NameRange.Start.Byte
 	})
+	if localVar != nil {
+		// ordered last
+		val, diag := localVar.Expr.Value(evalCtx)
+		if !diags.Extend(diag) {
+			vars = append(vars, &definitions.Variable{
+				Name:      definitions.LocalVarName,
+				NameRange: localVar.NameRange,
+				Val:       val,
+				ValRange:  localVar.Expr.Range(),
+			})
+		}
+	}
 	byName := make(map[string]int, len(vars))
 	for i, v := range vars {
 		byName[v.Name] = i

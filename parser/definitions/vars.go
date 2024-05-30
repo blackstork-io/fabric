@@ -13,6 +13,8 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 )
 
+const LocalVarName = "local"
+
 type Query interface {
 	Eval(ctx context.Context, dataCtx plugin.MapData) (result plugin.Data, diags diagnostics.Diag)
 	Range() *hcl.Range
@@ -62,4 +64,14 @@ func (pv *ParsedVars) MergeWithBaseVars(baseVars *ParsedVars) *ParsedVars {
 		Variables: vars,
 		ByName:    byName,
 	}
+}
+
+// AppendVar append a variable to the parsed vars struct (last in evaluation order).
+func (pv *ParsedVars) AppendVar(variable *Variable) {
+	idx := len(pv.Variables)
+	pv.Variables = append(pv.Variables, variable)
+	if idx == 0 {
+		pv.ByName = make(map[string]int)
+	}
+	pv.ByName[variable.Name] = idx
 }

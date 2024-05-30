@@ -60,7 +60,7 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 	body := utils.ToHclsyntaxBody(plugin.Block.Body)
 
 	configAttr, _ := utils.Pop(body.Attributes, definitions.BlockKindConfig)
-	var configBlock *hclsyntax.Block
+	var configBlock, varsBlock *hclsyntax.Block
 
 	body.Blocks = slices.DeleteFunc(
 		body.Blocks,
@@ -101,25 +101,31 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 					// pass vars to data block to deal with
 					return false
 				}
-				if res.Vars != nil {
+				if varsBlock != nil {
 					diags.Append(&hcl.Diagnostic{
 						Severity: hcl.DiagWarning,
-						Summary:  "More than one vars block",
-						Detail:   "No more than one vars block is allowed. Only the first one will be used.",
-						Subject:  blk.DefRange().Ptr(),
-						Context:  plugin.Block.Range().Ptr(),
+						Summary:  "Vars block redefinition",
+						Detail: fmt.Sprintf(
+							"%s block allows at most one vars block, original vars block was defined at %s:%d",
+							plugin.Kind(), varsBlock.DefRange().Filename, varsBlock.DefRange().Start.Line,
+						),
+						Subject: blk.DefRange().Ptr(),
+						Context: plugin.Block.Body.Range().Ptr(),
 					})
 					break
 				}
-				var diag diagnostics.Diag
-				res.Vars, diag = ParseVars(blk)
-				diags.Extend(diag)
+				varsBlock = blk
 			default:
 				return false
 			}
 			return true
 		},
 	)
+
+	localVar, _ := utils.Pop(body.Attributes, definitions.AttrLocalVar)
+	var diag diagnostics.Diag
+	res.Vars, diag = ParseVars(varsBlock, localVar)
+	diags.Extend(diag)
 
 	invocation := &evaluation.BlockInvocation{
 		Body:            body,
