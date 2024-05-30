@@ -57,11 +57,14 @@ func (doc *Document) RenderContent(ctx context.Context) (plugin.Content, plugin.
 	if doc.Meta != nil {
 		docData[definitions.BlockKindMeta] = doc.Meta.AsJQData()
 	}
-	dataCtx := plugin.MapData{
+	// static portion of the data context for this document
+	// will never change, all changes are made to the clone of this map
+	docDataCtx := plugin.MapData{
 		definitions.BlockKindData:     data,
 		definitions.BlockKindDocument: docData,
 	}
-	diag := ApplyVars(ctx, doc.Vars, dataCtx)
+	diag := ApplyVars(ctx, doc.Vars, docDataCtx)
+
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
@@ -87,11 +90,9 @@ func (doc *Document) RenderContent(ctx context.Context) (plugin.Content, plugin.
 	// execute content blocks based on the invocation order
 	for _, idx := range invokeList {
 		// clone the data context for each content block
-		dataCtx = maps.Clone(dataCtx)
+		dataCtx := maps.Clone(docDataCtx)
 		// set the current content to the data context
-		docData[definitions.BlockKindContent] = result.AsData()
-		dataCtx[definitions.BlockKindDocument] = docData
-		delete(dataCtx, definitions.BlockKindSection)
+		dataCtx[definitions.BlockKindDocument].(plugin.MapData)[definitions.BlockKindContent] = result.AsData()
 		// TODO: if section, set section
 
 		// execute the content block
