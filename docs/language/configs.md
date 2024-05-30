@@ -85,7 +85,6 @@ Nested blocks aren't supported inside the `config` blocks.
 ### Example
 
 ```hcl
-
 config data csv {
   delimiter = ";"
 }
