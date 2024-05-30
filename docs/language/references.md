@@ -6,9 +6,11 @@ weight: 80
 
 # References
 
-Fabric language supports code reuse via block references. Note, only `data`, `content` and `section` blocks with names, defined on a root level of the file, can be referenced.
+Fabric language supports code reuse via block references. Note, it's only possible to reference
+`data`, `content` and `section` blocks with names, defined on a root level of the file.
 
-To include a named block defined on the root level into a document, use `ref` label and `base` argument:
+To include a named block defined on the root level into a document, use `ref` label and `base`
+attribute:
 
 ```hcl
 content <content-provider> "<block-name>" {
@@ -34,13 +36,17 @@ document "foo" {
 ```
 
 - `<block-type>` is either `content`, `data` or `section`.
-- `<block-identifier>` is a dot-separated identifier for the block to be included. It consists of all labels in the block signature. For example, `content.<content-provider>.<block-name>` or `section.<block-name>`. The block name in the identifier shouldn't be wrapper in double quotes `"`.
+- `<block-identifier>` is an identifier for the referenced block. It consists of a dot-separated
+  list of all labels in the block signature. For example, `content.<content-provider>.<block-name>` or
+  `section.<block-name>`. The block name in the identifier must not be wrapper in double quotes
+  `"`.
 
-If the `ref` block is defined on the root level of the file, the block name is required. If it's within the `document` block, the block can be anonymous - the name is optional.
+For the `ref` blocks defined on the root level of the file, the block name is required. If the
+blocks are defined inside the `document` block, they can be anonymous - the name is optional.
 
-{{< hint warning >}}
-An anonymous `ref` block adopts a name of the referenced block. Since the final name of the block isn't stated explicitly, unwanted overrides can happen — a block signature must be unique between the blocks defined on the same level.
-{{< /hint >}}
+{{< hint warning >}} An anonymous `ref` block adopts a name of the referenced block. Since the final
+name of the block isn't stated explicitly, unwanted overrides can happen — a block signature must be
+unique between the blocks defined on the same level. {{< /hint >}}
 
 ## Overriding arguments
 
