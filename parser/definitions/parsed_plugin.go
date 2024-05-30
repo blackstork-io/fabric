@@ -4,12 +4,14 @@ import (
 	"github.com/blackstork-io/fabric/parser/evaluation"
 )
 
+// TODO: update all references to this type (vars)
 type ParsedPlugin struct {
 	PluginName string
 	BlockName  string
 	Meta       *MetaBlock
 	Config     evaluation.Configuration
 	Invocation evaluation.Invocation
+	Vars       *ParsedVars
 }
 
 func (pe *ParsedPlugin) GetBlockInvocation() *evaluation.BlockInvocation {

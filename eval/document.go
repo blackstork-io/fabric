@@ -14,7 +14,7 @@ import (
 
 type Document struct {
 	Meta          *definitions.MetaBlock
-	Vars          definitions.ParsedVars
+	Vars          *definitions.ParsedVars
 	DataBlocks    []*PluginDataAction
 	ContentBlocks []*Content
 	PublishBlocks []*PluginPublishAction

@@ -2,11 +2,11 @@ package definitions
 
 import (
 	"context"
+	"maps"
 	"slices"
-	"sync"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/encapsulator"
@@ -17,58 +17,49 @@ type Query interface {
 	Eval(ctx context.Context, dataCtx plugin.MapData) (result plugin.Data, diags diagnostics.Diag)
 	Range() *hcl.Range
 }
-type QueryResultPlaceholder int
 
-var (
-	QueryType                  = encapsulator.New[Query]("query")
-	QueriesType                = encapsulator.New[Queries]("queries")
-	QueryResultPlaceholderType = encapsulator.New[int]("query result placeholder")
-)
+var QueryType = encapsulator.NewDecoder[Query]()
 
-// Key for the eval context map to store the pending queries array.
-const QueryKey = "\x00queries"
-
-type ParsedVars []*hclsyntax.Attribute
-
-// Queries is a threadsafe collection of pending queries.
-type Queries struct {
-	mu      sync.Mutex
-	queries []DeferredQuery
+type ParsedVars struct {
+	// stored in the order of definition
+	Variables []*Variable
+	ByName    map[string]int
 }
 
-type DeferredQuery struct {
-	Query Query
-	// path to store the result of the query
-	// elements may be int or string (array index or map key)
-	ResultPath []any
+type Variable struct {
+	Name      string
+	NameRange hcl.Range
+	Val       cty.Value
+	ValRange  hcl.Range
 }
 
-// Append adds a query to the internal state and returns an id.
-func (q *Queries) Append(query Query) int {
-	q.mu.Lock()
-	defer q.mu.Unlock()
-	idx := len(q.queries)
-	q.queries = append(q.queries, DeferredQuery{Query: query})
-	return idx
+func (pv *ParsedVars) Empty() bool {
+	return pv == nil || len(pv.Variables) == 0
 }
 
-// Take returns all the queries and resets the internal state.
-func (q *Queries) Take() []DeferredQuery {
-	q.mu.Lock()
-	defer q.mu.Unlock()
-	queries := q.queries
-	q.queries = nil
-	return queries
-}
+// MergeWithBaseVars handles merging with vars from ref base
+// Shadowing has different rules, and will be handled at the evaluation stage
+func (pv *ParsedVars) MergeWithBaseVars(baseVars *ParsedVars) *ParsedVars {
+	if pv.Empty() {
+		return baseVars
+	}
+	if baseVars.Empty() {
+		return pv
+	}
 
-// ResultDest sets the result destination for a query with `id`.
-func (q *Queries) ResultDest(id int, path []any) {
-	path = slices.Clone(path)
-	q.mu.Lock()
-	defer q.mu.Unlock()
-	q.queries[id].ResultPath = path
-}
-
-func NewQueries() *Queries {
-	return &Queries{}
+	vars := slices.Clone(baseVars.Variables)
+	byName := maps.Clone(baseVars.ByName)
+	for _, v := range pv.Variables {
+		if idx, found := byName[v.Name]; found {
+			// redefine, but keep the definition order
+			vars[idx] = v
+		} else {
+			byName[v.Name] = len(vars)
+			vars = append(vars, v)
+		}
+	}
+	return &ParsedVars{
+		Variables: vars,
+		ByName:    byName,
+	}
 }

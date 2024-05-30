@@ -65,10 +65,10 @@ func (p *Plugin) GetHCLBlock() *hcl.Block {
 	return p.Block.AsHCLBlock()
 }
 
-var ctyPluginType = encapsulator.New[Plugin]("plugin")
+var ctyPluginType = encapsulator.NewEncoder[Plugin]("plugin", nil)
 
 func (p *Plugin) CtyType() cty.Type {
-	return ctyPluginType.Type()
+	return ctyPluginType.CtyType()
 }
 
 func DefinePlugin(block *hclsyntax.Block, atTopLevel bool) (plugin *Plugin, diags diagnostics.Diag) {

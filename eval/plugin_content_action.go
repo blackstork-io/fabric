@@ -3,15 +3,12 @@ package eval
 import (
 	"context"
 	"fmt"
-	"slices"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
-	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/eval/dataquery"
-	"github.com/blackstork-io/fabric/parser"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
@@ -23,7 +20,7 @@ type PluginContentAction struct {
 	*PluginAction
 	Provider *plugin.ContentProvider
 	Query    definitions.Query
-	Vars     definitions.ParsedVars
+	Vars     *definitions.ParsedVars
 }
 
 func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugin.MapData, doc, parent *plugin.ContentSection, contentID uint32) (res *plugin.ContentResult, diags diagnostics.Diag) {
@@ -42,12 +39,10 @@ func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx pl
 	}
 
 	if action.Query != nil {
-		var queryRes plugin.Data
-		queryRes, diag = action.Query.Eval(ctx, dataCtx)
+		dataCtx["query_result"], diag = action.Query.Eval(ctx, dataCtx)
 		if diags.Extend(diag) {
 			return
 		}
-		dataCtx["query_result"] = queryRes
 	}
 	res, diag = action.Provider.Execute(ctx, &plugin.ProvideContentParams{
 		Config:      action.Config,
@@ -94,44 +89,15 @@ func LoadPluginContentAction(providers ContentProviders, node *definitions.Parse
 		return nil, diags
 	}
 	body := node.Invocation.GetBody()
-	var varsBlock *hclsyntax.Block // definitions.ParsedVars
-	var vars []*hclsyntax.Attribute
 	var query definitions.Query
 
-	body.Blocks = slices.DeleteFunc(body.Blocks, func(blk *hclsyntax.Block) bool {
-		if blk.Type != definitions.BlockKindVars {
-			return false
-		}
-		if varsBlock != nil {
-			diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "Vars block redefinition",
-				Detail: fmt.Sprintf(
-					"%s block allows at most one vars block, original vars block was defined at %s:%d",
-					node.BlockName, varsBlock.DefRange().Filename, varsBlock.DefRange().Start.Line,
-				),
-				Subject: blk.DefRange().Ptr(),
-				Context: node.Invocation.Range().Ptr(),
-			})
-			return true
-		}
-
-		varsBlock = blk
-
-		var diag diagnostics.Diag
-		vars, diag = parser.ParseVars(blk)
-		diags.Extend(diag)
-		return true
-	})
-
 	if _, found := body.Attributes["query"]; found {
-		evalCtx, queriesObj := dataquery.QueryContext(evaluation.EvalContext())
-		evalCtx = dataquery.JqEvalContext(evalCtx)
+		evalCtx := dataquery.JqEvalContext(evaluation.EvalContext())
 
 		value, newBody, stdDiag := hcldec.PartialDecode(body, &hcldec.ObjectSpec{
 			"query": &hcldec.AttrSpec{
 				Name:     "query",
-				Type:     dataquery.JqQueryType.Type(),
+				Type:     dataquery.JqQueryType.CtyType(),
 				Required: true,
 			},
 		}, evalCtx)
@@ -139,9 +105,7 @@ func LoadPluginContentAction(providers ContentProviders, node *definitions.Parse
 			return
 		}
 		body = utils.ToHclsyntaxBody(newBody)
-		queryIdx := dataquery.JqQueryType.MustFromCty(value.GetAttr("query"))
-		// there will be only one query with index 0, but we are working with it properly
-		query = queriesObj.Take()[*queryIdx].Query
+		query = dataquery.JqQueryType.MustFromCty(value.GetAttr("query"))
 	}
 	// finished parsing content-specific attrs and blocks
 	node.Invocation.SetBody(body)
@@ -161,6 +125,6 @@ func LoadPluginContentAction(providers ContentProviders, node *definitions.Parse
 		},
 		Provider: cp,
 		Query:    query,
-		Vars:     vars,
+		Vars:     node.Vars,
 	}, diags
 }

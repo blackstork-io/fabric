@@ -22,10 +22,10 @@ func (d *Document) GetHCLBlock() *hcl.Block {
 	return d.Block.AsHCLBlock()
 }
 
-var ctyDocumentType = encapsulator.New[Document]("document")
+var ctyDocumentType = encapsulator.NewEncoder[Document]("document", nil)
 
 func (d *Document) CtyType() cty.Type {
-	return ctyDocumentType.Type()
+	return ctyDocumentType.CtyType()
 }
 
 func DefineDocument(block *hclsyntax.Block) (doc *Document, diags diagnostics.Diag) {

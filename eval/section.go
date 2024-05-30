@@ -13,7 +13,7 @@ import (
 type Section struct {
 	meta     *definitions.MetaBlock
 	children []*Content
-	vars     definitions.ParsedVars
+	vars     *definitions.ParsedVars
 }
 
 func (block *Section) RenderContent(ctx context.Context, dataCtx plugin.MapData, doc, parent *plugin.ContentSection, contentID uint32) (_ *plugin.ContentResult, diags diagnostics.Diag) {

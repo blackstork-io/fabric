@@ -96,7 +96,30 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 					break
 				}
 				res.Meta = &meta
-
+			case definitions.BlockKindVars:
+				if res.Vars != nil {
+					diags.Append(&hcl.Diagnostic{
+						Severity: hcl.DiagWarning,
+						Summary:  "More than one vars block",
+						Detail:   "No more than one vars block is allowed. Only the first one will be used.",
+						Subject:  blk.DefRange().Ptr(),
+						Context:  plugin.Block.Range().Ptr(),
+					})
+					break
+				}
+				if plugin.Kind() != definitions.BlockKindContent {
+					diags.Append(&hcl.Diagnostic{
+						Severity: hcl.DiagError,
+						Summary:  "Inapplicable var nesting",
+						Detail:   "Vars block is only allowed in content providers, sections, and documents.",
+						Subject:  blk.DefRange().Ptr(),
+						Context:  plugin.Block.Range().Ptr(),
+					})
+					break
+				}
+				var diag diagnostics.Diag
+				res.Vars, diag = ParseVars(blk)
+				diags.Extend(diag)
 			default:
 				return false
 			}
@@ -129,6 +152,8 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 		if res.BlockName == "" {
 			res.BlockName = baseEval.BlockName
 		}
+
+		res.Vars = res.Vars.MergeWithBaseVars(baseEval.Vars)
 
 		updateRefBody(invocation.Body, baseEval.GetBlockInvocation().Body)
 
@@ -281,6 +306,8 @@ func hclBlockKey(b *hclsyntax.Block) string {
 }
 
 func updateRefBody(ref, base *hclsyntax.Body) {
+	// TODO: actually these explicitly ignored attributes and blocks were removed
+	// while the base itself was parsed
 	for k, v := range base.Attributes {
 		switch k {
 		case definitions.AttrRefBase, definitions.BlockKindConfig:

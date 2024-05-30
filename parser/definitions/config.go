@@ -91,10 +91,10 @@ func (c *Config) GetHCLBlock() *hcl.Block {
 	return c.Block
 }
 
-var ctyConfigType = encapsulator.New[Config]("config")
+var ctyConfigType = encapsulator.NewEncoder[Config]("config", nil)
 
 func (c *Config) CtyType() cty.Type {
-	return ctyConfigType.Type()
+	return ctyConfigType.CtyType()
 }
 
 func DefineConfig(block *hclsyntax.Block) (config *Config, diags diagnostics.Diag) {

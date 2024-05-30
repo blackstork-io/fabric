@@ -9,7 +9,6 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 
-	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/encapsulator"
 	"github.com/blackstork-io/fabric/pkg/utils"
@@ -17,11 +16,6 @@ import (
 )
 
 func compileJq(expr hcl.Expression, evalCtx *hcl.EvalContext) (val cty.Value, diags diagnostics.Diag) {
-	queryCtx := utils.EvalContextByVar(evalCtx, definitions.QueryKey)
-	if queryCtx == nil {
-		panic("query_jq must be called within QueryContext")
-	}
-	queries := definitions.QueriesType.MustFromCty(queryCtx.Variables[definitions.QueryKey])
 	queryVal, diag := expr.Value(evalCtx)
 	if diags.Extend(diag) {
 		return
@@ -67,19 +61,18 @@ func compileJq(expr hcl.Expression, evalCtx *hcl.EvalContext) (val cty.Value, di
 		})
 		return
 	}
-	idx := queries.Append(&JqQuery{
+	val = JqQueryType.ToCty(&JqQuery{
 		query:    query,
 		code:     code,
 		srcRange: expr.Range().Ptr(),
 	})
-	val = JqQueryType.ToCty(&idx)
 	return
 }
 
-var JqQueryType *encapsulator.Encapsulator[int]
+var JqQueryType *encapsulator.Codec[JqQuery]
 
 func init() {
-	JqQueryType = encapsulator.NewWithOps[int]("jq query", &cty.CapsuleOps{
+	JqQueryType = encapsulator.NewCodec("jq query", &encapsulator.CapsuleOps[JqQuery]{
 		ExtensionData: func(key interface{}) interface{} {
 			switch key {
 			case customdecode.CustomExpressionDecoder:
@@ -140,13 +133,9 @@ const funcName = "query_jq"
 
 // Adds "query_jq" function to the eval context
 func JqEvalContext(base *hcl.EvalContext) (evalCtx *hcl.EvalContext) {
-	// try finding exisitng jq eval context in base
+	// try finding existing jq eval context in base
 	if ctx := utils.EvalContextByFunc(base, funcName); ctx != nil {
 		return base
-	}
-	// Check for query collection, if found - store query to eval there
-	if ctx := utils.EvalContextByVar(base, definitions.QueryKey); ctx == nil {
-		panic("JqEvalContext must be called within QueryContext")
 	}
 
 	evalCtx = base.NewChild()
@@ -156,16 +145,13 @@ func JqEvalContext(base *hcl.EvalContext) (evalCtx *hcl.EvalContext) {
 				{
 					Name:        "query",
 					Description: "The jq query string",
-					Type:        JqQueryType.Type(),
+					Type:        JqQueryType.CtyType(),
 				},
 			},
-			Type: function.StaticReturnType(definitions.QueryResultPlaceholderType.Type()),
+			Type: function.StaticReturnType(JqQueryType.CtyType()),
 			Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 				// The parsing is done by the customdecode on JqType
-				// Here we just type-erasing the query placeholder
-				return definitions.QueryResultPlaceholderType.ToCty(
-					JqQueryType.MustFromCty(args[0]),
-				), nil
+				return args[0], nil
 			},
 		}),
 	}

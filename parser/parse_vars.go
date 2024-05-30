@@ -6,25 +6,49 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
-	"golang.org/x/exp/maps"
 
+	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/parser/definitions"
+	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
-func ParseVars(block *hclsyntax.Block) (vars []*hclsyntax.Attribute, diags diagnostics.Diag) {
-	for _, subblock := range block.Body.Blocks {
+func ParseVars(block *hclsyntax.Block) (parsed *definitions.ParsedVars, diags diagnostics.Diag) {
+	for _, subBlock := range block.Body.Blocks {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
 			Summary:  "Unsupported nesting",
-			Detail:   fmt.Sprintf(`%s block does not support nested blocks, use nested maps instead`, definitions.BlockKindVars),
-			Subject:  subblock.Range().Ptr(),
+			Detail:   fmt.Sprintf(`%s block does not support nested blocks, did you mean to use nested maps?`, definitions.BlockKindVars),
+			Subject:  subBlock.Range().Ptr(),
 		})
 	}
-	// Attributes are in map form, we need to sort them in order of definition
-	vars = maps.Values(block.Body.Attributes)
-	slices.SortFunc(vars, func(a, b *hclsyntax.Attribute) int {
+
+	evalCtx := dataquery.JqEvalContext(evaluation.EvalContext())
+	vars := make([]*definitions.Variable, 0, len(block.Body.Attributes))
+
+	for _, attr := range block.Body.Attributes {
+		val, diag := attr.Expr.Value(evalCtx)
+		if diags.Extend(diag) {
+			continue
+		}
+		vars = append(vars, &definitions.Variable{
+			Name:      attr.Name,
+			NameRange: attr.NameRange,
+			Val:       val,
+			ValRange:  attr.Expr.Range(),
+		})
+	}
+	// ordered by definition
+	slices.SortFunc(vars, func(a, b *definitions.Variable) int {
 		return a.NameRange.Start.Byte - b.NameRange.Start.Byte
 	})
+	byName := make(map[string]int, len(vars))
+	for i, v := range vars {
+		byName[v.Name] = i
+	}
+	parsed = &definitions.ParsedVars{
+		Variables: vars,
+		ByName:    byName,
+	}
 	return
 }

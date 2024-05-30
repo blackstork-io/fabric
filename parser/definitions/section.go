@@ -22,7 +22,7 @@ type ParsedSection struct {
 	Meta    *MetaBlock
 	Title   *ParsedContent
 	Content []*ParsedContent
-	Vars    ParsedVars
+	Vars    *ParsedVars
 }
 
 func (s ParsedSection) Name() string {
@@ -54,10 +54,10 @@ func (s *Section) GetHCLBlock() *hcl.Block {
 	return s.Block.AsHCLBlock()
 }
 
-var ctySectionType = encapsulator.New[Section]("section")
+var ctySectionType = encapsulator.NewEncoder[Section]("section", nil)
 
 func (*Section) CtyType() cty.Type {
-	return ctySectionType.Type()
+	return ctySectionType.CtyType()
 }
 
 func DefineSection(block *hclsyntax.Block, atTopLevel bool) (section *Section, diags diagnostics.Diag) {
