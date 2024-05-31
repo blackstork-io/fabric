@@ -77,7 +77,7 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Unsupported format",
-				Detail:   "Only md and html formats are supported",
+				Detail:   "Only md, html and pdf formats are supported",
 			}}
 		}
 		printer = print.WithLogging(printer, logger, slog.String("format", params.Format.String()))
@@ -94,7 +94,7 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 		if err != nil {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,
-				Summary:  "Failed to render path",
+				Summary:  "Failed to render path value",
 				Detail:   err.Error(),
 			}}
 		}
@@ -104,7 +104,7 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 		if err != nil {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,
-				Summary:  "Failed to create directory",
+				Summary:  "Failed to create a directory",
 				Detail:   err.Error(),
 			}}
 		}
@@ -112,7 +112,7 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 		if err != nil {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,
-				Summary:  "Failed to create file",
+				Summary:  "Failed to create a file",
 				Detail:   err.Error(),
 			}}
 		}
@@ -121,7 +121,7 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 		if err != nil {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,
-				Summary:  "Failed to write to file",
+				Summary:  "Failed to write to a file",
 				Detail:   err.Error(),
 			}}
 		}
@@ -132,13 +132,13 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 func templatePath(pattern string, datactx plugin.MapData) (string, error) {
 	tmpl, err := template.New("pattern").Funcs(sprig.FuncMap()).Parse(pattern)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse text template: %w", err)
+		return "", fmt.Errorf("failed to parse a text template: %w", err)
 	}
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, datactx.Any())
 	if err != nil {
-		return "", fmt.Errorf("failed to execute text template: %w", err)
+		return "", fmt.Errorf("failed to execute a text template: %w", err)
 	}
 	return filepath.Abs(filepath.Clean(strings.TrimSpace(buf.String())))
 }
