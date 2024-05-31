@@ -40,6 +40,7 @@ func makeJSONDataSource() *plugin.DataSource {
 
 		When ` + "`path`" + ` attribute is specified, the data source returns only the content of a file.
 		When ` + "`glob`" + ` attribute is specified, the data source returns a list of dicts that contain the content of a file and file's metadata. For example:
+
 		` + "```json" + `
 		[
 		  {
@@ -47,14 +48,14 @@ func makeJSONDataSource() *plugin.DataSource {
 			"file_name": "file-a.json",
 			"content": {
 			  "foo": "bar"
-			},
+			}
 		  },
 		  {
 			"file_path": "path/file-b.json",
 			"file_name": "file-b.json",
 			"content": [
 			  {"x": "y"}
-			],
+			]
 		  }
 		]
 		` + "```",

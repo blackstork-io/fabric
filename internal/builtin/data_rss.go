@@ -17,7 +17,6 @@ import (
 
 func makeRSSDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
-		Doc:      `Fetches an rss or atom feed`,
 		Tags:     []string{"rss", "http"},
 		DataFunc: fetchRSSData,
 		Args: dataspec.ObjectSpec{
@@ -51,6 +50,11 @@ func makeRSSDataSource() *plugin.DataSource {
 				},
 			},
 		},
+		Doc: `
+		Fetches RSS / Atom feed from a URL.
+
+		The data source supports basic authentication.
+		`,
 	}
 }
 
