@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -58,19 +58,19 @@ func DecodeAndAssert(t *testing.T, spec dataspec.RootSpec, body string, asserts 
 	fm = map[string]*hcl.File{
 		filename: f,
 	}
-	v, dgs := dataspec.Decode(f.Body, spec, nil)
+	v, dgs := dataspec.Decode(f.Body, spec, evaluation.EvalContext())
 	diags.Extend(dgs)
 	return
 }
 
 func Decode(t *testing.T, spec dataspec.RootSpec, body string) (v cty.Value, diags diagnostics.Diag) {
 	t.Helper()
-	f, diag := hclsyntax.ParseConfig([]byte(body), filename, hcl.InitialPos)
-	if diags.Extend(diag) {
+	f, stdDiag := hclsyntax.ParseConfig([]byte(body), filename, hcl.InitialPos)
+	if diags.Extend(stdDiag) {
 		return
 	}
 
-	v, diag = hcldec.Decode(f.Body, spec.HcldecSpec(), nil)
-	diags = append(diags, diag...)
+	v, diag := dataspec.Decode(f.Body, spec, evaluation.EvalContext())
+	diags.Extend(diag)
 	return
 }

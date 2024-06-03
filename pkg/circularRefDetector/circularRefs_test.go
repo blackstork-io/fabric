@@ -77,27 +77,34 @@ func TestDiagnostic(t *testing.T) {
 
 				circularRefDetector.Add(obj, rng)
 				assert.True(circularRefDetector.Check(obj))
-				orig_diag := hcl.Diagnostic{
+				orig_diag := &hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  "Some diag",
 				}
+
 				if tt.addMarker {
-					orig_diag.Extra = circularRefDetector.ExtraMarker
+					orig_diag.Extra = diagnostics.NewTracebackExtra()
 				}
-				diag_copy := orig_diag
+				orig_extra_len := 0
 
 				diags := diagnostics.Diag{
-					&diag_copy,
+					orig_diag,
 				}
 				circularRefDetector.Remove(obj, &diags)
 
 				assert.Len(diags, 1)
+				var new_tb_len int
+				var tbe diagnostics.TracebackExtra
+				var ok bool
+				if tbe, ok = diags[0].Extra.(diagnostics.TracebackExtra); ok {
+					new_tb_len = len(tbe.Traceback)
+				}
 				if tt.wantUnchanged {
-					assert.Equal(&orig_diag, diags[0])
+					assert.Equal(orig_extra_len, new_tb_len)
 				} else {
-					assert.NotEqual(&orig_diag, diags[0])
+					assert.NotEqual(orig_extra_len, new_tb_len)
 					if tt.filenameForTraceback != "" {
-						assert.Contains(diags[0].Detail, tt.filenameForTraceback)
+						assert.Contains(tbe.Traceback[0].Filename, tt.filenameForTraceback)
 					}
 				}
 			})

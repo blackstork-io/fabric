@@ -1,7 +1,6 @@
 package circularRefDetector
 
 import (
-	"fmt"
 	"sync"
 	"unsafe"
 
@@ -18,12 +17,6 @@ type circularRefDetector struct {
 var detector = circularRefDetector{
 	refs: make(map[unsafe.Pointer]*hcl.Range),
 }
-
-type extraMarker struct{}
-
-// Marker to identify circular access diagnostic.
-// Identifies the diagnostic that will be extended with the backtrace.
-var ExtraMarker = extraMarker{}
 
 // Adds pointer to circular reference detection.
 // refRange is optional.
@@ -65,16 +58,9 @@ func (d *circularRefDetector) remove(ptr unsafe.Pointer, diags *diagnostics.Diag
 		return
 	}
 
-	diag := diagnostics.FindByExtra[extraMarker](*diags)
-	if diag == nil {
+	tb, _ := diagnostics.DiagnosticsExtra[diagnostics.TracebackExtra](*diags)
+	if tb == nil {
 		return
 	}
-	if rng != nil {
-		diag.Detail = fmt.Sprintf(
-			"%s\n  at %s:%d:%d",
-			diag.Detail, rng.Filename, rng.Start.Line, rng.Start.Column,
-		)
-	} else {
-		diag.Detail += "\n  at <missing location info>"
-	}
+	tb.Traceback = append(tb.Traceback, rng)
 }

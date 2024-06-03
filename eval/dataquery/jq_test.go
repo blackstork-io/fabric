@@ -10,5 +10,5 @@ import (
 )
 
 func TestJqIsQuery(t *testing.T) {
-	assert.True(t, encapsulator.Compatible(JqQueryType, definitions.QueryType))
+	assert.True(t, encapsulator.Compatible(JqQueryType, definitions.DataCtxEvalNeededType))
 }

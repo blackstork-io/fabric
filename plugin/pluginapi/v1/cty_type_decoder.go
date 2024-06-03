@@ -4,6 +4,9 @@ import (
 	"fmt"
 
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/blackstork-io/fabric/pkg/utils"
+	"github.com/blackstork-io/fabric/plugin"
 )
 
 func decodeCtyType(src *CtyType) (cty.Type, error) {
@@ -22,42 +25,44 @@ func decodeCtyType(src *CtyType) (cty.Type, error) {
 		return decodeCtyTupleType(src.Tuple)
 	case *CtyType_DynamicPseudo:
 		return cty.DynamicPseudoType, nil
+	case *CtyType_Encapsulated:
+		return plugin.EncapsulatedData.CtyType(), nil
 	default:
 		return cty.NilType, fmt.Errorf("unsupported cty type: %T", src)
 	}
 }
 
-func decodeCtyPrimitiveType(src *CtyPrimitiveType) (cty.Type, error) {
-	switch src.GetKind() {
-	case CtyPrimitiveKind_CTY_PRIMITIVE_KIND_BOOL:
+func decodeCtyPrimitiveType(src CtyPrimitiveType) (cty.Type, error) {
+	switch src {
+	case CtyPrimitiveType_CTY_PRIMITIVE_KIND_BOOL:
 		return cty.Bool, nil
-	case CtyPrimitiveKind_CTY_PRIMITIVE_KIND_NUMBER:
+	case CtyPrimitiveType_CTY_PRIMITIVE_KIND_NUMBER:
 		return cty.Number, nil
-	case CtyPrimitiveKind_CTY_PRIMITIVE_KIND_STRING:
+	case CtyPrimitiveType_CTY_PRIMITIVE_KIND_STRING:
 		return cty.String, nil
 	default:
-		return cty.NilType, fmt.Errorf("unsupported primitive cty type: %v", src.Kind)
+		return cty.NilType, fmt.Errorf("unsupported primitive cty type: %v", src)
 	}
 }
 
-func decodeCtyListType(src *CtyListType) (cty.Type, error) {
-	elemType, err := decodeCtyType(src.GetElement())
+func decodeCtyListType(src *CtyType) (cty.Type, error) {
+	elemType, err := decodeCtyType(src)
 	if err != nil {
 		return cty.NilType, err
 	}
 	return cty.List(elemType), nil
 }
 
-func decodeCtyMapType(src *CtyMapType) (cty.Type, error) {
-	elemType, err := decodeCtyType(src.GetElement())
+func decodeCtyMapType(src *CtyType) (cty.Type, error) {
+	elemType, err := decodeCtyType(src)
 	if err != nil {
 		return cty.NilType, err
 	}
 	return cty.Map(elemType), nil
 }
 
-func decodeCtySetType(src *CtySetType) (cty.Type, error) {
-	elemType, err := decodeCtyType(src.GetElement())
+func decodeCtySetType(src *CtyType) (cty.Type, error) {
+	elemType, err := decodeCtyType(src)
 	if err != nil {
 		return cty.NilType, err
 	}
@@ -65,25 +70,17 @@ func decodeCtySetType(src *CtySetType) (cty.Type, error) {
 }
 
 func decodeCtyObjectType(src *CtyObjectType) (cty.Type, error) {
-	attrTypes := make(map[string]cty.Type)
-	for name, attrType := range src.GetAttrs() {
-		t, err := decodeCtyType(attrType)
-		if err != nil {
-			return cty.NilType, err
-		}
-		attrTypes[name] = t
+	attrTypes, err := utils.MapMapErr(src.GetAttrs(), decodeCtyType)
+	if err != nil {
+		return cty.NilType, err
 	}
 	return cty.Object(attrTypes), nil
 }
 
 func decodeCtyTupleType(src *CtyTupleType) (cty.Type, error) {
-	elemTypes := make([]cty.Type, len(src.GetElements()))
-	for i, elemType := range src.GetElements() {
-		t, err := decodeCtyType(elemType)
-		if err != nil {
-			return cty.NilType, err
-		}
-		elemTypes[i] = t
+	elemTypes, err := utils.FnMapErr(src.GetElements(), decodeCtyType)
+	if err != nil {
+		return cty.NilType, err
 	}
 	return cty.Tuple(elemTypes), nil
 }

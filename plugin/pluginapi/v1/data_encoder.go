@@ -1,6 +1,9 @@
 package pluginapiv1
 
-import "github.com/blackstork-io/fabric/plugin"
+import (
+	"github.com/blackstork-io/fabric/pkg/utils"
+	"github.com/blackstork-io/fabric/plugin"
+)
 
 func encodeData(d plugin.Data) *Data {
 	switch v := d.(type) {
@@ -9,25 +12,19 @@ func encodeData(d plugin.Data) *Data {
 	case plugin.NumberData:
 		return &Data{
 			Data: &Data_NumberVal{
-				NumberVal: &NumberData{
-					Value: float64(v),
-				},
+				NumberVal: float64(v),
 			},
 		}
 	case plugin.StringData:
 		return &Data{
 			Data: &Data_StringVal{
-				StringVal: &StringData{
-					Value: string(v),
-				},
+				StringVal: string(v),
 			},
 		}
 	case plugin.BoolData:
 		return &Data{
 			Data: &Data_BoolVal{
-				BoolVal: &BoolData{
-					Value: bool(v),
-				},
+				BoolVal: bool(v),
 			},
 		}
 	case plugin.MapData:
@@ -37,14 +34,10 @@ func encodeData(d plugin.Data) *Data {
 			},
 		}
 	case plugin.ListData:
-		l := make([]*Data, len(v))
-		for i, d := range v {
-			l[i] = encodeData(d)
-		}
 		return &Data{
 			Data: &Data_ListVal{
 				ListVal: &ListData{
-					Value: l,
+					Value: utils.FnMap(v, encodeData),
 				},
 			},
 		}
@@ -53,11 +46,7 @@ func encodeData(d plugin.Data) *Data {
 }
 
 func encodeMapData(m plugin.MapData) *MapData {
-	dst := make(map[string]*Data)
-	for k, v := range m {
-		dst[k] = encodeData(v)
-	}
 	return &MapData{
-		Value: dst,
+		Value: utils.MapMap(m, encodeData),
 	}
 }

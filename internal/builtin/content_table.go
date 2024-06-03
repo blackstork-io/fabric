@@ -53,7 +53,7 @@ func makeTableContentProvider() *plugin.ContentProvider {
 			This content provider assumes that ` + "`query_result`" + ` is a list of objects representing rows,
 			and uses the configured ` + "`value`" + ` go templates (see below) to display each row.
 
-			NOTE: ` + "`header`" + ` templates are executed with the whole context availible, while ` + "`value`" + `
+			NOTE: ` + "`header`" + ` templates are executed with the whole context available, while ` + "`value`" + `
 			templates are executed on each item of the ` + "`query_result`" + ` list.
 		`,
 	}

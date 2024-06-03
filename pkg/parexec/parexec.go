@@ -141,9 +141,9 @@ func (pe *Executor[T]) execute(idx int, fn func() T) {
 		if limiterActive {
 			pe.limiter.Return()
 		}
-		// TODO: do something with panic
-		p := recover()
-		slog.Error("Panic in the parallel executor!", "panic:", p)
+		if p := recover(); p != nil {
+			slog.Error("Panic in the parallel executor!", "panic:", p)
+		}
 	}()
 	if limiterActive {
 		pe.limiter.Take()

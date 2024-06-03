@@ -18,6 +18,9 @@ func SetAt[T any](slice []T, idx int, val T) []T {
 
 // Produce a new slice by applying function fn to items of the slice s.
 func FnMap[I, O any](s []I, fn func(I) O) []O {
+	if s == nil {
+		return nil
+	}
 	out := make([]O, len(s))
 	for i, v := range s {
 		out[i] = fn(v)
@@ -28,6 +31,9 @@ func FnMap[I, O any](s []I, fn func(I) O) []O {
 // Produce a new slice by applying (possibly erroring) function fn to items of the slice s.
 // Returns on the first error with nil slice.
 func FnMapErr[I, O any](s []I, fn func(I) (O, error)) (out []O, err error) {
+	if s == nil {
+		return nil, nil
+	}
 	out = make([]O, len(s))
 	for i, v := range s {
 		out[i], err = fn(v)

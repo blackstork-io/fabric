@@ -2,32 +2,23 @@ syntax = "proto3";
 
 package pluginapi.v1;
 
+import "pluginapi/v1/data.proto";
+
 message CtyType {
     oneof data {
         CtyPrimitiveType     primitive      = 1;
         CtyObjectType        object         = 2;
-        CtyMapType           map            = 3;
-        CtyListType          list           = 4;
-        CtySetType           set            = 5;
+        CtyType              map            = 3;
+        CtyType              list           = 4;
+        CtyType              set            = 5;
         CtyTupleType         tuple          = 6;
         CtyDynamicPseudoType dynamic_pseudo = 7;
+        EncapsulatedDataType encapsulated   = 8;
     }
 }
 
 message CtyObjectType {
     map<string, CtyType> attrs = 1;
-}
-
-message CtyListType {
-    CtyType element = 1;
-}
-
-message CtySetType {
-    CtyType element = 1;
-}
-
-message CtyMapType {
-    CtyType element = 1;
 }
 
 message CtyTupleType {
@@ -36,26 +27,23 @@ message CtyTupleType {
 
 message CtyDynamicPseudoType {}
 
-enum CtyPrimitiveKind {
+message EncapsulatedDataType {}
+
+enum CtyPrimitiveType {
     CTY_PRIMITIVE_KIND_UNSPECIFIED = 0;
     CTY_PRIMITIVE_KIND_STRING      = 1;
     CTY_PRIMITIVE_KIND_NUMBER      = 2;
     CTY_PRIMITIVE_KIND_BOOL        = 3;
 }
 
-message CtyPrimitiveType {
-    CtyPrimitiveKind kind = 1;
-}
 
 message CtyValue {
     CtyType type = 1;
     oneof data {
-        CtyPrimitiveValue primitive = 2;
-        CtyObjectValue    object    = 3;
-        CtyMapValue       map       = 4;
-        CtyListValue      list      = 5;
-        CtySetValue       set       = 6;
-        CtyTupleValue     tuple     = 7;
+        CtyPrimitiveValue    primitive    = 2;
+        CtyMapLike           mapLike      = 8;
+        CtyListLike          listLike     = 9;
+        CtyEncapsulatedValue encapsulated = 10;
     }
 }
 
@@ -67,23 +55,14 @@ message CtyPrimitiveValue {
     }
 }
 
-message CtyListValue {
+message CtyListLike {
     repeated CtyValue elements = 1;
 }
 
-message CtyMapValue {
+message CtyMapLike {
     map<string, CtyValue> elements = 1;
 }
 
-message CtySetValue {
-    repeated CtyValue elements = 1;
+message CtyEncapsulatedValue {
+    Data value = 1;
 }
-
-message CtyTupleValue {
-    repeated CtyValue elements = 1;
-}
-
-message CtyObjectValue {
-    map<string, CtyValue> attrs = 1;
-}
-

@@ -1,33 +1,28 @@
 package pluginapiv1
 
-import "github.com/blackstork-io/fabric/plugin"
+import (
+	"github.com/blackstork-io/fabric/pkg/utils"
+	"github.com/blackstork-io/fabric/plugin"
+)
 
 func decodeData(src *Data) plugin.Data {
-	switch {
-	case src == nil || src.GetData() == nil:
+	switch src.GetData().(type) {
+	case nil:
 		return nil
-	case src.GetNumberVal() != nil:
-		return plugin.NumberData(src.GetNumberVal().GetValue())
-	case src.GetStringVal() != nil:
-		return plugin.StringData(src.GetStringVal().GetValue())
-	case src.GetBoolVal() != nil:
-		return plugin.BoolData(src.GetBoolVal().GetValue())
-	case src.GetMapVal() != nil:
-		return decodeMapData(src.GetMapVal())
-	case src.GetListVal() != nil:
-		dst := make(plugin.ListData, len(src.GetListVal().GetValue()))
-		for i, v := range src.GetListVal().GetValue() {
-			dst[i] = decodeData(v)
-		}
-		return dst
+	case *Data_NumberVal:
+		return plugin.NumberData(src.GetNumberVal())
+	case *Data_StringVal:
+		return plugin.StringData(src.GetStringVal())
+	case *Data_BoolVal:
+		return plugin.BoolData(src.GetBoolVal())
+	case *Data_MapVal:
+		return decodeMapData(src.GetMapVal().GetValue())
+	case *Data_ListVal:
+		return plugin.ListData(utils.FnMap(src.GetListVal().GetValue(), decodeData))
 	}
 	panic("unreachable")
 }
 
-func decodeMapData(src *MapData) plugin.MapData {
-	dst := make(plugin.MapData)
-	for k, v := range src.GetValue() {
-		dst[k] = decodeData(v)
-	}
-	return dst
+func decodeMapData(src map[string]*Data) plugin.MapData {
+	return plugin.MapData(utils.MapMap(src, decodeData))
 }

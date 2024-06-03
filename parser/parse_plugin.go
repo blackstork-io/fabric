@@ -27,7 +27,7 @@ func (db *DefinedBlocks) ParsePlugin(plugin *definitions.Plugin) (res *definitio
 			Summary:  "Circular reference detected",
 			Detail:   "Looped back to this block through reference chain:",
 			Subject:  plugin.DefRange().Ptr(),
-			Extra:    circularRefDetector.ExtraMarker,
+			Extra:    diagnostics.NewTracebackExtra(),
 		})
 		return
 	}
@@ -280,7 +280,7 @@ func (db *DefinedBlocks) parseRefBase(plugin *definitions.Plugin, base hcl.Expre
 			Summary:  "Circular reference detected",
 			Detail:   "Looped back to this block through reference chain:",
 			Subject:  plugin.DefRange().Ptr(),
-			Extra:    circularRefDetector.ExtraMarker,
+			Extra:    diagnostics.NewTracebackExtra(),
 		})
 		return
 	}

@@ -1,26 +1,14 @@
 package definitions
 
 import (
-	"context"
 	"maps"
 	"slices"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
-
-	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/pkg/encapsulator"
-	"github.com/blackstork-io/fabric/plugin"
 )
 
 const LocalVarName = "local"
-
-type Query interface {
-	Eval(ctx context.Context, dataCtx plugin.MapData) (result plugin.Data, diags diagnostics.Diag)
-	Range() *hcl.Range
-}
-
-var QueryType = encapsulator.NewDecoder[Query]()
 
 type ParsedVars struct {
 	// stored in the order of definition

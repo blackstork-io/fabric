@@ -6,36 +6,49 @@ import (
 	"github.com/hashicorp/hcl/v2"
 )
 
-// Generic type matching both hcl.Diagnostics and these Diags
-type Generic interface {
-	~[]*hcl.Diagnostic
+type extraList []any
+
+func (e extraList) extraListSigil() {}
+
+func diagnosticExtra[T any](extra any) (_ T, _ bool) {
+	for extra != nil {
+		switch extraT := extra.(type) {
+		case T:
+			return extraT, true
+		case extraList:
+			for _, extra := range extraT {
+				val, found := diagnosticExtra[T](extra)
+				if found {
+					return val, found
+				}
+			}
+		case hcl.DiagnosticExtraUnwrapper:
+			extra = extraT.UnwrapDiagnosticExtra()
+			continue
+		}
+		break
+	}
+	return
 }
 
-func From[D Generic](diags D) Diag {
-	return Diag(diags)
+func DiagnosticExtra[T any](diag *hcl.Diagnostic) (_ T, _ bool) {
+	return diagnosticExtra[T](diag.Extra)
+}
+
+func DiagnosticsExtra[T any](diags Diag) (val T, found bool) {
+	for _, diag := range diags {
+		if val, found = diagnosticExtra[T](diag.Extra); found {
+			return
+		}
+	}
+	return
 }
 
 type Diag hcl.Diagnostics // Diagnostics does implement error interface, but not, itself, an error.
 
-type repeatedError struct{}
-
-// Invisible to user error, typically used to signal that the initial block evaluation
-// has failed (and already has reported its errors to user).
-var RepeatedError = &hcl.Diagnostic{
-	Severity: hcl.DiagError,
-	Extra:    repeatedError{},
-}
-
-// Attach this as an .Extra on diagnostic to enhance the error message for gojq errors.
-// Diagnostic must include Subject pointing to the query expression.
-type GoJQError struct {
-	Err   error
-	Query string
-}
-
 func FindByExtra[T any](diags Diag) *hcl.Diagnostic {
 	for _, diag := range diags {
-		if _, found := hcl.DiagnosticExtra[T](diag); found {
+		if _, found := diagnosticExtra[T](diag.Extra); found {
 			return diag
 		}
 	}
@@ -79,6 +92,34 @@ func (d *Diag) DefaultSubject(rng *hcl.Range) {
 		if diag.Subject == nil {
 			diag.Subject = rng
 		}
+	}
+}
+
+// Adds an extra if no extra with the same type is present.
+func AddExtraIfMissing[T any](d Diag, extra T) {
+	for _, diag := range d {
+		if _, found := diagnosticExtra[T](diag.Extra); !found {
+			AddExtra(diag, extra)
+		}
+	}
+}
+
+// Adds extra without replacing existing extras.
+func AddExtra(diag *hcl.Diagnostic, extra any) {
+	switch extraT := diag.Extra.(type) {
+	case nil:
+		diag.Extra = extra
+	case extraList:
+		diag.Extra = extraList(append(extraT, extra))
+	default:
+		diag.Extra = extraList{extraT, extra}
+	}
+}
+
+// Adds extra without replacing existing extras.
+func (d Diag) AddExtra(extra any) {
+	for _, diag := range d {
+		AddExtra(diag, extra)
 	}
 }
 

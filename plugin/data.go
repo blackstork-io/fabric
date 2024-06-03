@@ -6,12 +6,16 @@ import (
 	"log/slog"
 
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/blackstork-io/fabric/pkg/encapsulator"
 )
+
+var EncapsulatedData *encapsulator.Codec[Data] = encapsulator.NewCodec[Data]("arbitrary json-like data", nil)
 
 type Data interface {
 	Any() any
 	data()
-	ConvertableData
+	ConvertibleData
 }
 
 func (NumberData) data() {}
@@ -149,11 +153,11 @@ func ParseDataMapAny(v map[string]any) (MapData, error) {
 	return dst, nil
 }
 
-type ConvertableData interface {
+type ConvertibleData interface {
 	AsJQData() Data
 }
 
-type ConvMapData map[string]ConvertableData
+type ConvMapData map[string]ConvertibleData
 
 func (d ConvMapData) AsJQData() Data {
 	dst := make(MapData, len(d))
@@ -180,7 +184,7 @@ func (d ConvMapData) Any() any {
 }
 func (d ConvMapData) data() {}
 
-type ConvListData []ConvertableData
+type ConvListData []ConvertibleData
 
 func (d ConvListData) AsJQData() Data {
 	dst := make(ListData, len(d))

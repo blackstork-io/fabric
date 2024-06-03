@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -443,7 +444,7 @@ func TestValidation(t *testing.T) {
 			}},
 		},
 		{
-			name: "length_check_constaint_err",
+			name: "length_check_constraint_err",
 			obj: &dataspec.AttrSpec{
 				Name:         "test",
 				Type:         cty.List(cty.Number),
@@ -465,7 +466,7 @@ func TestValidation(t *testing.T) {
 			},
 		},
 		{
-			name: "length_check_constaint_err2",
+			name: "length_check_constraint_err2",
 			obj: &dataspec.AttrSpec{
 				Name:         "test",
 				Type:         cty.List(cty.Number),
@@ -481,7 +482,7 @@ func TestValidation(t *testing.T) {
 			}},
 		},
 		{
-			name: "length_check_constaint_err3",
+			name: "length_check_constraint_err3",
 			obj: &dataspec.AttrSpec{
 				Name:         "test",
 				Type:         cty.List(cty.Number),
@@ -707,7 +708,7 @@ func TestValidation(t *testing.T) {
 					},
 				}
 			}
-			objVal, diag := dataspec.Decode(body, spec, nil)
+			objVal, diag := dataspec.Decode(body, spec, evaluation.EvalContext())
 			diags.Extend(diag)
 			tc.asserts.AssertMatch(t, diags, nil)
 			if diags.HasErrors() {

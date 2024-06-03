@@ -24,7 +24,7 @@ func (db *DefinedBlocks) ParseSection(section *definitions.Section) (res *defini
 			Summary:  "Circular reference detected",
 			Detail:   "Looped back to this block through reference chain:",
 			Subject:  section.Block.DefRange().Ptr(),
-			Extra:    circularRefDetector.ExtraMarker,
+			Extra:    diagnostics.NewTracebackExtra(),
 		})
 		return
 	}
@@ -183,7 +183,7 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 			Summary:  "Circular reference detected",
 			Detail:   "Looped back to this block through reference chain:",
 			Subject:  section.Block.DefRange().Ptr(),
-			Extra:    circularRefDetector.ExtraMarker,
+			Extra:    diagnostics.NewTracebackExtra(),
 		})
 		return
 	}

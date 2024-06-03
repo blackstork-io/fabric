@@ -24,3 +24,32 @@ func Pop[K comparable, V any](m map[K]V, key K) (val V, found bool) {
 	}
 	return
 }
+
+// Produce a new map by applying function fn to the values of the map m.
+func MapMap[K comparable, VIn, VOut any](m map[K]VIn, fn func(VIn) VOut) map[K]VOut {
+	if m == nil {
+		return nil
+	}
+	out := make(map[K]VOut, len(m))
+	for k, v := range m {
+		out[k] = fn(v)
+	}
+	return out
+}
+
+// Produce a new map by applying (possibly erroring) function fn to the values of the map m.
+// Returns on the first error with nil map.
+func MapMapErr[K comparable, VIn, VOut any](m map[K]VIn, fn func(VIn) (VOut, error)) (map[K]VOut, error) {
+	var err error
+	if m == nil {
+		return nil, nil
+	}
+	out := make(map[K]VOut, len(m))
+	for k, v := range m {
+		out[k], err = fn(v)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return out, nil
+}
