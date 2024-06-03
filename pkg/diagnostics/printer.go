@@ -46,6 +46,9 @@ func PrintDiags(output io.Writer, diags []*hcl.Diagnostic, fileMap map[string]*h
 		if traceback, ok := DiagnosticExtra[TracebackExtra](diag); ok {
 			traceback.improveDiagnostic(diag)
 		}
+		if path, ok := DiagnosticExtra[PathExtra](diag); ok {
+			path.improveDiagnostic(diag)
+		}
 		err := diagWriter.WriteDiagnostic(diag)
 		if err != nil {
 			slog.Error("Failed to write diagnostics", "err", err)

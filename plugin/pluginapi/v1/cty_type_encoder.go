@@ -83,30 +83,6 @@ func encodeCtySingleType(src cty.Type) (*CtyType, error) {
 	panic("unreachable")
 }
 
-func encodeCtyMapType(src cty.Type) (*CtyType, error) {
-	elemType, err := encodeCtyType(src.ElementType())
-	if err != nil {
-		return nil, err
-	}
-	return &CtyType{
-		Data: &CtyType_Map{
-			Map: elemType,
-		},
-	}, nil
-}
-
-func encodeCtySetType(src cty.Type) (*CtyType, error) {
-	elemType, err := encodeCtyType(src.ElementType())
-	if err != nil {
-		return nil, err
-	}
-	return &CtyType{
-		Data: &CtyType_Set{
-			Set: elemType,
-		},
-	}, nil
-}
-
 func encodeCtyObjectType(src cty.Type) (*CtyType, error) {
 	attrs, err := utils.MapMapErr(src.AttributeTypes(), encodeCtyType)
 	if err != nil {

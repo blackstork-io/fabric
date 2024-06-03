@@ -8,13 +8,9 @@ import (
 
 type extraList []any
 
-func (e extraList) extraListSigil() {}
-
 func diagnosticExtra[T any](extra any) (_ T, _ bool) {
 	for extra != nil {
 		switch extraT := extra.(type) {
-		case T:
-			return extraT, true
 		case extraList:
 			for _, extra := range extraT {
 				val, found := diagnosticExtra[T](extra)
@@ -25,6 +21,8 @@ func diagnosticExtra[T any](extra any) (_ T, _ bool) {
 		case hcl.DiagnosticExtraUnwrapper:
 			extra = extraT.UnwrapDiagnosticExtra()
 			continue
+		case T:
+			return extraT, true
 		}
 		break
 	}

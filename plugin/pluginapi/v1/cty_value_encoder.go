@@ -135,7 +135,11 @@ func (le *listEncoder) Encode() (*CtyValue, diagnostics.Diag) {
 }
 
 func encodeCtyValue(src cty.Value) (*CtyValue, error) {
-	return grpcCtyValueDecoder.Encode(src)
+	res, diags := grpcCtyValueDecoder.Encode(src)
+	if diags.HasErrors() {
+		return nil, diags
+	}
+	return res, nil
 }
 
 func encodeCtyPrimitiveValue(src cty.Value) (*CtyValue, error) {
