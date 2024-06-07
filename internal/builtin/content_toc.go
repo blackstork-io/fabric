@@ -204,7 +204,13 @@ func parseContentTitles(data plugin.MapData, startLvl, endLvl int, scope string)
 	for _, item := range list {
 		line := strings.TrimSpace(item)
 		if strings.HasPrefix(line, "#") {
-			level := strings.Count(line, "#") - 1
+			level := -1
+			for i := 0; i < len(line); i++ {
+				if line[i] != '#' {
+					break
+				}
+				level++
+			}
 			if level < startLvl || level > endLvl {
 				continue
 			}
