@@ -3,7 +3,7 @@ title: blackstork/microsoft_sentinel
 weight: 20
 plugin:
   name: blackstork/microsoft_sentinel
-  description: ""
+  description: "The `microsoft_sentinel` plugin fetches data from Microsoft Sentinel."
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/sentinel/"
@@ -11,6 +11,9 @@ type: docs
 ---
 
 {{< plugin-header "blackstork/microsoft_sentinel" "microsoft_sentinel" "v0.4.1" >}}
+
+## Description
+The `microsoft_sentinel` plugin fetches data from Microsoft Sentinel.
 
 ## Installation
 

@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/google/go-querystring/query"
 )
 
 const (
+	authURL    = "https://login.microsoftonline.com"
 	defaultURL = "https://management.azure.com"
 	version    = "2023-11-01"
 )
@@ -37,19 +39,30 @@ type ListIncidentsRes struct {
 	Value []any `json:"value"`
 }
 
+type GetClientCredentialsTokenReq struct {
+	TenantID     string `url:"-"`
+	ClientID     string `url:"-"`
+	ClientSecret string `url:"-"`
+}
+
+type GetClientCredentialsTokenRes struct {
+	AccessToken string `json:"access_token"`
+}
+
 type client struct {
 	url   string
 	token string
 }
 
 type Client interface {
+	UseAuth(token string)
+	GetClientCredentialsToken(ctx context.Context, req *GetClientCredentialsTokenReq) (*GetClientCredentialsTokenRes, error)
 	ListIncidents(ctx context.Context, req *ListIncidentsReq) (*ListIncidentsRes, error)
 }
 
-func New(token string) Client {
+func New() Client {
 	return &client{
-		url:   defaultURL,
-		token: token,
+		url: defaultURL,
 	}
 }
 
@@ -58,6 +71,46 @@ func (c *client) prepare(r *http.Request) {
 	q := r.URL.Query()
 	q.Add("api-version", version)
 	r.URL.RawQuery = q.Encode()
+}
+
+func (c *client) UseAuth(token string) {
+	c.token = token
+}
+
+func (c *client) GetClientCredentialsToken(ctx context.Context, req *GetClientCredentialsTokenReq) (*GetClientCredentialsTokenRes, error) {
+	format := "/%s/oauth2/token"
+	u, err := url.Parse(authURL + fmt.Sprintf(format, req.TenantID))
+	if err != nil {
+		return nil, err
+	}
+	payload := url.Values{
+		"grant_type":    {"client_credentials"},
+		"client_id":     {req.ClientID},
+		"client_secret": {req.ClientSecret},
+		"resource":      {defaultURL},
+	}
+	r, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), strings.NewReader(payload.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	c.prepare(r)
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	client := http.Client{
+		Timeout: 15 * time.Second,
+	}
+	res, err := client.Do(r)
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("microsoft sentinels client returned status code: %d", res.StatusCode)
+	}
+	defer res.Body.Close()
+	var data GetClientCredentialsTokenRes
+	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+	return &data, nil
 }
 
 func (c *client) ListIncidents(ctx context.Context, req *ListIncidentsReq) (*ListIncidentsRes, error) {

@@ -27,8 +27,7 @@ func TestSentinelIncidentsDataSourceTestSuite(t *testing.T) {
 }
 
 func (s *SentinelIncidentsDataSourceTestSuite) SetupSuite() {
-	s.schema = makeMicrosoftSentinelIncidentsDataSource(func(token string) client.Client {
-		s.storedTkn = token
+	s.schema = makeMicrosoftSentinelIncidentsDataSource(func() client.Client {
 		return s.cli
 	})
 	s.ctx = context.Background()
@@ -50,6 +49,16 @@ func (s *SentinelIncidentsDataSourceTestSuite) TestSchema() {
 }
 
 func (s *SentinelIncidentsDataSourceTestSuite) Testlimit() {
+	s.cli.On("GetClientCredentialsToken", mock.Anything, &client.GetClientCredentialsTokenReq{
+		TenantID:     "test_tenant_id",
+		ClientID:     "test_client_id",
+		ClientSecret: "test_client_secret",
+	}).Return(&client.GetClientCredentialsTokenRes{
+		AccessToken: "test_token",
+	}, nil)
+	s.cli.On("UseAuth", "test_token").Run(func(args mock.Arguments) {
+		s.storedTkn = args.Get(0).(string)
+	}).Return()
 	s.cli.On("ListIncidents", mock.Anything, &client.ListIncidentsReq{
 		SubscriptionID:    "test_subscription_id",
 		ResourceGroupName: "test_resource_group_name",
@@ -64,6 +73,9 @@ func (s *SentinelIncidentsDataSourceTestSuite) Testlimit() {
 	}, nil)
 	res, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: cty.ObjectVal(map[string]cty.Value{
+			"tenant_id":           cty.StringVal("test_tenant_id"),
+			"client_id":           cty.StringVal("test_client_id"),
+			"client_secret":       cty.StringVal("test_client_secret"),
 			"subscription_id":     cty.StringVal("test_subscription_id"),
 			"resource_group_name": cty.StringVal("test_resource_group_name"),
 			"workspace_name":      cty.StringVal("test_workspace_name"),
@@ -74,7 +86,7 @@ func (s *SentinelIncidentsDataSourceTestSuite) Testlimit() {
 			"order_by": cty.NullVal(cty.String),
 		}),
 	})
-	s.Equal("", s.storedTkn)
+	s.Equal("test_token", s.storedTkn)
 	s.Len(diags, 0)
 	s.Equal(plugin.ListData{
 		plugin.MapData{
@@ -84,6 +96,16 @@ func (s *SentinelIncidentsDataSourceTestSuite) Testlimit() {
 }
 
 func (s *SentinelIncidentsDataSourceTestSuite) TestFull() {
+	s.cli.On("GetClientCredentialsToken", mock.Anything, &client.GetClientCredentialsTokenReq{
+		TenantID:     "test_tenant_id",
+		ClientID:     "test_client_id",
+		ClientSecret: "test_client_secret",
+	}).Return(&client.GetClientCredentialsTokenRes{
+		AccessToken: "test_token",
+	}, nil)
+	s.cli.On("UseAuth", "test_token").Run(func(args mock.Arguments) {
+		s.storedTkn = args.Get(0).(string)
+	}).Return()
 	s.cli.On("ListIncidents", mock.Anything, &client.ListIncidentsReq{
 		SubscriptionID:    "test_subscription_id",
 		ResourceGroupName: "test_resource_group_name",
@@ -100,6 +122,9 @@ func (s *SentinelIncidentsDataSourceTestSuite) TestFull() {
 	}, nil)
 	res, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: cty.ObjectVal(map[string]cty.Value{
+			"tenant_id":           cty.StringVal("test_tenant_id"),
+			"client_id":           cty.StringVal("test_client_id"),
+			"client_secret":       cty.StringVal("test_client_secret"),
 			"subscription_id":     cty.StringVal("test_subscription_id"),
 			"resource_group_name": cty.StringVal("test_resource_group_name"),
 			"workspace_name":      cty.StringVal("test_workspace_name"),
@@ -110,7 +135,7 @@ func (s *SentinelIncidentsDataSourceTestSuite) TestFull() {
 			"limit":    cty.NumberIntVal(10),
 		}),
 	})
-	s.Equal("", s.storedTkn)
+	s.Equal("test_token", s.storedTkn)
 	s.Len(diags, 0)
 	s.Equal(plugin.ListData{
 		plugin.MapData{
@@ -121,6 +146,16 @@ func (s *SentinelIncidentsDataSourceTestSuite) TestFull() {
 
 func (s *SentinelIncidentsDataSourceTestSuite) TestError() {
 	errTest := fmt.Errorf("test_error")
+	s.cli.On("GetClientCredentialsToken", mock.Anything, &client.GetClientCredentialsTokenReq{
+		TenantID:     "test_tenant_id",
+		ClientID:     "test_client_id",
+		ClientSecret: "test_client_secret",
+	}).Return(&client.GetClientCredentialsTokenRes{
+		AccessToken: "test_token",
+	}, nil)
+	s.cli.On("UseAuth", "test_token").Run(func(args mock.Arguments) {
+		s.storedTkn = args.Get(0).(string)
+	}).Return()
 	s.cli.On("ListIncidents", mock.Anything, &client.ListIncidentsReq{
 		SubscriptionID:    "test_subscription_id",
 		ResourceGroupName: "test_resource_group_name",
@@ -129,6 +164,9 @@ func (s *SentinelIncidentsDataSourceTestSuite) TestError() {
 	}).Return(nil, errTest)
 	_, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: cty.ObjectVal(map[string]cty.Value{
+			"tenant_id":           cty.StringVal("test_tenant_id"),
+			"client_id":           cty.StringVal("test_client_id"),
+			"client_secret":       cty.StringVal("test_client_secret"),
 			"subscription_id":     cty.StringVal("test_subscription_id"),
 			"resource_group_name": cty.StringVal("test_resource_group_name"),
 			"workspace_name":      cty.StringVal("test_workspace_name"),
@@ -139,7 +177,7 @@ func (s *SentinelIncidentsDataSourceTestSuite) TestError() {
 			"order_by": cty.NullVal(cty.String),
 		}),
 	})
-	s.Equal("", s.storedTkn)
+	s.Equal("test_token", s.storedTkn)
 	s.Len(diags, 1)
 	s.Equal("Unable to list Microsoft Sentinel incidents", diags[0].Summary)
 	s.Equal(errTest.Error(), diags[0].Detail)

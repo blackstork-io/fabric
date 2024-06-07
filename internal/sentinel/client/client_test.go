@@ -94,6 +94,6 @@ func (s *ClientTestSuite) TestGetAllReportsError() {
 }
 
 func (s *ClientTestSuite) TestDefaultClientURL() {
-	cli := New("test_token")
+	cli := New()
 	s.Equal("https://management.azure.com", cli.(*client).url)
 }

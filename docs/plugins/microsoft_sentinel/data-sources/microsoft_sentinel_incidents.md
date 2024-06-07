@@ -2,7 +2,7 @@
 title: microsoft_sentinel_incidents
 plugin:
   name: blackstork/microsoft_sentinel
-  description: ""
+  description: "The `microsoft_sentinel_incidents` data source fetches incidents from Microsoft Sentinel"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/sentinel/"
@@ -14,6 +14,9 @@ type: docs
 {{< breadcrumbs 2 >}}
 
 {{< plugin-resource-header "blackstork/microsoft_sentinel" "microsoft_sentinel" "v0.4.1" "microsoft_sentinel_incidents" "data source" >}}
+
+## Description
+The `microsoft_sentinel_incidents` data source fetches incidents from Microsoft Sentinel.
 
 ## Installation
 
@@ -37,9 +40,41 @@ The data source supports the following configuration parameters:
 
 ```hcl
 config data microsoft_sentinel_incidents {
-    resource_group_name = <string>  # required
-    subscription_id = <string>  # required
-    workspace_name = <string>  # required
+  # The Azure client ID
+  #
+  # Required string.
+  # For example:
+  client_id = "some string"
+
+  # The Azure client secret
+  #
+  # Required string.
+  # For example:
+  client_secret = "some string"
+
+  # The Azure tenant ID
+  #
+  # Required string.
+  # For example:
+  tenant_id = "some string"
+
+  # The Azure subscription ID
+  #
+  # Required string.
+  # For example:
+  subscription_id = "some string"
+
+  # The Azure resource group name
+  #
+  # Required string.
+  # For example:
+  resource_group_name = "some string"
+
+  # The Azure workspace name
+  #
+  # Required string.
+  # For example:
+  workspace_name = "some string"
 }
 ```
 
@@ -49,8 +84,22 @@ The data source supports the following parameters in the data blocks:
 
 ```hcl
 data microsoft_sentinel_incidents {
-    filter = <string>  # optional
-    limit = <number>  # optional
-    order_by = <string>  # optional
+  # The filter expression
+  #
+  # Optional string.
+  # Default value:
+  filter = null
+
+  # The maximum number of incidents to return
+  #
+  # Optional number.
+  # Default value:
+  limit = null
+
+  # The order by expression
+  #
+  # Optional string.
+  # Default value:
+  order_by = null
 }
 ```

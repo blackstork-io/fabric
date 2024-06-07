@@ -313,8 +313,11 @@
         "name": "microsoft_sentinel_incidents",
         "type": "data-source",
         "config_params": [
+          "client_id",
+          "client_secret",
           "resource_group_name",
           "subscription_id",
+          "tenant_id",
           "workspace_name"
         ],
         "arguments": [
