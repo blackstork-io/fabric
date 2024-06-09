@@ -8,8 +8,6 @@ plugin:
   version: "{{ .Version }}"
   {{- if eq (shortname .Name) "nist_nvd" }}
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/nistnvd/"
-  {{- else if eq (shortname .Name) "microsoft_sentinel" }}
-  source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/sentinel/"
   {{- else }}
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/{{ shortname .Name }}/"
   {{- end }}

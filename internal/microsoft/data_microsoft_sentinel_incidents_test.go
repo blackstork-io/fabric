@@ -1,4 +1,4 @@
-package sentinel
+package microsoft
 
 import (
 	"context"
@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/internal/sentinel/client"
-	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/sentinel/client"
+	"github.com/blackstork-io/fabric/internal/microsoft/client"
+	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/microsoft/client"
 	"github.com/blackstork-io/fabric/plugin"
 )
 

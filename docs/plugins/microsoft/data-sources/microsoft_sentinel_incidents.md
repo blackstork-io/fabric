@@ -1,11 +1,11 @@
 ---
 title: microsoft_sentinel_incidents
 plugin:
-  name: blackstork/microsoft_sentinel
+  name: blackstork/microsoft
   description: "The `microsoft_sentinel_incidents` data source fetches incidents from Microsoft Sentinel"
   tags: []
   version: "v0.4.1"
-  source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/sentinel/"
+  source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/microsoft/"
 resource:
   type: data-source
 type: docs
@@ -13,21 +13,21 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/microsoft_sentinel" "microsoft_sentinel" "v0.4.1" "microsoft_sentinel_incidents" "data source" >}}
+{{< plugin-resource-header "blackstork/microsoft" "microsoft" "v0.4.1" "microsoft_sentinel_incidents" "data source" >}}
 
 ## Description
 The `microsoft_sentinel_incidents` data source fetches incidents from Microsoft Sentinel.
 
 ## Installation
 
-To use `microsoft_sentinel_incidents` data source, you must install the plugin `blackstork/microsoft_sentinel`.
+To use `microsoft_sentinel_incidents` data source, you must install the plugin `blackstork/microsoft`.
 
 To install the plugin, add the full plugin name to the `plugin_versions` map in the Fabric global configuration block (see [Global configuration]({{< ref "configs.md#global-configuration" >}}) for more details), as shown below:
 
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/microsoft_sentinel" = ">= v0.4.1"
+    "blackstork/microsoft" = ">= v0.4.1"
   }
 }
 ```

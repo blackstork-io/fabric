@@ -5,7 +5,7 @@ package client_mocks
 import (
 	context "context"
 
-	client "github.com/blackstork-io/fabric/internal/sentinel/client"
+	client "github.com/blackstork-io/fabric/internal/microsoft/client"
 
 	mock "github.com/stretchr/testify/mock"
 )

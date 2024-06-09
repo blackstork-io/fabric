@@ -41,7 +41,7 @@ packages:
     config:
     interfaces:
       Client:
-  github.com/blackstork-io/fabric/internal/sentinel/client:
+  github.com/blackstork-io/fabric/internal/microsoft/client:
     config:
     interfaces:
       Client:

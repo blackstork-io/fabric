@@ -107,8 +107,8 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     no_unique_dist_dir: true
 
-  - id: microsoft_sentinel
-    main: ./internal/sentinel/cmd
-    binary: "plugins/blackstork/microsoft_sentinel@{{ .Version }}"
+  - id: microsoft
+    main: ./internal/microsoft/cmd
+    binary: "plugins/blackstork/microsoft@{{ .Version }}"
     ldflags: "-X main.version={{.Version}}"
     no_unique_dist_dir: true

@@ -305,9 +305,9 @@
     ]
   },
   {
-    "name": "blackstork/microsoft_sentinel",
+    "name": "blackstork/microsoft",
     "version": "v0.4.1",
-    "shortname": "microsoft_sentinel",
+    "shortname": "microsoft",
     "resources": [
       {
         "name": "microsoft_sentinel_incidents",

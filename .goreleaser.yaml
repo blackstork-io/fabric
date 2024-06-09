@@ -205,9 +205,9 @@ builds:
       - windows
       - darwin
 
-  - id: plugin_microsoft_sentinel
-    main: ./internal/sentinel/cmd
-    binary: "microsoft_sentinel@{{ .Version }}"
+  - id: plugin_microsoft
+    main: ./internal/microsoft/cmd
+    binary: "microsoft@{{ .Version }}"
     flags: "-trimpath"
     hooks:
       post:
@@ -445,12 +445,12 @@ docker_manifests:
     - "{{ .Env.CONTAINER_REPO_NAME }}:latest-arm64v8"
     - "{{ .Env.CONTAINER_REPO_NAME }}:latest-386"
 
-  - id: plugin_microsoft_sentinel
+  - id: plugin_microsoft
     format: tar.gz
     builds:
-      - plugin_microsoft_sentinel
+      - plugin_microsoft
     name_template: >-
-      plugin_microsoft_sentinel_
+      plugin_microsoft_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386

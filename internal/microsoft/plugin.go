@@ -1,4 +1,4 @@
-package sentinel
+package microsoft
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/internal/sentinel/client"
+	"github.com/blackstork-io/fabric/internal/microsoft/client"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -19,8 +19,8 @@ func Plugin(version string, loader ClientLoadFn) *plugin.Schema {
 		loader = DefaultClientLoader
 	}
 	return &plugin.Schema{
-		Doc:     "The `microsoft_sentinel` plugin fetches data from Microsoft Sentinel.",
-		Name:    "blackstork/microsoft_sentinel",
+		Doc:     "The `microsoft` plugin for Microsoft services.",
+		Name:    "blackstork/microsoft",
 		Version: version,
 		DataSources: plugin.DataSources{
 			"microsoft_sentinel_incidents": makeMicrosoftSentinelIncidentsDataSource(loader),
