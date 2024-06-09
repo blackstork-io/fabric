@@ -5,6 +5,7 @@ import (
 
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 )
@@ -26,7 +27,14 @@ func decodeCtyType(src *CtyType) (cty.Type, error) {
 	case *CtyType_DynamicPseudo:
 		return cty.DynamicPseudoType, nil
 	case *CtyType_Encapsulated:
-		return plugin.EncapsulatedData.CtyType(), nil
+		switch src.Encapsulated {
+		case CtyCapsuleType_CAPSULE_DELAYED_EVAL:
+			return dataquery.DelayedEvalType.CtyType(), nil
+		case CtyCapsuleType_CAPSULE_PLUGIN_DATA:
+			return plugin.EncapsulatedData.CtyType(), nil
+		default:
+			return cty.NilType, fmt.Errorf("unsupported capsule cty type: %v", src.Encapsulated.String())
+		}
 	default:
 		return cty.NilType, fmt.Errorf("unsupported cty type: %T", src)
 	}
@@ -34,11 +42,11 @@ func decodeCtyType(src *CtyType) (cty.Type, error) {
 
 func decodeCtyPrimitiveType(src CtyPrimitiveType) (cty.Type, error) {
 	switch src {
-	case CtyPrimitiveType_CTY_PRIMITIVE_KIND_BOOL:
+	case CtyPrimitiveType_KIND_BOOL:
 		return cty.Bool, nil
-	case CtyPrimitiveType_CTY_PRIMITIVE_KIND_NUMBER:
+	case CtyPrimitiveType_KIND_NUMBER:
 		return cty.Number, nil
-	case CtyPrimitiveType_CTY_PRIMITIVE_KIND_STRING:
+	case CtyPrimitiveType_KIND_STRING:
 		return cty.String, nil
 	default:
 		return cty.NilType, fmt.Errorf("unsupported primitive cty type: %v", src)

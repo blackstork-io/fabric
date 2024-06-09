@@ -5,9 +5,9 @@ import (
 	"maps"
 
 	"github.com/blackstork-io/fabric/parser/definitions"
-	"github.com/blackstork-io/fabric/pkg/ctyencoder"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugincty"
 )
 
 // Evaluates `variables` and stores the results in `dataCtx` under the key "vars".
@@ -27,10 +27,16 @@ func ApplyVars(ctx context.Context, variables *definitions.ParsedVars, dataCtx p
 	dataCtx["vars"] = vars
 
 	for _, variable := range variables.Variables {
-		val, diag := ctyencoder.ToPluginData(ctx, dataCtx, variable.Val)
+		val, diag := plugin.CustomEvalTransform(ctx, dataCtx, variable.Val)
+		diag.DefaultSubject(&variable.ValRange)
+		if diags.Extend(diag) {
+			vars[variable.Name] = nil
+			continue
+		}
+		dataVal, diag := plugincty.Encode(val)
 		diag.DefaultSubject(&variable.ValRange)
 		diags.Extend(diag)
-		vars[variable.Name] = val
+		vars[variable.Name] = dataVal
 	}
 
 	return

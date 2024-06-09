@@ -131,7 +131,7 @@ func (a *AttrSpec) DocComment() hclwrite.Tokens {
 }
 
 func (a *AttrSpec) WriteDoc(w *hclwrite.Body) {
-	// write out documnetation
+	// write out documentation
 	w.AppendUnstructuredTokens(a.DocComment())
 
 	// write the attribute

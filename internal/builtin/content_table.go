@@ -3,7 +3,9 @@ package builtin
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 	"text/template"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -23,6 +26,12 @@ func makeTableContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genTableContent,
 		Args: dataspec.ObjectSpec{
+			&dataspec.AttrSpec{
+				Name:        "test",
+				Type:        dataquery.DelayedEvalType.CtyType(),
+				Doc:         "Test",
+				Constraints: constraint.RequiredMeaningful,
+			},
 			&dataspec.AttrSpec{
 				Name: "columns",
 				Type: cty.List(cty.Object(map[string]cty.Type{
@@ -60,6 +69,13 @@ func makeTableContentProvider() *plugin.ContentProvider {
 }
 
 func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
+	res, err := dataquery.DelayedEvalType.FromCty(params.Args.GetAttr("test"))
+	if err != nil {
+		return nil, diagnostics.FromErr(err, "failed to get test")
+	}
+	data := res.Result()
+	t, _ := json.MarshalIndent(data.Any(), "", "  ")
+	slog.Error("hey", "t", string(t))
 	headers, values, err := parseTableContentArgs(params)
 	if err != nil {
 		return nil, diagnostics.Diag{{

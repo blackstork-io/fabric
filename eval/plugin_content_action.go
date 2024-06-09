@@ -11,7 +11,6 @@ import (
 	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/parser/evaluation"
-	"github.com/blackstork-io/fabric/pkg/ctyencoder"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
@@ -19,10 +18,9 @@ import (
 
 type PluginContentAction struct {
 	*PluginAction
-	Provider   *plugin.ContentProvider
-	Query      cty.Value
-	QueryRange *hcl.Range
-	Vars       *definitions.ParsedVars
+	Provider *plugin.ContentProvider
+	Query    *dataquery.JqQuery
+	Vars     *definitions.ParsedVars
 }
 
 func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugin.MapData, doc, parent *plugin.ContentSection, contentID uint32) (res *plugin.ContentResult, diags diagnostics.Diag) {
@@ -40,12 +38,14 @@ func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx pl
 		return
 	}
 
-	if !action.Query.IsNull() {
-		dataCtx["query_result"], diag = ctyencoder.ToPluginData(ctx, dataCtx, action.Query)
-		diag.DefaultSubject(action.QueryRange)
+	if action.Query != nil {
+		var q *dataquery.JqQuery
+		q, diag = action.Query.Eval(ctx, dataCtx)
 		if diags.Extend(diag) {
+			dataCtx["query_result"] = nil
 			return
 		}
+		dataCtx["query_result"] = q.Result
 	}
 	res, diag = action.Provider.Execute(ctx, &plugin.ProvideContentParams{
 		Config:      action.Config,
@@ -92,10 +92,9 @@ func LoadPluginContentAction(providers ContentProviders, node *definitions.Parse
 		return nil, diags
 	}
 	body := node.Invocation.GetBody()
-	var query cty.Value
-	var queryRange *hcl.Range
+	var query *dataquery.JqQuery
 
-	if q, found := body.Attributes["query"]; found {
+	if _, found := body.Attributes["query"]; found {
 		evalCtx := dataquery.JqEvalContext(evaluation.EvalContext())
 
 		value, newBody, stdDiag := hcldec.PartialDecode(body, &hcldec.ObjectSpec{
@@ -109,8 +108,7 @@ func LoadPluginContentAction(providers ContentProviders, node *definitions.Parse
 			return
 		}
 		body = utils.ToHclsyntaxBody(newBody)
-		query = value.GetAttr("query")
-		queryRange = q.Expr.Range().Ptr()
+		query = dataquery.JqQueryType.MustFromCty(value.GetAttr("query"))
 	}
 	// finished parsing content-specific attrs and blocks
 	node.Invocation.SetBody(body)
@@ -128,9 +126,8 @@ func LoadPluginContentAction(providers ContentProviders, node *definitions.Parse
 			Config:     cfg,
 			Args:       args,
 		},
-		Provider:   cp,
-		Query:      query,
-		QueryRange: queryRange,
-		Vars:       node.Vars,
+		Provider: cp,
+		Query:    query,
+		Vars:     node.Vars,
 	}, diags
 }

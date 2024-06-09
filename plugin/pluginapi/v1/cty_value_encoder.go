@@ -4,14 +4,16 @@ import (
 	"fmt"
 
 	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/convert"
 
+	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/ctyencoder"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
 var grpcCtyValueDecoder = ctyencoder.Encoder[*CtyValue]{
-	Encode: func(val cty.Value) (res *CtyValue, diags diagnostics.Diag) {
+	EncodeVal: func(val cty.Value) (res *CtyValue, diags diagnostics.Diag) {
 		var err error
 		if val == cty.NilVal {
 			return nil, nil
@@ -22,18 +24,31 @@ var grpcCtyValueDecoder = ctyencoder.Encoder[*CtyValue]{
 			diags.AppendErr(err, "Can't encode a value")
 			return
 		}
+		if dataquery.DelayedEvalType.CtyTypeEqual(ty) {
+			convVal, err := convert.Convert(val, plugin.EncapsulatedData.CtyType())
+			if diags.AppendErr(err, "Can't encode a value") {
+				return
+			}
+			res = &CtyValue{
+				Type: &CtyType{
+					Data: &CtyType_Encapsulated{Encapsulated: CtyCapsuleType_CAPSULE_DELAYED_EVAL},
+				},
+				Data: &CtyValue_PluginData{
+					PluginData: encodeData(*plugin.EncapsulatedData.MustFromCty(convVal)),
+				},
+			}
+			return
+		}
 		diags.Add("Unsupported value", "unsupported cty value: "+ty.FriendlyName())
 		return
 	},
 	EncodePluginData: func(val plugin.Data) (*CtyValue, diagnostics.Diag) {
 		return &CtyValue{
 			Type: &CtyType{
-				Data: &CtyType_Encapsulated{Encapsulated: &EncapsulatedDataType{}},
+				Data: &CtyType_Encapsulated{Encapsulated: CtyCapsuleType_CAPSULE_PLUGIN_DATA},
 			},
-			Data: &CtyValue_Encapsulated{
-				Encapsulated: &CtyEncapsulatedValue{
-					Value: encodeData(val),
-				},
+			Data: &CtyValue_PluginData{
+				PluginData: encodeData(val),
 			},
 		}, nil
 	},
@@ -135,7 +150,7 @@ func (le *listEncoder) Encode() (*CtyValue, diagnostics.Diag) {
 }
 
 func encodeCtyValue(src cty.Value) (*CtyValue, error) {
-	res, diags := grpcCtyValueDecoder.Encode(src)
+	res, diags := grpcCtyValueDecoder.Encode(nil, src)
 	if diags.HasErrors() {
 		return nil, diags
 	}

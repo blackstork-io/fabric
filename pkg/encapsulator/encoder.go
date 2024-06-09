@@ -40,18 +40,12 @@ func (e *encoderCore) ValCtyTypeEqual(v cty.Value) bool {
 	return isValid(v) && e.CtyTypeEqual(v.Type())
 }
 
-// NewEncoder creates an Encoder.
-// Will use cty.Capsule if capsuleOps is nil, and cty.CapsuleWithOps otherwise
-func newEncoderCore(goType reflect.Type, friendlyName string, capsuleOps *cty.CapsuleOps) encoderCore {
-	var ctyType cty.Type
-
-	if capsuleOps == nil {
-		ctyType = cty.Capsule(friendlyName, goType)
+func (e *encoderCore) initEncoderCore(name string, nativeType reflect.Type, ops typedOpsI) {
+	ctyOps := ops.asCtyCapsuleOps(e)
+	if ctyOps == nil {
+		e.ctyType = cty.Capsule(name, nativeType)
 	} else {
-		ctyType = cty.CapsuleWithOps(friendlyName, goType, capsuleOps)
-	}
-	return encoderCore{
-		ctyType: ctyType,
+		e.ctyType = cty.CapsuleWithOps(name, nativeType, ctyOps)
 	}
 }
 
@@ -73,11 +67,7 @@ func (e *Encoder[T]) ValToCty(val T) cty.Value {
 // NewEncoder creates an Encoder.
 // Will use cty.Capsule if capsuleOps is nil, and cty.CapsuleWithOps otherwise
 func NewEncoder[T any](friendlyName string, capsuleOps *CapsuleOps[T]) *Encoder[T] {
-	return &Encoder[T]{
-		encoderCore: newEncoderCore(
-			reflect.TypeFor[T](),
-			friendlyName,
-			capsuleOps.asCtyCapsuleOps(),
-		),
-	}
+	enc := &Encoder[T]{}
+	enc.initEncoderCore(friendlyName, reflect.TypeFor[T](), capsuleOps)
+	return enc
 }

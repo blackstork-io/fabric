@@ -13,7 +13,7 @@ message CtyType {
         CtyType              set            = 5;
         CtyTupleType         tuple          = 6;
         CtyDynamicPseudoType dynamic_pseudo = 7;
-        EncapsulatedDataType encapsulated   = 8;
+        CtyCapsuleType       encapsulated   = 8;
     }
 }
 
@@ -27,23 +27,26 @@ message CtyTupleType {
 
 message CtyDynamicPseudoType {}
 
-message EncapsulatedDataType {}
-
-enum CtyPrimitiveType {
-    CTY_PRIMITIVE_KIND_UNSPECIFIED = 0;
-    CTY_PRIMITIVE_KIND_STRING      = 1;
-    CTY_PRIMITIVE_KIND_NUMBER      = 2;
-    CTY_PRIMITIVE_KIND_BOOL        = 3;
+enum CtyCapsuleType {
+    CAPSULE_UNSPECIFIED  = 0;
+    CAPSULE_PLUGIN_DATA  = 1;
+    CAPSULE_DELAYED_EVAL = 2;
 }
 
+enum CtyPrimitiveType {
+    KIND_UNSPECIFIED = 0;
+    KIND_STRING      = 1;
+    KIND_NUMBER      = 2;
+    KIND_BOOL        = 3;
+}
 
 message CtyValue {
     CtyType type = 1;
-    oneof data {
-        CtyPrimitiveValue    primitive    = 2;
-        CtyMapLike           mapLike      = 8;
-        CtyListLike          listLike     = 9;
-        CtyEncapsulatedValue encapsulated = 10;
+    oneof   data {
+        CtyPrimitiveValue primitive  = 2;
+        CtyMapLike        mapLike    = 8;
+        CtyListLike       listLike   = 9;
+        Data              pluginData = 10;
     }
 }
 
@@ -61,8 +64,4 @@ message CtyListLike {
 
 message CtyMapLike {
     map<string, CtyValue> elements = 1;
-}
-
-message CtyEncapsulatedValue {
-    Data value = 1;
 }

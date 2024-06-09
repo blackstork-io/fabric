@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/convert"
 
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
@@ -24,12 +25,26 @@ func decodeCtyValue(src *CtyValue) (cty.Value, error) {
 		return decodeCtyMapLike(t, src.GetMapLike().GetElements())
 	case t.IsListType() || t.IsSetType() || t.IsTupleType():
 		return decodeCtyListLike(t, src.GetListLike().GetElements())
-	case plugin.EncapsulatedData.CtyTypeEqual(t):
-		if data := src.GetEncapsulated().GetValue(); data != nil {
-			return plugin.EncapsulatedData.ValToCty(decodeData(data)), nil
+	case t.IsCapsuleType():
+		data := src.GetPluginData()
+		if data == nil {
+			return cty.NilVal, fmt.Errorf("unsupported serialization %T for cty type: %s", src.Data, t.FriendlyName())
 		}
+		pluginData := plugin.EncapsulatedData.ValToCty(decodeData(data))
+		if plugin.EncapsulatedData.CtyTypeEqual(t) {
+			// we wanted to get plugin data
+			return pluginData, nil
+		}
+		// plugin data was only used for transport, convert to the desired type
+		conv, err := convert.Convert(pluginData, t)
+		if err != nil {
+			return cty.NilVal, err
+		}
+		return conv, nil
+
+	default:
+		return cty.NilVal, fmt.Errorf("unsupported cty type: %s", t.FriendlyName())
 	}
-	return cty.NullVal(t), nil
 }
 
 func decodeCtyMapLike(t cty.Type, src map[string]*CtyValue) (cty.Value, error) {

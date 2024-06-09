@@ -14,6 +14,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugincty"
 )
 
 const (
@@ -119,7 +120,11 @@ func parseFrontMatterArgs(args cty.Value, datactx plugin.MapData) (string, plugi
 	if data == nil {
 		content := args.GetAttr("content")
 		if !content.IsNull() {
-			data = plugin.ConvertCtyToData(content)
+			var diag diagnostics.Diag
+			data, diag = plugincty.Encode(content)
+			if diag.HasErrors() {
+				return "", nil, diag
+			}
 		}
 	}
 	if data == nil {

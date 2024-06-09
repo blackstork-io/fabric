@@ -4,6 +4,7 @@ package diagnostics
 
 import (
 	"github.com/hashicorp/hcl/v2"
+	"github.com/zclconf/go-cty/cty"
 )
 
 type extraList []any
@@ -86,6 +87,9 @@ func (d *Diag) AddWarn(summary, detail string) {
 
 // Set the subject for diagnostics if it's not already specified.
 func (d *Diag) DefaultSubject(rng *hcl.Range) {
+	if rng == nil {
+		return
+	}
 	for _, diag := range *d {
 		if diag.Subject == nil {
 			diag.Subject = rng
@@ -151,12 +155,7 @@ func (d *Diag) AppendErr(err error, summary string) (haveAddedErrors bool) {
 //
 //go:noinline
 func appendErr(d *Diag, err error, summary string) {
-	*d = append(*d, &hcl.Diagnostic{
-		Severity: hcl.DiagError,
-		Summary:  summary,
-		Detail:   err.Error(),
-		Extra:    err,
-	})
+	d.Extend(FromErr(err, summary))
 }
 
 func FromHcl(diag *hcl.Diagnostic) Diag {
@@ -166,27 +165,39 @@ func FromHcl(diag *hcl.Diagnostic) Diag {
 	return nil
 }
 
-func FromErr(err error, summary string) Diag {
-	if err != nil {
-		return Diag{{
-			Severity: hcl.DiagError,
-			Summary:  summary,
-			Detail:   err.Error(),
-			Extra:    err,
-		}}
+func extractPathErr(diag Diag, err error) {
+	if pathErr, ok := err.(cty.PathError); ok {
+		diag.AddExtra(NewPathExtra(pathErr.Path))
 	}
-	return nil
 }
 
-func FromErrSubj(err error, summary string, subject *hcl.Range) Diag {
-	if err != nil {
-		return Diag{{
+func FromErr(err error, summary string) (diags Diag) {
+	if err == nil {
+		return nil
+	}
+	if diag, ok := err.(Diag); ok {
+		diags = diag
+	}
+	if diag, ok := err.(hcl.Diagnostics); ok {
+		diags = Diag(diag)
+	}
+	if diag, ok := err.(*hcl.Diagnostic); ok {
+		diags = Diag{diag}
+	}
+	if diags == nil {
+		diags = Diag{&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  summary,
 			Detail:   err.Error(),
-			Extra:    err,
-			Subject:  subject,
 		}}
 	}
-	return nil
+	extractPathErr(diags, err)
+	return
+}
+
+func FromErrSubj(err error, summary string, subject *hcl.Range) (diags Diag) {
+	diags = FromErr(err, summary)
+	diags.DefaultSubject(subject)
+	extractPathErr(diags, err)
+	return
 }

@@ -19,3 +19,11 @@ func IsNil(val any) bool {
 
 	return false
 }
+
+// Unwraps the value, panics if err is not nil.
+func Must[T any](val T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return val
+}

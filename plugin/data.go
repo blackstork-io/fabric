@@ -3,14 +3,7 @@ package plugin
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
-
-	"github.com/zclconf/go-cty/cty"
-
-	"github.com/blackstork-io/fabric/pkg/encapsulator"
 )
-
-var EncapsulatedData *encapsulator.Codec[Data] = encapsulator.NewCodec[Data]("arbitrary json-like data", nil)
 
 type Data interface {
 	Any() any
@@ -202,39 +195,3 @@ func (d ConvListData) Any() any {
 	return dst
 }
 func (d ConvListData) data() {}
-
-func ConvertCtyToData(val cty.Value) Data {
-	if val.IsNull() {
-		return nil
-	}
-	ty := val.Type()
-
-	switch {
-	case ty.IsPrimitiveType():
-		switch ty {
-		case cty.String:
-			return StringData(val.AsString())
-		case cty.Number:
-			n, _ := val.AsBigFloat().Float64()
-			return NumberData(n)
-		case cty.Bool:
-			return BoolData(val.True())
-		}
-	case ty.IsMapType() || ty.IsObjectType():
-		result := make(MapData, val.LengthInt())
-		for it := val.ElementIterator(); it.Next(); {
-			k, v := it.Element()
-			result[k.AsString()] = ConvertCtyToData(v)
-		}
-		return result
-	case ty.IsListType() || ty.IsTupleType():
-		result := make(ListData, 0, val.LengthInt())
-		for it := val.ElementIterator(); it.Next(); {
-			_, v := it.Element()
-			result = append(result, ConvertCtyToData(v))
-		}
-		return result
-	}
-	slog.Warn("Unknown type while converting cty to data", "type", ty.FriendlyName())
-	return nil
-}

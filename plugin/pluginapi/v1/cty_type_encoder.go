@@ -5,6 +5,7 @@ import (
 
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 )
@@ -25,30 +26,45 @@ func encodeCtyType(src cty.Type) (*CtyType, error) {
 				DynamicPseudo: &CtyDynamicPseudoType{},
 			},
 		}, nil
-	case plugin.EncapsulatedData.CtyTypeEqual(src):
-		return &CtyType{
-			Data: &CtyType_Encapsulated{
-				Encapsulated: &EncapsulatedDataType{},
-			},
-		}, nil
+	case src.IsCapsuleType():
+		return encodeCtyCapsuleType(src)
 	default:
 		return nil, fmt.Errorf("unsupported cty type: %s", src.FriendlyName())
 	}
 }
 
+func encodeCtyCapsuleType(src cty.Type) (*CtyType, error) {
+	switch {
+	case plugin.EncapsulatedData.CtyTypeEqual(src):
+		return &CtyType{
+			Data: &CtyType_Encapsulated{
+				Encapsulated: CtyCapsuleType_CAPSULE_PLUGIN_DATA,
+			},
+		}, nil
+	case dataquery.DelayedEvalType.CtyTypeEqual(src):
+		return &CtyType{
+			Data: &CtyType_Encapsulated{
+				Encapsulated: CtyCapsuleType_CAPSULE_DELAYED_EVAL,
+			},
+		}, nil
+	default:
+		return nil, fmt.Errorf("unsupported capsule cty type: %s", src.FriendlyName())
+	}
+}
+
 func encodeCtyPrimitiveType(src cty.Type) (*CtyType, error) {
-	kind := CtyPrimitiveType_CTY_PRIMITIVE_KIND_UNSPECIFIED
+	var kind CtyPrimitiveType
 	switch src {
 	case cty.Bool:
-		kind = CtyPrimitiveType_CTY_PRIMITIVE_KIND_BOOL
+		kind = CtyPrimitiveType_KIND_BOOL
 	case cty.Number:
-		kind = CtyPrimitiveType_CTY_PRIMITIVE_KIND_NUMBER
+		kind = CtyPrimitiveType_KIND_NUMBER
 	case cty.String:
-		kind = CtyPrimitiveType_CTY_PRIMITIVE_KIND_STRING
-	}
-	if kind == CtyPrimitiveType_CTY_PRIMITIVE_KIND_UNSPECIFIED {
+		kind = CtyPrimitiveType_KIND_STRING
+	default:
 		return nil, fmt.Errorf("unsupported primitive cty type: %s", src.FriendlyName())
 	}
+
 	return &CtyType{
 		Data: &CtyType_Primitive{
 			Primitive: kind,

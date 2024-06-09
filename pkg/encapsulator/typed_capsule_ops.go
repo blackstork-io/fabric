@@ -1,10 +1,19 @@
 package encapsulator
 
 import (
+	"log/slog"
 	"reflect"
 
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/ext/customdecode"
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
+
+type typedOpsI interface {
+	asCtyCapsuleOps(encoder *encoderCore) (res *cty.CapsuleOps)
+}
 
 // CapsuleOps represents a set of overloaded operations for a capsule type.
 // This struct is identical to cty.CapsuleOps, except that it specifies
@@ -105,15 +114,43 @@ type CapsuleOps[T any] struct {
 	// prefer to ignore it or gracefully produce an error rather than causing
 	// a panic.
 	ExtensionData func(key interface{}) interface{}
+
+	// CustomExpressionDecoder is a function that overrides the usual
+	// hcl evaluation. It takes precedence over the function that may
+	// be returned from ExtensionData
+	CustomExpressionDecoder func(expr hcl.Expression, evalCtx *hcl.EvalContext) (*T, diagnostics.Diag)
 }
 
-func (co *CapsuleOps[T]) asCtyCapsuleOps() (res *cty.CapsuleOps) {
+func (co *CapsuleOps[T]) asCtyCapsuleOps(encoder *encoderCore) (res *cty.CapsuleOps) {
 	if co == nil {
 		return
 	}
 	res = &cty.CapsuleOps{
-		TypeGoString:  co.TypeGoString,
-		ExtensionData: co.ExtensionData,
+		TypeGoString: co.TypeGoString,
+	}
+
+	if co.ExtensionData != nil || co.CustomExpressionDecoder != nil {
+		res.ExtensionData = func(key any) any {
+			switch key {
+			case customdecode.CustomExpressionDecoder:
+				if co.CustomExpressionDecoder == nil {
+					break
+				}
+				return customdecode.CustomExpressionDecoderFunc(func(expr hcl.Expression, ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
+					slog.Error("CustomExpressionDecoderFunc in the func")
+					data, diags := co.CustomExpressionDecoder(expr, ctx)
+					diag := hcl.Diagnostics(diags)
+					if data == nil && diag.HasErrors() {
+						return cty.NilVal, diag
+					}
+					return encoder.toCty(data), diag
+				})
+			}
+			if co.ExtensionData != nil {
+				return co.ExtensionData(key)
+			}
+			return nil
+		}
 	}
 	if co.GoString != nil {
 		res.GoString = func(val interface{}) string {
