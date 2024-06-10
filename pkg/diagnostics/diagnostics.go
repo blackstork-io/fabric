@@ -112,7 +112,8 @@ func AddExtra(diag *hcl.Diagnostic, extra any) {
 	case nil:
 		diag.Extra = extra
 	case extraList:
-		diag.Extra = append(extraT, extra)
+		extraT = append(extraT, extra)
+		diag.Extra = extraT
 	default:
 		diag.Extra = extraList{extraT, extra}
 	}
