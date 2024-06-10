@@ -3,10 +3,7 @@ package builtin
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"log/slog"
-	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -27,9 +24,10 @@ func makeTableContentProvider() *plugin.ContentProvider {
 		ContentFunc: genTableContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name:        "test",
-				Type:        dataquery.DelayedEvalType.CtyType(),
-				Doc:         "Test",
+				Name: "rows_var",
+				Type: dataquery.DelayedEvalType.CtyType(),
+				Doc: "A list of objects representing rows in the table.\n" +
+					"May be set statically or as a result of one or more queries.",
 				Constraints: constraint.RequiredMeaningful,
 			},
 			&dataspec.AttrSpec{
@@ -53,29 +51,38 @@ func makeTableContentProvider() *plugin.ContentProvider {
 						"value":  cty.StringVal("..."),
 					}),
 				}),
-				Constraints: constraint.RequiredNonNull,
+				Constraints: constraint.RequiredMeaningful,
 			},
 		},
 		Doc: `
 			Produces a table.
 
-			This content provider assumes that ` + "`query_result`" + ` is a list of objects representing rows,
-			and uses the configured ` + "`value`" + ` go templates (see below) to display each row.
+			Each cell template has access to the data context and the following variables:
+			* ` + "`" + `.block.rows` + "`" + ` – the value of rows_var attribute
+			* ` + "`" + `.block.row` + "`" + ` – the current row from ` + "`" + `.block.rows` + "`" + ` list
+			* ` + "`" + `.block.row_index` + "`" + ` – the current row index
+			* ` + "`" + `.block.col_index` + "`" + ` – the current column index
 
-			NOTE: ` + "`header`" + ` templates are executed with the whole context available, while ` + "`value`" + `
-			templates are executed on each item of the ` + "`query_result`" + ` list.
-		`,
+			Header templates have access to the same variables as value templates,
+			except for ` + "`" + `.block.row` + "`" + ` and ` + "`" + `.block.row_index` + "`",
 	}
 }
 
 func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	res, err := dataquery.DelayedEvalType.FromCty(params.Args.GetAttr("test"))
+	res, err := dataquery.DelayedEvalType.FromCty(params.Args.GetAttr("rows_var"))
 	if err != nil {
-		return nil, diagnostics.FromErr(err, "failed to get test")
+		return nil, diagnostics.FromErr(err, "failed to get rows_var")
 	}
 	data := res.Result()
-	t, _ := json.MarshalIndent(data.Any(), "", "  ")
-	slog.Error("hey", "t", string(t))
+	rows_var, ok := data.(plugin.ListData)
+	if !ok {
+		return nil, diagnostics.Diag{{
+			Severity: hcl.DiagError,
+			Summary:  "Failed to parse arguments",
+			Detail:   fmt.Sprintf("rows_var must be a list, not %T", res),
+		}}
+	}
+
 	headers, values, err := parseTableContentArgs(params)
 	if err != nil {
 		return nil, diagnostics.Diag{{
@@ -84,7 +91,7 @@ func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (
 			Detail:   err.Error(),
 		}}
 	}
-	result, err := renderTableContent(headers, values, params.DataContext)
+	result, err := renderTableContent(headers, values, params.DataContext, rows_var)
 	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -101,23 +108,14 @@ func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (
 
 func parseTableContentArgs(params *plugin.ProvideContentParams) (headers, values []tableCellTmpl, err error) {
 	arr := params.Args.GetAttr("columns")
-	if arr.IsNull() {
-		return nil, nil, fmt.Errorf("columns is required")
-	}
-	if len(arr.AsValueSlice()) == 0 {
-		return nil, nil, fmt.Errorf("columns must not be empty")
-	}
 	for _, val := range arr.AsValueSlice() {
 		obj := val.AsValueMap()
-		var (
-			header cty.Value
-			value  cty.Value
-			ok     bool
-		)
-		if header, ok = obj["header"]; !ok || header.IsNull() {
+		header := obj["header"]
+		if header.IsNull() {
 			return nil, nil, fmt.Errorf("missing header in table cell")
 		}
-		if value, ok = obj["value"]; !ok || value.IsNull() {
+		value := obj["value"]
+		if value.IsNull() {
 			return nil, nil, fmt.Errorf("missing value in table cell")
 		}
 
@@ -135,62 +133,65 @@ func parseTableContentArgs(params *plugin.ProvideContentParams) (headers, values
 	return
 }
 
-func renderTableContent(headers, values []tableCellTmpl, datactx plugin.MapData) (string, error) {
-	hstr := make([]string, len(headers))
-	vstr := [][]string{}
-	for i, header := range headers {
-		var buf bytes.Buffer
-		err := header.Execute(&buf, datactx.Any())
+func renderTableContent(headers, values []tableCellTmpl, dataCtx plugin.MapData, rows_var plugin.ListData) (string, error) {
+	var buf bytes.Buffer
+
+	data := dataCtx.Any().(map[string]any)
+
+	rows := rows_var.Any().([]any)
+	block := map[string]any{
+		"rows": rows,
+	}
+	data["block"] = block
+
+	buf.WriteByte('|')
+	var cellBuf bytes.Buffer
+	for col_idx, header := range headers {
+		cellBuf.Reset()
+		block["col_index"] = col_idx + 1
+		err := header.Execute(&cellBuf, data)
 		if err != nil {
 			return "", fmt.Errorf("failed to render header: %w", err)
 		}
-		hstr[i] = strings.TrimSpace(
-			strings.ReplaceAll(buf.String(), "\n", " "),
+
+		buf.Write(
+			bytes.ReplaceAll(
+				bytes.TrimSpace(cellBuf.Bytes()),
+				[]byte("\n"),
+				[]byte(" "),
+			),
 		)
+		buf.WriteByte('|')
 	}
-	if datactx == nil {
-		return "", fmt.Errorf("data context is nil")
+	buf.WriteByte('\n')
+	buf.WriteByte('|')
+	for range headers {
+		buf.WriteString("---|")
 	}
-	if queryResult, ok := datactx["query_result"]; ok && queryResult != nil {
-		queryResult, ok := queryResult.(plugin.ListData)
-		if !ok {
-			return "", fmt.Errorf("query_result is not an array")
-		}
-		for _, row := range queryResult {
-			rowstr := make([]string, len(values))
-			for i, value := range values {
-				var buf bytes.Buffer
-				err := value.Execute(&buf, row.Any())
-				if err != nil {
-					return "", fmt.Errorf("failed to render value: %w", err)
-				}
-				rowstr[i] = strings.TrimSpace(
-					strings.ReplaceAll(buf.String(), "\n", " "),
-				)
+	buf.WriteString("\n")
+
+	for row_idx, row := range rows {
+		buf.WriteByte('|')
+		block["row_index"] = row_idx + 1
+		block["row"] = row
+		for col_idx, value := range values {
+			cellBuf.Reset()
+			block["col_index"] = col_idx + 1
+			err := value.Execute(&cellBuf, data)
+			if err != nil {
+				return "", fmt.Errorf("failed to render value: %w", err)
 			}
-			vstr = append(vstr, rowstr)
-		}
-	}
-	var buf bytes.Buffer
-	buf.WriteByte('|')
-	for _, header := range hstr {
-		buf.WriteString(header)
-		buf.WriteByte('|')
-	}
-	buf.WriteByte('\n')
-	buf.WriteByte('|')
-	for range hstr {
-		buf.WriteString("---")
-		buf.WriteByte('|')
-	}
-	buf.WriteByte('\n')
-	for _, row := range vstr {
-		buf.WriteByte('|')
-		for _, value := range row {
-			buf.WriteString(value)
+			buf.Write(
+				bytes.ReplaceAll(
+					bytes.TrimSpace(cellBuf.Bytes()),
+					[]byte("\n"),
+					[]byte(" "),
+				),
+			)
 			buf.WriteByte('|')
 		}
 		buf.WriteByte('\n')
 	}
+
 	return buf.String(), nil
 }

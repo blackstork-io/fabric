@@ -16,7 +16,7 @@ import (
 // A type that transports plugin.Data objects inside of the arguments/configuration of the plugin
 // Capable of evaluating queries inside of self, evaluated just before sending the data
 // to the plugin (`vars` and `query` have already processed the data)
-var DelayedEvalType = encapsulator.NewCodec("arbitrary json-like data", &encapsulator.CapsuleOps[DelayedEval]{
+var DelayedEvalType = encapsulator.NewCodec("data", &encapsulator.CapsuleOps[DelayedEval]{
 	CustomExpressionDecoder: func(expr hcl.Expression, ctx *hcl.EvalContext) (value *DelayedEval, diags diagnostics.Diag) {
 		// Allow using jq queries here
 		val, diag := expr.Value(JqEvalContext(ctx))

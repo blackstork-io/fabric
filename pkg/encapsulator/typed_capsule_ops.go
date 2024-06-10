@@ -1,7 +1,6 @@
 package encapsulator
 
 import (
-	"log/slog"
 	"reflect"
 
 	"github.com/hashicorp/hcl/v2"
@@ -137,7 +136,6 @@ func (co *CapsuleOps[T]) asCtyCapsuleOps(encoder *encoderCore) (res *cty.Capsule
 					break
 				}
 				return customdecode.CustomExpressionDecoderFunc(func(expr hcl.Expression, ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
-					slog.Error("CustomExpressionDecoderFunc in the func")
 					data, diags := co.CustomExpressionDecoder(expr, ctx)
 					diag := hcl.Diagnostics(diags)
 					if data == nil && diag.HasErrors() {

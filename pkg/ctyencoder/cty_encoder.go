@@ -1,13 +1,9 @@
 package ctyencoder
 
 import (
-	"encoding/json"
-	"log/slog"
-
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
@@ -70,8 +66,6 @@ func (e *Encoder[T]) Encode(path cty.Path, val cty.Value) (result T, diags diagn
 	}
 
 	if plugin.EncapsulatedData.ValDecodable(val) {
-		t := plugin.EncapsulatedData.MustFromCty(val)
-		slog.Info("plugin.EncapsulatedData", "v", utils.Must(json.MarshalIndent((*t).Any(), "", "  ")), "path", path)
 		data := *plugin.EncapsulatedData.MustFromCty(val)
 		result, diag = e.EncodePluginData(data)
 		addPathIfMissing(diag, path)

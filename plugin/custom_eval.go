@@ -2,7 +2,7 @@ package plugin
 
 import (
 	"context"
-	"log/slog"
+	"fmt"
 
 	"github.com/zclconf/go-cty/cty"
 
@@ -31,7 +31,7 @@ func CustomEvalTransform(ctx context.Context, dataCtx MapData, val cty.Value) (r
 		if newV.Type().Equals(v.Type()) {
 			v = newV
 		} else if newV != cty.NilVal {
-			slog.Error("Type mismatch in CustomEvalTransform", "original type", v.Type().FriendlyName(), "new type", newV.Type().FriendlyName())
+			panic(fmt.Sprintf("Type mismatch in CustomEvalTransform. Original type: %s New type: %s", v.Type().FriendlyName(), newV.Type().FriendlyName()))
 		}
 		diag.AddExtra(diagnostics.NewPathExtra(p))
 		diags.Extend(diag)

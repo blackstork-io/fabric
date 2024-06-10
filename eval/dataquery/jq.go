@@ -2,7 +2,6 @@ package dataquery
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/itchyny/gojq"
@@ -31,7 +30,6 @@ type JqQueryDefinition struct {
 
 var JqQueryType = encapsulator.NewCodec("jq query", &encapsulator.CapsuleOps[JqQuery]{
 	CustomExpressionDecoder: func(expr hcl.Expression, evalCtx *hcl.EvalContext) (val *JqQuery, diags diagnostics.Diag) {
-		slog.Error("CustomExpressionDecoder called")
 		queryVal, diag := expr.Value(evalCtx)
 		if diags.Extend(diag) {
 			return

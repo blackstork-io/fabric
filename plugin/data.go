@@ -44,7 +44,7 @@ func (d BoolData) Any() any {
 type MapData map[string]Data
 
 func (d MapData) Any() any {
-	dst := make(map[string]any)
+	dst := make(map[string]any, len(d))
 	for k, v := range d {
 		if v == nil {
 			dst[k] = nil
