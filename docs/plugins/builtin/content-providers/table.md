@@ -19,13 +19,13 @@ type: docs
 Produces a table.
 
 Each cell template has access to the data context and the following variables:
-* `.block.rows` – the value of rows_var attribute
-* `.block.row` – the current row from `.block.rows` list
-* `.block.row_index` – the current row index
-* `.block.col_index` – the current column index
+* `.rows` – the value of `rows_var` attribute
+* `.row.value` – the current row from `.rows` list
+* `.row.index` – the current row index
+* `.col.index` – the current column index
 
 Header templates have access to the same variables as value templates,
-except for `.block.row` and `.block.row_index`
+except for `.row.value` and `.row.index`
 
 The content provider is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 
@@ -43,9 +43,8 @@ content table {
   # A list of objects representing rows in the table.
   # May be set statically or as a result of one or more queries.
   #
-  # Required data.
-  # Must have a length of at least 1
-  # For example:
+  # Optional data.
+  # Default value:
   rows_var = null
 
   # List of header and value go templates for each column

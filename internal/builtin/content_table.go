@@ -57,13 +57,13 @@ func makeTableContentProvider() *plugin.ContentProvider {
 			Produces a table.
 
 			Each cell template has access to the data context and the following variables:
-			* ` + "`" + `.block.rows` + "`" + ` – the value of rows_var attribute
-			* ` + "`" + `.block.row` + "`" + ` – the current row from ` + "`" + `.block.rows` + "`" + ` list
-			* ` + "`" + `.block.row_index` + "`" + ` – the current row index
-			* ` + "`" + `.block.col_index` + "`" + ` – the current column index
+			* ` + "`" + `.rows` + "`" + ` – the value of ` + "`" + `rows_var` + "`" + ` attribute
+			* ` + "`" + `.row.value` + "`" + ` – the current row from ` + "`" + `.rows` + "`" + ` list
+			* ` + "`" + `.row.index` + "`" + ` – the current row index
+			* ` + "`" + `.col.index` + "`" + ` – the current column index
 
 			Header templates have access to the same variables as value templates,
-			except for ` + "`" + `.block.row` + "`" + ` and ` + "`" + `.block.row_index` + "`",
+			except for ` + "`" + `.row.value` + "`" + ` and ` + "`" + `.row.index` + "`",
 	}
 }
 
@@ -145,16 +145,14 @@ func renderTableContent(headers, values []tableCellTmpl, dataCtx plugin.MapData,
 	data := dataCtx.Any().(map[string]any)
 
 	rows := rows_var.Any().([]any)
-	block := map[string]any{
-		"rows": rows,
-	}
-	data["block"] = block
-
+	data["rows"] = rows
+	col := map[string]any{}
+	data["col"] = col
 	buf.WriteByte('|')
 	var cellBuf bytes.Buffer
 	for col_idx, header := range headers {
 		cellBuf.Reset()
-		block["col_index"] = col_idx + 1
+		col["index"] = col_idx + 1
 		err := header.Execute(&cellBuf, data)
 		if err != nil {
 			return "", fmt.Errorf("failed to render header: %w", err)
@@ -176,13 +174,16 @@ func renderTableContent(headers, values []tableCellTmpl, dataCtx plugin.MapData,
 	}
 	buf.WriteString("\n")
 
+	dataRow := map[string]any{}
+	data["row"] = dataRow
+
 	for row_idx, row := range rows {
 		buf.WriteByte('|')
-		block["row_index"] = row_idx + 1
-		block["row"] = row
+		dataRow["index"] = row_idx + 1
+		dataRow["value"] = row
 		for col_idx, value := range values {
 			cellBuf.Reset()
-			block["col_index"] = col_idx + 1
+			col["index"] = col_idx + 1
 			err := value.Execute(&cellBuf, data)
 			if err != nil {
 				return "", fmt.Errorf("failed to render value: %w", err)

@@ -97,11 +97,11 @@ func (s *TableGeneratorTestSuite) TestBasic() {
 	columns = [
 		{
 			header = "{{.col_prefix}} Name"
-			value  = "{{.block.row.name}}"
+			value  = "{{.row.value.name}}"
 		},
 		{
 			header = "{{.col_prefix}} Age"
-			value  = "{{.block.row.age}}"
+			value  = "{{.row.value.age}}"
 		}
 	]
 	rows_var = [
@@ -127,11 +127,11 @@ func (s *TableGeneratorTestSuite) TestSprigTemplate() {
 	columns = [
 		{
 			header = "{{.col_prefix | upper}} Name"
-			value  = "{{.block.row.name | upper}}"
+			value  = "{{.row.value.name | upper}}"
 		},
 		{
 			header = "{{.col_prefix}} Age"
-			value  = "{{.block.row.age}}"
+			value  = "{{.row.value.age}}"
 		}
 	]
 	rows_var = [
