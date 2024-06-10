@@ -35,7 +35,7 @@ func Test_fetchInlineData(t *testing.T) {
                 plugh  = false
         }
         xyzzy = null
-    `, diagtest.Asserts{})
+    `, nil, diagtest.Asserts{})
 	data, diags := p.RetrieveData(context.Background(), "inline", &plugin.RetrieveDataParams{
 		Args: args,
 	})

@@ -31,7 +31,7 @@ func (s *BlockQuoteTestSuite) TestSchema() {
 }
 
 func (s *BlockQuoteTestSuite) TestMissingText() {
-	plugintest.DecodeAndAssert(s.T(), s.schema.Args, ``, diagtest.Asserts{
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, ``, nil, diagtest.Asserts{
 		{
 			diagtest.IsError,
 			diagtest.DetailContains(`The argument "value" is required`),
@@ -44,7 +44,7 @@ func (s *BlockQuoteTestSuite) TestMissingText() {
 }
 
 func (s *BlockQuoteTestSuite) TestNullText() {
-	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `value = null`, diagtest.Asserts{
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `value = null`, nil, diagtest.Asserts{
 		{
 			diagtest.IsError,
 			diagtest.SummaryContains(`Attribute must be non-null`),
@@ -56,7 +56,7 @@ func (s *BlockQuoteTestSuite) TestCallBlockquote() {
 	ctx := context.Background()
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		value = "Hello {{.name}}!"
-	`, nil)
+	`, nil, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
@@ -75,7 +75,7 @@ func (s *BlockQuoteTestSuite) TestCallBlockquoteMultiline() {
 	ctx := context.Background()
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		value = "Hello\n{{.name}}\nfor you!"
-	`, nil)
+	`, nil, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
@@ -94,7 +94,7 @@ func (s *BlockQuoteTestSuite) TestCallBlockquoteMultilineDoubleNewline() {
 	ctx := context.Background()
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		value = "Hello\n{{.name}}\n\nfor you!"
-	`, nil)
+	`, nil, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{

@@ -28,7 +28,6 @@ func makeTableContentProvider() *plugin.ContentProvider {
 				Type: dataquery.DelayedEvalType.CtyType(),
 				Doc: "A list of objects representing rows in the table.\n" +
 					"May be set statically or as a result of one or more queries.",
-				Constraints: constraint.RequiredMeaningful,
 			},
 			&dataspec.AttrSpec{
 				Name: "columns",
@@ -69,18 +68,25 @@ func makeTableContentProvider() *plugin.ContentProvider {
 }
 
 func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	res, err := dataquery.DelayedEvalType.FromCty(params.Args.GetAttr("rows_var"))
-	if err != nil {
-		return nil, diagnostics.FromErr(err, "failed to get rows_var")
-	}
-	data := res.Result()
-	rows_var, ok := data.(plugin.ListData)
-	if !ok {
-		return nil, diagnostics.Diag{{
-			Severity: hcl.DiagError,
-			Summary:  "Failed to parse arguments",
-			Detail:   fmt.Sprintf("rows_var must be a list, not %T", res),
-		}}
+	var rows_var plugin.ListData
+	rows_val := params.Args.GetAttr("rows_var")
+	if !rows_val.IsNull() {
+		res, err := dataquery.DelayedEvalType.FromCty(rows_val)
+		if err != nil {
+			return nil, diagnostics.FromErr(err, "failed to get rows_var")
+		}
+		data := res.Result()
+		var ok bool
+		if data != nil {
+			rows_var, ok = data.(plugin.ListData)
+			if !ok {
+				return nil, diagnostics.Diag{{
+					Severity: hcl.DiagError,
+					Summary:  "Failed to parse arguments",
+					Detail:   fmt.Sprintf("rows_var must be a list, not %T", data),
+				}}
+			}
+		}
 	}
 
 	headers, values, err := parseTableContentArgs(params)
