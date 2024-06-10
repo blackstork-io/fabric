@@ -28,7 +28,7 @@ func decodeCtyValue(src *CtyValue) (cty.Value, error) {
 	case t.IsCapsuleType():
 		data := src.GetPluginData()
 		if data == nil {
-			return cty.NilVal, fmt.Errorf("unsupported serialization %T for cty type: %s", src.Data, t.FriendlyName())
+			return cty.NilVal, fmt.Errorf("unsupported serialization %T for cty type: %s", src.GetData(), t.FriendlyName())
 		}
 		pluginData := plugin.EncapsulatedData.ValToCty(decodeData(data))
 		if plugin.EncapsulatedData.CtyTypeEqual(t) {
@@ -71,11 +71,12 @@ func decodeCtyListLike(t cty.Type, src []*CtyValue) (cty.Value, error) {
 	if err != nil {
 		return cty.NilVal, err
 	}
-	if t.IsListType() {
+	switch {
+	case t.IsListType():
 		return cty.ListVal(elements), nil
-	} else if t.IsSetType() {
+	case t.IsSetType():
 		return cty.SetVal(elements), nil
-	} else if t.IsTupleType() {
+	case t.IsTupleType():
 		return cty.TupleVal(elements), nil
 	}
 	return cty.NilVal, fmt.Errorf("Unsupported cty list-like type: %s", t.FriendlyName())

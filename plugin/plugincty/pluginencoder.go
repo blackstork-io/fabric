@@ -1,7 +1,6 @@
 package plugincty
 
 import (
-	"fmt"
 	"log/slog"
 
 	"github.com/hashicorp/hcl/v2"
@@ -47,7 +46,7 @@ func (m mapEncoder) Add(k cty.Value, v plugin.Data) diagnostics.Diag {
 		return diagnostics.Diag{&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Incorrect key type",
-			Detail:   fmt.Sprintf("%s is not supported here, only strings are allowed", k.Type().FriendlyName()),
+			Detail:   k.Type().FriendlyName() + " is not supported here, only strings are allowed",
 		}}
 	}
 	m[k.AsString()] = v
@@ -99,12 +98,9 @@ var pluginDataEncoder = ctyencoder.Encoder[plugin.Data]{
 			result = *plugin.EncapsulatedData.MustFromCty(val)
 			return
 		} else {
-			slog.Error("convert", "in", val.Type().FriendlyName(), "out", plugin.EncapsulatedData.CtyType().FriendlyName())
 			res, err := convert.Convert(val, plugin.EncapsulatedData.CtyType())
 			if diags.AppendErr(err, "Failed to encode data") {
-				// panic("Failed to encode")
 				slog.Error("Failed to encode", "in", val.GoString())
-
 				return
 			}
 			result = *plugin.EncapsulatedData.MustFromCty(res)

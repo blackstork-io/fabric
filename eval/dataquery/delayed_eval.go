@@ -13,7 +13,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugincty"
 )
 
-// A type that transports plugin.Data objects inside of the arguments/configuration of the plugin
+// DelayedEvalType is  type that transports plugin.Data objects inside of the arguments/configuration of the plugin
 // Capable of evaluating queries inside of self, evaluated just before sending the data
 // to the plugin (`vars` and `query` have already processed the data)
 var DelayedEvalType = encapsulator.NewCodec("data", &encapsulator.CapsuleOps[DelayedEval]{

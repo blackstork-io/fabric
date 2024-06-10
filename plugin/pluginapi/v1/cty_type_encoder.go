@@ -77,26 +77,29 @@ func encodeCtySingleType(src cty.Type) (*CtyType, error) {
 	if err != nil {
 		return nil, err
 	}
-	if src.IsListType() {
+
+	switch {
+	case src.IsListType():
 		return &CtyType{
 			Data: &CtyType_List{
 				List: elemType,
 			},
 		}, nil
-	} else if src.IsMapType() {
+	case src.IsMapType():
 		return &CtyType{
 			Data: &CtyType_Map{
 				Map: elemType,
 			},
 		}, nil
-	} else if src.IsSetType() {
+	case src.IsSetType():
 		return &CtyType{
 			Data: &CtyType_Set{
 				Set: elemType,
 			},
 		}, nil
+	default:
+		panic("unreachable")
 	}
-	panic("unreachable")
 }
 
 func encodeCtyObjectType(src cty.Type) (*CtyType, error) {
