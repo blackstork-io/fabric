@@ -9,6 +9,7 @@ import (
 
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/encapsulator"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
@@ -31,7 +32,7 @@ var _ evaluation.Configuration = (*Config)(nil)
 func (c *Config) ParseConfig(spec dataspec.RootSpec) (val cty.Value, diags diagnostics.Diag) {
 	c.once.Do(func() {
 		var diag diagnostics.Diag
-		c.value, diag = dataspec.Decode(c.Body, spec, evaluation.NewEvalContext())
+		c.value, diag = dataspec.Decode(c.Body, spec, evaluation.EvalContext())
 		if diags.Extend(diag) {
 			// don't let partially-decoded values live
 			c.value = cty.NilVal
@@ -90,10 +91,10 @@ func (c *Config) GetHCLBlock() *hcl.Block {
 	return c.Block
 }
 
-var ctyConfigType = capsuleTypeFor[Config]()
+var ctyConfigType = encapsulator.NewEncoder[Config]("config", nil)
 
 func (c *Config) CtyType() cty.Type {
-	return ctyConfigType
+	return ctyConfigType.CtyType()
 }
 
 func DefineConfig(block *hclsyntax.Block) (config *Config, diags diagnostics.Diag) {

@@ -144,7 +144,7 @@ func ParseDir(dir fs.FS) (*DefinedBlocks, map[string]*hcl.File, diagnostics.Diag
 		},
 	)
 
-	// Reads files in readPE and shedules them to be parsed in parsePE
+	// Reads files in readPE and schedules them to be parsed in parsePE
 	goReadFabricFile := parexec.GoWithArg(readPE, func(path string) diagnostics.Diag {
 		bytes, diag := readFabricFile(dir, path)
 		if !diag.HasErrors() {

@@ -3,15 +3,12 @@ package plugin
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
-
-	"github.com/zclconf/go-cty/cty"
 )
 
 type Data interface {
 	Any() any
 	data()
-	ConvertableData
+	ConvertibleData
 }
 
 func (NumberData) data() {}
@@ -47,7 +44,7 @@ func (d BoolData) Any() any {
 type MapData map[string]Data
 
 func (d MapData) Any() any {
-	dst := make(map[string]any)
+	dst := make(map[string]any, len(d))
 	for k, v := range d {
 		if v == nil {
 			dst[k] = nil
@@ -149,11 +146,11 @@ func ParseDataMapAny(v map[string]any) (MapData, error) {
 	return dst, nil
 }
 
-type ConvertableData interface {
+type ConvertibleData interface {
 	AsJQData() Data
 }
 
-type ConvMapData map[string]ConvertableData
+type ConvMapData map[string]ConvertibleData
 
 func (d ConvMapData) AsJQData() Data {
 	dst := make(MapData, len(d))
@@ -180,7 +177,7 @@ func (d ConvMapData) Any() any {
 }
 func (d ConvMapData) data() {}
 
-type ConvListData []ConvertableData
+type ConvListData []ConvertibleData
 
 func (d ConvListData) AsJQData() Data {
 	dst := make(ListData, len(d))
@@ -198,39 +195,3 @@ func (d ConvListData) Any() any {
 	return dst
 }
 func (d ConvListData) data() {}
-
-func ConvertCtyToData(val cty.Value) Data {
-	if val.IsNull() {
-		return nil
-	}
-	ty := val.Type()
-
-	switch {
-	case ty.IsPrimitiveType():
-		switch ty {
-		case cty.String:
-			return StringData(val.AsString())
-		case cty.Number:
-			n, _ := val.AsBigFloat().Float64()
-			return NumberData(n)
-		case cty.Bool:
-			return BoolData(val.True())
-		}
-	case ty.IsMapType() || ty.IsObjectType():
-		result := make(MapData, val.LengthInt())
-		for it := val.ElementIterator(); it.Next(); {
-			k, v := it.Element()
-			result[k.AsString()] = ConvertCtyToData(v)
-		}
-		return result
-	case ty.IsListType() || ty.IsTupleType():
-		result := make(ListData, 0, val.LengthInt())
-		for it := val.ElementIterator(); it.Next(); {
-			_, v := it.Element()
-			result = append(result, ConvertCtyToData(v))
-		}
-		return result
-	}
-	slog.Warn("Unknown type while converting cty to data", "type", ty.FriendlyName())
-	return nil
-}

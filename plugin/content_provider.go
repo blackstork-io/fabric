@@ -90,6 +90,15 @@ func (cg *ContentProvider) Execute(ctx context.Context, params *ProvideContentPa
 			Detail:   "content provider function not loaded",
 		}}
 	}
+
+	var diag diagnostics.Diag
+	params.Config, diag = CustomEvalTransform(ctx, params.DataContext, params.Config)
+	diags.Extend(diag)
+	params.Args, diag = CustomEvalTransform(ctx, params.DataContext, params.Args)
+	diags.Extend(diag)
+	if diags.HasErrors() {
+		return
+	}
 	return cg.ContentFunc(ctx, params)
 }
 

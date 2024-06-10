@@ -13,6 +13,7 @@ import (
 type Section struct {
 	meta     *definitions.MetaBlock
 	children []*Content
+	vars     *definitions.ParsedVars
 }
 
 func (block *Section) RenderContent(ctx context.Context, dataCtx plugin.MapData, doc, parent *plugin.ContentSection, contentID uint32) (_ *plugin.ContentResult, diags diagnostics.Diag) {
@@ -41,15 +42,20 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugin.MapData,
 		bo := block.children[b].InvocationOrder()
 		return ao.Weight() - bo.Weight()
 	})
+	dataCtx[definitions.BlockKindSection] = sectionData
+
+	diag := ApplyVars(ctx, block.vars, dataCtx)
+	if diags.Extend(diag) {
+		return nil, diags
+	}
+
 	// execute content blocks based on the invocation order
 	for _, idx := range invokeList {
-		// clone the data context for each content block
-		dataCtx = maps.Clone(dataCtx)
-		// set the current content to the data context
+		// update the session data (is propagated to dataCtx, maps are by-ref structures)
 		sectionData[definitions.BlockKindContent] = section.AsData()
-		dataCtx[definitions.BlockKindSection] = sectionData
+
 		// execute the content block
-		_, diag := block.children[idx].RenderContent(ctx, dataCtx, doc, section, posMap[idx])
+		_, diag := block.children[idx].RenderContent(ctx, maps.Clone(dataCtx), doc, section, posMap[idx])
 		if diags.Extend(diag) {
 			return nil, diags
 		}
@@ -68,6 +74,7 @@ func LoadSection(providers ContentProviders, node *definitions.ParsedSection) (_
 	var diags diagnostics.Diag
 	block := &Section{
 		meta: node.Meta,
+		vars: node.Vars,
 	}
 
 	if node.Title != nil {

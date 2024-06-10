@@ -4,18 +4,18 @@ import (
 	"fmt"
 
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/blackstork-io/fabric/eval/dataquery"
+	"github.com/blackstork-io/fabric/pkg/utils"
+	"github.com/blackstork-io/fabric/plugin"
 )
 
 func encodeCtyType(src cty.Type) (*CtyType, error) {
 	switch {
 	case src.IsPrimitiveType():
 		return encodeCtyPrimitiveType(src)
-	case src.IsListType():
-		return encodeCtyListType(src)
-	case src.IsMapType():
-		return encodeCtyMapType(src)
-	case src.IsSetType():
-		return encodeCtySetType(src)
+	case src.IsListType() || src.IsMapType() || src.IsSetType():
+		return encodeCtySingleType(src)
 	case src.IsObjectType():
 		return encodeCtyObjectType(src)
 	case src.IsTupleType():
@@ -26,108 +26,106 @@ func encodeCtyType(src cty.Type) (*CtyType, error) {
 				DynamicPseudo: &CtyDynamicPseudoType{},
 			},
 		}, nil
+	case src.IsCapsuleType():
+		return encodeCtyCapsuleType(src)
 	default:
 		return nil, fmt.Errorf("unsupported cty type: %s", src.FriendlyName())
 	}
 }
 
+func encodeCtyCapsuleType(src cty.Type) (*CtyType, error) {
+	switch {
+	case plugin.EncapsulatedData.CtyTypeEqual(src):
+		return &CtyType{
+			Data: &CtyType_Encapsulated{
+				Encapsulated: CtyCapsuleType_CAPSULE_PLUGIN_DATA,
+			},
+		}, nil
+	case dataquery.DelayedEvalType.CtyTypeEqual(src):
+		return &CtyType{
+			Data: &CtyType_Encapsulated{
+				Encapsulated: CtyCapsuleType_CAPSULE_DELAYED_EVAL,
+			},
+		}, nil
+	default:
+		return nil, fmt.Errorf("unsupported capsule cty type: %s", src.FriendlyName())
+	}
+}
+
 func encodeCtyPrimitiveType(src cty.Type) (*CtyType, error) {
-	kind := CtyPrimitiveKind_CTY_PRIMITIVE_KIND_UNSPECIFIED
+	var kind CtyPrimitiveType
 	switch src {
 	case cty.Bool:
-		kind = CtyPrimitiveKind_CTY_PRIMITIVE_KIND_BOOL
+		kind = CtyPrimitiveType_KIND_BOOL
 	case cty.Number:
-		kind = CtyPrimitiveKind_CTY_PRIMITIVE_KIND_NUMBER
+		kind = CtyPrimitiveType_KIND_NUMBER
 	case cty.String:
-		kind = CtyPrimitiveKind_CTY_PRIMITIVE_KIND_STRING
-	}
-	if kind == CtyPrimitiveKind_CTY_PRIMITIVE_KIND_UNSPECIFIED {
+		kind = CtyPrimitiveType_KIND_STRING
+	default:
 		return nil, fmt.Errorf("unsupported primitive cty type: %s", src.FriendlyName())
 	}
+
 	return &CtyType{
 		Data: &CtyType_Primitive{
-			Primitive: &CtyPrimitiveType{
-				Kind: kind,
-			},
+			Primitive: kind,
 		},
 	}, nil
 }
 
-func encodeCtyListType(src cty.Type) (*CtyType, error) {
+func encodeCtySingleType(src cty.Type) (*CtyType, error) {
 	elemType, err := encodeCtyType(src.ElementType())
 	if err != nil {
 		return nil, err
 	}
-	return &CtyType{
-		Data: &CtyType_List{
-			List: &CtyListType{
-				Element: elemType,
-			},
-		},
-	}, nil
-}
 
-func encodeCtyMapType(src cty.Type) (*CtyType, error) {
-	elemType, err := encodeCtyType(src.ElementType())
-	if err != nil {
-		return nil, err
-	}
-	return &CtyType{
-		Data: &CtyType_Map{
-			Map: &CtyMapType{
-				Element: elemType,
+	switch {
+	case src.IsListType():
+		return &CtyType{
+			Data: &CtyType_List{
+				List: elemType,
 			},
-		},
-	}, nil
-}
-
-func encodeCtySetType(src cty.Type) (*CtyType, error) {
-	elemType, err := encodeCtyType(src.ElementType())
-	if err != nil {
-		return nil, err
-	}
-	return &CtyType{
-		Data: &CtyType_Set{
-			Set: &CtySetType{
-				Element: elemType,
+		}, nil
+	case src.IsMapType():
+		return &CtyType{
+			Data: &CtyType_Map{
+				Map: elemType,
 			},
-		},
-	}, nil
+		}, nil
+	case src.IsSetType():
+		return &CtyType{
+			Data: &CtyType_Set{
+				Set: elemType,
+			},
+		}, nil
+	default:
+		panic("unreachable")
+	}
 }
 
 func encodeCtyObjectType(src cty.Type) (*CtyType, error) {
-	srcAttrs := src.AttributeTypes()
-	dstAttrs := make(map[string]*CtyType, len(srcAttrs))
-	for k, v := range srcAttrs {
-		ct, err := encodeCtyType(v)
-		if err != nil {
-			return nil, err
-		}
-		dstAttrs[k] = ct
+	attrs, err := utils.MapMapErr(src.AttributeTypes(), encodeCtyType)
+	if err != nil {
+		return nil, err
 	}
+
 	return &CtyType{
 		Data: &CtyType_Object{
 			Object: &CtyObjectType{
-				Attrs: dstAttrs,
+				Attrs: attrs,
 			},
 		},
 	}, nil
 }
 
 func encodeCtyTupleType(src cty.Type) (*CtyType, error) {
-	srcElems := src.TupleElementTypes()
-	dstElems := make([]*CtyType, len(srcElems))
-	for i, v := range srcElems {
-		ct, err := encodeCtyType(v)
-		if err != nil {
-			return nil, err
-		}
-		dstElems[i] = ct
+	elements, err := utils.FnMapErr(src.TupleElementTypes(), encodeCtyType)
+	if err != nil {
+		return nil, err
 	}
 	return &CtyType{
 		Data: &CtyType_Tuple{
 			Tuple: &CtyTupleType{
-				Elements: dstElems,
+				Elements: elements,
 			},
 		},
 	}, nil

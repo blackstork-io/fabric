@@ -2,7 +2,6 @@ package definitions
 
 import (
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
@@ -69,7 +68,7 @@ func (t *titleInvocation) ParseInvocation(spec dataspec.RootSpec) (val cty.Value
 		},
 	}
 
-	val, diag := hcldec.Decode(body, spec.HcldecSpec(), nil)
+	val, diag := dataspec.Decode(body, spec, evaluation.EvalContext())
 	diags.Extend(diag)
 	return
 }

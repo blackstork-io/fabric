@@ -14,6 +14,7 @@ require (
 	github.com/hashicorp/go-plugin v1.6.0
 	github.com/hashicorp/hcl/v2 v2.20.0
 	github.com/itchyny/gojq v0.12.15
+	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/lmittmann/tint v1.0.4
 	github.com/mattn/go-colorable v0.1.13

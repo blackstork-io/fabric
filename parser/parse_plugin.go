@@ -27,7 +27,7 @@ func (db *DefinedBlocks) ParsePlugin(plugin *definitions.Plugin) (res *definitio
 			Summary:  "Circular reference detected",
 			Detail:   "Looped back to this block through reference chain:",
 			Subject:  plugin.DefRange().Ptr(),
-			Extra:    circularRefDetector.ExtraMarker,
+			Extra:    diagnostics.NewTracebackExtra(),
 		})
 		return
 	}
@@ -60,7 +60,7 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 	body := utils.ToHclsyntaxBody(plugin.Block.Body)
 
 	configAttr, _ := utils.Pop(body.Attributes, definitions.BlockKindConfig)
-	var configBlock *hclsyntax.Block
+	var configBlock, varsBlock *hclsyntax.Block
 
 	body.Blocks = slices.DeleteFunc(
 		body.Blocks,
@@ -96,13 +96,36 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 					break
 				}
 				res.Meta = &meta
-
+			case definitions.BlockKindVars:
+				if plugin.Kind() != definitions.BlockKindContent {
+					// pass vars to data block to deal with
+					return false
+				}
+				if varsBlock != nil {
+					diags.Append(&hcl.Diagnostic{
+						Severity: hcl.DiagWarning,
+						Summary:  "Vars block redefinition",
+						Detail: fmt.Sprintf(
+							"%s block allows at most one vars block, original vars block was defined at %s:%d",
+							plugin.Kind(), varsBlock.DefRange().Filename, varsBlock.DefRange().Start.Line,
+						),
+						Subject: blk.DefRange().Ptr(),
+						Context: plugin.Block.Body.Range().Ptr(),
+					})
+					break
+				}
+				varsBlock = blk
 			default:
 				return false
 			}
 			return true
 		},
 	)
+
+	localVar, _ := utils.Pop(body.Attributes, definitions.AttrLocalVar)
+	var diag diagnostics.Diag
+	res.Vars, diag = ParseVars(varsBlock, localVar)
+	diags.Extend(diag)
 
 	invocation := &evaluation.BlockInvocation{
 		Body:            body,
@@ -129,6 +152,8 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 		if res.BlockName == "" {
 			res.BlockName = baseEval.BlockName
 		}
+
+		res.Vars = res.Vars.MergeWithBaseVars(baseEval.Vars)
 
 		updateRefBody(invocation.Body, baseEval.GetBlockInvocation().Body)
 
@@ -255,7 +280,7 @@ func (db *DefinedBlocks) parseRefBase(plugin *definitions.Plugin, base hcl.Expre
 			Summary:  "Circular reference detected",
 			Detail:   "Looped back to this block through reference chain:",
 			Subject:  plugin.DefRange().Ptr(),
-			Extra:    circularRefDetector.ExtraMarker,
+			Extra:    diagnostics.NewTracebackExtra(),
 		})
 		return
 	}
@@ -282,18 +307,12 @@ func hclBlockKey(b *hclsyntax.Block) string {
 
 func updateRefBody(ref, base *hclsyntax.Body) {
 	for k, v := range base.Attributes {
-		switch k {
-		case definitions.AttrRefBase, definitions.BlockKindConfig:
+		if _, found := ref.Attributes[k]; found {
 			continue
-		default:
-			if _, found := ref.Attributes[k]; found {
-				continue
-			}
-			ref.Attributes[k] = v
 		}
+		ref.Attributes[k] = v
 	}
-	refBlocks := make(map[string]struct{}, len(ref.Blocks)+1)
-	refBlocks[definitions.BlockKindConfig] = struct{}{} // to prevent us from copying the anonymous config block
+	refBlocks := make(map[string]struct{}, len(ref.Blocks))
 	for _, b := range ref.Blocks {
 		refBlocks[hclBlockKey(b)] = struct{}{}
 	}

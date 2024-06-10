@@ -8,6 +8,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/encapsulator"
 )
 
 type Section struct {
@@ -21,6 +22,7 @@ type ParsedSection struct {
 	Meta    *MetaBlock
 	Title   *ParsedContent
 	Content []*ParsedContent
+	Vars    *ParsedVars
 }
 
 func (s ParsedSection) Name() string {
@@ -52,10 +54,10 @@ func (s *Section) GetHCLBlock() *hcl.Block {
 	return s.Block.AsHCLBlock()
 }
 
-var ctySectionType = capsuleTypeFor[Section]()
+var ctySectionType = encapsulator.NewEncoder[Section]("section", nil)
 
 func (*Section) CtyType() cty.Type {
-	return ctySectionType
+	return ctySectionType.CtyType()
 }
 
 func DefineSection(block *hclsyntax.Block, atTopLevel bool) (section *Section, diags diagnostics.Diag) {

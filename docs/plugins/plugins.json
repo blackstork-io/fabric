@@ -98,7 +98,8 @@
         "name": "table",
         "type": "content-provider",
         "arguments": [
-          "columns"
+          "columns",
+          "rows_var"
         ]
       },
       {

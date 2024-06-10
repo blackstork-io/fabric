@@ -8,6 +8,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugincty"
 )
 
 func makeInlineDataSource() *plugin.DataSource {
@@ -44,5 +45,6 @@ func fetchInlineData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 			Detail:   "inline data must be a map",
 		}}
 	}
-	return plugin.ConvertCtyToData(params.Args), nil
+
+	return plugincty.Encode(params.Args)
 }

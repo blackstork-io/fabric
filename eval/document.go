@@ -14,6 +14,7 @@ import (
 
 type Document struct {
 	Meta          *definitions.MetaBlock
+	Vars          *definitions.ParsedVars
 	DataBlocks    []*PluginDataAction
 	ContentBlocks []*Content
 	PublishBlocks []*PluginPublishAction
@@ -56,10 +57,18 @@ func (doc *Document) RenderContent(ctx context.Context) (plugin.Content, plugin.
 	if doc.Meta != nil {
 		docData[definitions.BlockKindMeta] = doc.Meta.AsJQData()
 	}
-	dataCtx := plugin.MapData{
+	// static portion of the data context for this document
+	// will never change, all changes are made to the clone of this map
+	docDataCtx := plugin.MapData{
 		definitions.BlockKindData:     data,
 		definitions.BlockKindDocument: docData,
 	}
+	diag := ApplyVars(ctx, doc.Vars, docDataCtx)
+
+	if diags.Extend(diag) {
+		return nil, nil, diags
+	}
+
 	result := plugin.NewSection(0)
 	// create a position map for content blocks
 	posMap := make(map[int]uint32)
@@ -81,11 +90,9 @@ func (doc *Document) RenderContent(ctx context.Context) (plugin.Content, plugin.
 	// execute content blocks based on the invocation order
 	for _, idx := range invokeList {
 		// clone the data context for each content block
-		dataCtx = maps.Clone(dataCtx)
+		dataCtx := maps.Clone(docDataCtx)
 		// set the current content to the data context
-		docData[definitions.BlockKindContent] = result.AsData()
-		dataCtx[definitions.BlockKindDocument] = docData
-		delete(dataCtx, definitions.BlockKindSection)
+		dataCtx[definitions.BlockKindDocument].(plugin.MapData)[definitions.BlockKindContent] = result.AsData()
 		// TODO: if section, set section
 
 		// execute the content block
@@ -126,6 +133,7 @@ func (doc *Document) Publish(ctx context.Context) (plugin.Content, plugin.Data, 
 func LoadDocument(plugins Plugins, node *definitions.ParsedDocument) (_ *Document, diags diagnostics.Diag) {
 	block := Document{
 		Meta: node.Meta,
+		Vars: node.Vars,
 	}
 	dataNames := make(map[[2]string]struct{})
 	for _, child := range node.Data {

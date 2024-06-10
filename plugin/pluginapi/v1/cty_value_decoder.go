@@ -4,6 +4,10 @@ import (
 	"fmt"
 
 	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/convert"
+
+	"github.com/blackstork-io/fabric/pkg/utils"
+	"github.com/blackstork-io/fabric/plugin"
 )
 
 func decodeCtyValue(src *CtyValue) (cty.Value, error) {
@@ -17,79 +21,65 @@ func decodeCtyValue(src *CtyValue) (cty.Value, error) {
 	switch {
 	case t.IsPrimitiveType() && src.GetPrimitive() != nil:
 		return decodeCtyPrimitiveValue(src.GetPrimitive())
-	case t.IsListType() && src.GetList() != nil:
-		return decodeCtyListValue(src.GetList())
-	case t.IsMapType() && src.GetMap() != nil:
-		return decodeCtyMapValue(src.GetMap())
-	case t.IsSetType() && src.GetSet() != nil:
-		return decodeCtySetValue(src.GetSet())
-	case t.IsObjectType() && src.GetObject() != nil:
-		return decodeCtyObjectValue(src.GetObject())
-	case t.IsTupleType() && src.GetTuple() != nil:
-		return decodeCtyTupleValue(src.GetTuple())
+	case t.IsObjectType() || t.IsMapType():
+		return decodeCtyMapLike(t, src.GetMapLike().GetElements())
+	case t.IsListType() || t.IsSetType() || t.IsTupleType():
+		return decodeCtyListLike(t, src.GetListLike().GetElements())
+	case t.IsCapsuleType():
+		data := src.GetPluginData()
+		if data == nil {
+			return cty.NilVal, fmt.Errorf("unsupported serialization %T for cty type: %s", src.GetData(), t.FriendlyName())
+		}
+		pluginData := plugin.EncapsulatedData.ValToCty(decodeData(data))
+		if plugin.EncapsulatedData.CtyTypeEqual(t) {
+			// we wanted to get plugin data
+			return pluginData, nil
+		}
+		// plugin data was only used for transport, convert to the desired type
+		conv, err := convert.Convert(pluginData, t)
+		if err != nil {
+			return cty.NilVal, err
+		}
+		return conv, nil
+
 	default:
+		return cty.NilVal, fmt.Errorf("unsupported cty type: %s", t.FriendlyName())
+	}
+}
+
+func decodeCtyMapLike(t cty.Type, src map[string]*CtyValue) (cty.Value, error) {
+	if src == nil {
 		return cty.NullVal(t), nil
 	}
+	elements, err := utils.MapMapErr(src, decodeCtyValue)
+	if err != nil {
+		return cty.NilVal, err
+	}
+	if t.IsObjectType() {
+		return cty.ObjectVal(elements), nil
+	} else if t.IsMapType() {
+		return cty.MapVal(elements), nil
+	}
+	return cty.NilVal, fmt.Errorf("Unsupported cty map-like type: %s", t.FriendlyName())
 }
 
-func decodeCtyTupleValue(src *CtyTupleValue) (cty.Value, error) {
-	elements := make([]cty.Value, len(src.GetElements()))
-	var err error
-	for i, elem := range src.GetElements() {
-		elements[i], err = decodeCtyValue(elem)
-		if err != nil {
-			return cty.NilVal, err
-		}
+func decodeCtyListLike(t cty.Type, src []*CtyValue) (cty.Value, error) {
+	if src == nil {
+		return cty.NullVal(t), nil
 	}
-	return cty.TupleVal(elements), nil
-}
-
-func decodeCtyObjectValue(src *CtyObjectValue) (cty.Value, error) {
-	attrs := make(map[string]cty.Value, len(src.GetAttrs()))
-	var err error
-	for k, v := range src.GetAttrs() {
-		attrs[k], err = decodeCtyValue(v)
-		if err != nil {
-			return cty.NilVal, err
-		}
+	elements, err := utils.FnMapErr(src, decodeCtyValue)
+	if err != nil {
+		return cty.NilVal, err
 	}
-	return cty.ObjectVal(attrs), nil
-}
-
-func decodeCtySetValue(src *CtySetValue) (cty.Value, error) {
-	elements := make([]cty.Value, len(src.GetElements()))
-	var err error
-	for i, elem := range src.GetElements() {
-		elements[i], err = decodeCtyValue(elem)
-		if err != nil {
-			return cty.NilVal, err
-		}
+	switch {
+	case t.IsListType():
+		return cty.ListVal(elements), nil
+	case t.IsSetType():
+		return cty.SetVal(elements), nil
+	case t.IsTupleType():
+		return cty.TupleVal(elements), nil
 	}
-	return cty.SetVal(elements), nil
-}
-
-func decodeCtyMapValue(src *CtyMapValue) (cty.Value, error) {
-	elements := make(map[string]cty.Value, len(src.GetElements()))
-	var err error
-	for k, v := range src.GetElements() {
-		elements[k], err = decodeCtyValue(v)
-		if err != nil {
-			return cty.NilVal, err
-		}
-	}
-	return cty.MapVal(elements), nil
-}
-
-func decodeCtyListValue(src *CtyListValue) (cty.Value, error) {
-	elements := make([]cty.Value, len(src.GetElements()))
-	var err error
-	for i, elem := range src.GetElements() {
-		elements[i], err = decodeCtyValue(elem)
-		if err != nil {
-			return cty.NilVal, err
-		}
-	}
-	return cty.ListVal(elements), nil
+	return cty.NilVal, fmt.Errorf("Unsupported cty list-like type: %s", t.FriendlyName())
 }
 
 func decodeCtyPrimitiveValue(src *CtyPrimitiveValue) (cty.Value, error) {

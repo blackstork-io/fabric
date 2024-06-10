@@ -31,7 +31,7 @@ func (b *BlockInvocation) DefRange() hcl.Range {
 
 // ParseInvocation implements Invocation.
 func (b *BlockInvocation) ParseInvocation(spec dataspec.RootSpec) (cty.Value, diagnostics.Diag) {
-	return dataspec.Decode(b.Body, spec, NewEvalContext())
+	return dataspec.Decode(b.Body, spec, EvalContext())
 }
 
 // Range implements Invocation.

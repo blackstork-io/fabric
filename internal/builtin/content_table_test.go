@@ -35,123 +35,118 @@ func (s *TableGeneratorTestSuite) TestSchema() {
 	s.NotNil(s.schema.ContentFunc)
 }
 
-func (s *TableGeneratorTestSuite) TestNilQueryResult() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"columns": cty.ListVal([]cty.Value{
-			cty.ObjectVal(map[string]cty.Value{
-				"header": cty.StringVal("{{.col_prefix}} Name"),
-				"value":  cty.StringVal("{{.name}}"),
-			}),
-			cty.ObjectVal(map[string]cty.Value{
-				"header": cty.StringVal("{{.col_prefix}} Age"),
-				"value":  cty.StringVal("{{.age}}"),
-			}),
-		}),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+func (s *TableGeneratorTestSuite) TestNilRowVars() {
+	val := `
+	columns = [
+		{
+			header = "{{.col_prefix}} Name"
+			value  = "{{.name}}"
+		},
+		{
+			header = "{{.col_prefix}} Age"
+			value  = "{{.age}}"
+		}
+	]
+	rows_var = null
+	`
+	dataCtx := plugin.MapData{
+		"col_prefix": plugin.StringData("User"),
+	}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, val, dataCtx, diagtest.Asserts{})
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"col_prefix":   plugin.StringData("User"),
-			"query_result": nil,
-		},
+		Args:        args,
+		DataContext: dataCtx,
 	})
+	diagtest.AssertNoErrors(s.T(), diags, nil)
 	s.Equal("|User Name|User Age|\n|---|---|\n", mdprint.PrintString(result.Content))
 	s.Nil(diags)
 }
 
 func (s *TableGeneratorTestSuite) TestEmptyQueryResult() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"columns": cty.ListVal([]cty.Value{
-			cty.ObjectVal(map[string]cty.Value{
-				"header": cty.StringVal("{{.col_prefix}} Name"),
-				"value":  cty.StringVal("{{.name}}"),
-			}),
-			cty.ObjectVal(map[string]cty.Value{
-				"header": cty.StringVal("{{.col_prefix}} Age"),
-				"value":  cty.StringVal("{{.age}}"),
-			}),
-		}),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	val := `
+	columns = [
+		{
+			header = "{{.col_prefix}} Name"
+			value  = "{{.name}}"
+		},
+		{
+			header = "{{.col_prefix}} Age"
+			value  = "{{.age}}"
+		}
+	]
+	rows_var = null
+	`
+
+	dataCtx := plugin.MapData{
+		"col_prefix":   plugin.StringData("User"),
+		"query_result": plugin.ListData{},
+	}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, val, dataCtx, diagtest.Asserts{})
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"col_prefix":   plugin.StringData("User"),
-			"query_result": plugin.ListData{},
-		},
+		Args:        args,
+		DataContext: dataCtx,
 	})
 	s.Equal("|User Name|User Age|\n|---|---|\n", mdprint.PrintString(result.Content))
 	s.Nil(diags)
 }
 
 func (s *TableGeneratorTestSuite) TestBasic() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"columns": cty.ListVal([]cty.Value{
-			cty.ObjectVal(map[string]cty.Value{
-				"header": cty.StringVal("{{.col_prefix}} Name"),
-				"value":  cty.StringVal("{{.name}}"),
-			}),
-			cty.ObjectVal(map[string]cty.Value{
-				"header": cty.StringVal("{{.col_prefix}} Age"),
-				"value":  cty.StringVal("{{.age}}"),
-			}),
-		}),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	val := `
+	columns = [
+		{
+			header = "{{.col_prefix}} Name"
+			value  = "{{.row.value.name}}"
+		},
+		{
+			header = "{{.col_prefix}} Age"
+			value  = "{{.row.value.age}}"
+		}
+	]
+	rows_var = [
+		{name = "John", age = 42},
+		{name = "Jane", age = 43}
+	]
+	`
+	dataCtx := plugin.MapData{
+		"col_prefix": plugin.StringData("User"),
+	}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, val, dataCtx, diagtest.Asserts{})
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"col_prefix": plugin.StringData("User"),
-			"query_result": plugin.ListData{
-				plugin.MapData{
-					"name": plugin.StringData("John"),
-					"age":  plugin.NumberData(42),
-				},
-				plugin.MapData{
-					"name": plugin.StringData("Jane"),
-					"age":  plugin.NumberData(43),
-				},
-			},
-		},
+		Args:        args,
+		DataContext: dataCtx,
 	})
 	s.Equal("|User Name|User Age|\n|---|---|\n|John|42|\n|Jane|43|\n", mdprint.PrintString(result.Content))
 	s.Nil(diags)
 }
 
 func (s *TableGeneratorTestSuite) TestSprigTemplate() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"columns": cty.ListVal([]cty.Value{
-			cty.ObjectVal(map[string]cty.Value{
-				"header": cty.StringVal("{{.col_prefix | upper}} Name"),
-				"value":  cty.StringVal("{{.name | upper}}"),
-			}),
-			cty.ObjectVal(map[string]cty.Value{
-				"header": cty.StringVal("{{.col_prefix}} Age"),
-				"value":  cty.StringVal("{{.age}}"),
-			}),
-		}),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	val := `
+	columns = [
+		{
+			header = "{{.col_prefix | upper}} Name"
+			value  = "{{.row.value.name | upper}}"
+		},
+		{
+			header = "{{.col_prefix}} Age"
+			value  = "{{.row.value.age}}"
+		}
+	]
+	rows_var = [
+		{name = "John", age = 42},
+		{name = "Jane", age = 43}
+	]
+	`
+	dataCtx := plugin.MapData{
+		"col_prefix": plugin.StringData("User"),
+	}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, val, dataCtx, diagtest.Asserts{})
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"col_prefix": plugin.StringData("User"),
-			"query_result": plugin.ListData{
-				plugin.MapData{
-					"name": plugin.StringData("John"),
-					"age":  plugin.NumberData(42),
-				},
-				plugin.MapData{
-					"name": plugin.StringData("Jane"),
-					"age":  plugin.NumberData(43),
-				},
-			},
-		},
+		Args:        args,
+		DataContext: dataCtx,
 	})
 	s.Equal("|USER Name|User Age|\n|---|---|\n|JOHN|42|\n|JANE|43|\n", mdprint.PrintString(result.Content))
 	s.Nil(diags)
@@ -263,33 +258,30 @@ func (s *TableGeneratorTestSuite) TestNilColumns() {
 }
 
 func (s *TableGeneratorTestSuite) TestEmptyColumns() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"columns": cty.ListValEmpty(cty.Object(map[string]cty.Type{})),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
-	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"col_prefix": plugin.StringData("User"),
-			"query_result": plugin.ListData{
-				plugin.MapData{
-					"name": plugin.StringData("John"),
-					"age":  plugin.NumberData(42),
-				},
-				plugin.MapData{
-					"name": plugin.StringData("Jane"),
-					"age":  plugin.NumberData(43),
-				},
+	val := `
+	columns = []
+	rows_var = [
+		{name = "John", age = 42},
+		{name = "Jane", age = 43}
+	]
+	`
+	dataCtx := plugin.MapData{
+		"col_prefix": plugin.StringData("User"),
+		"query_result": plugin.ListData{
+			plugin.MapData{
+				"name": plugin.StringData("John"),
+				"age":  plugin.NumberData(42),
+			},
+			plugin.MapData{
+				"name": plugin.StringData("Jane"),
+				"age":  plugin.NumberData(43),
 			},
 		},
-	})
-	s.Nil(result)
-	s.Equal(diagnostics.Diag{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "columns must not be empty",
-	}}, diags)
+	}
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, val, dataCtx, diagtest.Asserts{{
+		diagtest.IsError,
+		diagtest.DetailContains("length", `"columns"`, ">= 1"),
+	}})
 }
 
 func (s *TableGeneratorTestSuite) TestInvalidHeaderTemplate() {

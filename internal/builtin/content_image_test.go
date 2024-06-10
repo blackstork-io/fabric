@@ -37,7 +37,7 @@ func (s *ImageGeneratorTestSuite) TestMissingImageSource() {
 		src = null
 		alt = null
 		`,
-		diagtest.Asserts{{
+		nil, diagtest.Asserts{{
 			diagtest.IsError,
 			diagtest.SummaryContains("Attribute must be non-null"),
 		}})
@@ -48,7 +48,7 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceEmpty() {
 		src = ""
 		alt = null
 		`,
-		diagtest.Asserts{{
+		nil, diagtest.Asserts{{
 			diagtest.IsError,
 			diagtest.DetailContains(`The length`, `"src"`, `>= 1`),
 		}})
@@ -58,7 +58,7 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceValid() {
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		src = "https://example.com/image.png"
 		`,
-		nil)
+		nil, nil)
 
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
@@ -73,7 +73,7 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceValidWithAlt() {
 		src = "https://example.com/image.png"
 		alt = "alt text"
 		`,
-		nil)
+		nil, nil)
 
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
@@ -87,7 +87,7 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceTemplateRender() {
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		src = "./{{ add 1 2 }}.png"
 		`,
-		nil)
+		nil, nil)
 
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
@@ -102,7 +102,7 @@ func (s *ImageGeneratorTestSuite) TestCallImageAltTemplateRender() {
 		src = "./{{ add 1 2 }}.png"
 		alt = "{{ add 2 3 }} alt text"
 		`,
-		nil)
+		nil, nil)
 
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{

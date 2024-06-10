@@ -9,7 +9,7 @@ fabric {
 
 document "example" {
     title = "CVE-2024-29018 NIST NVD CVE vulnerability"
-   
+
     data nist_nvd_cves "cves" {
         cve_id = "CVE-2024-29018"
     }
@@ -18,7 +18,7 @@ document "example" {
         title = "Description"
          content openai_text {
             config {
-                api_key = from_env_variable("OPENAI_API_KEY")
+                api_key = env.OPENAI_API_KEY
             }
             query = ".data.nist_nvd_cves.cves"
             prompt = "Short description of NIST CVE vulnerability."
@@ -28,11 +28,11 @@ document "example" {
         title = "What to do?"
          content openai_text {
             config {
-                api_key = from_env_variable("OPENAI_API_KEY")
+                api_key = env.OPENAI_API_KEY
             }
             query = ".data.nist_nvd_cves.cves"
             prompt = "Step by step guide how to mitigate NIST CVE vulnerability."
         }
     }
-   
+
 }

@@ -4,162 +4,157 @@ import (
 	"fmt"
 
 	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/convert"
+
+	"github.com/blackstork-io/fabric/eval/dataquery"
+	"github.com/blackstork-io/fabric/pkg/ctyencoder"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin"
 )
 
+var grpcCtyValueDecoder = ctyencoder.Encoder[*CtyValue]{
+	EncodeVal: func(val cty.Value) (res *CtyValue, diags diagnostics.Diag) {
+		var err error
+		if val == cty.NilVal {
+			return nil, nil
+		}
+		ty := val.Type()
+		if ty.IsPrimitiveType() {
+			res, err = encodeCtyPrimitiveValue(val)
+			diags.AppendErr(err, "Can't encode a value")
+			return
+		}
+		if dataquery.DelayedEvalType.CtyTypeEqual(ty) {
+			convVal, err := convert.Convert(val, plugin.EncapsulatedData.CtyType())
+			if diags.AppendErr(err, "Can't encode a value") {
+				return
+			}
+			res = &CtyValue{
+				Type: &CtyType{
+					Data: &CtyType_Encapsulated{Encapsulated: CtyCapsuleType_CAPSULE_DELAYED_EVAL},
+				},
+				Data: &CtyValue_PluginData{
+					PluginData: encodeData(*plugin.EncapsulatedData.MustFromCty(convVal)),
+				},
+			}
+			return
+		}
+		diags.Add("Unsupported value", "unsupported cty value: "+ty.FriendlyName())
+		return
+	},
+	EncodePluginData: func(val plugin.Data) (*CtyValue, diagnostics.Diag) {
+		return &CtyValue{
+			Type: &CtyType{
+				Data: &CtyType_Encapsulated{Encapsulated: CtyCapsuleType_CAPSULE_PLUGIN_DATA},
+			},
+			Data: &CtyValue_PluginData{
+				PluginData: encodeData(val),
+			},
+		}, nil
+	},
+	MapEncoder:    newMapEncoder,
+	ObjectEncoder: newMapEncoder,
+	ListEncoder:   newListEncoder,
+	TupleEncoder:  newListEncoder,
+	SetEncoder:    newListEncoder,
+}
+
+func newMapEncoder(val cty.Value) ctyencoder.CollectionEncoder[*CtyValue] {
+	ty, err := encodeCtyType(val.Type())
+	me := &mapEncoder{
+		ty:  ty,
+		err: err,
+	}
+	if err == nil && !val.IsNull() {
+		me.values = make(map[string]*CtyValue, val.LengthInt())
+	}
+	return me
+}
+
+type mapEncoder struct {
+	ty     *CtyType
+	err    error
+	values map[string]*CtyValue
+}
+
+// Add implements ctyencoder.CollectionEncoder.
+func (me *mapEncoder) Add(k cty.Value, v *CtyValue) diagnostics.Diag {
+	if me.values == nil {
+		return nil
+	}
+	me.values[k.AsString()] = v
+	return nil
+}
+
+// Encode implements ctyencoder.CollectionEncoder.
+func (me *mapEncoder) Encode() (*CtyValue, diagnostics.Diag) {
+	if me.err != nil {
+		return nil, diagnostics.FromErr(me.err, "Can't encode a value")
+	}
+	val := &CtyValue{
+		Type: me.ty,
+	}
+	if me.values == nil {
+		return val, nil
+	}
+	val.Data = &CtyValue_MapLike{
+		MapLike: &CtyMapLike{
+			Elements: me.values,
+		},
+	}
+	return val, nil
+}
+
+func newListEncoder(val cty.Value) ctyencoder.CollectionEncoder[*CtyValue] {
+	ty, err := encodeCtyType(val.Type())
+	le := &listEncoder{
+		ty:  ty,
+		err: err,
+	}
+	if err == nil && !val.IsNull() {
+		le.values = make([]*CtyValue, val.LengthInt())
+	}
+	return le
+}
+
+type listEncoder struct {
+	ty     *CtyType
+	err    error
+	values []*CtyValue
+}
+
+func (le *listEncoder) Add(_ cty.Value, v *CtyValue) diagnostics.Diag {
+	if le.values == nil {
+		return nil
+	}
+	le.values = append(le.values, v)
+	return nil
+}
+
+func (le *listEncoder) Encode() (*CtyValue, diagnostics.Diag) {
+	if le.err != nil {
+		return nil, diagnostics.FromErr(le.err, "Can't encode a value")
+	}
+	val := &CtyValue{
+		Type: le.ty,
+	}
+	if le.values == nil {
+		return val, nil
+	}
+	val.Data = &CtyValue_ListLike{
+		ListLike: &CtyListLike{
+			Elements: le.values,
+		},
+	}
+	return val, nil
+}
+
 func encodeCtyValue(src cty.Value) (*CtyValue, error) {
-	if src == cty.NilVal {
-		return nil, nil
+	res, diags := grpcCtyValueDecoder.Encode(nil, src)
+	if diags.HasErrors() {
+		return nil, diags
 	}
-	switch {
-	case src.Type().IsPrimitiveType():
-		return encodeCtyPrimitiveValue(src)
-	case src.Type().IsListType():
-		return encodeCtyListValue(src)
-	case src.Type().IsMapType():
-		return encodeCtyMapValue(src)
-	case src.Type().IsSetType():
-		return encodeCtySetValue(src)
-	case src.Type().IsObjectType():
-		return encodeCtyObjectValue(src)
-	case src.Type().IsTupleType():
-		return encodeCtyTupleValue(src)
-	default:
-		return nil, fmt.Errorf("unsupported cty value: %s", src.Type().FriendlyName())
-	}
-}
-
-func encodeCtySetValue(src cty.Value) (*CtyValue, error) {
-	t, err := encodeCtyType(src.Type())
-	if err != nil {
-		return nil, err
-	}
-	dst := CtyValue{
-		Type: t,
-	}
-	if src.IsNull() {
-		return &dst, nil
-	}
-	value := CtySetValue{}
-	for it := src.ElementIterator(); it.Next(); {
-		_, v := it.Element()
-		elem, err := encodeCtyValue(v)
-		if err != nil {
-			return nil, err
-		}
-		value.Elements = append(value.Elements, elem)
-	}
-	dst.Data = &CtyValue_Set{
-		Set: &value,
-	}
-	return &dst, nil
-}
-
-func encodeCtyTupleValue(src cty.Value) (*CtyValue, error) {
-	t, err := encodeCtyType(src.Type())
-	if err != nil {
-		return nil, err
-	}
-	dst := CtyValue{
-		Type: t,
-	}
-	if src.IsNull() {
-		return &dst, nil
-	}
-	value := CtyTupleValue{}
-	for it := src.ElementIterator(); it.Next(); {
-		_, v := it.Element()
-		elem, err := encodeCtyValue(v)
-		if err != nil {
-			return nil, err
-		}
-		value.Elements = append(value.Elements, elem)
-	}
-	dst.Data = &CtyValue_Tuple{
-		Tuple: &value,
-	}
-	return &dst, nil
-}
-
-func encodeCtyMapValue(src cty.Value) (*CtyValue, error) {
-	t, err := encodeCtyType(src.Type())
-	if err != nil {
-		return nil, err
-	}
-	dst := CtyValue{
-		Type: t,
-	}
-	if src.IsNull() {
-		return &dst, nil
-	}
-	value := CtyMapValue{
-		Elements: make(map[string]*CtyValue),
-	}
-	for it := src.ElementIterator(); it.Next(); {
-		k, v := it.Element()
-		elem, err := encodeCtyValue(v)
-		if err != nil {
-			return nil, err
-		}
-		value.Elements[k.AsString()] = elem
-	}
-	dst.Data = &CtyValue_Map{
-		Map: &value,
-	}
-	return &dst, nil
-}
-
-func encodeCtyObjectValue(src cty.Value) (*CtyValue, error) {
-	t, err := encodeCtyType(src.Type())
-	if err != nil {
-		return nil, err
-	}
-	dst := CtyValue{
-		Type: t,
-	}
-	if src.IsNull() {
-		return &dst, nil
-	}
-	value := CtyObjectValue{
-		Attrs: make(map[string]*CtyValue),
-	}
-	for it := src.ElementIterator(); it.Next(); {
-		k, v := it.Element()
-		elem, err := encodeCtyValue(v)
-		if err != nil {
-			return nil, err
-		}
-		value.Attrs[k.AsString()] = elem
-	}
-	dst.Data = &CtyValue_Object{
-		Object: &value,
-	}
-	return &dst, nil
-}
-
-func encodeCtyListValue(src cty.Value) (*CtyValue, error) {
-	t, err := encodeCtyType(src.Type())
-	if err != nil {
-		return nil, err
-	}
-	dst := CtyValue{
-		Type: t,
-	}
-	if src.IsNull() {
-		return &dst, nil
-	}
-	value := CtyListValue{}
-	for it := src.ElementIterator(); it.Next(); {
-		_, v := it.Element()
-		elem, err := encodeCtyValue(v)
-		if err != nil {
-			return nil, err
-		}
-		value.Elements = append(value.Elements, elem)
-	}
-	dst.Data = &CtyValue_List{
-		List: &value,
-	}
-	return &dst, nil
+	return res, nil
 }
 
 func encodeCtyPrimitiveValue(src cty.Value) (*CtyValue, error) {

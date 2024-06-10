@@ -148,12 +148,11 @@ type AttrSpec struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Name       string    `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Type       *CtyType  `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
-	DefaultVal *CtyValue `protobuf:"bytes,3,opt,name=default_val,json=defaultVal,proto3" json:"default_val,omitempty"`
-	ExampleVal *CtyValue `protobuf:"bytes,4,opt,name=example_val,json=exampleVal,proto3" json:"example_val,omitempty"`
-	Doc        string    `protobuf:"bytes,5,opt,name=doc,proto3" json:"doc,omitempty"`
-	// bool     required    = 6; // made obsolete by constraints system
+	Name         string      `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Type         *CtyType    `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	DefaultVal   *CtyValue   `protobuf:"bytes,3,opt,name=default_val,json=defaultVal,proto3" json:"default_val,omitempty"`
+	ExampleVal   *CtyValue   `protobuf:"bytes,4,opt,name=example_val,json=exampleVal,proto3" json:"example_val,omitempty"`
+	Doc          string      `protobuf:"bytes,5,opt,name=doc,proto3" json:"doc,omitempty"`
 	Constraints  uint32      `protobuf:"varint,7,opt,name=constraints,proto3" json:"constraints,omitempty"`
 	OneOf        []*CtyValue `protobuf:"bytes,8,rep,name=one_of,json=oneOf,proto3" json:"one_of,omitempty"`
 	MinInclusive *CtyValue   `protobuf:"bytes,9,opt,name=min_inclusive,json=minInclusive,proto3" json:"min_inclusive,omitempty"`

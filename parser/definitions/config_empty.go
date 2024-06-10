@@ -34,7 +34,7 @@ func (c *ConfigEmpty) ParseConfig(spec dataspec.RootSpec) (val cty.Value, diags 
 	}
 
 	var diag diagnostics.Diag
-	val, diag = dataspec.Decode(emptyBody, spec, nil)
+	val, diag = dataspec.Decode(emptyBody, spec, evaluation.EvalContext())
 	for _, d := range diag {
 		d.Summary = fmt.Sprintf("Missing required configuration: %s", d.Summary)
 	}

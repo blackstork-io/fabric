@@ -10,6 +10,7 @@ type ParsedPlugin struct {
 	Meta       *MetaBlock
 	Config     evaluation.Configuration
 	Invocation evaluation.Invocation
+	Vars       *ParsedVars
 }
 
 func (pe *ParsedPlugin) GetBlockInvocation() *evaluation.BlockInvocation {

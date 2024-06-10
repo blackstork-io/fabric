@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
@@ -12,11 +13,12 @@ import (
 
 func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definitions.ParsedDocument, diags diagnostics.Diag) {
 	doc = &definitions.ParsedDocument{}
-	if title := d.Block.Body.Attributes["title"]; title != nil {
+	if title := d.Block.Body.Attributes[definitions.AttrTitle]; title != nil {
 		doc.Content = append(doc.Content, definitions.NewTitle(title, db.DefaultConfig))
 	}
 
 	var origMeta *hcl.Range
+	var varsBlock *hclsyntax.Block
 
 	for _, block := range d.Block.Body.Blocks {
 		switch block.Type {
@@ -41,7 +43,21 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 			default:
 				panic("must be exhaustive")
 			}
-
+		case definitions.BlockKindVars:
+			if varsBlock != nil {
+				diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "Vars block redefinition",
+					Detail: fmt.Sprintf(
+						"%s block allows at most one vars block, original vars block was defined at %s:%d",
+						d.Block.Type, varsBlock.DefRange().Filename, varsBlock.DefRange().Start.Line,
+					),
+					Subject: block.DefRange().Ptr(),
+					Context: d.Block.Body.Range().Ptr(),
+				})
+				continue
+			}
+			varsBlock = block
 		case definitions.BlockKindMeta:
 			if origMeta != nil {
 				diags.Append(&hcl.Diagnostic{
@@ -83,6 +99,7 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 					definitions.BlockKindContent,
 					definitions.BlockKindData,
 					definitions.BlockKindMeta,
+					definitions.BlockKindVars,
 					definitions.BlockKindSection,
 					definitions.BlockKindPublish,
 				},
@@ -90,5 +107,9 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 			continue
 		}
 	}
+
+	var diag diagnostics.Diag
+	doc.Vars, diag = ParseVars(varsBlock, d.Block.Body.Attributes[definitions.AttrLocalVar])
+	diags.Extend(diag)
 	return
 }

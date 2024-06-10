@@ -4,9 +4,9 @@ package pluginapi.v1;
 
 message Data {
     oneof data {
-        StringData string_val = 1;
-        NumberData number_val = 2;
-        BoolData   bool_val   = 3;
+        string string_val = 1;
+        double number_val = 2;
+        bool   bool_val   = 3;
         ListData   list_val   = 4;
         MapData    map_val    = 5;
     };
@@ -18,16 +18,4 @@ message ListData {
 
 message MapData {
     map<string, Data> value = 1;
-}
-
-message StringData {
-    string value = 1;
-}
-
-message NumberData {
-    double value = 1;
-}
-
-message BoolData {
-    bool value = 1;
 }

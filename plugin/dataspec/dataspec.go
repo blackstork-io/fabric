@@ -1,4 +1,4 @@
-// Documentable wrapper tupes form
+// Documentable wrapper types form
 package dataspec
 
 import (
@@ -72,7 +72,7 @@ type Spec interface {
 	ValidateSpec() diagnostics.Diag
 }
 
-// Reperesents types that could be included as children in Object.
+// Represents types that could be included as children in Object.
 type ObjectSpecChild interface {
 	Spec
 	KeyForObjectSpec() string
