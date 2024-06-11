@@ -36,7 +36,7 @@ func init() {
 var renderCmd = &cobra.Command{
 	Use:   "render TARGET",
 	Short: "Render the document",
-	Long:  `Render the specified document into Markdown and output it either to stdout or to a file`,
+	Long:  `Render the specified document and either publish it or output it to stdout.`,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		target := strings.TrimSpace(args[0])
