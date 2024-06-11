@@ -94,11 +94,11 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 		if err != nil {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,
-				Summary:  "Failed to render path value",
+				Summary:  "Failed to render a path value",
 				Detail:   err.Error(),
 			}}
 		}
-		logger.InfoContext(ctx, "Writing to file", "path", path)
+		logger.InfoContext(ctx, "Writing to a file", "path", path)
 		dir := filepath.Dir(path)
 		err = os.MkdirAll(dir, 0o755)
 		if err != nil {
