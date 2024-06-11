@@ -7,13 +7,13 @@ weight: 10
 
 # Syntax
 
-This page describes the native syntax of the Fabric Configuration Language (FCL). Leveraging the foundation laid by the [HashiCorp Configuration Language](https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md) (HCL), FCL aligns itself with a syntax favored by numerous applications for its simplicity, readability, and clarity.
+This page describes the native syntax of the Fabric Configuration Language (FCL). Building on the foundation laid by the [HashiCorp Configuration Language](https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md) (HCL), FCL defines a simple, readable, and clear syntax for document templates.
 
-The syntax of the Fabric language revolves around two fundamental components: arguments and blocks. These elements constitute the building blocks for crafting configurations within the Fabric Configuration Language.
+The syntax of FCL has two fundamental components: **arguments** and **blocks**. These components constitute the building blocks for crafting configurations within the Fabric Configuration Language.
 
 ## Arguments
 
-The arguments play a crucial role in assigning values to names within a block. An example of using arguments is as follows:
+The arguments are used for assigning values to names within a block. An example of using arguments is as follows:
 
 ```hcl
 ... {
@@ -22,11 +22,15 @@ The arguments play a crucial role in assigning values to names within a block. A
 }
 ```
 
-The argument name, `query_string` in the snippet above, is allowed to contain letters, digits, underscores (`_`), and hyphens (`-`). However, the first character of an identifier must not be a digit.
+The argument name, `query_string` in the snippet above, can contain letters, digits, underscores
+(`_`), and hyphens (`-`). However, the first character of an identifier must not be a digit.
 
 ## Blocks
 
-In the Fabric Configuration Language (FCL), a block serves as a versatile container defining configurations, data requirements, or content structures. An example is provided below:
+In the Fabric Configuration Language (FCL), a block serves as a versatile container defining
+configurations, data requirements, content structures, and delivery destinations.
+
+For example:
 
 ```hcl
 document "test_document" {
@@ -42,15 +46,17 @@ document "test_document" {
 }
 ```
 
-A block is characterized by a type (`document` and `content` in the example above), dictating the number of labels permissible in a block signature. Additionally, a block can either bear a name (for example, "`alerts_overview`") or remain anonymous, as seen in the case of content text in the provided snippet. This flexibility in block composition contributes to the expressive and modular nature of FCL configurations.
+Each block has a type (`document` and `content` in the example above) that defines the labels allowed in a block signature. Additionally, each block can either have a name (for example, "`alerts_overview`") or be anonymous (as seen in the snippet above), depending on the position of the block in the code (is it defined inside or outside `document` block). This flexibility in block composition contributes to the expressive and modular nature of FCL configurations.
 
-Supported categories of blocks:
+The blocks serve different purposed in FCL, and can be divided into the following categories:
 
 - [Configuration]({{< ref "configs.md" >}}): `fabric` and `config` blocks
 - [Documents]({{< ref "documents.md" >}}): `document` block
 - [Data definitions]({{< ref "data-blocks.md" >}}): `data` block
 - [Content definitions]({{< ref "content-blocks.md" >}}): `content` block
 - [Content structure]({{< ref "section-blocks.md" >}}): `section` block
+- [Document delivery]({{< ref "publish-blocks.md" >}}): `publish` block
+- [Reused blocks]({{< ref "references.md" >}}): reusing blocks by referencing
 
 ## Comments
 
@@ -64,7 +70,7 @@ It's recommend to use `#` single-line comment style usually. Future Fabric code 
 
 ## Character encoding
 
-Fabric configuration files must be UTF-8 encoded. Fabric allows non-ASCII characters in comments, and string values.
+Fabric configuration files must be UTF-8 encoded. Fabric supports non-ASCII characters in comments, and string values.
 
 ## Next steps
 

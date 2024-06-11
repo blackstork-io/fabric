@@ -1,5 +1,5 @@
 ---
-title: openai_text
+title: "`openai_text` content provider"
 plugin:
   name: blackstork/openai
   description: ""
@@ -34,7 +34,7 @@ Note the version constraint set for the plugin.
 
 #### Configuration
 
-The content provider supports the following configuration parameters:
+The content provider supports the following configuration arguments:
 
 ```hcl
 config content openai_text {
@@ -54,7 +54,7 @@ config content openai_text {
 
 #### Usage
 
-The content provider supports the following execution parameters:
+The content provider supports the following execution arguments:
 
 ```hcl
 content openai_text {

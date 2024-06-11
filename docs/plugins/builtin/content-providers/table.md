@@ -1,5 +1,5 @@
 ---
-title: table
+title: "`table` content provider"
 plugin:
   name: blackstork/builtin
   description: "Produces a table"
@@ -32,11 +32,11 @@ The content provider is built-in, which means it's a part of `fabric` binary. It
 
 #### Configuration
 
-The content provider doesn't support any configuration parameters.
+The content provider doesn't support any configuration arguments.
 
 #### Usage
 
-The content provider supports the following execution parameters:
+The content provider supports the following execution arguments:
 
 ```hcl
 content table {

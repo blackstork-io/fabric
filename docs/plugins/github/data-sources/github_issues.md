@@ -1,5 +1,5 @@
 ---
-title: github_issues
+title: "`github_issues` data source"
 plugin:
   name: blackstork/github
   description: ""
@@ -33,7 +33,7 @@ Note the version constraint set for the plugin.
 
 ## Configuration
 
-The data source supports the following configuration parameters:
+The data source supports the following configuration arguments:
 
 ```hcl
 config data github_issues {
@@ -45,7 +45,7 @@ config data github_issues {
 
 ## Usage
 
-The data source supports the following parameters in the data blocks:
+The data source supports the following execution arguments:
 
 ```hcl
 data github_issues {

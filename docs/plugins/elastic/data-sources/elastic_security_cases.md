@@ -1,5 +1,5 @@
 ---
-title: elastic_security_cases
+title: "`elastic_security_cases` data source"
 plugin:
   name: blackstork/elastic
   description: ""
@@ -33,7 +33,7 @@ Note the version constraint set for the plugin.
 
 ## Configuration
 
-The data source supports the following configuration parameters:
+The data source supports the following configuration arguments:
 
 ```hcl
 config data elastic_security_cases {
@@ -53,7 +53,7 @@ config data elastic_security_cases {
 
 ## Usage
 
-The data source supports the following parameters in the data blocks:
+The data source supports the following execution arguments:
 
 ```hcl
 data elastic_security_cases {

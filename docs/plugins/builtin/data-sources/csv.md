@@ -1,8 +1,8 @@
 ---
-title: csv
+title: "`csv` data source"
 plugin:
   name: blackstork/builtin
-  description: "Loads CSV files with the names that match a provided `glob`pattern or a single file from a provided path"
+  description: "Loads CSV files with the names that match provided `glob` pattern or a single file from provided `path` value"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -16,14 +16,15 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "csv" "data source" >}}
 
 ## Description
-Loads CSV files with the names that match a provided `glob`pattern or a single file from a provided path.
+Loads CSV files with the names that match provided `glob` pattern or a single file from provided `path` value.
 
-Either `glob`or `path`attribute must be set.
+Either `glob` or `path` argument must be set.
 
-When `path`attribute is specified, the data source returns only the content of a file.
-When `glob`attribute is specified, the data source returns a list of dicts that contain the content of a file and file's metadata.
+When `path` argument is specified, the data source returns only the content of a file.
+When `glob` argument is specified, the data source returns a list of dicts that contain
+the content of a file and file's metadata.
 
-Note: the data source assumes that CSV file has a header and turns each line into a map with column titles as keys.
+**Note**: the data source assumes that CSV file has a header: the data source turns each line into a map with the column titles as keys.
 
 For example, CSV file with the following data:
 
@@ -40,7 +41,7 @@ will be represented as the following data structure:
 ]
 ```
 
-When `glob`is used and multiple files match the pattern, the data source will return a list of dicts, for example:
+When `glob` is used and multiple files match the pattern, the data source will return a list of dicts, for example:
 
 ```json
 [
@@ -67,7 +68,7 @@ The data source is built-in, which means it's a part of `fabric` binary. It's av
 
 ## Configuration
 
-The data source supports the following configuration parameters:
+The data source supports the following configuration arguments:
 
 ```hcl
 config data csv {
@@ -82,7 +83,7 @@ config data csv {
 
 ## Usage
 
-The data source supports the following parameters in the data blocks:
+The data source supports the following execution arguments:
 
 ```hcl
 data csv {

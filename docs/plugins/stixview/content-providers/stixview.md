@@ -1,5 +1,5 @@
 ---
-title: stixview
+title: "`stixview` content provider"
 plugin:
   name: blackstork/stixview
   description: ""
@@ -34,11 +34,11 @@ Note the version constraint set for the plugin.
 
 #### Configuration
 
-The content provider doesn't support any configuration parameters.
+The content provider doesn't support any configuration arguments.
 
 #### Usage
 
-The content provider supports the following execution parameters:
+The content provider supports the following execution arguments:
 
 ```hcl
 content stixview {

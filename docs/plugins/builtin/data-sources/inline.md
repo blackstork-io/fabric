@@ -1,5 +1,5 @@
 ---
-title: inline
+title: "`inline` data source"
 plugin:
   name: blackstork/builtin
   description: "Creates a queryable key-value map from the block's contents"
@@ -22,11 +22,11 @@ The data source is built-in, which means it's a part of `fabric` binary. It's av
 
 ## Configuration
 
-The data source doesn't support configuration.
+The data source doesn't support any configuration arguments.
 
 ## Usage
 
-The data source supports the following parameters in the data blocks:
+The data source supports the following execution arguments:
 
 ```hcl
 data inline {

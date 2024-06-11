@@ -8,6 +8,7 @@ plugin:
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/nistnvd/"
 type: docs
+hideInMenu: true
 ---
 
 {{< plugin-header "blackstork/nist_nvd" "nist_nvd" "v0.4.1" >}}

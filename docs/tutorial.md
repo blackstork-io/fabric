@@ -17,11 +17,12 @@ To effectively follow this tutorial, ensure you have the following:
 - Fabric CLI [installed]({{< ref "install.md" >}}) and `fabric` CLI command available
 - (optional) OpenAI API token
 
-Throughout this tutorial, the command examples were executed in macOS Sonoma, in `zsh` shell.
+Throughout this tutorial, the command examples were executed in macOS Sonoma `zsh` shell.
 
 ## Hello, Fabric
 
-Let's start with a straightforward "Hello, Fabric!" template to confirm that everything is configured correctly.
+Let's start with a straightforward "Hello, Fabric!" template to confirm that everything is
+configured correctly.
 
 Create a new `hello.fabric` file and define a simple template:
 
@@ -35,9 +36,11 @@ document "greeting" {
 }
 ```
 
-In this code snippet, the `document.greeting` block defines a template with a single anonymous content block containing the text "Hello, Fabric!"
+In this code snippet, `document.greeting` block defines a template with a single anonymous content
+block containing the static text "Hello, Fabric!"
 
-To render the document, ensure that Fabric can locate the `hello.fabric` file. Execute `fabric` command in the same directory (or explicitly provide `--source-dir` CLI argument):
+To render the document, execute `fabric` command in the directory with `hello.fabric` file, or
+explicitly specify a path to another directory with `--source-dir` CLI argument:
 
 ```shell
 fabric render document.greeting
@@ -52,9 +55,10 @@ Hello, Fabric!
 
 ## Document title
 
-Documents typically include titles, and the document block supports the `title` argument as a straightforward method to set a title for a document.
+Documents typically include titles, so the document block supports `title` argument as an
+easy way to set a title for a document.
 
-Enhance the `document.greeting` template by adding a title using the `title` argument:
+With the new `title` argument, `document.greeting` template would look like this:
 
 ```hcl
 document "greeting" {
@@ -69,7 +73,7 @@ document "greeting" {
 ```
 
 {{< hint note >}}
-`title` argument for `document` block is a syntactic sugar that Fabric translates into `content.title` block:
+`title` argument for `document` block is a syntactic sugar that Fabric will translate into `content.title` block:
 
 ```hcl
 content title {
@@ -77,7 +81,7 @@ content title {
 }
 ```
 
-See [the documentation]({{< ref "plugins/builtin/content-providers/text" >}}) for the details about the arguments supported by `text` content provider.
+See [`content.title`]({{< ref "plugins/builtin/content-providers/title" >}}) content providers documentations for the details.
 {{< /hint >}}
 
 The rendered output should now include the document title:
@@ -91,11 +95,13 @@ Hello, Fabric!
 
 ## Data blocks
 
-A core feature of the Fabric configuration language is the ability to define data requirements inside templates with the [data blocks]({{< ref "language/data-blocks.md" >}}). The easiest way is to use [`inline`]({{< ref "plugins/builtin/data-sources/inline" >}}) data source that supports free-form data structures.
+A core feature of Fabric configuration language is the ability to define data requirements inside a
+template with the [data blocks]({{< ref "language/data-blocks.md" >}}). The easiest way is to use
+[`inline`]({{< ref "plugins/builtin/data-sources/inline" >}}) data source that supports free-form
+data structures.
 
-Note, you must define `data` blocks on the root level of the `document` block.
-
-Modify the template in the `hello.fabric` file to include a `data` block and another `content.text` block:
+Change the template in the `hello.fabric` file to include a `data` block and add another
+`content.text` block:
 
 ```hcl
 document "greeting" {
@@ -125,9 +131,9 @@ document "greeting" {
 }
 ```
 
-The content blocks can access and transform the data available with [JQ query](https://jqlang.github.io/jq/manual/) in the [`query`]({{< ref "language/content-blocks.md#generic-arguments" >}}) argument. It's applied to [the context object]({{< ref "language/content-blocks.md#context" >}}) during the evaluation of the block, and the result is stored in the context object under the `query_result` field.
+The content blocks can access and transform the data available with [JQ query](https://jqlang.github.io/jq/manual/) in the [`query`]({{< ref "language/content-blocks.md#generic-arguments" >}}) argument. The query is applied to the [evaluation context]({{< ref context.md >}}), and the result is stored under the `query_result` field (in the context).
 
-As you can see, `text` argument value in the new content block is a template string – `content.text` blocks support [Go templates](https://pkg.go.dev/text/template) out-of-the-box. The templates can access the context object, so it's easy to include `query_result` or `moons_count` values from the context.
+As you can see, `value` argument value in the new content block is a template string – `content.text` blocks support [Go templates](https://pkg.go.dev/text/template) out-of-the-box. The templates can access the evaluation context, so it's easy to include `query_result` or `moons_count` values in the string.
 
 The rendered output should now include the new sentence:
 
@@ -142,17 +148,23 @@ There are 8 planets and 146 moons in our solar system.
 
 ## Content providers
 
-Fabric seamlessly integrates with external APIs for content generation. An excellent example is the use of the OpenAI API to dynamically generate text through prompts.
+Fabric seamlessly integrates with external APIs for content generation. An excellent example is the
+use of the OpenAI API to dynamically generate text through prompts.
 
-In scenarios where providing the exact text or a template string for the content block proves challenging or impossible, leveraging generative AI for summarization becomes invaluable. This enables users to dynamically create context-aware text.
+In scenarios where providing the exact text or a template string for the content block proves
+challenging or impossible, leveraging generative AI for summarization becomes invaluable. This
+enables users to dynamically create context-aware text.
 
-In this tutorial, we will use the [`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}}) content provider to generate text with the OpenAI Large Language Model (LLM).
+In this tutorial, we will use the [`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}})
+content provider to generate text with ChatGPT through OpenAI API.
 
 ### Installation
 
-Before using [`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}}) content provider, it's necessary to add [`blackstork/openai`]({{< ref "plugins/openai" >}}) plugin as a dependency and install it.
+Before using [`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}}) content
+provider, it's necessary to add [`blackstork/openai`]({{< ref "plugins/openai" >}}) plugin as a
+dependency and install it locally.
 
-To achieve this, update the `hello.fabric` file to resemble the following:
+To start, update the `hello.fabric` file with the global configuration block:
 
 ```hcl
 fabric {
@@ -188,7 +200,8 @@ document "greeting" {
 }
 ```
 
-Here, we added a fully qualified name plugin name `blackstork/openai` to the list of dependencies in the `plugin_versions` argument in [the global configuration]({{< ref "language/configs.md#global-configuration" >}}).
+Here, a plugin name `blackstork/openai` was added to the list of dependencies in the `plugin_versions` argument
+in [the global configuration]({{< ref "language/configs.md#global-configuration" >}}).
 
 With the `hello.fabric` file updated, you can install all required plugins with the `fabric install` command:
 
@@ -199,7 +212,7 @@ Mar 11 19:20:10.787 INF Installing plugin name=blackstork/openai version=0.4.0
 $
 ```
 
-Fabric fetched the `blackstork/openai` plugin release from the plugin registry and installed it in the `./.fabric/` folder.
+Fabric fetched the `blackstork/openai` plugin release from the plugin registry and installed it in the local `./.fabric/` folder.
 
 ### Configuration
 
@@ -229,8 +242,8 @@ document "greeting" {
   content openai_text {
     query = "{planet: .data.inline.solar_system.planets[-1]}"
     prompt = <<-EOT
-      Share a fact about the planet specified in the provided
-      data: {{ .query_result | toRawJson }}
+      Share a fact about the planet specified in the provided data:
+      {{ .query_result | toRawJson }}
     EOT
   }
 
@@ -283,8 +296,8 @@ document "greeting" {
   content openai_text {
     query = "{planet: .data.inline.solar_system.planets[-1]}"
     prompt = <<-EOT
-      Share a fact about the planet specified in the provided
-      data: {{ .query_result | toRawJson }}
+      Share a fact about the planet specified in the provided data:
+      {{ .query_result | toRawJson }}
     EOT
   }
 

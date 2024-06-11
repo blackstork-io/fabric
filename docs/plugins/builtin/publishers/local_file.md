@@ -1,5 +1,5 @@
 ---
-title: local_file
+title: "`local_file` publisher"
 plugin:
   name: blackstork/builtin
   description: "Publishes content to local file"
@@ -17,16 +17,28 @@ type: docs
 
 The publisher is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 
+#### Formats
+
+The publisher supports the following document formats:
+
+- `md`
+- `html`
+- `pdf`
+
+To set the output format, specify it inside `publish` block with `format` argument.
+
 
 #### Configuration
 
-The publisher doesn't support any configuration parameters.
+The publisher doesn't support any configuration arguments.
 
 #### Usage
 
-The publisher supports the following execution parameters:
+The publisher supports the following execution arguments:
 
 ```hcl
+# In addition to the arguments listed, `publish` block accepts `format` argument.
+
 publish local_file {
   # Path to the file
   #

@@ -1,5 +1,5 @@
 ---
-title: hackerone_reports
+title: "`hackerone_reports` data source"
 plugin:
   name: blackstork/hackerone
   description: ""
@@ -33,7 +33,7 @@ Note the version constraint set for the plugin.
 
 ## Configuration
 
-The data source supports the following configuration parameters:
+The data source supports the following configuration arguments:
 
 ```hcl
 config data hackerone_reports {
@@ -49,7 +49,7 @@ config data hackerone_reports {
 
 ## Usage
 
-The data source supports the following parameters in the data blocks:
+The data source supports the following execution arguments:
 
 ```hcl
 data hackerone_reports {

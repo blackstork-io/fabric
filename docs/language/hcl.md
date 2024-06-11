@@ -13,7 +13,9 @@ See a snippet below for the examples:
 
 ```hcl
 document "example" {
-  data inline "hcl_expression_showcase" {
+
+  data inline "hcl_expressions_showcase" {
+
     arithmetic = "1 + 2 = ${1 + 2}"
     # "arithmetic": "1 + 2 = 3",
 
@@ -106,29 +108,29 @@ document "example" {
 
   content text {
     value = <<-EOT
-      arithmetic: {{ .data.inline.hcl_expression_showcase.arithmetic }}
+      arithmetic: {{ .data.inline.hcl_expressions_showcase.arithmetic }}
 
-      logic: {{ .data.inline.hcl_expression_showcase.logic }}
+      logic: {{ .data.inline.hcl_expressions_showcase.logic }}
 
-      conditionals: {{ .data.inline.hcl_expression_showcase.conditionals }}
+      conditionals: {{ .data.inline.hcl_expressions_showcase.conditionals }}
 
-      loop_over_list: {{ .data.inline.hcl_expression_showcase.loop_over_list | toJson }}
+      loop_over_list: {{ .data.inline.hcl_expressions_showcase.loop_over_list | toJson }}
 
-      loop_over_tuple: {{ .data.inline.hcl_expression_showcase.loop_over_tuple | toJson }}
+      loop_over_tuple: {{ .data.inline.hcl_expressions_showcase.loop_over_tuple | toJson }}
 
-      loop_over_map: {{ .data.inline.hcl_expression_showcase.loop_over_map | toJson }}
+      loop_over_map: {{ .data.inline.hcl_expressions_showcase.loop_over_map | toJson }}
 
-      loop_over_object: {{ .data.inline.hcl_expression_showcase.loop_over_object | toJson }}
+      loop_over_object: {{ .data.inline.hcl_expressions_showcase.loop_over_object | toJson }}
 
-      loop_creating_object: {{ .data.inline.hcl_expression_showcase.loop_creating_object | toJson }}
+      loop_creating_object: {{ .data.inline.hcl_expressions_showcase.loop_creating_object | toJson }}
 
-      loop_with_filter: {{ .data.inline.hcl_expression_showcase.loop_with_filter | toJson }}
+      loop_with_filter: {{ .data.inline.hcl_expressions_showcase.loop_with_filter | toJson }}
 
-      loop_with_grouping: {{ .data.inline.hcl_expression_showcase.loop_with_grouping | toJson }}
+      loop_with_grouping: {{ .data.inline.hcl_expressions_showcase.loop_with_grouping | toJson }}
 
-      splat_expression: {{ .data.inline.hcl_expression_showcase.splat_expression | toJson }}
+      splat_expression: {{ .data.inline.hcl_expressions_showcase.splat_expression | toJson }}
 
-      template_directives: {{ .data.inline.hcl_expression_showcase.template_directives }}
+      template_directives: {{ .data.inline.hcl_expressions_showcase.template_directives }}
     EOT
   }
 }

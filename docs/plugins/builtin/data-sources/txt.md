@@ -1,8 +1,8 @@
 ---
-title: txt
+title: "`txt` data source"
 plugin:
   name: blackstork/builtin
-  description: "Loads TXT files with the names that match a provided \"glob\" pattern or a single file from a provided path"
+  description: "Loads TXT files with the names that match a provided `glob` pattern or a single file from a provided path"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -16,12 +16,12 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "txt" "data source" >}}
 
 ## Description
-Loads TXT files with the names that match a provided "glob" pattern or a single file from a provided path.
+Loads TXT files with the names that match a provided `glob` pattern or a single file from a provided path.
 
-Either "glob" or "path" attribute must be set.
+Either `glob` or `path` argument must be set.
 
-When "path" attribute is specified, the data source returns only the content of a file.
-When "glob" attribute is specified, the data source returns a list of dicts that contain the content of a file and file's metadata. For example:
+When `path` argument is specified, the data source returns only the content of a file.
+When `glob` argument is specified, the data source returns a list of dicts that contain the content of a file and file's metadata. For example:
 ```json
 [
   {
@@ -41,11 +41,11 @@ The data source is built-in, which means it's a part of `fabric` binary. It's av
 
 ## Configuration
 
-The data source doesn't support configuration.
+The data source doesn't support any configuration arguments.
 
 ## Usage
 
-The data source supports the following parameters in the data blocks:
+The data source supports the following execution arguments:
 
 ```hcl
 data txt {

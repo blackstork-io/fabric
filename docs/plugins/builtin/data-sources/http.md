@@ -1,5 +1,5 @@
 ---
-title: http
+title: "`http` data source"
 plugin:
   name: blackstork/builtin
   description: "Loads data from a URL"
@@ -18,18 +18,22 @@ type: docs
 ## Description
 Loads data from a URL.
 
-At the moment, the data source accepts only responses with UTF-8 charset and parses only responses with MIME types `text/csv` or `application/json`.
-If MIME type of the response is `text/csv` or `application/json`, the response content will be parsed and returned as a JSON structure (similar to the behaviour of CSV and JSON data sources). Otherwise, the response content will be returned as text
+At the moment, the data source accepts only responses with UTF-8 charset and parses only responses
+with MIME types `text/csv` or `application/json`.
+
+If MIME type of the response is `text/csv` or `application/json`, the response
+content will be parsed and returned as a JSON structure (similar to the behaviour of CSV and JSON data
+sources). Otherwise, the response content will be returned as text
 
 The data source is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 
 ## Configuration
 
-The data source doesn't support configuration.
+The data source doesn't support any configuration arguments.
 
 ## Usage
 
-The data source supports the following parameters in the data blocks:
+The data source supports the following execution arguments:
 
 ```hcl
 data http {

@@ -1,5 +1,5 @@
 ---
-title: nist_nvd_cves
+title: "`nist_nvd_cves` data source"
 plugin:
   name: blackstork/nist_nvd
   description: ""
@@ -33,7 +33,7 @@ Note the version constraint set for the plugin.
 
 ## Configuration
 
-The data source supports the following configuration parameters:
+The data source supports the following configuration arguments:
 
 ```hcl
 config data nist_nvd_cves {
@@ -45,7 +45,7 @@ config data nist_nvd_cves {
 
 ## Usage
 
-The data source supports the following parameters in the data blocks:
+The data source supports the following execution arguments:
 
 ```hcl
 data nist_nvd_cves {

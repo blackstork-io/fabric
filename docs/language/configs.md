@@ -56,31 +56,36 @@ fabric {
 }
 ```
 
-## Data source configuration
+## Data source, content provider and publisher configurations
 
-A Fabric plugin can include one or more data sources. For example, `blackstork/github` plugin includes `github_issues` data source.
+The data sources, content provides and publishers can be configured using `config` blocks.
 
-A data source within Fabric serves the purpose of loading data from either a local or an external data store, platform, or service.
+`config` blocks expose configuration properties supported by data sources, content providers and
+publishers.
 
-Configuration for data sources is accomplished through the use of the `config` block:
+`config` block must be defined on a root level of Fabric file, outside `document` block. The
+signature of `config` block consists of a block type selector (`content`, `data` or `publish`), a
+data source / content provider / publisher name, and a block name:
 
 ```hcl
-config data <data-source-name> "<name>" {
+config <block-type> <source/provider/publisher-name> "<name>" {
   ...
 }
 ```
 
-If the block is named (`<name>` is provided), the `config` block can be referenced in a `config` argument inside `data` blocks. This is helpful if there is a need to have more than one configuration for the same data source.
+If `<name>` isn't provided, the configuration acts as a default configuration for a specified data
+source / content provider / publisher.
 
-If `<name>` isn't provided, the configuration acts as a default configuration for a specified data source.
+If the block has a name (`<name>` is specified), `config` block can be referenced in a `config` argument.
+This is helpful if there is a need to have more than one configuration available.
 
 ### Supported arguments
 
-The arguments allowed in the configuration block depend on the data source. See [Plugins]({{< ref "plugins.md" >}}) for the details on the configuration parameters supported.
+The arguments allowed in the configuration block depend on the data source / content provider / publisher. See the documentation for [Data Sources]({{< ref data-sources.md >}}), [Content Providers]({{< ref content-providers.md >}}), and [Publishers]({{< ref publishers.md >}}) for the details on the configuration parameters supported.
 
 ### Supported nested blocks
 
-Nested blocks aren't supported inside the `config` blocks.
+`config` blocks don't support nested blocks.
 
 ### Example
 
@@ -89,61 +94,25 @@ config data csv {
   delimiter = ";"
 }
 
-data csv "events_a" {
-  path = "/tmp/events-a.csv"
+config content openai_text {
+  api_key = "some-openai-api-key"
+  system_prompt = "You are the best at saying Hi!"
 }
 
 document "test-document" {
 
-  data ref {
-    base = data.csv.events_a
+  data csv "events_a" {
+    path = "/tmp/events-a.csv"
   }
 
   data csv "events_b" {
+    # Overriding the default configuration for CSV data source
     config {
-      delimiter = ",";
+      delimiter = ","
     }
 
     path = "/tmp/events-b.csv"
   }
-}
-```
-
-## Content provider configuration
-
-A Fabric plugin can include one or more content providers. For example, `blackstork/openai` plugin includes `openai_text` content provider.
-Content providers generate Markdown content that Fabric will include into the rendered document. The provider can either render content locally or use an external API (like OpenAI API).
-
-Content providers can be configured using `config` block:
-
-```hcl
-config content <content-provider-name> "<name>" {
-  ...
-}
-```
-
-If the block is named (`<name>` is provided), the `config` block can be explicitly referenced in a `config` argument inside `content`. This is helpful if there is a need to have more than one configuration for the same content provider.
-
-If `<name>` isn't provided, the configuration acts as a default configuration for a specified content provider.
-
-### Supported arguments
-
-The arguments allowed in the configuration block depend on the content provider. See [Plugins]({{< ref "plugins.md" >}}) for the details on the configuration parameters supported.
-
-### Supported nested blocks
-
-Nested blocks aren't supported inside the `config` blocks.
-
-### Example
-
-```hcl
-config content openai_text {
-  api_key = 'some-openai-api-key'
-
-  system_prompt = 'You are the best at saying Hi!'
-}
-
-document "test-document" {
 
   content openai_text {
     prompt = "Say hi!"

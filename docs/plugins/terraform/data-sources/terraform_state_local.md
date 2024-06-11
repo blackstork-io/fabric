@@ -1,5 +1,5 @@
 ---
-title: terraform_state_local
+title: "`terraform_state_local` data source"
 plugin:
   name: blackstork/terraform
   description: ""
@@ -33,11 +33,11 @@ Note the version constraint set for the plugin.
 
 ## Configuration
 
-The data source doesn't support configuration.
+The data source doesn't support any configuration arguments.
 
 ## Usage
 
-The data source supports the following parameters in the data blocks:
+The data source supports the following execution arguments:
 
 ```hcl
 data terraform_state_local {

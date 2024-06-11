@@ -1,5 +1,5 @@
 ---
-title: snyk_issues
+title: "`snyk_issues` data source"
 plugin:
   name: blackstork/snyk
   description: "The `snyk_issues` data source fetches issues from Snyk"
@@ -36,7 +36,7 @@ Note the version constraint set for the plugin.
 
 ## Configuration
 
-The data source supports the following configuration parameters:
+The data source supports the following configuration arguments:
 
 ```hcl
 config data snyk_issues {
@@ -51,7 +51,7 @@ config data snyk_issues {
 
 ## Usage
 
-The data source supports the following parameters in the data blocks:
+The data source supports the following execution arguments:
 
 ```hcl
 data snyk_issues {

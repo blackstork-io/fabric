@@ -40,20 +40,14 @@ A content block is rendered by a specified content provider. See [Content Provid
 
 ## Supported arguments
 
-The arguments provided in the block are either generic arguments or plugin-specific input parameters.
+The arguments provided in the block are either generic arguments or provider-specific input parameters.
 
 ### Generic arguments
 
-- `config`: (optional) a reference to a named configuration block for the data source or a content provider. If provided, it takes precedence over the default configuration. See [Content provider configuration]({{< ref "configs.md#content-provider-configuration" >}}) for the details.
+- `config`: (optional) a reference to a named configuration block for the content provider. If provided, it takes precedence over the default configuration. See [Content provider configuration]({{< ref "configs.md#content-provider-configuration" >}}) for the details.
 - `query`: (optional) a [JQ](https://jqlang.github.io/jq/manual/) query to be executed against the context object. The results of the query will be placed under `query_result` field in the context. See [Context](#context) object for the details.
-- `render_if_no_query_result`: (optional) a boolean flag that determines if the content block should be rendered when `query` returned no data. Defaults to `true`.
-- `text_when_no_query_result`: (optional) provides the text to be rendered instead of calling the plugin when `render_if_no_query_result` is `true`.
-- `query_input_required`: (optional) a boolean flag that specifies if `query_input` must be explicitly provided when the content block is referenced. `false` by default. See [Query Input Requirement]({{< ref "references.md#query-input-requirement" >}}) for the details.
-- `query_input`: (optional) a JQ query to be applied to the context object. The results of the query are stored under `query_input` field in the context. See [Query Input Requirement]({{< ref "references.md#query-input-requirement" >}}) for the details.
 
 ### Content provider arguments
-
-Content provider specific are defined by a plugin specification. See [Plugins]({{< ref "plugins.md" >}}) for the details on the supported arguments per plugin.
 
 Content provider arguments differ per content provider. See the documentation for a specific content provider (find it in [supported content providers]({{< ref "content-providers.md" >}})) for the details on the supported arguments.
 
