@@ -8,3 +8,5 @@ LLM
 Splunk
 Cyber
 CTI
+ASCII
+stdout
