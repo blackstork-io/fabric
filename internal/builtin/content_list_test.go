@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/suite"
-	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
@@ -36,205 +35,165 @@ func (s *ListGeneratorTestSuite) TestSchema() {
 }
 
 func (s *ListGeneratorTestSuite) TestNilQueryResult() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"item_template": cty.StringVal("{{.}}"),
-		"format":        cty.NullVal(cty.String),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	dataCtx := plugin.MapData{}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+		items = null
+	`, dataCtx, diagtest.Asserts{})
 
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args:        args,
-		DataContext: plugin.MapData{},
+		DataContext: dataCtx,
 	})
 	s.Nil(result)
 	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
-		Summary:  "Failed to render template",
-		Detail:   "query_result is required in data context",
+		Summary:  "Failed to parse arguments",
+		Detail:   "Data is nil",
 	}}, diags)
 }
 
 func (s *ListGeneratorTestSuite) TestNonArrayQueryResult() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"item_template": cty.StringVal("{{.}}"),
-		"format":        cty.NullVal(cty.String),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	dataCtx := plugin.MapData{}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+		items = "not_an_array"
+	`, dataCtx, diagtest.Asserts{})
+
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"query_result": plugin.StringData("not_an_array"),
-		},
+		Args:        args,
+		DataContext: dataCtx,
 	})
 	s.Nil(result)
 	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
-		Summary:  "Failed to render template",
-		Detail:   "query_result must be an array",
+		Summary:  "Failed to parse arguments",
+		Detail:   "Data must be a list",
 	}}, diags)
 }
 
 func (s *ListGeneratorTestSuite) TestUnordered() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"item_template": cty.StringVal("foo {{.}}"),
-		"format":        cty.StringVal("unordered"),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	dataCtx := plugin.MapData{}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+		items = ["bar", "baz"]
+		item_template = "foo {{.}}"
+		format = "unordered"
+	`, dataCtx, diagtest.Asserts{})
+
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"query_result": plugin.ListData{
-				plugin.StringData("bar"),
-				plugin.StringData("baz"),
-			},
-		},
+		Args:        args,
+		DataContext: dataCtx,
 	})
 	s.Equal("* foo bar\n* foo baz\n", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }
 
 func (s *ListGeneratorTestSuite) TestOrdered() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"item_template": cty.StringVal("foo {{.}}"),
-		"format":        cty.StringVal("ordered"),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	dataCtx := plugin.MapData{}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+		items = ["bar", "baz"]
+		item_template = "foo {{.}}"
+		format = "ordered"
+	`, dataCtx, diagtest.Asserts{})
+
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"query_result": plugin.ListData{
-				plugin.StringData("bar"),
-				plugin.StringData("baz"),
-			},
-		},
+		Args:        args,
+		DataContext: dataCtx,
 	})
 	s.Equal("1. foo bar\n2. foo baz\n", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }
 
 func (s *ListGeneratorTestSuite) TestTaskList() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"item_template": cty.StringVal("foo {{.}}"),
-		"format":        cty.StringVal("tasklist"),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	dataCtx := plugin.MapData{}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+		items = ["bar", "baz"]
+		item_template = "foo {{.}}"
+		format = "tasklist"
+	`, dataCtx, diagtest.Asserts{})
+
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"query_result": plugin.ListData{
-				plugin.StringData("bar"),
-				plugin.StringData("baz"),
-			},
-		},
+		Args:        args,
+		DataContext: dataCtx,
 	})
 	s.Equal("* [ ] foo bar\n* [ ] foo baz\n", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }
 
 func (s *ListGeneratorTestSuite) TestBasic() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"item_template": cty.StringVal("foo {{.}}"),
-		"format":        cty.NullVal(cty.String),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	dataCtx := plugin.MapData{}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+		items = ["bar", "baz"]
+		item_template = "foo {{.}}"
+	`, dataCtx, diagtest.Asserts{})
+
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"query_result": plugin.ListData{
-				plugin.StringData("bar"),
-				plugin.StringData("baz"),
-			},
-		},
+		Args:        args,
+		DataContext: dataCtx,
 	})
 	s.Equal("* foo bar\n* foo baz\n", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }
 
 func (s *ListGeneratorTestSuite) TestAdvanced() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"item_template": cty.StringVal("foo {{.bar}} {{.baz | upper}}"),
-		"format":        cty.NullVal(cty.String),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	dataCtx := plugin.MapData{}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+		items = [
+			{
+				bar = "bar1",
+				baz = "baz1",
+			},
+			{
+				bar = "bar2",
+				baz = "baz2",
+			}
+		]
+		item_template = "foo {{.bar}} {{.baz | upper}}"
+		format = null
+	`, dataCtx, diagtest.Asserts{})
+
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"query_result": plugin.ListData{
-				plugin.MapData{
-					"bar": plugin.StringData("bar1"),
-					"baz": plugin.StringData("baz1"),
-				},
-				plugin.MapData{
-					"bar": plugin.StringData("bar2"),
-					"baz": plugin.StringData("baz2"),
-				},
-			},
-		},
+		Args:        args,
+		DataContext: dataCtx,
 	})
 	s.Equal("* foo bar1 BAZ1\n* foo bar2 BAZ2\n", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }
 
 func (s *ListGeneratorTestSuite) TestEmptyQueryResult() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"item_template": cty.StringVal("foo {{.}}"),
-		"format":        cty.NullVal(cty.String),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+	dataCtx := plugin.MapData{}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+		items = []
+		item_template = "foo {{.}}"
+		format = null
+	`, dataCtx, diagtest.Asserts{})
+
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"query_result": plugin.ListData{},
-		},
+		Args:        args,
+		DataContext: dataCtx,
 	})
 	s.Equal("", mdprint.PrintString(result.Content))
 	s.Empty(diags)
 }
 
 func (s *ListGeneratorTestSuite) TestMissingItemTemplate() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"item_template": cty.NullVal(cty.String),
-		"format":        cty.NullVal(cty.String),
-	})
-	plugintest.ReencodeCTY(s.T(), s.schema.Args, val, diagtest.Asserts{{
-		diagtest.IsError,
-		diagtest.SummaryContains("Attribute must be non-null"),
-	}})
-}
+	dataCtx := plugin.MapData{}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+		items = ["bar", "baz"]
+		format = null
+	`, dataCtx, diagtest.Asserts{})
 
-func (s *ListGeneratorTestSuite) TestInvalidFormat() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"item_template": cty.StringVal("foo {{.}}"),
-		"format":        cty.StringVal("invalid"),
-	})
-	plugintest.ReencodeCTY(s.T(), s.schema.Args, val, diagtest.Asserts{{
-		diagtest.IsError,
-		diagtest.SummaryContains("Attribute is not one of the allowed values"),
-	}})
-}
-
-func (s *ListGeneratorTestSuite) TestMissingDataContext() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"item_template": cty.StringVal("foo {{.}}"),
-		"format":        cty.NullVal(cty.String),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: args,
+		Args:        args,
+		DataContext: dataCtx,
 	})
-	s.Nil(result)
-	s.Equal(diagnostics.Diag{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to render template",
-		Detail:   "data context is required",
-	}}, diags)
+	s.Equal("* bar\n* baz\n", mdprint.PrintString(result.Content))
+	s.Empty(diags)
 }

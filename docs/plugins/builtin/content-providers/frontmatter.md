@@ -39,20 +39,16 @@ content frontmatter {
   format = "yaml"
 
   # Arbitrary key-value map to be put in the frontmatter.
-  # 
-  # NOTE: Data from "query_result" replaces this value if present
   #
-  # Optional any type.
+  # Required data.
+  # Must have a length of at least 1
   # For example:
-  # content = {
-  #   key = "arbitrary value"
-  #   key2 = {
-  #     "can be nested" = 42
-  #   }
-  # }
-  # 
-  # Default value:
-  content = null
+  content = {
+    key = "arbitrary value"
+    key2 = {
+      "can be nested" = 42
+    }
+  }
 }
 ```
 

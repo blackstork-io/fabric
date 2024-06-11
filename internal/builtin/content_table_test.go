@@ -79,8 +79,7 @@ func (s *TableGeneratorTestSuite) TestEmptyQueryResult() {
 	`
 
 	dataCtx := plugin.MapData{
-		"col_prefix":   plugin.StringData("User"),
-		"query_result": plugin.ListData{},
+		"col_prefix": plugin.StringData("User"),
 	}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, val, dataCtx, diagtest.Asserts{})
 	ctx := context.Background()
@@ -188,16 +187,6 @@ func (s *TableGeneratorTestSuite) TestNilHeader() {
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
-			"query_result": plugin.ListData{
-				plugin.MapData{
-					"name": plugin.StringData("John"),
-					"age":  plugin.NumberData(42),
-				},
-				plugin.MapData{
-					"name": plugin.StringData("Jane"),
-					"age":  plugin.NumberData(43),
-				},
-			},
 		},
 	})
 	s.Nil(result)
@@ -227,16 +216,6 @@ func (s *TableGeneratorTestSuite) TestNilValue() {
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
-			"query_result": plugin.ListData{
-				plugin.MapData{
-					"name": plugin.StringData("John"),
-					"age":  plugin.NumberData(42),
-				},
-				plugin.MapData{
-					"name": plugin.StringData("Jane"),
-					"age":  plugin.NumberData(43),
-				},
-			},
 		},
 	})
 	s.Nil(result)
@@ -267,16 +246,6 @@ func (s *TableGeneratorTestSuite) TestEmptyColumns() {
 	`
 	dataCtx := plugin.MapData{
 		"col_prefix": plugin.StringData("User"),
-		"query_result": plugin.ListData{
-			plugin.MapData{
-				"name": plugin.StringData("John"),
-				"age":  plugin.NumberData(42),
-			},
-			plugin.MapData{
-				"name": plugin.StringData("Jane"),
-				"age":  plugin.NumberData(43),
-			},
-		},
 	}
 	plugintest.DecodeAndAssert(s.T(), s.schema.Args, val, dataCtx, diagtest.Asserts{{
 		diagtest.IsError,
@@ -303,16 +272,6 @@ func (s *TableGeneratorTestSuite) TestInvalidHeaderTemplate() {
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
-			"query_result": plugin.ListData{
-				plugin.MapData{
-					"name": plugin.StringData("John"),
-					"age":  plugin.NumberData(42),
-				},
-				plugin.MapData{
-					"name": plugin.StringData("Jane"),
-					"age":  plugin.NumberData(43),
-				},
-			},
 		},
 	})
 	s.Nil(result)
@@ -342,16 +301,6 @@ func (s *TableGeneratorTestSuite) TestInvalidValueTemplate() {
 		Args: args,
 		DataContext: plugin.MapData{
 			"col_prefix": plugin.StringData("User"),
-			"query_result": plugin.ListData{
-				plugin.MapData{
-					"name": plugin.StringData("John"),
-					"age":  plugin.NumberData(42),
-				},
-				plugin.MapData{
-					"name": plugin.StringData("Jane"),
-					"age":  plugin.NumberData(43),
-				},
-			},
 		},
 	})
 	s.Nil(result)

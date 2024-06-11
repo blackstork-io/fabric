@@ -11,14 +11,11 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"gopkg.in/yaml.v3"
 
+	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
-	"github.com/blackstork-io/fabric/plugin/plugincty"
-)
-
-const (
-	frontMatterQueryResultKey = "query_result"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeFrontMatterContentProvider() *plugin.ContentProvider {
@@ -37,13 +34,10 @@ func makeFrontMatterContentProvider() *plugin.ContentProvider {
 				},
 			},
 			&dataspec.AttrSpec{
-				Name: "content",
-				Type: cty.DynamicPseudoType,
-				Doc: `
-				Arbitrary key-value map to be put in the frontmatter.
-
-				NOTE: Data from "query_result" replaces this value if present`,
-				DefaultVal: cty.NullVal(cty.DynamicPseudoType),
+				Name:        "content",
+				Type:        dataquery.DelayedEvalType.CtyType(),
+				Doc:         `Arbitrary key-value map to be put in the frontmatter.`,
+				Constraints: constraint.RequiredMeaningful,
 				ExampleVal: cty.ObjectVal(map[string]cty.Value{
 					"key": cty.StringVal("arbitrary value"),
 					"key2": cty.MapVal(map[string]cty.Value{
@@ -64,15 +58,37 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 			Detail:   err.Error(),
 		}}
 	}
-	format, m, err := parseFrontMatterArgs(params.Args, params.DataContext)
-	if err != nil {
+
+	format := params.Args.GetAttr("format").AsString()
+	data := dataquery.DelayedEvalType.MustFromCty(params.Args.GetAttr("content")).Result()
+
+	if data == nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
-			Detail:   err.Error(),
+			Detail:   "Content is nil",
 		}}
 	}
-	result, err := renderFrontMatterContent(format, m)
+	m, ok := data.(plugin.MapData)
+	if !ok {
+		return nil, diagnostics.Diag{{
+			Severity: hcl.DiagError,
+			Summary:  "Failed to parse arguments",
+			Detail:   fmt.Sprintf("Invalid frontmatter data type: %T. Map required.", data),
+		}}
+	}
+	var result string
+	var err error
+	switch format {
+	case "yaml":
+		result, err = renderYAMLFrontMatter(m)
+	case "toml":
+		result, err = renderTOMLFrontMatter(m)
+	case "json":
+		result, err = renderJSONFrontMatter(m)
+	default:
+		panic("unreachable")
+	}
 	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -91,11 +107,11 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 	}, nil
 }
 
-func validateFrontMatterContentTree(datactx plugin.MapData, contentID uint32) error {
-	if datactx == nil {
+func validateFrontMatterContentTree(dataCtx plugin.MapData, contentID uint32) error {
+	if dataCtx == nil {
 		return fmt.Errorf("DataContext is empty")
 	}
-	document, _ := parseScope(datactx)
+	document, _ := parseScope(dataCtx)
 	if document == nil {
 		return fmt.Errorf("frontmatter must be declared in the document")
 	}
@@ -106,48 +122,6 @@ func validateFrontMatterContentTree(datactx plugin.MapData, contentID uint32) er
 		return fmt.Errorf("frontmatter already declared in the document")
 	}
 	return nil
-}
-
-func parseFrontMatterArgs(args cty.Value, datactx plugin.MapData) (string, plugin.MapData, error) {
-	format := args.GetAttr("format").AsString()
-
-	var data plugin.Data
-	if datactx != nil {
-		if qr, ok := datactx[frontMatterQueryResultKey]; ok {
-			data = qr
-		}
-	}
-	if data == nil {
-		content := args.GetAttr("content")
-		if !content.IsNull() {
-			var diag diagnostics.Diag
-			data, diag = plugincty.Encode(content)
-			if diag.HasErrors() {
-				return "", nil, diag
-			}
-		}
-	}
-	if data == nil {
-		return "", nil, fmt.Errorf("%s and content are nil", frontMatterQueryResultKey)
-	}
-	m, ok := data.(plugin.MapData)
-	if !ok {
-		return "", nil, fmt.Errorf("invalid frontmatter data type: %T", data)
-	}
-	return format, m, nil
-}
-
-func renderFrontMatterContent(format string, m plugin.MapData) (string, error) {
-	switch format {
-	case "yaml":
-		return renderYAMLFrontMatter(m)
-	case "toml":
-		return renderTOMLFrontMatter(m)
-	case "json":
-		return renderJSONFrontMatter(m)
-	default:
-		return "", fmt.Errorf("invalid format: %s", format)
-	}
 }
 
 func renderYAMLFrontMatter(m plugin.MapData) (string, error) {

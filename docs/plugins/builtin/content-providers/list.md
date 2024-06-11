@@ -33,14 +33,24 @@ The content provider supports the following execution parameters:
 content list {
   # Go template for the item of the list
   #
-  # Required string.
+  # Optional string.
   # For example:
-  item_template = "[{{.Title}}]({{.URL}})"
+  # item_template = "[{{.Title}}]({{.URL}})"
+  # 
+  # Default value:
+  item_template = "{{.}}"
 
   # Optional string.
   # Must be one of: "unordered", "ordered", "tasklist"
   # Default value:
   format = "unordered"
+
+  # List of items to render.
+  #
+  # Required data.
+  # Must have a length of at least 1
+  # For example:
+  items = ["First item", "Second item", "Third item"]
 }
 ```
 

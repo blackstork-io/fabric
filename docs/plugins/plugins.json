@@ -76,7 +76,8 @@
         "type": "content-provider",
         "arguments": [
           "format",
-          "item_template"
+          "item_template",
+          "items"
         ]
       },
       {
@@ -477,6 +478,7 @@
           "caption",
           "gist_id",
           "height",
+          "objects",
           "show_footer",
           "show_idrefs",
           "show_labels",
