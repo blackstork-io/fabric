@@ -1,5 +1,5 @@
 ---
-title: {{ .name }}
+title: "`{{ .name }}` content provider"
 plugin:
   name: {{ .plugin.Name }}
   description: {{ .short_desc | quote }}
@@ -49,22 +49,22 @@ Note the version constraint set for the plugin.
 
 {{ $ctx := . -}}
 {{with .content_provider.Config -}}
-The content provider supports the following configuration parameters:
+The content provider supports the following configuration arguments:
 
 ```hcl
 {{ renderDoc . "config" "content" $ctx.name -}}
 ```
 {{ else -}}
-The content provider doesn't support any configuration parameters.
+The content provider doesn't support any configuration arguments.
 {{ end }}
 #### Usage
 
 {{with .content_provider.Args -}}
-The content provider supports the following execution parameters:
+The content provider supports the following execution arguments:
 
 ```hcl
 {{ renderDoc . "content" $ctx.name -}}
 ```
 {{ else }}
-The content provider doesn't define any execution parameters.
+The content provider doesn't define any execution arguments.
 {{ end }}
