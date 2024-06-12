@@ -42,8 +42,9 @@ The data source supports the following configuration parameters:
 config data snyk_issues {
   # The Snyk API key
   #
-  # Required string. For example:
-  api_key = "some string"
+  # Optional string.
+  # Default value:
+  api_key = null
 }
 ```
 
@@ -55,67 +56,81 @@ The data source supports the following parameters in the data blocks:
 data snyk_issues {
   # The group ID
   #
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   group_id = null
 
   # The organization ID
   #
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   org_id = null
 
   # The scan item ID
   #
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   scan_item_id = null
 
   # The scan item type
   #
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   scan_item_type = null
 
   # The issue type
   #
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   type = null
 
   # The updated before date
   #
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   updated_before = null
 
   # The updated after date
   #
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   updated_after = null
 
   # The created before date
   #
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   created_before = null
 
   # The created after date
   #
-  # Optional string. Default value:
+  # Optional string.
+  # Default value:
   created_after = null
 
   # The effective severity level
   #
-  # Optional list of string. Default value:
+  # Optional list of string.
+  # Default value:
   effective_severity_level = null
 
   # The status
   #
-  # Optional list of string. Default value:
+  # Optional list of string.
+  # Default value:
   status = null
 
   # The ignored flag
   #
-  # Optional bool. Default value:
+  # Optional bool.
+  # Default value:
   ignored = null
 
   # The limit of issues to fetch
   #
-  # Optional number. Default value:
+  # Optional number.
+  # Must be >= 1
+  # Default value:
   limit = null
 }
 ```

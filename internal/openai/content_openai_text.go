@@ -42,10 +42,13 @@ func makeOpenAITextContentSchema(loader ClientLoadFn) *plugin.ContentProvider {
 				Name:        "prompt",
 				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
+				ExampleVal:  cty.StringVal("Summarize the following text: {{.vars.text_to_summarize}}"),
 			},
 			&dataspec.AttrSpec{
-				Name: "model",
-				Type: cty.String,
+				Name:        "model",
+				Type:        cty.String,
+				Constraints: constraint.Meaningful,
+				DefaultVal:  cty.StringVal(defaultModel),
 			},
 		},
 		ContentFunc: genOpenAIText(loader),
@@ -78,17 +81,9 @@ func genOpenAIText(loader ClientLoadFn) plugin.ProvideContentFunc {
 	}
 }
 
-func renderText(ctx context.Context, cli client.Client, cfg, args cty.Value, datactx plugin.MapData) (string, error) {
-	prompt := args.GetAttr("prompt")
-	if prompt.IsNull() || prompt.AsString() == "" {
-		return "", errors.New("prompt is required in invocation")
-	}
-	model := args.GetAttr("model")
-	if model.IsNull() || model.AsString() == "" {
-		model = cty.StringVal(defaultModel)
-	}
+func renderText(ctx context.Context, cli client.Client, cfg, args cty.Value, dataCtx plugin.MapData) (string, error) {
 	params := client.ChatCompletionParams{
-		Model: model.AsString(),
+		Model: args.GetAttr("model").AsString(),
 	}
 	systemPrompt := cfg.GetAttr("system_prompt")
 	if !systemPrompt.IsNull() && systemPrompt.AsString() != "" {
@@ -97,8 +92,7 @@ func renderText(ctx context.Context, cli client.Client, cfg, args cty.Value, dat
 			Content: systemPrompt.AsString(),
 		})
 	}
-	content := prompt.AsString()
-	content, err := templateText(content, datactx)
+	content, err := templateText(args.GetAttr("prompt").AsString(), dataCtx)
 	if err != nil {
 		return "", err
 	}
@@ -116,14 +110,14 @@ func renderText(ctx context.Context, cli client.Client, cfg, args cty.Value, dat
 	return result.Choices[0].Message.Content, nil
 }
 
-func templateText(text string, datactx plugin.MapData) (string, error) {
+func templateText(text string, dataCtx plugin.MapData) (string, error) {
 	tmpl, err := template.New("text").Funcs(sprig.FuncMap()).Parse(text)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse template: %w", err)
 	}
 
 	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, datactx.Any())
+	err = tmpl.Execute(&buf, dataCtx.Any())
 	if err != nil {
 		return "", fmt.Errorf("failed to execute template: %w", err)
 	}

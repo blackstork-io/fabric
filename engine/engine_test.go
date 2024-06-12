@@ -545,14 +545,14 @@ func TestEngineRenderContent(t *testing.T) {
 		[]string{
 			`
 			document "test" {
-				data inline "foo" {
-				  items = ["a", "b", "c"]
-				  x = 1
-				  y = 2
+				vars {
+					items = ["a", "b", "c"]
+					x = 1
+					y = 2
 				}
 				content text {
-				  query = ".data.inline.foo.items | length"
-				  value = "There are {{ .query_result }} items"
+					local_var = query_jq(".vars.items | length")
+					value = "There are {{ .vars.local }} items"
 				}
 			}
 			`,
@@ -572,9 +572,9 @@ func TestEngineRenderContent(t *testing.T) {
 					tags = ["xxx", "yyy"]
 				}
 				content text {
-					query = ".document.meta.authors"
+					local_var = query_jq(".document.meta.authors")
 					value = <<-EOT
-						authors={{ .query_result | join "," }},
+						authors={{ .vars.local | join "," }},
 						version={{ .document.meta.version }},
 						tag={{ index .document.meta.tags 0 }}
 					EOT
@@ -592,21 +592,21 @@ func TestEngineRenderContent(t *testing.T) {
 			`
 			document "test" {
 				meta {
-				  authors = ["foo"]
+					authors = ["foo"]
 				}
 				section {
-				  meta {
-					authors = ["bar"]
-				  }
-				  content text {
 					meta {
-					  authors = ["baz"]
+						authors = ["bar"]
 					}
-					query = "(.document.meta.authors[0] + .section.meta.authors[0] + .content.meta.authors[0])" //
-					value = "author = {{ .query_result }}"
-				  }
+					content text {
+						meta {
+							authors = ["baz"]
+						}
+						local_var = query_jq(".document.meta.authors[0] + .section.meta.authors[0] + .content.meta.authors[0]")
+						value = "author = {{ .vars.local }}"
+					}
 				}
-			  }
+			}
 			`,
 		},
 		"test",
@@ -618,8 +618,8 @@ func TestEngineRenderContent(t *testing.T) {
 		[]string{
 			`
 			content text get_section_author {
-				query = ".section.meta.authors[0] // \"unknown\""
-				value = "author = {{ .query_result }}"
+				local_var = query_jq(".section.meta.authors[0] // \"unknown\"")
+				value = "author = {{ .vars.local }}"
 			}
 			document "test" {
 				content ref {
@@ -673,14 +673,14 @@ func TestEngineRenderContent(t *testing.T) {
 					value = "first result"
 				}
 				content text {
-					query = ".document.content.children[0].markdown"
-					value = "content[0] = {{ .query_result }}"
+					local_var = query_jq(".document.content.children[0].markdown")
+					value = "content[0] = {{ .vars.local }}"
 				}
 				content text {
-					query = ".document.content.children[1].markdown"
-					value = "content[1] = {{ .query_result }}"
+					local_var = query_jq(".document.content.children[1].markdown")
+					value = "content[1] = {{ .vars.local }}"
 				}
-			  }
+			}
 			`,
 		},
 		"test",

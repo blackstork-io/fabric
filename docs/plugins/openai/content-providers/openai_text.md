@@ -60,11 +60,12 @@ The content provider supports the following execution parameters:
 content openai_text {
   # Required string.
   # For example:
-  prompt = "some string"
+  prompt = "Summarize the following text: {{.vars.text_to_summarize}}"
 
   # Optional string.
+  # Must have a length of at least 1
   # Default value:
-  model = null
+  model = "gpt-3.5-turbo"
 }
 ```
 

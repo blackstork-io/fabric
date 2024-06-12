@@ -2,7 +2,7 @@
 title: csv
 plugin:
   name: blackstork/builtin
-  description: "Loads CSV files with the names that match a provided \"glob\" pattern or a single file from a provided path"
+  description: "Loads CSV files with the names that match a provided `glob`pattern or a single file from a provided path"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -16,12 +16,12 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "csv" "data source" >}}
 
 ## Description
-Loads CSV files with the names that match a provided "glob" pattern or a single file from a provided path.
+Loads CSV files with the names that match a provided `glob`pattern or a single file from a provided path.
 
-Either "glob" or "path" attribute must be set.
+Either `glob`or `path`attribute must be set.
 
-When "path" attribute is specified, the data source returns only the content of a file.
-When "glob" attribute is specified, the data source returns a list of dicts that contain the content of a file and file's metadata.
+When `path`attribute is specified, the data source returns only the content of a file.
+When `glob`attribute is specified, the data source returns a list of dicts that contain the content of a file and file's metadata.
 
 Note: the data source assumes that CSV file has a header and turns each line into a map with column titles as keys.
 
@@ -40,7 +40,7 @@ will be represented as the following data structure:
 ]
 ```
 
-When "glob" is used and multiple files match the pattern, the data source will return a list of dicts, for example:
+When `glob`is used and multiple files match the pattern, the data source will return a list of dicts, for example:
 
 ```json
 [
