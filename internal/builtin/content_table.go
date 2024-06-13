@@ -57,13 +57,13 @@ func makeTableContentProvider() *plugin.ContentProvider {
 			Produces a table.
 
 			Each cell template has access to the data context and the following variables:
-			* ` + "`" + `.rows` + "`" + ` – the value of ` + "`" + `rows_var` + "`" + ` attribute
-			* ` + "`" + `.row.value` + "`" + ` – the current row from ` + "`" + `.rows` + "`" + ` list
-			* ` + "`" + `.row.index` + "`" + ` – the current row index
-			* ` + "`" + `.col.index` + "`" + ` – the current column index
+			* ` + "`.rows` – the value of `rows_var` attribute" + `
+			* ` + "`.row.value` – the current row from `.rows` list" + `
+			* ` + "`.row.index` – the current row index" + `
+			* ` + "`.col.index` – the current column index" + `
 
 			Header templates have access to the same variables as value templates,
-			except for ` + "`" + `.row.value` + "`" + ` and ` + "`" + `.row.index` + "`",
+			except for ` + "`.row.value` and `.row.index`",
 	}
 }
 
