@@ -19,8 +19,8 @@ func TestEngineFetchData(t *testing.T) {
 		[]string{
 			`
 			document "hello" {
-				data inline "test" {
-					hello = "world"
+				data json "test" {
+					path = "testdata/a.json"
 				}
 
 				content text {
@@ -29,9 +29,9 @@ func TestEngineFetchData(t *testing.T) {
 			}
 			`,
 		},
-		"document.hello.data.inline.test",
+		"document.hello.data.json.test",
 		plugin.MapData{
-			"hello": plugin.StringData("world"),
+			"property_for": plugin.StringData("a.json"),
 		},
 		[][]diagtest.Assert{},
 	)
@@ -39,8 +39,8 @@ func TestEngineFetchData(t *testing.T) {
 		t, "Basic",
 		[]string{
 			`
-			data inline "test" {
-				hello = "world"
+			data json "test" {
+				path = "testdata/a.json"
 			}
 			document "hello" {
 				content text {
@@ -49,9 +49,9 @@ func TestEngineFetchData(t *testing.T) {
 			}
 			`,
 		},
-		"data.inline.test",
+		"data.json.test",
 		plugin.MapData{
-			"hello": plugin.StringData("world"),
+			"property_for": plugin.StringData("a.json"),
 		},
 		[][]diagtest.Assert{},
 	)
@@ -98,17 +98,15 @@ func TestEngineLint(t *testing.T) {
 		t, "Data ref name warning",
 		[]string{
 			`
-			data inline "name" {
-				inline {
-					a = "1"
-				}
+			data json "name" {
+				path = "testdata/a.json"
 			}
 			document "test-doc" {
 				data ref {
-					base = data.inline.name
+					base = data.json.name
 				}
 				data ref {
-					base = data.inline.name
+					base = data.json.name
 				}
 			}
 			`,
@@ -162,7 +160,7 @@ func TestEngineLint(t *testing.T) {
 		[]string{
 			`
 			document "doc1" {
-				data inline "name1" {
+				data json "name1" {
 					config {}
 				}
 			}
@@ -176,7 +174,7 @@ func TestEngineLint(t *testing.T) {
 		[]string{
 			`
 			document "doc1" {
-				data inline "name1" {
+				data json "name1" {
 					config {}
 				}
 			}
@@ -454,14 +452,12 @@ func TestEngineRenderContent(t *testing.T) {
 		t, "Data ref name warning missing",
 		[]string{
 			`
-			data inline "name" {
-				inline {
-					a = "1"
-				}
+			data json "name" {
+				path = "testdata/a.json"
 			}
 			document "test-doc" {
 				data ref {
-					base = data.inline.name
+					base = data.json.name
 				}
 			}
 			`,
@@ -474,17 +470,15 @@ func TestEngineRenderContent(t *testing.T) {
 		t, "Data ref name warning",
 		[]string{
 			`
-			data inline "name" {
-				inline {
-					a = "1"
-				}
+			data json "name" {
+				path = "testdata/a.json"
 			}
 			document "test-doc" {
 				data ref {
-					base = data.inline.name
+					base = data.json.name
 				}
 				data ref {
-					base = data.inline.name
+					base = data.json.name
 				}
 			}
 			`,
@@ -527,17 +521,17 @@ func TestEngineRenderContent(t *testing.T) {
 		[]string{
 			`
 			document "test-doc" {
-				data inline "name" {
-					attr = "val"
+				data json "name" {
+					path = "testdata/a.json"
 				}
 				content text {
-					value = "From data block: {{.data.inline.name.attr}}"
+					value = "From data block: {{.data.json.name.property_for}}"
 				}
 			}
 			`,
 		},
 		"test-doc",
-		[]string{"From data block: val"},
+		[]string{"From data block: a.json"},
 		diagtest.Asserts{},
 	)
 	renderTest(
