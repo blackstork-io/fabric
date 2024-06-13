@@ -36,4 +36,5 @@ The `document` block is a structure that groups the data definitions, the sectio
 
 ## Next steps
 
-See [Data Blocks]({{< ref "data-blocks.md" >}}) documentation to learn how to define data requirements in the templates.
+See [Evaluation Context]({{< ref context.md >}}) documentation to learn how about the context that
+holds all data available for the template.
