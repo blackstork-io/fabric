@@ -24,7 +24,7 @@ func makeTableContentProvider() *plugin.ContentProvider {
 		ContentFunc: genTableContent,
 		Args: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Name: "rows_var",
+				Name: "rows",
 				Type: dataquery.DelayedEvalType.CtyType(),
 				Doc: "A list of objects representing rows in the table.\n" +
 					"May be set statically or as a result of one or more queries.",
@@ -57,7 +57,7 @@ func makeTableContentProvider() *plugin.ContentProvider {
 			Produces a table.
 
 			Each cell template has access to the data context and the following variables:
-			* ` + "`.rows` – the value of `rows_var` attribute" + `
+			* ` + "`.rows` – the value of `rows` attribute" + `
 			* ` + "`.row.value` – the current row from `.rows` list" + `
 			* ` + "`.row.index` – the current row index" + `
 			* ` + "`.col.index` – the current column index" + `
@@ -68,22 +68,22 @@ func makeTableContentProvider() *plugin.ContentProvider {
 }
 
 func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	var rows_var plugin.ListData
-	rows_val := params.Args.GetAttr("rows_var")
-	if !rows_val.IsNull() {
-		res, err := dataquery.DelayedEvalType.FromCty(rows_val)
+	var rows plugin.ListData
+	rowsVal := params.Args.GetAttr("rows")
+	if !rowsVal.IsNull() {
+		res, err := dataquery.DelayedEvalType.FromCty(rowsVal)
 		if err != nil {
-			return nil, diagnostics.FromErr(err, "failed to get rows_var")
+			return nil, diagnostics.FromErr(err, "failed to get rows")
 		}
 		data := res.Result()
 		var ok bool
 		if data != nil {
-			rows_var, ok = data.(plugin.ListData)
+			rows, ok = data.(plugin.ListData)
 			if !ok {
 				return nil, diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Failed to parse arguments",
-					Detail:   fmt.Sprintf("rows_var must be a list, not %T", data),
+					Detail:   fmt.Sprintf("rows must be a list, not %T", data),
 				}}
 			}
 		}
@@ -97,7 +97,7 @@ func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (
 			Detail:   err.Error(),
 		}}
 	}
-	result, err := renderTableContent(headers, values, params.DataContext, rows_var)
+	result, err := renderTableContent(headers, values, params.DataContext, rows)
 	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -139,20 +139,20 @@ func parseTableContentArgs(params *plugin.ProvideContentParams) (headers, values
 	return
 }
 
-func renderTableContent(headers, values []tableCellTmpl, dataCtx plugin.MapData, rows_var plugin.ListData) (string, error) {
+func renderTableContent(headers, values []tableCellTmpl, dataCtx plugin.MapData, rowsList plugin.ListData) (string, error) {
 	var buf bytes.Buffer
 
 	data := dataCtx.Any().(map[string]any)
 
-	rows := rows_var.Any().([]any)
+	rows := rowsList.Any().([]any)
 	data["rows"] = rows
 	col := map[string]any{}
 	data["col"] = col
 	buf.WriteByte('|')
 	var cellBuf bytes.Buffer
-	for col_idx, header := range headers {
+	for colIdx, header := range headers {
 		cellBuf.Reset()
-		col["index"] = col_idx + 1
+		col["index"] = colIdx + 1
 		err := header.Execute(&cellBuf, data)
 		if err != nil {
 			return "", fmt.Errorf("failed to render header: %w", err)
@@ -177,13 +177,13 @@ func renderTableContent(headers, values []tableCellTmpl, dataCtx plugin.MapData,
 	dataRow := map[string]any{}
 	data["row"] = dataRow
 
-	for row_idx, row := range rows {
+	for rowIdx, row := range rows {
 		buf.WriteByte('|')
-		dataRow["index"] = row_idx + 1
+		dataRow["index"] = rowIdx + 1
 		dataRow["value"] = row
-		for col_idx, value := range values {
+		for colIdx, value := range values {
 			cellBuf.Reset()
-			col["index"] = col_idx + 1
+			col["index"] = colIdx + 1
 			err := value.Execute(&cellBuf, data)
 			if err != nil {
 				return "", fmt.Errorf("failed to render value: %w", err)

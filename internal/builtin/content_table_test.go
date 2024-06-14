@@ -47,7 +47,7 @@ func (s *TableGeneratorTestSuite) TestNilRowVars() {
 			value  = "{{.age}}"
 		}
 	]
-	rows_var = null
+	rows = null
 	`
 	dataCtx := plugin.MapData{
 		"col_prefix": plugin.StringData("User"),
@@ -75,7 +75,7 @@ func (s *TableGeneratorTestSuite) TestEmptyQueryResult() {
 			value  = "{{.age}}"
 		}
 	]
-	rows_var = null
+	rows = null
 	`
 
 	dataCtx := plugin.MapData{
@@ -103,7 +103,7 @@ func (s *TableGeneratorTestSuite) TestBasic() {
 			value  = "{{.row.value.age}}"
 		}
 	]
-	rows_var = [
+	rows = [
 		{name = "John", age = 42},
 		{name = "Jane", age = 43}
 	]
@@ -133,7 +133,7 @@ func (s *TableGeneratorTestSuite) TestSprigTemplate() {
 			value  = "{{.row.value.age}}"
 		}
 	]
-	rows_var = [
+	rows = [
 		{name = "John", age = 42},
 		{name = "Jane", age = 43}
 	]
@@ -239,7 +239,7 @@ func (s *TableGeneratorTestSuite) TestNilColumns() {
 func (s *TableGeneratorTestSuite) TestEmptyColumns() {
 	val := `
 	columns = []
-	rows_var = [
+	rows = [
 		{name = "John", age = 42},
 		{name = "Jane", age = 43}
 	]
