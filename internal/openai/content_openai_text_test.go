@@ -7,12 +7,13 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/openai/client"
 	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/openai/client"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
@@ -69,17 +70,15 @@ func (s *OpenAITextContentTestSuite) TestBasic() {
 		},
 	}, nil)
 	ctx := context.Background()
+	dataCtx := plugin.MapData{}
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"prompt": cty.StringVal("Tell me a story"),
-			"model":  cty.NullVal(cty.String),
-		}),
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"api_key":         cty.StringVal("api_key_123"),
-			"organization_id": cty.NullVal(cty.String),
-			"system_prompt":   cty.NullVal(cty.String),
-		}),
-		DataContext: plugin.MapData{},
+		Args: plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+			prompt = "Tell me a story"
+		`, dataCtx, diagtest.Asserts{}),
+		Config: plugintest.DecodeAndAssert(s.T(), s.schema.Config, `
+			api_key = "api_key_123"
+		`, dataCtx, diagtest.Asserts{}),
+		DataContext: dataCtx,
 	})
 	s.Nil(diags)
 	s.Equal("Once upon a time.", mdprint.PrintString(result.Content))
@@ -111,68 +110,60 @@ func (s *OpenAITextContentTestSuite) TestAdvanced() {
 		},
 	}, nil)
 	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"prompt": cty.StringVal("Tell me a story about {{.query_result.foo | upper}}. {{ .query_result | toRawJson }}"),
-			"model":  cty.StringVal("model_123"),
-		}),
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"api_key":         cty.StringVal("api_key_123"),
-			"organization_id": cty.StringVal("org_id_123"),
-			"system_prompt":   cty.StringVal("Some system message."),
-		}),
-		DataContext: plugin.MapData{
-			"query_result": plugin.MapData{
-				"foo": plugin.StringData("bar"),
-			},
+	dataCtx := plugin.MapData{
+		"local": plugin.MapData{
+			"foo": plugin.StringData("bar"),
 		},
+	}
+
+	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
+		Args: plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+			prompt = "Tell me a story about {{.local.foo | upper}}. {{ .local | toRawJson }}"
+			model = "model_123"
+		`, dataCtx, diagtest.Asserts{}),
+		Config: plugintest.DecodeAndAssert(s.T(), s.schema.Config, `
+			api_key = "api_key_123"
+			organization_id = "org_id_123"
+			system_prompt = "Some system message."
+		`, dataCtx, diagtest.Asserts{}),
+		DataContext: dataCtx,
 	})
-	s.Nil(diags)
+	s.Empty(diags)
 	s.Equal("Once upon a time.", mdprint.PrintString(result.Content))
 }
 
 func (s *OpenAITextContentTestSuite) TestMissingPrompt() {
-	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"prompt": cty.NullVal(cty.String),
-			"model":  cty.NullVal(cty.String),
-		}),
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"api_key":         cty.StringVal("api_key_123"),
-			"organization_id": cty.NullVal(cty.String),
-			"system_prompt":   cty.NullVal(cty.String),
-		}),
-		DataContext: plugin.MapData{},
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, "", plugin.MapData{}, diagtest.Asserts{
+		{
+			diagtest.IsError,
+			diagtest.SummaryEquals("Missing required argument"),
+			diagtest.DetailContains("prompt"),
+		},
+		{
+			diagtest.IsError,
+			diagtest.SummaryEquals("Attribute must be non-null"),
+			diagtest.DetailContains("prompt"),
+		},
 	})
-	s.Nil(result)
-	s.Equal(diagnostics.Diag{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to generate text",
-		Detail:   "prompt is required in invocation",
-	}}, diags)
 }
 
 func (s *OpenAITextContentTestSuite) TestMissingAPIKey() {
-	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"prompt": cty.StringVal("Tell me a story"),
-			"model":  cty.NullVal(cty.String),
-		}),
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"api_key":         cty.NullVal(cty.String),
-			"organization_id": cty.NullVal(cty.String),
-			"system_prompt":   cty.NullVal(cty.String),
-		}),
-		DataContext: plugin.MapData{},
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+		prompt = "Tell me a story"
+	`, plugin.MapData{}, diagtest.Asserts{})
+	plugintest.DecodeAndAssert(s.T(), s.schema.Config, `
+	`, plugin.MapData{}, diagtest.Asserts{
+		{
+			diagtest.IsError,
+			diagtest.SummaryEquals("Missing required argument"),
+			diagtest.DetailContains("api_key"),
+		},
+		{
+			diagtest.IsError,
+			diagtest.SummaryEquals("Attribute must be non-null"),
+			diagtest.DetailContains("api_key"),
+		},
 	})
-	s.Nil(result)
-	s.Equal(diagnostics.Diag{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to create client",
-		Detail:   "api_key is required in configuration",
-	}}, diags)
 }
 
 func (s *OpenAITextContentTestSuite) TestFailingClient() {
@@ -181,17 +172,15 @@ func (s *OpenAITextContentTestSuite) TestFailingClient() {
 		Message: "error_message",
 	})
 	ctx := context.Background()
+	dataCtx := plugin.MapData{}
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"prompt": cty.StringVal("Tell me a story"),
-			"model":  cty.NullVal(cty.String),
-		}),
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"api_key":         cty.StringVal("api_key_123"),
-			"organization_id": cty.NullVal(cty.String),
-			"system_prompt":   cty.NullVal(cty.String),
-		}),
-		DataContext: plugin.MapData{},
+		Args: plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+			prompt = "Tell me a story"
+		`, dataCtx, diagtest.Asserts{}),
+		Config: plugintest.DecodeAndAssert(s.T(), s.schema.Config, `
+			api_key = "api_key_123"
+		`, dataCtx, diagtest.Asserts{}),
+		DataContext: dataCtx,
 	})
 	s.Nil(result)
 	s.Equal(diagnostics.Diag{{
@@ -205,17 +194,15 @@ func (s *OpenAITextContentTestSuite) TestCancellation() {
 	s.cli.On("GenerateChatCompletion", mock.Anything, mock.Anything).Return(nil, context.Canceled)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
+	dataCtx := plugin.MapData{}
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"prompt": cty.StringVal("Tell me a story"),
-			"model":  cty.NullVal(cty.String),
-		}),
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"api_key":         cty.StringVal("api_key_123"),
-			"organization_id": cty.NullVal(cty.String),
-			"system_prompt":   cty.NullVal(cty.String),
-		}),
-		DataContext: plugin.MapData{},
+		Args: plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+			prompt = "Tell me a story"
+		`, dataCtx, diagtest.Asserts{}),
+		Config: plugintest.DecodeAndAssert(s.T(), s.schema.Config, `
+			api_key = "api_key_123"
+		`, dataCtx, diagtest.Asserts{}),
+		DataContext: dataCtx,
 	})
 	s.Nil(result)
 	s.Equal(diagnostics.Diag{{
@@ -232,17 +219,15 @@ func (s *OpenAITextContentTestSuite) TestErrorEncoding() {
 	}
 	s.cli.On("GenerateChatCompletion", mock.Anything, mock.Anything).Return(nil, want)
 	ctx := context.Background()
+	dataCtx := plugin.MapData{}
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"prompt": cty.StringVal("Tell me a story"),
-			"model":  cty.NullVal(cty.String),
-		}),
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"api_key":         cty.StringVal("api_key_123"),
-			"organization_id": cty.NullVal(cty.String),
-			"system_prompt":   cty.NullVal(cty.String),
-		}),
-		DataContext: plugin.MapData{},
+		Args: plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+			prompt = "Tell me a story"
+		`, dataCtx, diagtest.Asserts{}),
+		Config: plugintest.DecodeAndAssert(s.T(), s.schema.Config, `
+			api_key = "api_key_123"
+		`, dataCtx, diagtest.Asserts{}),
+		DataContext: dataCtx,
 	})
 	s.Nil(result)
 	s.Equal(diagnostics.Diag{{

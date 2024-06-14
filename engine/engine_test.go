@@ -19,8 +19,8 @@ func TestEngineFetchData(t *testing.T) {
 		[]string{
 			`
 			document "hello" {
-				data inline "test" {
-					hello = "world"
+				data json "test" {
+					path = "testdata/a.json"
 				}
 
 				content text {
@@ -29,9 +29,9 @@ func TestEngineFetchData(t *testing.T) {
 			}
 			`,
 		},
-		"document.hello.data.inline.test",
+		"document.hello.data.json.test",
 		plugin.MapData{
-			"hello": plugin.StringData("world"),
+			"property_for": plugin.StringData("a.json"),
 		},
 		[][]diagtest.Assert{},
 	)
@@ -39,8 +39,8 @@ func TestEngineFetchData(t *testing.T) {
 		t, "Basic",
 		[]string{
 			`
-			data inline "test" {
-				hello = "world"
+			data json "test" {
+				path = "testdata/a.json"
 			}
 			document "hello" {
 				content text {
@@ -49,9 +49,9 @@ func TestEngineFetchData(t *testing.T) {
 			}
 			`,
 		},
-		"data.inline.test",
+		"data.json.test",
 		plugin.MapData{
-			"hello": plugin.StringData("world"),
+			"property_for": plugin.StringData("a.json"),
 		},
 		[][]diagtest.Assert{},
 	)
@@ -98,17 +98,15 @@ func TestEngineLint(t *testing.T) {
 		t, "Data ref name warning",
 		[]string{
 			`
-			data inline "name" {
-				inline {
-					a = "1"
-				}
+			data json "name" {
+				path = "testdata/a.json"
 			}
 			document "test-doc" {
 				data ref {
-					base = data.inline.name
+					base = data.json.name
 				}
 				data ref {
-					base = data.inline.name
+					base = data.json.name
 				}
 			}
 			`,
@@ -162,7 +160,7 @@ func TestEngineLint(t *testing.T) {
 		[]string{
 			`
 			document "doc1" {
-				data inline "name1" {
+				data json "name1" {
 					config {}
 				}
 			}
@@ -176,7 +174,7 @@ func TestEngineLint(t *testing.T) {
 		[]string{
 			`
 			document "doc1" {
-				data inline "name1" {
+				data json "name1" {
 					config {}
 				}
 			}
@@ -454,14 +452,12 @@ func TestEngineRenderContent(t *testing.T) {
 		t, "Data ref name warning missing",
 		[]string{
 			`
-			data inline "name" {
-				inline {
-					a = "1"
-				}
+			data json "name" {
+				path = "testdata/a.json"
 			}
 			document "test-doc" {
 				data ref {
-					base = data.inline.name
+					base = data.json.name
 				}
 			}
 			`,
@@ -474,17 +470,15 @@ func TestEngineRenderContent(t *testing.T) {
 		t, "Data ref name warning",
 		[]string{
 			`
-			data inline "name" {
-				inline {
-					a = "1"
-				}
+			data json "name" {
+				path = "testdata/a.json"
 			}
 			document "test-doc" {
 				data ref {
-					base = data.inline.name
+					base = data.json.name
 				}
 				data ref {
-					base = data.inline.name
+					base = data.json.name
 				}
 			}
 			`,
@@ -527,17 +521,17 @@ func TestEngineRenderContent(t *testing.T) {
 		[]string{
 			`
 			document "test-doc" {
-				data inline "name" {
-					attr = "val"
+				data json "name" {
+					path = "testdata/a.json"
 				}
 				content text {
-					value = "From data block: {{.data.inline.name.attr}}"
+					value = "From data block: {{.data.json.name.property_for}}"
 				}
 			}
 			`,
 		},
 		"test-doc",
-		[]string{"From data block: val"},
+		[]string{"From data block: a.json"},
 		diagtest.Asserts{},
 	)
 	renderTest(
@@ -545,14 +539,14 @@ func TestEngineRenderContent(t *testing.T) {
 		[]string{
 			`
 			document "test" {
-				data inline "foo" {
-				  items = ["a", "b", "c"]
-				  x = 1
-				  y = 2
+				vars {
+					items = ["a", "b", "c"]
+					x = 1
+					y = 2
 				}
 				content text {
-				  query = ".data.inline.foo.items | length"
-				  value = "There are {{ .query_result }} items"
+					local_var = query_jq(".vars.items | length")
+					value = "There are {{ .vars.local }} items"
 				}
 			}
 			`,
@@ -572,9 +566,9 @@ func TestEngineRenderContent(t *testing.T) {
 					tags = ["xxx", "yyy"]
 				}
 				content text {
-					query = ".document.meta.authors"
+					local_var = query_jq(".document.meta.authors")
 					value = <<-EOT
-						authors={{ .query_result | join "," }},
+						authors={{ .vars.local | join "," }},
 						version={{ .document.meta.version }},
 						tag={{ index .document.meta.tags 0 }}
 					EOT
@@ -592,21 +586,21 @@ func TestEngineRenderContent(t *testing.T) {
 			`
 			document "test" {
 				meta {
-				  authors = ["foo"]
+					authors = ["foo"]
 				}
 				section {
-				  meta {
-					authors = ["bar"]
-				  }
-				  content text {
 					meta {
-					  authors = ["baz"]
+						authors = ["bar"]
 					}
-					query = "(.document.meta.authors[0] + .section.meta.authors[0] + .content.meta.authors[0])" //
-					value = "author = {{ .query_result }}"
-				  }
+					content text {
+						meta {
+							authors = ["baz"]
+						}
+						local_var = query_jq(".document.meta.authors[0] + .section.meta.authors[0] + .content.meta.authors[0]")
+						value = "author = {{ .vars.local }}"
+					}
 				}
-			  }
+			}
 			`,
 		},
 		"test",
@@ -618,8 +612,8 @@ func TestEngineRenderContent(t *testing.T) {
 		[]string{
 			`
 			content text get_section_author {
-				query = ".section.meta.authors[0] // \"unknown\""
-				value = "author = {{ .query_result }}"
+				local_var = query_jq(".section.meta.authors[0] // \"unknown\"")
+				value = "author = {{ .vars.local }}"
 			}
 			document "test" {
 				content ref {
@@ -673,14 +667,14 @@ func TestEngineRenderContent(t *testing.T) {
 					value = "first result"
 				}
 				content text {
-					query = ".document.content.children[0].markdown"
-					value = "content[0] = {{ .query_result }}"
+					local_var = query_jq(".document.content.children[0].markdown")
+					value = "content[0] = {{ .vars.local }}"
 				}
 				content text {
-					query = ".document.content.children[1].markdown"
-					value = "content[1] = {{ .query_result }}"
+					local_var = query_jq(".document.content.children[1].markdown")
+					value = "content[1] = {{ .vars.local }}"
 				}
-			  }
+			}
 			`,
 		},
 		"test",

@@ -3,23 +3,18 @@ package builtin
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
-	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
-)
-
-const (
-	listQueryResultKey = "query_result"
 )
 
 func makeListContentProvider() *plugin.ContentProvider {
@@ -29,7 +24,8 @@ func makeListContentProvider() *plugin.ContentProvider {
 			&dataspec.AttrSpec{
 				Name:        "item_template",
 				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
+				Constraints: constraint.NonNull,
+				DefaultVal:  cty.StringVal("{{.}}"),
 				ExampleVal:  cty.StringVal(`[{{.Title}}]({{.URL}})`),
 				Doc:         "Go template for the item of the list",
 			},
@@ -43,13 +39,26 @@ func makeListContentProvider() *plugin.ContentProvider {
 					cty.StringVal("tasklist"),
 				},
 			},
+			&dataspec.AttrSpec{
+				Name:        "items",
+				Type:        dataquery.DelayedEvalType.CtyType(),
+				Constraints: constraint.RequiredMeaningful,
+				ExampleVal: cty.ListVal([]cty.Value{
+					cty.StringVal("First item"),
+					cty.StringVal("Second item"),
+					cty.StringVal("Third item"),
+				}),
+				Doc: "List of items to render.",
+			},
 		},
 		Doc: "Produces a list of items",
 	}
 }
 
 func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	format, tmpl, err := parseListContentArgs(params)
+	format := params.Args.GetAttr("format").AsString()
+
+	tmpl, err := template.New("item").Funcs(sprig.FuncMap()).Parse(params.Args.GetAttr("item_template").AsString())
 	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -57,7 +66,25 @@ func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 			Detail:   err.Error(),
 		}}
 	}
-	result, err := renderListContent(format, tmpl, params.DataContext)
+
+	items := dataquery.DelayedEvalType.MustFromCty(params.Args.GetAttr("items")).Result()
+	if items == nil {
+		return nil, diagnostics.Diag{{
+			Severity: hcl.DiagError,
+			Summary:  "Failed to parse arguments",
+			Detail:   "Data is nil",
+		}}
+	}
+	itemsList, ok := items.(plugin.ListData)
+	if !ok {
+		return nil, diagnostics.Diag{{
+			Severity: hcl.DiagError,
+			Summary:  "Failed to parse arguments",
+			Detail:   "Data must be a list",
+		}}
+	}
+
+	result, err := renderListContent(format, tmpl, itemsList)
 	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -72,30 +99,12 @@ func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 	}, nil
 }
 
-func parseListContentArgs(params *plugin.ProvideContentParams) (string, *template.Template, error) {
-	itemTemplate := params.Args.GetAttr("item_template")
-	format := params.Args.GetAttr("format").AsString()
-
-	tmpl, err := template.New("item").Funcs(sprig.FuncMap()).Parse(itemTemplate.AsString())
-	return format, tmpl, err
-}
-
-func renderListContent(format string, tmpl *template.Template, datactx plugin.MapData) (string, error) {
-	if datactx == nil {
-		return "", errors.New("data context is required")
-	}
-	queryResult, ok := datactx[listQueryResultKey]
-	if !ok || queryResult == nil {
-		return "", errors.New("query_result is required in data context")
-	}
-	items, ok := queryResult.(plugin.ListData)
-	if !ok {
-		return "", errors.New("query_result must be an array")
-	}
+func renderListContent(format string, tmpl *template.Template, items plugin.ListData) (string, error) {
 	var buf bytes.Buffer
+	var tmpBuf bytes.Buffer
 	for i, item := range items {
-		tmpbuf := bytes.Buffer{}
-		err := tmpl.Execute(&tmpbuf, item.Any())
+		tmpBuf.Reset()
+		err := tmpl.Execute(&tmpBuf, item.Any())
 		if err != nil {
 			return "", err
 		}
@@ -106,7 +115,7 @@ func renderListContent(format string, tmpl *template.Template, datactx plugin.Ma
 		} else {
 			fmt.Fprintf(&buf, "%d. ", i+1)
 		}
-		buf.WriteString(strings.TrimSpace(strings.ReplaceAll(tmpbuf.String(), "\n", " ")))
+		buf.Write(bytes.TrimSpace(bytes.ReplaceAll(tmpBuf.Bytes(), []byte("\n"), []byte(" "))))
 		buf.WriteString("\n")
 	}
 	return buf.String(), nil

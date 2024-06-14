@@ -6,9 +6,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
@@ -33,23 +34,16 @@ func (s *StixViewTestSuite) TestSchema() {
 }
 
 func (s *StixViewTestSuite) TestGistID() {
+	dataCtx := plugin.MapData{}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+		gist_id = "123"
+	`, dataCtx, diagtest.Asserts{})
+
 	res, diags := s.schema.ContentFunc(context.Background(), &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"gist_id":            cty.StringVal("123"),
-			"stix_url":           cty.NullVal(cty.String),
-			"caption":            cty.NullVal(cty.String),
-			"show_footer":        cty.NullVal(cty.Bool),
-			"show_sidebar":       cty.NullVal(cty.Bool),
-			"show_tlp_as_tags":   cty.NullVal(cty.Bool),
-			"show_marking_nodes": cty.NullVal(cty.Bool),
-			"show_labels":        cty.NullVal(cty.Bool),
-			"show_idrefs":        cty.NullVal(cty.Bool),
-			"width":              cty.NullVal(cty.Number),
-			"height":             cty.NullVal(cty.Number),
-		}),
-		DataContext: plugin.MapData{},
+		Args:        args,
+		DataContext: dataCtx,
 	})
-	s.Len(diags, 0)
+	s.Empty(diags)
 	s.Equal(strings.Join([]string{
 		`<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`,
 		`<div data-stix-gist-id="123">`,
@@ -58,23 +52,17 @@ func (s *StixViewTestSuite) TestGistID() {
 }
 
 func (s *StixViewTestSuite) TestStixURL() {
+	dataCtx := plugin.MapData{}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+		stix_url = "https://example.com/stix.json"
+	`, dataCtx, diagtest.Asserts{})
+
 	res, diags := s.schema.ContentFunc(context.Background(), &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"gist_id":            cty.NullVal(cty.String),
-			"stix_url":           cty.StringVal("https://example.com/stix.json"),
-			"caption":            cty.NullVal(cty.String),
-			"show_footer":        cty.NullVal(cty.Bool),
-			"show_sidebar":       cty.NullVal(cty.Bool),
-			"show_tlp_as_tags":   cty.NullVal(cty.Bool),
-			"show_marking_nodes": cty.NullVal(cty.Bool),
-			"show_labels":        cty.NullVal(cty.Bool),
-			"show_idrefs":        cty.NullVal(cty.Bool),
-			"width":              cty.NullVal(cty.Number),
-			"height":             cty.NullVal(cty.Number),
-		}),
-		DataContext: plugin.MapData{},
+		Args:        args,
+		DataContext: dataCtx,
 	})
-	s.Len(diags, 0)
+
+	s.Empty(diags)
 	s.Equal(strings.Join([]string{
 		`<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`,
 		`<div data-stix-url="https://example.com/stix.json">`,
@@ -83,23 +71,27 @@ func (s *StixViewTestSuite) TestStixURL() {
 }
 
 func (s *StixViewTestSuite) TestAllArgs() {
+	dataCtx := plugin.MapData{}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+		gist_id = "123"
+		caption = "test caption"
+		show_footer = true
+		show_sidebar = true
+		show_tlp_as_tags = true
+		show_marking_nodes = true
+		show_labels = true
+		show_idrefs = true
+		width = 400
+		height = 300
+
+	`, dataCtx, diagtest.Asserts{})
+
 	res, diags := s.schema.ContentFunc(context.Background(), &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"gist_id":            cty.StringVal("123"),
-			"stix_url":           cty.NullVal(cty.String),
-			"caption":            cty.StringVal("test caption"),
-			"show_footer":        cty.BoolVal(true),
-			"show_sidebar":       cty.BoolVal(true),
-			"show_tlp_as_tags":   cty.BoolVal(true),
-			"show_marking_nodes": cty.BoolVal(true),
-			"show_labels":        cty.BoolVal(true),
-			"show_idrefs":        cty.BoolVal(true),
-			"width":              cty.NumberIntVal(400),
-			"height":             cty.NumberIntVal(300),
-		}),
-		DataContext: plugin.MapData{},
+		Args:        args,
+		DataContext: dataCtx,
 	})
-	s.Len(diags, 0)
+
+	s.Empty(diags)
 	s.Equal(strings.Join([]string{
 		`<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`,
 		`<div data-stix-gist-id="123" data-show-sidebar=true data-show-footer=true data-show-tlp-as-tags=true data-caption="test caption" data-show-marking-nodes=true data-show-labels=true data-show-idrefs=true data-graph-width=400 data-graph-height=300>`,
@@ -107,30 +99,20 @@ func (s *StixViewTestSuite) TestAllArgs() {
 	}, "\n"), mdprint.PrintString(res.Content))
 }
 
-func (s *StixViewTestSuite) TestQueryResult() {
+func (s *StixViewTestSuite) TestDataCtx() {
+	dataCtx := plugin.MapData{}
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+		objects = [
+			{"key" = "value"}
+		]
+
+	`, dataCtx, diagtest.Asserts{})
+
 	res, diags := s.schema.ContentFunc(context.Background(), &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"gist_id":            cty.NullVal(cty.String),
-			"stix_url":           cty.NullVal(cty.String),
-			"caption":            cty.NullVal(cty.String),
-			"show_footer":        cty.NullVal(cty.Bool),
-			"show_sidebar":       cty.NullVal(cty.Bool),
-			"show_tlp_as_tags":   cty.NullVal(cty.Bool),
-			"show_marking_nodes": cty.NullVal(cty.Bool),
-			"show_labels":        cty.NullVal(cty.Bool),
-			"show_idrefs":        cty.NullVal(cty.Bool),
-			"width":              cty.NullVal(cty.Number),
-			"height":             cty.NullVal(cty.Number),
-		}),
-		DataContext: plugin.MapData{
-			"query_result": plugin.ListData{
-				plugin.MapData{
-					"key": plugin.StringData("value"),
-				},
-			},
-		},
+		Args:        args,
+		DataContext: dataCtx,
 	})
-	s.Len(diags, 0)
+	s.Empty(diags)
 	s.Contains(mdprint.PrintString(res.Content), `<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`)
 	s.Contains(mdprint.PrintString(res.Content), `<div id="graph-`)
 	s.Contains(mdprint.PrintString(res.Content), `window.stixview.init(`)

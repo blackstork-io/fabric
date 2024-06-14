@@ -1,8 +1,6 @@
 package openai
 
 import (
-	"fmt"
-
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/openai/client"
@@ -10,8 +8,7 @@ import (
 )
 
 const (
-	defaultModel   = "gpt-3.5-turbo"
-	queryResultKey = "query_result"
+	defaultModel = "gpt-3.5-turbo"
 )
 
 type ClientLoadFn func(opts ...client.Option) client.Client
@@ -32,12 +29,9 @@ func Plugin(version string, loader ClientLoadFn) *plugin.Schema {
 }
 
 func makeClient(loader ClientLoadFn, cfg cty.Value) (client.Client, error) {
-	opts := []client.Option{}
-	apiKey := cfg.GetAttr("api_key")
-	if apiKey.IsNull() || apiKey.AsString() == "" {
-		return nil, fmt.Errorf("api_key is required in configuration")
+	opts := []client.Option{
+		client.WithAPIKey(cfg.GetAttr("api_key").AsString()),
 	}
-	opts = append(opts, client.WithAPIKey(apiKey.AsString()))
 	orgID := cfg.GetAttr("organization_id")
 	if !orgID.IsNull() && orgID.AsString() != "" {
 		opts = append(opts, client.WithOrgID(orgID.AsString()))

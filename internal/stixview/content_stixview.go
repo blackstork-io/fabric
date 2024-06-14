@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -82,6 +83,10 @@ func makeStixViewContentProvider() *plugin.ContentProvider {
 				Name: "height",
 				Type: cty.Number,
 			},
+			&dataspec.AttrSpec{
+				Name: "objects",
+				Type: dataquery.DelayedEvalType.CtyType(),
+			},
 		},
 		ContentFunc: renderStixView,
 	}
@@ -109,20 +114,35 @@ func renderStixView(ctx context.Context, params *plugin.ProvideContentParams) (*
 		Args: args,
 		UID:  base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(uid[:]),
 	}
-	if queryResult, ok := params.DataContext["query_result"]; ok {
-		rctx.QueryResult, ok = queryResult.(plugin.ListData)
-		if !ok {
-			return nil, diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Invalid query result",
-				Detail:   "Query result is not a list",
-			}}
+
+	objectCty := params.Args.GetAttr("objects")
+	if !objectCty.IsNull() {
+		objects := dataquery.DelayedEvalType.MustFromCty(objectCty).Result()
+		if objects != nil {
+			var ok bool
+			rctx.Objects, ok = objects.(plugin.ListData)
+			if !ok {
+				return nil, diagnostics.Diag{{
+					Severity: hcl.DiagError,
+					Summary:  "Invalid query result",
+					Detail:   "Query result is not a list",
+				}}
+			}
+			if rctx.Objects == nil {
+				return nil, diagnostics.Diag{{
+					Severity: hcl.DiagError,
+					Summary:  "Invalid query result",
+					Detail:   "Query result is null",
+				}}
+			}
 		}
-	} else if args.StixURL == nil && args.GistID == nil {
+	}
+
+	if rctx.Objects == nil && args.StixURL == nil && args.GistID == nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Missing arugments",
-			Detail:   "Must provide either stix_url or gist_id or query_result",
+			Detail:   "Must provide either stix_url or gist_id or objects",
 		}}
 	}
 	buf := bytes.NewBufferString("")
@@ -143,9 +163,9 @@ func renderStixView(ctx context.Context, params *plugin.ProvideContentParams) (*
 }
 
 type renderContext struct {
-	Args        *stixViewArgs
-	UID         string
-	QueryResult plugin.ListData
+	Args    *stixViewArgs
+	UID     string
+	Objects plugin.ListData
 }
 
 type stixViewArgs struct {

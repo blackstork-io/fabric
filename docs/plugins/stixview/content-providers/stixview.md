@@ -85,6 +85,10 @@ content stixview {
   # Optional number.
   # Default value:
   height = null
+
+  # Optional data.
+  # Default value:
+  objects = null
 }
 ```
 

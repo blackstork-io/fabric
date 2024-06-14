@@ -30,7 +30,8 @@ The publisher supports the following execution parameters:
 publish local_file {
   # Path to the file
   #
-  # Required string. For example:
+  # Required string.
+  # For example:
   path = "dist/output.md"
 }
 

@@ -5,21 +5,16 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/parser/definitions"
-	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
 type PluginContentAction struct {
 	*PluginAction
 	Provider *plugin.ContentProvider
-	Query    *dataquery.JqQuery
 	Vars     *definitions.ParsedVars
 }
 
@@ -38,15 +33,6 @@ func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx pl
 		return
 	}
 
-	if action.Query != nil {
-		var q *dataquery.JqQuery
-		q, diag = action.Query.Eval(ctx, dataCtx)
-		if diags.Extend(diag) {
-			dataCtx["query_result"] = nil
-			return
-		}
-		dataCtx["query_result"] = q.Result
-	}
 	res, diag = action.Provider.Execute(ctx, &plugin.ProvideContentParams{
 		Config:      action.Config,
 		Args:        action.Args,
@@ -91,27 +77,6 @@ func LoadPluginContentAction(providers ContentProviders, node *definitions.Parse
 		})
 		return nil, diags
 	}
-	body := node.Invocation.GetBody()
-	var query *dataquery.JqQuery
-
-	if _, found := body.Attributes["query"]; found {
-		evalCtx := dataquery.JqEvalContext(evaluation.EvalContext())
-
-		value, newBody, stdDiag := hcldec.PartialDecode(body, &hcldec.ObjectSpec{
-			"query": &hcldec.AttrSpec{
-				Name:     "query",
-				Type:     dataquery.JqQueryType.CtyType(),
-				Required: true,
-			},
-		}, evalCtx)
-		if diags.Extend(stdDiag) {
-			return
-		}
-		body = utils.ToHclsyntaxBody(newBody)
-		query = dataquery.JqQueryType.MustFromCty(value.GetAttr("query"))
-	}
-	// finished parsing content-specific attrs and blocks
-	node.Invocation.SetBody(body)
 
 	var args cty.Value
 	args, diag := node.Invocation.ParseInvocation(cp.Args)
@@ -127,7 +92,6 @@ func LoadPluginContentAction(providers ContentProviders, node *definitions.Parse
 			Args:       args,
 		},
 		Provider: cp,
-		Query:    query,
 		Vars:     node.Vars,
 	}, diags
 }

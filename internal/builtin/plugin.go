@@ -15,12 +15,11 @@ func Plugin(version string, logger *slog.Logger, tracer trace.Tracer) *plugin.Sc
 		Name:    Name,
 		Version: version,
 		DataSources: plugin.DataSources{
-			"csv":    makeCSVDataSource(),
-			"txt":    makeTXTDataSource(),
-			"rss":    makeRSSDataSource(),
-			"json":   makeJSONDataSource(),
-			"http":   makeHTTPDataSource(version),
-			"inline": makeInlineDataSource(),
+			"csv":  makeCSVDataSource(),
+			"txt":  makeTXTDataSource(),
+			"rss":  makeRSSDataSource(),
+			"json": makeJSONDataSource(),
+			"http": makeHTTPDataSource(version),
 		},
 		ContentProviders: plugin.ContentProviders{
 			"toc":         makeTOCContentProvider(),

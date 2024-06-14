@@ -1,19 +1,55 @@
 package builtin
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/pelletier/go-toml/v2"
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/gocty"
+	"gopkg.in/yaml.v3"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
+
+type testStructInner struct {
+	Corge  string `cty:"Corge" yaml:"Corge" toml:"Corge" json:"Corge"`
+	Garply bool   `cty:"Garply" yaml:"Garply" toml:"Garply" json:"Garply"`
+}
+
+type testStruct struct {
+	Baz   float32         `cty:"Baz" yaml:"Baz" toml:"Baz" json:"Baz"`
+	Foo   string          `cty:"Foo" yaml:"Foo" toml:"Foo" json:"Foo"`
+	Quux  testStructInner `cty:"Quux" yaml:"Quux" toml:"Quux" json:"Quux"`
+	Qux   bool            `cty:"Qux" yaml:"Qux" toml:"Qux" json:"Qux"`
+	Waldo []string        `cty:"Waldo" yaml:"Waldo" toml:"Waldo" json:"Waldo"`
+}
+
+var testVal = testStruct{
+	Baz: 1,
+	Foo: "bar",
+	Quux: testStructInner{
+		Corge:  "grault",
+		Garply: false,
+	},
+	Qux:   true,
+	Waldo: []string{"fred", "plugh"},
+}
+
+var testValCty = utils.Must(gocty.ToCtyValue(
+	&testVal,
+	utils.Must(gocty.ImpliedType(&testVal)),
+))
 
 type FrontMatterGeneratorTestSuite struct {
 	suite.Suite
@@ -22,6 +58,30 @@ type FrontMatterGeneratorTestSuite struct {
 
 func TestFrontMatterGeneratorSuite(t *testing.T) {
 	suite.Run(t, &FrontMatterGeneratorTestSuite{})
+}
+
+func (s *FrontMatterGeneratorTestSuite) parseFrontmatter(contentStr string) (format string) {
+	require := s.Require()
+
+	content := bytes.TrimSpace([]byte(contentStr))
+	var result testStruct
+	var err error
+	switch {
+	case bytes.HasPrefix(content, []byte("---\n")) && bytes.HasSuffix(content, []byte("\n---")):
+		content = bytes.Trim(content, "-\n")
+		err = yaml.Unmarshal(content, &result)
+		format = "yaml"
+	case bytes.HasPrefix(content, []byte("+++\n")) && bytes.HasSuffix(content, []byte("\n+++")):
+		content = bytes.Trim(content, "+\n")
+		err = toml.Unmarshal(content, &result)
+		format = "toml"
+	default:
+		err = json.Unmarshal(content, &result)
+		format = "json"
+	}
+	require.NoError(err)
+	require.Equal(testVal, result)
+	return
 }
 
 func (s *FrontMatterGeneratorTestSuite) SetupSuite() {
@@ -70,27 +130,28 @@ func (s *FrontMatterGeneratorTestSuite) TestContentAndQueryResultMissing() {
 	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
-		Detail:   "query_result and content are nil",
+		Detail:   "Content is nil",
 	}}, diags)
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestInvalidQueryResult() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"content": cty.NullVal(cty.DynamicPseudoType),
-		"format":  cty.NullVal(cty.String),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
+	val := `
+		format = null
+		content = "invalid_type"
+	`
+	document := plugin.ContentSection{}
+	dataCtx := plugin.MapData{
+		"document": plugin.MapData{
+			"content": document.AsData(),
+		},
+	}
+
+	args := plugintest.DecodeAndAssert(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, dataCtx, diagtest.Asserts{})
 
 	ctx := context.Background()
-	document := plugin.ContentSection{}
 	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"query_result": plugin.StringData("invalid_type"),
-			"document": plugin.MapData{
-				"content": document.AsData(),
-			},
-		},
+		Args:        args,
+		DataContext: dataCtx,
 	})
 	s.Nil(content)
 
@@ -121,31 +182,28 @@ func (s *FrontMatterGeneratorTestSuite) TestContentAndDataContextNil() {
 	s.Equal(diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Failed to parse arguments",
-		Detail:   "query_result and content are nil",
+		Detail:   "Content is nil",
 	}}, diags)
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestWithContent() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"content": cty.ObjectVal(map[string]cty.Value{
-			"baz": cty.NumberIntVal(1),
-			"foo": cty.StringVal("bar"),
-			"quux": cty.ObjectVal(map[string]cty.Value{
-				"corge":  cty.StringVal("grault"),
-				"garply": cty.BoolVal(false),
-			}),
-			"qux": cty.BoolVal(true),
-			"waldo": cty.ListVal([]cty.Value{
-				cty.StringVal("fred"),
-				cty.StringVal("plugh"),
-			}),
-		}),
-		"format": cty.NullVal(cty.String),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
+	f := hclwrite.NewEmptyFile()
+	f.Body().SetAttributeValue("content", testValCty)
+	body := string(f.Bytes())
+
+	document := plugin.ContentSection{}
+	dataCtx := plugin.MapData{
+		"document": plugin.MapData{
+			"content": document.AsData(),
+		},
+	}
+
+	args := plugintest.DecodeAndAssert(
+		s.T(), s.schema.ContentProviders["frontmatter"].Args,
+		body, dataCtx, diagtest.Asserts{},
+	)
 
 	ctx := context.Background()
-	document := plugin.ContentSection{}
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
@@ -155,191 +213,105 @@ func (s *FrontMatterGeneratorTestSuite) TestWithContent() {
 		},
 	})
 	s.Require().Nil(diags)
-	s.Equal("---\n"+
-		"baz: 1\n"+
-		"foo: bar\n"+
-		"quux:\n"+
-		"    corge: grault\n"+
-		"    garply: false\n"+
-		"qux: true\n"+
-		"waldo:\n"+
-		"    - fred\n"+
-		"    - plugh\n"+
-		"---", mdprint.PrintString(result.Content))
-}
-
-func (s *FrontMatterGeneratorTestSuite) TestWithQueryResult() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"content": cty.NullVal(cty.DynamicPseudoType),
-		"format":  cty.NullVal(cty.String),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
-
-	ctx := context.Background()
-	document := plugin.ContentSection{}
-	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"query_result": plugin.MapData{
-				"baz": plugin.NumberData(1),
-				"foo": plugin.StringData("bar"),
-				"quux": plugin.MapData{
-					"corge":  plugin.StringData("grault"),
-					"garply": plugin.BoolData(false),
-				},
-				"qux": plugin.BoolData(true),
-				"waldo": plugin.ListData{
-					plugin.StringData("fred"),
-					plugin.StringData("plugh"),
-				},
-			},
-			"document": plugin.MapData{
-				"content": document.AsData(),
-			},
-		},
-	})
-	s.Equal("---\n"+
-		"baz: 1\n"+
-		"foo: bar\n"+
-		"quux:\n"+
-		"    corge: grault\n"+
-		"    garply: false\n"+
-		"qux: true\n"+
-		"waldo:\n"+
-		"    - fred\n"+
-		"    - plugh\n"+
-		"---", mdprint.PrintString(result.Content))
-	s.Nil(diags)
+	format := s.parseFrontmatter(mdprint.PrintString(result.Content))
+	s.Equal("yaml", format)
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestFormatYaml() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"content": cty.NullVal(cty.DynamicPseudoType),
-		"format":  cty.StringVal("yaml"),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
+	f := hclwrite.NewEmptyFile()
+	hclBody := f.Body()
+	hclBody.SetAttributeValue("content", testValCty)
+	hclBody.SetAttributeValue("format", cty.StringVal("yaml"))
+	body := string(f.Bytes())
+
+	document := plugin.ContentSection{}
+	dataCtx := plugin.MapData{
+		"document": plugin.MapData{
+			"content": document.AsData(),
+		},
+	}
+
+	args := plugintest.DecodeAndAssert(
+		s.T(), s.schema.ContentProviders["frontmatter"].Args,
+		body, dataCtx, diagtest.Asserts{},
+	)
 
 	ctx := context.Background()
-	document := plugin.ContentSection{}
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
-			"query_result": plugin.MapData{
-				"baz": plugin.NumberData(1),
-				"foo": plugin.StringData("bar"),
-				"quux": plugin.MapData{
-					"corge":  plugin.StringData("grault"),
-					"garply": plugin.BoolData(false),
-				},
-				"qux": plugin.BoolData(true),
-				"waldo": plugin.ListData{
-					plugin.StringData("fred"),
-					plugin.StringData("plugh"),
-				},
-			},
 			"document": plugin.MapData{
 				"content": document.AsData(),
 			},
 		},
 	})
-	s.Equal("---\n"+
-		"baz: 1\n"+
-		"foo: bar\n"+
-		"quux:\n"+
-		"    corge: grault\n"+
-		"    garply: false\n"+
-		"qux: true\n"+
-		"waldo:\n"+
-		"    - fred\n"+
-		"    - plugh\n"+
-		"---", mdprint.PrintString(result.Content))
-	s.Nil(diags)
+	s.Require().Nil(diags)
+	format := s.parseFrontmatter(mdprint.PrintString(result.Content))
+	s.Equal("yaml", format)
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestFormatTOML() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"content": cty.NullVal(cty.DynamicPseudoType),
-		"format":  cty.StringVal("toml"),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
+	f := hclwrite.NewEmptyFile()
+	hclBody := f.Body()
+	hclBody.SetAttributeValue("content", testValCty)
+	hclBody.SetAttributeValue("format", cty.StringVal("toml"))
+	body := string(f.Bytes())
+
+	document := plugin.ContentSection{}
+	dataCtx := plugin.MapData{
+		"document": plugin.MapData{
+			"content": document.AsData(),
+		},
+	}
+
+	args := plugintest.DecodeAndAssert(
+		s.T(), s.schema.ContentProviders["frontmatter"].Args,
+		body, dataCtx, diagtest.Asserts{},
+	)
 
 	ctx := context.Background()
-	document := plugin.ContentSection{}
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
-			"query_result": plugin.MapData{
-				"baz": plugin.NumberData(1),
-				"foo": plugin.StringData("bar"),
-				"quux": plugin.MapData{
-					"corge":  plugin.StringData("grault"),
-					"garply": plugin.BoolData(false),
-				},
-				"qux": plugin.BoolData(true),
-				"waldo": plugin.ListData{
-					plugin.StringData("fred"),
-					plugin.StringData("plugh"),
-				},
-			},
 			"document": plugin.MapData{
 				"content": document.AsData(),
 			},
 		},
 	})
-	s.Equal("+++\n"+
-		"baz = 1.0\n"+
-		"foo = 'bar'\n"+
-		"qux = true\n"+
-		"waldo = ['fred', 'plugh']\n\n"+
-		"[quux]\n"+
-		"corge = 'grault'\n"+
-		"garply = false\n"+
-		"+++", mdprint.PrintString(result.Content))
-	s.Nil(diags)
+	s.Require().Nil(diags)
+	format := s.parseFrontmatter(mdprint.PrintString(result.Content))
+	s.Equal("toml", format)
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestFormatJSON() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"content": cty.NullVal(cty.DynamicPseudoType),
-		"format":  cty.StringVal("json"),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
+	f := hclwrite.NewEmptyFile()
+	hclBody := f.Body()
+	hclBody.SetAttributeValue("content", testValCty)
+	hclBody.SetAttributeValue("format", cty.StringVal("json"))
+	body := string(f.Bytes())
+
+	document := plugin.ContentSection{}
+	dataCtx := plugin.MapData{
+		"document": plugin.MapData{
+			"content": document.AsData(),
+		},
+	}
+
+	args := plugintest.DecodeAndAssert(
+		s.T(), s.schema.ContentProviders["frontmatter"].Args,
+		body, dataCtx, diagtest.Asserts{},
+	)
 
 	ctx := context.Background()
-	document := plugin.ContentSection{}
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
 		DataContext: plugin.MapData{
-			"query_result": plugin.MapData{
-				"baz": plugin.NumberData(1),
-				"foo": plugin.StringData("bar"),
-				"quux": plugin.MapData{
-					"corge":  plugin.StringData("grault"),
-					"garply": plugin.BoolData(false),
-				},
-				"qux": plugin.BoolData(true),
-				"waldo": plugin.ListData{
-					plugin.StringData("fred"),
-					plugin.StringData("plugh"),
-				},
-			},
 			"document": plugin.MapData{
 				"content": document.AsData(),
 			},
 		},
 	})
-	s.Equal("{\n"+
-		"  \"baz\": 1,\n"+
-		"  \"foo\": \"bar\",\n"+
-		"  \"quux\": {\n"+
-		"    \"corge\": \"grault\",\n"+
-		"    \"garply\": false\n"+
-		"  },\n"+
-		"  \"qux\": true,\n"+
-		"  \"waldo\": [\n"+
-		"    \"fred\",\n"+
-		"    \"plugh\"\n"+
-		"  ]\n"+
-		"}\n", mdprint.PrintString(result.Content))
-	s.Nil(diags)
+	s.Require().Nil(diags)
+	format := s.parseFrontmatter(mdprint.PrintString(result.Content))
+	s.Equal("json", format)
 }

@@ -15,7 +15,7 @@ func FuzzEngine(f *testing.F) {
 				xxx = "xxx"
 			}
 			content table {
-				rows_var = query_jq("[10, 20, 10*(.vars.b + 1)]")
+				rows = query_jq("[10, 20, 10*(.vars.b + 1)]")
 
 				columns = [
 					{ header = "{{ .block.col_index }} Value", value = "{{ .block.row }}"},

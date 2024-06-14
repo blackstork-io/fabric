@@ -2,7 +2,7 @@
 title: image
 plugin:
   name: blackstork/builtin
-  description: "Inserts an image"
+  description: "Returns an image tag"
   tags: []
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -16,7 +16,7 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "image" "content provider" >}}
 
 ## Description
-Inserts an image
+Returns an image tag
 
 The content provider is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 
