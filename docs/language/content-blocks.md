@@ -4,10 +4,11 @@ description: Learn how to use Fabric content blocks efficiently for building mod
 type: docs
 weight: 60
 ---
-
 # Content blocks
 
-`content` blocks define document segments: text paragraphs, tables, graphs, lists, etc. The block signature includes the name of the content provider that will execute the content block. Fabric supports many [content pproviders]({{< ref "content-providers.md" >}}) through its [plugin ecosystem]({{< ref "plugins.md" >}}).
+`content` blocks define document segments: text paragraphs, tables, graphs, lists, etc.
+
+The block signature includes the name of the content provider that will execute the content block.
 
 ```hcl
 # Root-level definition of a content block
@@ -40,30 +41,24 @@ A content block is rendered by a specified content provider. See [Content Provid
 
 ## Supported arguments
 
-The arguments provided in the block are either generic arguments or provider-specific input parameters.
+The arguments provided in the block are either generic arguments or provider-specific arguments.
 
 ### Generic arguments
 
-- `config`: (optional) a reference to a named configuration block for the content provider. If provided, it takes precedence over the default configuration. See [Content provider configuration]({{< ref "configs.md#content-provider-configuration" >}}) for the details.
-- `query`: (optional) a [JQ](https://jqlang.github.io/jq/manual/) query to be executed against the context object. The results of the query will be placed under `query_result` field in the context. See [Context](#context) object for the details.
+- `config`: (optional) a reference to a named configuration block for the content provider. If
+  provided, it takes precedence over the default configuration. See content provider
+  [configuration details]({{< ref "configs.md#block-configuration" >}}) for more information.
+- `local_var`: (optional) a shortcut for specifying a local variable. See [Variables]({{< ref
+  "context.md#variables" >}}) for the details.
 
 ### Content provider arguments
 
-Content provider arguments differ per content provider. See the documentation for a specific content provider (find it in [supported content providers]({{< ref "content-providers.md" >}})) for the details on the supported arguments.
+Content provider arguments differ per content provider. See the documentation for a specific content provider (find it in [Content Providers]({{< ref "content-providers.md" >}}) documentation) for the details on the supported arguments.
 
 ## Supported nested blocks
 
-- `meta`: (optional) a block containing metadata for the block.
+- `meta`: (optional) a block containing metadata for the block. See [Metadata]({{< ref "configs.md#metadata" >}}) for details.
 - `config`: (optional) an inline configuration for the block. If provided, it takes precedence over the `config` argument and default configuration for the content provider.
-
-## Context
-
-When Fabric renders a content block, a corresponding content provider is executed. Along with the [configuration]({{< ref "configs/#content-provider-configuration" >}}) and the input parameters, the provider receives the context object with the data available for the provider.
-
-The context object is a JSON dictionary with pre-defined root-level fields:
-
-- `data` points to a map of all resolved data definitions for the document. The JSON path to a specific data point follows the data block signature: `data.<data-source>.<block-name>`.
-- `query_result` points to a result of the execution of a JQ query provided in `query` argument.
 
 ## References
 
@@ -71,35 +66,35 @@ See [References]({{< ref references.md >}}) for the details about referencing co
 
 ## Example
 
-The template `document.test-doc` with one `data.inline` block, one `content.text` block and one `content.openai_text` block:
-
+FIXME: TORUN
 ```hcl
 config content openai_text "test_account" {
-  api_key = "<OPENAI-KEY>"
+  # Reading a key from an environment variable
+  api_key = env.FABRIC_OPENAI_KEY
 }
 
 document "test-doc" {
 
-  data inline "foo" {
+  vars {
     items = ["aaa", "bbb", "ccc"]
   }
 
   content text {
     # Query contains a JQ query executed against the context
-    query = ".data.inline.foo.items | length"
+    local_var = ".vars.items | length"
 
-    # The result of the query is stored in the `query_result` field in the context.
-    # The context is available for the templating engine inside the `content.text` plugin.
-    value = "There are {{ .query_result }} items"
+    # The context can be accessed in Go templates
+    value = "There are {{ .vars.local }} items: {{ .vars.items | toPrettyJson }}"
   }
 
   content openai_text {
     config = config.content.openai_text.test_account
-    query = ".data.inline.foo"
 
     prompt = <<-EOT
        Write a short story, just a paragraph, about space exploration
-       using the values from the provided items list as character names.
+       using the values from the provided items list as character names:
+
+       {{ .vars.items | toPrettyJson }}
     EOT
   }
 }

@@ -7,56 +7,65 @@ weight: 10
 
 # Syntax
 
-This page describes the native syntax of the Fabric Configuration Language (FCL). Building on the foundation laid by the [HashiCorp Configuration Language](https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md) (HCL), FCL defines a simple, readable, and clear syntax for document templates.
+This page describes the native syntax of the Fabric Configuration Language (FCL). Building on the
+foundation laid by the [HashiCorp Configuration Language](https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md) (HCL),
+FCL defines a simple, readable, and clear syntax for document templates.
 
-The syntax of FCL has two fundamental components: **arguments** and **blocks**. These components constitute the building blocks for crafting configurations within the Fabric Configuration Language.
+The syntax of FCL has two fundamental components: **arguments** and **blocks**. These components
+constitute the building blocks for crafting configurations within the Fabric Configuration Language.
 
 ## Arguments
 
 The arguments are used for assigning values to names within a block. An example of using arguments is as follows:
 
 ```hcl
-... {
-  index = ".alerts-security.alerts-default"
-  query_string = "kibana.alert.severity:critical"
+content text {
+  value = "An example of the text value"
 }
 ```
 
-The argument name, `query_string` in the snippet above, can contain letters, digits, underscores
+The argument name, `value` in the snippet above, can contain letters, digits, underscores
 (`_`), and hyphens (`-`). However, the first character of an identifier must not be a digit.
 
 ## Blocks
 
-In the Fabric Configuration Language (FCL), a block serves as a versatile container defining
-configurations, data requirements, content structures, and delivery destinations.
+In the Fabric Configuration Language (FCL), a block serves as a container that defines
+configurations, data requirements, content structures, variables, and publishing destinations.
 
 For example:
 
 ```hcl
 document "test_document" {
 
-  data inline {
-    foo = 42
+  data elasticsearch "events" {
+    index = "events"
   }
 
   content text {
     value = "My custom static text"
   }
 
+  vars {
+    foo = "xyz"
+  }
+
 }
 ```
 
-Each block has a type (`document` and `content` in the example above) that defines the labels allowed in a block signature. Additionally, each block can either have a name (for example, "`alerts_overview`") or be anonymous (as seen in the snippet above), depending on the position of the block in the code (is it defined inside or outside `document` block). This flexibility in block composition contributes to the expressive and modular nature of FCL configurations.
+Each block has a type (for example, `document` and `content`) that defines the labels allowed in a
+block signature. A block can have a name (for example, "`events`") or be anonymous, depending on the
+type of the block and the position of the block in the code. This flexibility contributes to the
+expressive and modular nature of FCL configurations.
 
-The blocks serve different purposed in FCL, and can be divided into the following categories:
+The blocks types can be divided into the following categories based on their purpose:
 
-- [Configuration]({{< ref "configs.md" >}}): `fabric` and `config` blocks
+- [Configuration]({{< ref "configs.md" >}}): `fabric`, `config`, and `meta` blocks
 - [Documents]({{< ref "documents.md" >}}): `document` block
 - [Data definitions]({{< ref "data-blocks.md" >}}): `data` block
 - [Content definitions]({{< ref "content-blocks.md" >}}): `content` block
 - [Content structure]({{< ref "section-blocks.md" >}}): `section` block
-- [Document delivery]({{< ref "publish-blocks.md" >}}): `publish` block
-- [Reused blocks]({{< ref "references.md" >}}): reusing blocks by referencing
+- [Publishing / Delivery]({{< ref "publish-blocks.md" >}}): `publish` block
+- [Referenced blocks / Code reuse]({{< ref "references.md" >}}): reusing blocks by referencing
 
 ## Comments
 
@@ -66,7 +75,8 @@ Fabric language supports three different flavours of comments:
 - `//` is an alternative to `#` and also defines a single-line comment
 - `/*` and `*/` are start and end delimiters for a comment that might span over multiple lines.
 
-It's recommend to use `#` single-line comment style usually. Future Fabric code formatting tools will prioritise `#` comments as idiomatic.
+It's recommend to use `#` single-line comment style usually. Future Fabric code formatting tools
+will prioritise `#` comments as idiomatic.
 
 ## Character encoding
 

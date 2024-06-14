@@ -28,11 +28,12 @@ The `document` block is a structure that groups the data definitions, the sectio
 
 ## Supported nested blocks
 
-- `meta`: (optional) a block containing metadata for the document.
-- `data`: see [Data Blocks]({{< ref data-blocks.md >}}) for the details.
-- `content`: see [Content Blocks]({{< ref content-blocks.md >}}) for the details.
-- `section`: see [Section Blocks]({{< ref section-blocks.md >}}) for the details.
-- `publish`: see [Publish Blocks]({{< ref publish-blocks.md >}}) for the details.
+- `meta`: see [Metadata]({{< ref "configs.md/#metadata" >}})
+- `data`: see [Data Blocks]({{< ref data-blocks.md >}})
+- `vars`: see [Variables]({{< ref "context.md/#variables" >}})
+- `content`: see [Content Blocks]({{< ref content-blocks.md >}})
+- `section`: see [Section Blocks]({{< ref section-blocks.md >}})
+- `publish`: see [Publish Blocks]({{< ref publish-blocks.md >}})
 
 ## Next steps
 

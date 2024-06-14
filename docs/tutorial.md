@@ -93,12 +93,9 @@ $ fabric render document.greeting
 Hello, Fabric!
 ```
 
-## Data blocks
+## Variables
 
-A core feature of Fabric configuration language is the ability to define data requirements inside a
-template with the [data blocks]({{< ref "language/data-blocks.md" >}}). The easiest way is to use
-[`inline`]({{< ref "plugins/builtin/data-sources/inline" >}}) data source that supports free-form
-data structures.
+For this tutorial, we will use variables instead of defining the data requirements.
 
 Change the template in the `hello.fabric` file to include a `data` block and add another
 `content.text` block:
@@ -106,12 +103,13 @@ Change the template in the `hello.fabric` file to include a `data` block and add
 ```hcl
 document "greeting" {
 
-  data inline "solar_system" {
-    planets = [
-      "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"
-    ]
-
-    moons_count = 146
+  vars {
+    solar_system = {
+      planets = [
+        "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"
+      ]
+      moons_count = 146
+    }
   }
 
   title = "The Greeting"
@@ -121,21 +119,27 @@ document "greeting" {
   }
 
   content text {
-    query = ".data.inline.solar_system.planets | length"
+    local_var = query_jq(".vars.solar_system.planets | length")
 
     value = <<-EOT
-      There are {{ .query_result }} planets and {{ .data.inline.solar_system.moons_count }} moons in our solar system.
+      There are {{ .vars.local }} planets and {{ .vars.solar_system.moons_count }} moons in our solar system.
     EOT
   }
 
 }
 ```
 
-The content blocks can access and transform the data available with [JQ query](https://jqlang.github.io/jq/manual/) in the [`query`]({{< ref "language/content-blocks.md#generic-arguments" >}}) argument. The query is applied to the [evaluation context]({{< ref context.md >}}), and the result is stored under the `query_result` field (in the context).
+The content blocks can access and transform the data available in the context (see [Evaluation Context]({{< ref context.md >}})) with [JQ queries](https://jqlang.github.io/jq/manual/). By
+specifying `local_var` argument, we're using a shortcut that defines a variable called `local` for
+us. The query will be executed against the context and the results will be stored in the context
+under `.vars.local` path.
 
-As you can see, `value` argument value in the new content block is a template string – `content.text` blocks support [Go templates](https://pkg.go.dev/text/template) out-of-the-box. The templates can access the evaluation context, so it's easy to include `query_result` or `moons_count` values in the string.
+As you can see, `value` argument in the new content block contains a template string –
+`content.text` blocks support [Go templates](https://pkg.go.dev/text/template) out-of-the-box. The
+templates can access the evaluation context, so it's easy to include `local` or
+`solar_system.moons_count` variable values.
 
-The rendered output should now include the new sentence:
+The rendered output will now include the new sentence:
 
 ```shell
 $ fabric render document.greeting
@@ -175,12 +179,13 @@ fabric {
 
 document "greeting" {
 
-  data inline "solar_system" {
-    planets = [
-      "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"
-    ]
-
-    moons_count = 146
+  vars {
+    solar_system = {
+      planets = [
+        "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"
+      ]
+      moons_count = 146
+    }
   }
 
   title = "The Greeting"
@@ -190,10 +195,10 @@ document "greeting" {
   }
 
   content text {
-    query = ".data.inline.solar_system.planets | length"
+    local_var = query_jq(".vars.solar_system.planets | length")
 
     value = <<-EOT
-      There are {{ .query_result }} planets and {{ .data.inline.solar_system.moons_count }} moons in our solar system.
+      There are {{ .vars.local }} planets and {{ .vars.solar_system.moons_count }} moons in our solar system.
     EOT
   }
 
@@ -233,24 +238,27 @@ Add this block to `hello.fabric` file.
 Lets define the content block that uses `openai_text` content provider:
 
 ```hcl
-...
+// ...
 
 document "greeting" {
 
-  ...
+  // ...
 
   content openai_text {
-    query = "{planet: .data.inline.solar_system.planets[-1]}"
+    local_var = query_jq("{planet: .vars.solar_system.planets[-1]}")
+
     prompt = <<-EOT
       Share a fact about the planet specified in the provided data:
-      {{ .query_result | toRawJson }}
+      {{ .vars.local | toRawJson }}
     EOT
   }
 
 }
 ```
 
-A JQ query `"{planet: .data.inline.solar_system.planets[-1]}` in `query` argument fetches the last item from the list (`Neptune`) and creates a new JSON object `{"planet": "Neptune"}`, stored under `query_result` field in the context.
+A JQ query `"{planet: .vars.solar_system.planets[-1]}` fetches the last item from the list
+(`Neptune`) and creates a new JSON object `{"planet": "Neptune"}`. The results of the query
+execution are stored in `local` variable in the context.
 
 {{< hint note >}}
 If you would like to specify a system prompt for OpenAI API, you can set it up in the configuration for `openai_text` provider. See the provider's [documentation]({{< ref "plugins/openai/content-providers/openai_text" >}}) for more configuration options.
@@ -258,6 +266,7 @@ If you would like to specify a system prompt for OpenAI API, you can set it up i
 
 The complete content of the `hello.fabric` file should look like this:
 
+FIXME: TORUN
 ```hcl
 fabric {
   plugin_versions = {
@@ -271,7 +280,7 @@ config content openai_text {
 
 document "greeting" {
 
-  data inline "solar_system" {
+  vars "solar_system" {
     planets = [
       "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"
     ]
@@ -286,25 +295,26 @@ document "greeting" {
   }
 
   content text {
-    query = ".data.inline.solar_system.planets | length"
+    local_var = query_jq(".vars.solar_system.planets | length")
 
     value = <<-EOT
-      There are {{ .query_result }} planets and {{ .data.inline.solar_system.moons_count }} moons in our solar system.
+      There are {{ .vars.local }} planets and {{ .vars.solar_system.moons_count }} moons in our solar system.
     EOT
   }
 
   content openai_text {
-    query = "{planet: .data.inline.solar_system.planets[-1]}"
+    local_var = query_jq("{planet: .vars.solar_system.planets[-1]}")
+
     prompt = <<-EOT
       Share a fact about the planet specified in the provided data:
-      {{ .query_result | toRawJson }}
+      {{ .vars.local | toRawJson }}
     EOT
   }
 
 }
 ```
 
-To render the document, `OPENAI_API_KEY` environment variable must be set. A simple way to do that, is to set it for each `fabric` command execution:
+To render the document, `OPENAI_API_KEY` environment variable must be provided. We can set it for `fabric` command execution:
 
 ```shell
 $ OPENAI_API_KEY="<key-value>" fabric render document.greeting
@@ -329,13 +339,36 @@ There are 8 planets and 146 moons in our solar system.
 Neptune is the eighth planet from the Sun in our solar system and is the coldest planet. It has average temperatures of minus 353 degrees Fahrenheit (minus 214 degrees Celsius).
 ```
 
-## Markdown rendering
+## Publishing
 
-Fabric produces Markdown documents that are compatible with various Markdown editors, allowing rendering in formats such as HTML or PDF. It's also possible to copy-paste rich text into the word processors like Microsoft Word or Google Docs.
+We can already use the Markdown output (and render it with a Markdown editor like [MacDown](https://macdown.uranusjr.com/)), but it might be better to produce formatted HTML and PDF documents.
 
-An excellent choice for macOS users is [MacDown](https://macdown.uranusjr.com/), an open-source Markdown editor.
+To format the document as HTML or PDF, and publish them to a local or an external destination, we use `publish` blocks.
 
-![Rendered template in the MacDown Markdown editor](/images/the-greeting.png "The document in MacDown editor")
+Add two `publish` blocks to the document template:
+
+```hcl
+document "greeting" {
+
+  // ...
+
+  // Creating publishing to a local PDF file
+  publish local_file {
+    path = "./greeting-{{ now | date \"2006_01_02\" }}.{{.format}}"
+    format = "pdf"
+  }
+
+  // Creating publishing to a local HTML file
+  publish local_file {
+    path = "./greeting-{{ now | date \"2006_01_02\" }}.{{.format}}"
+    format = "html"
+  }
+
+}
+```
+
+Note, that both `publish` blocks use Go template strings as values for the `path` arguments. This
+allows us to have current date in a filename of the output files.
 
 # Next steps
 

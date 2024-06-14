@@ -4,10 +4,12 @@ description: Learn how to use Fabric data blocks for defining data requirements 
 type: docs
 weight: 50
 ---
-
 # Data blocks
 
-`data` blocks define data requirements for the template. The block signature includes the name of the data source that will execute the data block and load the data from external source. Fabric supports many [data sources]({{< ref "data-sources.md" >}}) through its [plugin ecosystem]({{< ref "plugins.md" >}}).
+`data` blocks define data requirements for the template. The data block represents a call to an
+integration with provided parameters.
+
+The block signature includes the name of the data source that will execute the data block.
 
 ```hcl
 # Root-level definition of a data block
@@ -25,28 +27,35 @@ document "foobar" {
 }
 ```
 
-Both a data source name and a block name are required. The pair makes an unique identifier for the block.
+Both a data source name and a block name are required, making an unique identifier for the block.
 
-The data blocks must be placed either on a root-level of the file or on a root-level of the document.
+The data blocks must be placed either on a root-level of the file or on a root-level of the
+document.
 
-When Fabric starts rendering the template, the data sources for the data blocks are executed and the results are placed under the block names in the context (see [Context]({{< ref "content-blocks.md#context" >}}) for more details), available for queries.
+When Fabric renders the template, the data blocks are executed and the results are stored in the
+context (see [Context]({{< ref context.md >}}) for more details), available for other blocks to use.
 
 ## Supported arguments
 
-The arguments provided in the block are either generic arguments or data-source-specific input parameters.
+The arguments provided in the block are either generic arguments or data-source-specific arguments.
 
 ### Generic arguments
 
-- `config`: (optional) a reference to a named configuration block for the data source or a content provider. If provided, it takes precedence over the default configuration. See [Data source configuration]({{< ref "configs.md#data-source-configuration" >}}) for the details.
+- `config`: (optional) a reference to a named configuration block for the data source. If provided,
+  it takes precedence over the default configuration. See data source [configuration details]({{<
+  ref "configs.md#block-configuration" >}}) for more information.
 
 ### Data source arguments
 
-Data source arguments differ per data source. See the documentation for a specific data source (find it in [supported data sources]({{< ref "data-sources.md" >}})) for the details on the supported arguments.
+Data source arguments differ per data source. See the documentation for a specific data source (find
+it in [supported data sources]({{< ref "data-sources.md" >}})) for the details on the supported
+arguments.
 
 ## Supported nested blocks
 
 - `meta`: (optional) a block containing metadata for the block.
-- `config`: (optional) an inline configuration for the block. If provided, it takes precedence over the `config` argument and default configuration for the content provider.
+- `config`: (optional) an inline configuration for the block. If provided, it takes precedence over
+  the `config` argument and default configuration for the data source.
 
 ## References
 
@@ -71,7 +80,7 @@ document "test-document" {
 
    data csv "events_b" {
      config {
-       delimiter = ",";
+       delimiter = ","
      }
 
      path = "/tmp/events-b.csv"
