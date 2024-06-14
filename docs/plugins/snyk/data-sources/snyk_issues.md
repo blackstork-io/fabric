@@ -42,9 +42,10 @@ The data source supports the following configuration parameters:
 config data snyk_issues {
   # The Snyk API key
   #
-  # Optional string.
-  # Default value:
-  api_key = null
+  # Required string.
+  # Must have a length of at least 1
+  # For example:
+  api_key = "some string"
 }
 ```
 
