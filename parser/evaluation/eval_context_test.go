@@ -8,7 +8,7 @@ import (
 )
 
 func Test_EvalContext(t *testing.T) {
-	ctx := buildEvalContext()
+	ctx := EvalContext()
 	assert.NotNil(t, ctx)
 	assert.Nil(t, ctx.Functions)
 }
@@ -16,7 +16,7 @@ func Test_EvalContext(t *testing.T) {
 func Test_EnvVars(t *testing.T) {
 	assert := assert.New(t)
 	t.Setenv("TEST_KEY", "test_value")
-	ctx := buildEvalContext()
+	ctx := EvalContext()
 	env := ctx.Variables["env"]
 	assert.NotNil(env)
 	assert.True(cty.Map(cty.String).Equals(env.Type()))

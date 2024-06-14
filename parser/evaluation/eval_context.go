@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/joho/godotenv"
@@ -34,12 +33,10 @@ func buildEnvVarMap() cty.Value {
 	return cty.MapVal(envMap)
 }
 
-func buildEvalContext() *hcl.EvalContext {
+func EvalContext() *hcl.EvalContext {
 	return &hcl.EvalContext{
 		Variables: map[string]cty.Value{
 			"env": buildEnvVarMap(),
 		},
 	}
 }
-
-var EvalContext = sync.OnceValue(buildEvalContext)

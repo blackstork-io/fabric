@@ -191,9 +191,9 @@ func TestEnvPrefix(t *testing.T) {
 		AddSource: true,
 		Level:     slog.LevelWarn,
 	})))
-	os.Setenv("OTHER_VAR", "OTHER_VAR")
-	os.Setenv("FABRIC_VAR", "FABRIC_VAR")
-	os.Setenv("FABRIC_TEST_VAR", "FABRIC_TEST_VAR")
+	t.Setenv("OTHER_VAR", "OTHER_VAR")
+	t.Setenv("FABRIC_VAR", "FABRIC_VAR")
+	t.Setenv("FABRIC_TEST_VAR", "FABRIC_TEST_VAR")
 
 	renderTest(
 		t, "Default",
