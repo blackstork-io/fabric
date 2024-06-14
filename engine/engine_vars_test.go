@@ -113,9 +113,6 @@ func TestEngineVarsHandling(t *testing.T) {
 		`},
 		"test-doc",
 		[]string{
-			`3: {
-  "docVar": "docVar"
-}`,
 			`1: {
   "contentVar": "contentVar",
   "docVar": "docVar",
@@ -124,6 +121,9 @@ func TestEngineVarsHandling(t *testing.T) {
 			`2: {
   "docVar": "docVar",
   "sectVar": "sectVar"
+}`,
+			`3: {
+  "docVar": "docVar"
 }`,
 		},
 		diagtest.Asserts{},
