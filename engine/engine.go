@@ -18,6 +18,7 @@ import (
 	"github.com/blackstork-io/fabric/eval"
 	"github.com/blackstork-io/fabric/parser"
 	"github.com/blackstork-io/fabric/parser/definitions"
+	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/resolver"
@@ -37,6 +38,7 @@ type Engine struct {
 	lockFile *resolver.LockFile
 	resolver *resolver.Resolver
 	fileMap  map[string]*hcl.File
+	env      plugin.MapData
 }
 
 // New creates a new Engine instance with the provided options.
@@ -380,6 +382,32 @@ func (e *Engine) FetchData(ctx context.Context, target string) (_ plugin.Data, d
 	return loadedData.FetchData(ctx)
 }
 
+func (e *Engine) loadEnv() plugin.MapData {
+	requiredPrefix := "FABRIC_"
+	if e.config != nil && e.config.EnvVarsPrefix != nil {
+		requiredPrefix = *e.config.EnvVarsPrefix
+	}
+	envMap := plugin.MapData{}
+
+	env := evaluation.EvalContext().Variables["env"].AsValueMap()
+	for k, v := range env {
+		if !strings.HasPrefix(k, requiredPrefix) {
+			continue
+		}
+		envMap[k] = plugin.StringData(v.AsString())
+	}
+	return envMap
+}
+
+func (e *Engine) initialDataCtx() plugin.MapData {
+	if e.env == nil {
+		e.env = e.loadEnv()
+	}
+	return plugin.MapData{
+		"env": e.env,
+	}
+}
+
 func (e *Engine) RenderContent(ctx context.Context, target string) (_ plugin.Content, _ plugin.Data, diags diagnostics.Diag) {
 	ctx, span := e.tracer.Start(ctx, "Engine.RenderContent", trace.WithAttributes(
 		attribute.String("target", target),
@@ -396,7 +424,7 @@ func (e *Engine) RenderContent(ctx context.Context, target string) (_ plugin.Con
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
-	content, data, diag := doc.RenderContent(ctx)
+	content, data, diag := doc.RenderContent(ctx, e.initialDataCtx())
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
@@ -419,7 +447,7 @@ func (e *Engine) Publish(ctx context.Context, target string) (_ plugin.Content, 
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
-	content, data, diag := doc.Publish(ctx)
+	content, data, diag := doc.Publish(ctx, e.initialDataCtx())
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
