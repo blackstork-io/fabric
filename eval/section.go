@@ -2,8 +2,11 @@ package eval
 
 import (
 	"context"
+	"fmt"
 	"maps"
 	"slices"
+
+	"github.com/hashicorp/hcl/v2"
 
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
@@ -23,7 +26,16 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugin.MapData,
 	}
 	section := new(plugin.ContentSection)
 	if parent != nil {
-		parent.Add(section, nil)
+		err := parent.Add(section, &plugin.Location{
+			Index: contentID,
+		})
+		if err != nil {
+			return nil, diagnostics.Diag{{
+				Severity: hcl.DiagError,
+				Summary:  "Failed to place content",
+				Detail:   fmt.Sprintf("Failed to place content: %s", err),
+			}}
+		}
 	}
 	// create a position map for content blocks
 	posMap := make(map[int]uint32)
