@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func makeSnykIssuesDataSource(loader ClientLoadFn) *plugin.DataSource {
@@ -19,10 +20,11 @@ func makeSnykIssuesDataSource(loader ClientLoadFn) *plugin.DataSource {
 		DataFunc: fetchSnykIssues(loader),
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
-				Doc:    "The Snyk API key",
-				Name:   "api_key",
-				Type:   cty.String,
-				Secret: true,
+				Doc:         "The Snyk API key",
+				Name:        "api_key",
+				Type:        cty.String,
+				Constraints: constraint.RequiredMeaningful,
+				Secret:      true,
 			},
 		},
 		Args: dataspec.ObjectSpec{

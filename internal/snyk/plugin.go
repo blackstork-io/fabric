@@ -34,9 +34,5 @@ func makeClient(loader ClientLoadFn, cfg cty.Value) (client.Client, error) {
 	if cfg.IsNull() {
 		return nil, fmt.Errorf("configuration is required")
 	}
-	apiKey := cfg.GetAttr("api_key")
-	if apiKey.IsNull() || apiKey.AsString() == "" {
-		return nil, fmt.Errorf("api_key is required in configuration")
-	}
-	return loader(apiKey.AsString()), nil
+	return loader(cfg.GetAttr("api_key").AsString()), nil
 }
