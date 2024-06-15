@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
+	"github.com/zclconf/go-cty/cty/function/stdlib"
 )
 
 func buildEnvVarMap() cty.Value {
@@ -58,6 +59,7 @@ func EvalContext() *hcl.EvalContext {
 		},
 		Functions: map[string]function.Function{
 			"from_file": fromFileFunc,
+			"join":      stdlib.JoinFunc,
 		},
 	}
 }
