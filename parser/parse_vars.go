@@ -1,18 +1,19 @@
 package parser
 
 import (
+	"context"
 	"slices"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 
+	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/parser/definitions"
-	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
-func ParseVars(block *hclsyntax.Block, localVar *hclsyntax.Attribute) (parsed *definitions.ParsedVars, diags diagnostics.Diag) {
+func ParseVars(ctx context.Context, block *hclsyntax.Block, localVar *hclsyntax.Attribute) (parsed *definitions.ParsedVars, diags diagnostics.Diag) {
 	if block == nil && localVar == nil {
 		parsed = &definitions.ParsedVars{}
 		return
@@ -53,7 +54,7 @@ func ParseVars(block *hclsyntax.Block, localVar *hclsyntax.Attribute) (parsed *d
 	if localVar != nil {
 		varCount++
 	}
-	evalCtx := dataquery.JqEvalContext(evaluation.EvalContext())
+	evalCtx := dataquery.JqEvalContext(fabctx.GetEvalContext(ctx))
 	vars := make([]*definitions.Variable, 0, varCount)
 
 	if block != nil {

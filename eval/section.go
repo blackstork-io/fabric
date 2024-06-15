@@ -82,7 +82,7 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugin.MapData,
 	}, diags
 }
 
-func LoadSection(providers ContentProviders, node *definitions.ParsedSection) (_ *Section, diag diagnostics.Diag) {
+func LoadSection(ctx context.Context, providers ContentProviders, node *definitions.ParsedSection) (_ *Section, diag diagnostics.Diag) {
 	var diags diagnostics.Diag
 	block := &Section{
 		meta: node.Meta,
@@ -90,7 +90,7 @@ func LoadSection(providers ContentProviders, node *definitions.ParsedSection) (_
 	}
 
 	if node.Title != nil {
-		title, diag := LoadContent(providers, node.Title)
+		title, diag := LoadContent(ctx, providers, node.Title)
 		if diags.Extend(diag) {
 			return nil, diags
 		}
@@ -98,7 +98,7 @@ func LoadSection(providers ContentProviders, node *definitions.ParsedSection) (_
 
 	}
 	for _, child := range node.Content {
-		decoded, diag := LoadContent(providers, child)
+		decoded, diag := LoadContent(ctx, providers, child)
 		if diags.Extend(diag) {
 			return nil, diags
 		}

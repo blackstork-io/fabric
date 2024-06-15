@@ -15,11 +15,12 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/eval"
 	"github.com/blackstork-io/fabric/parser"
 	"github.com/blackstork-io/fabric/parser/definitions"
-	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/resolver"
 	"github.com/blackstork-io/fabric/plugin/runner"
@@ -147,10 +148,10 @@ func (e *Engine) Lint(ctx context.Context, fullLint bool) (diags diagnostics.Dia
 	}()
 	for _, doc := range e.blocks.Documents {
 		e.logger.DebugContext(ctx, "Linting document", "document", doc.Name)
-		parsedDoc, diag := e.blocks.ParseDocument(doc)
+		parsedDoc, diag := e.blocks.ParseDocument(ctx, doc)
 		diags.Extend(diag)
 		if fullLint {
-			_, diag = eval.LoadDocument(e.runner, parsedDoc)
+			_, diag = eval.LoadDocument(ctx, e.runner, parsedDoc)
 			diags.Extend(diag)
 		}
 	}
@@ -265,11 +266,11 @@ func (e *Engine) loadGlobalData(ctx context.Context, source, name string) (_ *ev
 			Detail:   fmt.Sprintf("Data source named '%s' not found", name),
 		}}
 	}
-	parsedData, diag := e.blocks.ParsePlugin(data)
+	parsedData, diag := e.blocks.ParsePlugin(ctx, data)
 	if diags.Extend(diag) {
 		return nil, diags
 	}
-	loadedData, diag := eval.LoadDataAction(e.runner, parsedData)
+	loadedData, diag := eval.LoadDataAction(ctx, e.runner, parsedData)
 	if diags.Extend(diag) {
 		return nil, diags
 	}
@@ -312,7 +313,7 @@ func (e *Engine) loadDocumentData(ctx context.Context, doc, source, name string)
 			Detail:   fmt.Sprintf("Definition for document named '%s' not found", doc),
 		}}
 	}
-	docParsed, diag := e.blocks.ParseDocument(docBlock)
+	docParsed, diag := e.blocks.ParseDocument(ctx, docBlock)
 	if diags.Extend(diag) {
 		return nil, diags
 	}
@@ -326,7 +327,7 @@ func (e *Engine) loadDocumentData(ctx context.Context, doc, source, name string)
 			Detail:   fmt.Sprintf("Data source named '%s' not found", name),
 		}}
 	}
-	loadedData, diag := eval.LoadDataAction(e.runner, docParsed.Data[idx])
+	loadedData, diag := eval.LoadDataAction(ctx, e.runner, docParsed.Data[idx])
 	if diags.Extend(diag) {
 		return nil, diags
 	}
@@ -382,15 +383,17 @@ func (e *Engine) FetchData(ctx context.Context, target string) (_ plugin.Data, d
 	return loadedData.FetchData(ctx)
 }
 
-func (e *Engine) loadEnv() plugin.MapData {
+func (e *Engine) loadEnv(ctx context.Context) plugin.MapData {
 	requiredPrefix := "FABRIC_"
 	if e.config != nil && e.config.EnvVarsPrefix != nil {
 		requiredPrefix = *e.config.EnvVarsPrefix
 	}
 	envMap := plugin.MapData{}
-
-	env := evaluation.EvalContext().Variables["env"].AsValueMap()
-	for k, v := range env {
+	evalCtx := utils.EvalContextByVar(fabctx.GetEvalContext(ctx), "env")
+	if evalCtx == nil {
+		return envMap
+	}
+	for k, v := range evalCtx.Variables["env"].AsValueMap() {
 		if !strings.HasPrefix(k, requiredPrefix) {
 			continue
 		}
@@ -399,9 +402,9 @@ func (e *Engine) loadEnv() plugin.MapData {
 	return envMap
 }
 
-func (e *Engine) initialDataCtx() plugin.MapData {
+func (e *Engine) initialDataCtx(ctx context.Context) plugin.MapData {
 	if e.env == nil {
-		e.env = e.loadEnv()
+		e.env = e.loadEnv(ctx)
 	}
 	return plugin.MapData{
 		"env": e.env,
@@ -424,7 +427,7 @@ func (e *Engine) RenderContent(ctx context.Context, target string) (_ plugin.Con
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
-	content, data, diag := doc.RenderContent(ctx, e.initialDataCtx())
+	content, data, diag := doc.RenderContent(ctx, e.initialDataCtx(ctx))
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
@@ -447,7 +450,7 @@ func (e *Engine) Publish(ctx context.Context, target string) (_ plugin.Content, 
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
-	content, data, diag := doc.Publish(ctx, e.initialDataCtx())
+	content, data, diag := doc.Publish(ctx, e.initialDataCtx(ctx))
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
@@ -483,11 +486,11 @@ func (e *Engine) loadDocument(ctx context.Context, name string) (_ *eval.Documen
 		})
 		return nil, diags
 	}
-	parsedDoc, diag := e.blocks.ParseDocument(doc)
+	parsedDoc, diag := e.blocks.ParseDocument(ctx, doc)
 	if diags.Extend(diag) {
 		return nil, diags
 	}
-	loadedDoc, diag := eval.LoadDocument(e.runner, parsedDoc)
+	loadedDoc, diag := eval.LoadDocument(ctx, e.runner, parsedDoc)
 	if diags.Extend(diag) {
 		return nil, diags
 	}

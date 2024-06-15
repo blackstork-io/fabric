@@ -35,13 +35,13 @@ func (action *Content) RenderContent(ctx context.Context, dataCtx plugin.MapData
 	}}
 }
 
-func LoadContent(providers ContentProviders, node *definitions.ParsedContent) (_ *Content, diags diagnostics.Diag) {
+func LoadContent(ctx context.Context, providers ContentProviders, node *definitions.ParsedContent) (_ *Content, diags diagnostics.Diag) {
 	var block Content
 	switch {
 	case node.Plugin != nil:
-		block.Plugin, diags = LoadPluginContentAction(providers, node.Plugin)
+		block.Plugin, diags = LoadPluginContentAction(ctx, providers, node.Plugin)
 	case node.Section != nil:
-		block.Section, diags = LoadSection(providers, node.Section)
+		block.Section, diags = LoadSection(ctx, providers, node.Section)
 	default:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,

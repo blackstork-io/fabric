@@ -1,4 +1,4 @@
-package evaluation
+package fabctx
 
 import (
 	"os"
@@ -9,17 +9,11 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-func Test_EvalContext(t *testing.T) {
-	ctx := EvalContext()
-	assert.NotNil(t, ctx)
-	assert.Nil(t, ctx.Functions)
-}
-
 func Test_EnvVars(t *testing.T) {
 	assert := assert.New(t)
 	t.Setenv("TEST_KEY", "test_value")
-	ctx := EvalContext()
-	env := ctx.Variables["env"]
+	evalCtx := newEvalContext()
+	env := evalCtx.Variables["env"]
 	assert.NotNil(env)
 	assert.True(cty.Map(cty.String).Equals(env.Type()))
 	envMap := env.AsValueMap()
@@ -37,4 +31,11 @@ func TestFromFileFunc(t *testing.T) {
 	val, err := fromFileFunc.Call([]cty.Value{cty.StringVal(tmpPath)})
 	assert.NoError(err)
 	assert.Equal(fileContents, val.AsString())
+}
+
+func TestFuncsPresent(t *testing.T) {
+	assert := assert.New(t)
+	evalCtx := newEvalContext()
+	assert.Contains(evalCtx.Functions, "from_file")
+	assert.Contains(evalCtx.Functions, "join")
 }

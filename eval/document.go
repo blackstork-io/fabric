@@ -129,14 +129,14 @@ func (doc *Document) Publish(ctx context.Context, docDataCtx plugin.MapData) (pl
 	return content, data, diags
 }
 
-func LoadDocument(plugins Plugins, node *definitions.ParsedDocument) (_ *Document, diags diagnostics.Diag) {
+func LoadDocument(ctx context.Context, plugins Plugins, node *definitions.ParsedDocument) (_ *Document, diags diagnostics.Diag) {
 	block := Document{
 		Meta: node.Meta,
 		Vars: node.Vars,
 	}
 	dataNames := make(map[[2]string]struct{})
 	for _, child := range node.Data {
-		decoded, diag := LoadDataAction(plugins, child)
+		decoded, diag := LoadDataAction(ctx, plugins, child)
 		if diags.Extend(diag) {
 			return nil, diags
 		}
@@ -153,14 +153,14 @@ func LoadDocument(plugins Plugins, node *definitions.ParsedDocument) (_ *Documen
 		block.DataBlocks = append(block.DataBlocks, decoded)
 	}
 	for _, child := range node.Content {
-		decoded, diag := LoadContent(plugins, child)
+		decoded, diag := LoadContent(ctx, plugins, child)
 		if diags.Extend(diag) {
 			return nil, diags
 		}
 		block.ContentBlocks = append(block.ContentBlocks, decoded)
 	}
 	for _, child := range node.Publish {
-		decoded, diag := LoadPluginPublishAction(plugins, child)
+		decoded, diag := LoadPluginPublishAction(ctx, plugins, child)
 		if diags.Extend(diag) {
 			return nil, diags
 		}

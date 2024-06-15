@@ -1,12 +1,14 @@
 package definitions
 
 import (
+	"context"
 	"sync"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/encapsulator"
@@ -29,10 +31,10 @@ func (c *Config) Exists() bool {
 var _ evaluation.Configuration = (*Config)(nil)
 
 // ParseConfig implements Configuration.
-func (c *Config) ParseConfig(spec dataspec.RootSpec) (val cty.Value, diags diagnostics.Diag) {
+func (c *Config) ParseConfig(ctx context.Context, spec dataspec.RootSpec) (val cty.Value, diags diagnostics.Diag) {
 	c.once.Do(func() {
 		var diag diagnostics.Diag
-		c.value, diag = dataspec.Decode(c.Body, spec, evaluation.EvalContext())
+		c.value, diag = dataspec.Decode(c.Body, spec, fabctx.GetEvalContext(ctx))
 		if diags.Extend(diag) {
 			// don't let partially-decoded values live
 			c.value = cty.NilVal

@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/hashicorp/hcl/v2"
 )
 
 // FabCtx is a context that can be used to cancel the main context and trigger cleanup.
@@ -14,6 +16,7 @@ import (
 type FabCtx struct {
 	mainCtx    context.Context
 	cleanupCtx context.Context
+	evalCtx    *hcl.EvalContext
 }
 
 var _ context.Context = (*FabCtx)(nil)
@@ -55,6 +58,8 @@ func (ctx *FabCtx) Value(v any) any {
 	switch v.(type) {
 	case getFabCtxT:
 		return ctx
+	case evalCtxKeyT:
+		return ctx.evalCtx
 	default:
 		// fabCtx is the root context
 		return nil
@@ -92,6 +97,7 @@ func New(options ...Option) *FabCtx {
 		return &FabCtx{
 			mainCtx:    context.Background(),
 			cleanupCtx: context.Background(),
+			evalCtx:    newEvalContext(),
 		}
 	}
 

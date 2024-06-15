@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
@@ -32,7 +33,7 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 		}()
 
 		var res string
-		ctx := context.Background()
+		ctx := fabctx.New(fabctx.NoSignals)
 		diags := eng.ParseDir(ctx, sourceDir)
 		if !diags.HasErrors() {
 			if !diags.Extend(eng.LoadPluginResolver(ctx, false)) && !diags.Extend(eng.LoadPluginRunner(ctx)) {

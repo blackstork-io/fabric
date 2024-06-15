@@ -1,10 +1,13 @@
 package evaluation
 
 import (
+	"context"
+
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
@@ -30,8 +33,8 @@ func (b *BlockInvocation) DefRange() hcl.Range {
 }
 
 // ParseInvocation implements Invocation.
-func (b *BlockInvocation) ParseInvocation(spec dataspec.RootSpec) (cty.Value, diagnostics.Diag) {
-	return dataspec.Decode(b.Body, spec, EvalContext())
+func (b *BlockInvocation) ParseInvocation(ctx context.Context, spec dataspec.RootSpec) (cty.Value, diagnostics.Diag) {
+	return dataspec.Decode(b.Body, spec, fabctx.GetEvalContext(ctx))
 }
 
 // Range implements Invocation.

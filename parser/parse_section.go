@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
@@ -14,7 +15,7 @@ import (
 )
 
 // Evaluates a defined plugin.
-func (db *DefinedBlocks) ParseSection(section *definitions.Section) (res *definitions.ParsedSection, diags diagnostics.Diag) {
+func (db *DefinedBlocks) ParseSection(ctx context.Context, section *definitions.Section) (res *definitions.ParsedSection, diags diagnostics.Diag) {
 	if circularRefDetector.Check(section) {
 		// This produces a bit of an incorrect error and shouldn't trigger in normal operation
 		// but I re-check for the circular refs here out of abundance of caution:
@@ -29,7 +30,7 @@ func (db *DefinedBlocks) ParseSection(section *definitions.Section) (res *defini
 		return
 	}
 	section.Once.Do(func() {
-		res, diags = db.parseSection(section)
+		res, diags = db.parseSection(ctx, section)
 		if diags.HasErrors() {
 			return
 		}
@@ -46,7 +47,7 @@ func (db *DefinedBlocks) ParseSection(section *definitions.Section) (res *defini
 	return
 }
 
-func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *definitions.ParsedSection, diags diagnostics.Diag) {
+func (db *DefinedBlocks) parseSection(ctx context.Context, section *definitions.Section) (parsed *definitions.ParsedSection, diags diagnostics.Diag) {
 	res := definitions.ParsedSection{}
 	if title := section.Block.Body.Attributes["title"]; title != nil {
 		res.Title = definitions.NewTitle(title, db.DefaultConfig)
@@ -99,7 +100,7 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 			if diags.Extend(diag) {
 				continue
 			}
-			call, diag := db.ParsePlugin(plugin)
+			call, diag := db.ParsePlugin(ctx, plugin)
 			if diags.Extend(diag) {
 				continue
 			}
@@ -148,7 +149,7 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 				continue
 			}
 			circularRefDetector.Add(section, block.DefRange().Ptr())
-			parsedSubSection, diag := db.ParseSection(subSection)
+			parsedSubSection, diag := db.ParseSection(ctx, subSection)
 			circularRefDetector.Remove(section, &diag)
 			if diags.Extend(diag) {
 				continue
@@ -161,6 +162,7 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 
 	var diag diagnostics.Diag
 	res.Vars, diag = ParseVars(
+		ctx,
 		varsBlock,
 		section.Block.Body.Attributes[definitions.AttrLocalVar],
 	)
@@ -187,7 +189,7 @@ func (db *DefinedBlocks) parseSection(section *definitions.Section) (parsed *def
 		})
 		return
 	}
-	baseEval, diag := db.ParseSection(baseSection)
+	baseEval, diag := db.ParseSection(ctx, baseSection)
 	if diags.Extend(diag) {
 		return
 	}

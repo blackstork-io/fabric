@@ -1,7 +1,9 @@
-package evaluation
+package fabctx
 
 import (
+	"context"
 	"log/slog"
+	"maps"
 	"os"
 	"strings"
 
@@ -12,6 +14,20 @@ import (
 	"github.com/zclconf/go-cty/cty/function/stdlib"
 )
 
+// Creates a new eval context. Base eval context is cloned and extended with environment variables.
+func newEvalContext() *hcl.EvalContext {
+	vars := maps.Clone(baseEvalContext.Variables)
+	if vars == nil {
+		vars = make(map[string]cty.Value)
+	}
+	vars["env"] = buildEnvVarMap()
+	evalCtx := &hcl.EvalContext{
+		Variables: vars,
+		Functions: maps.Clone(baseEvalContext.Functions),
+	}
+	return evalCtx
+}
+
 func buildEnvVarMap() cty.Value {
 	envVars := os.Environ()
 	envFromFile, err := godotenv.Read()
@@ -19,9 +35,6 @@ func buildEnvVarMap() cty.Value {
 		slog.Error("Error reading .env file", "err", err)
 	}
 	envMap := make(map[string]cty.Value, len(envFromFile)+len(envVars))
-	for k, v := range envFromFile {
-		envMap[k] = cty.StringVal(v)
-	}
 	for k, v := range envFromFile {
 		envMap[k] = cty.StringVal(v)
 	}
@@ -52,14 +65,27 @@ var fromFileFunc = function.New(&function.Spec{
 	},
 })
 
-func EvalContext() *hcl.EvalContext {
-	return &hcl.EvalContext{
-		Variables: map[string]cty.Value{
-			"env": buildEnvVarMap(),
-		},
-		Functions: map[string]function.Function{
-			"from_file": fromFileFunc,
-			"join":      stdlib.JoinFunc,
-		},
+var baseEvalContext = &hcl.EvalContext{
+	Functions: map[string]function.Function{
+		"from_file": fromFileFunc,
+		"join":      stdlib.JoinFunc,
+	},
+}
+
+type evalCtxKeyT struct{}
+
+var evalCtxKey = evalCtxKeyT{}
+
+func GetEvalContext(ctx context.Context) *hcl.EvalContext {
+	if ctx != nil {
+		if ec, ok := ctx.Value(evalCtxKey).(*hcl.EvalContext); ok {
+			return ec
+		}
 	}
+	slog.InfoContext(ctx, "No eval context found, using base eval context")
+	return baseEvalContext
+}
+
+func WithEvalContext(ctx context.Context, evalCtxKey *hcl.EvalContext) context.Context {
+	return context.WithValue(ctx, evalCtxKey, evalCtxKey)
 }

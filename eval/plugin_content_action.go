@@ -51,7 +51,7 @@ func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx pl
 	return res, diags
 }
 
-func LoadPluginContentAction(providers ContentProviders, node *definitions.ParsedPlugin) (_ *PluginContentAction, diags diagnostics.Diag) {
+func LoadPluginContentAction(ctx context.Context, providers ContentProviders, node *definitions.ParsedPlugin) (_ *PluginContentAction, diags diagnostics.Diag) {
 	cp, ok := providers.ContentProvider(node.PluginName)
 	if !ok {
 		return nil, diagnostics.Diag{{
@@ -62,7 +62,7 @@ func LoadPluginContentAction(providers ContentProviders, node *definitions.Parse
 	}
 	var cfg cty.Value
 	if cp.Config != nil && !cp.Config.IsEmpty() {
-		cfg, diags = node.Config.ParseConfig(cp.Config)
+		cfg, diags = node.Config.ParseConfig(ctx, cp.Config)
 		if diags.HasErrors() {
 			return nil, diags
 		}
@@ -79,7 +79,7 @@ func LoadPluginContentAction(providers ContentProviders, node *definitions.Parse
 	}
 
 	var args cty.Value
-	args, diag := node.Invocation.ParseInvocation(cp.Args)
+	args, diag := node.Invocation.ParseInvocation(ctx, cp.Args)
 	if diags.Extend(diag) {
 		return nil, diags
 	}
