@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/joho/godotenv"
 	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/function"
 )
 
 func buildEnvVarMap() cty.Value {
@@ -33,10 +34,30 @@ func buildEnvVarMap() cty.Value {
 	return cty.MapVal(envMap)
 }
 
+var fromFileFunc = function.New(&function.Spec{
+	Description: "Reads the content of a file and returns it as a string",
+	Params: []function.Parameter{{
+		Name:        "path",
+		Description: "The path to the file to read",
+		Type:        cty.String,
+	}},
+	Type: function.StaticReturnType(cty.String),
+	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
+		res, err := os.ReadFile(args[0].AsString())
+		if err != nil {
+			return cty.NullVal(cty.String), err
+		}
+		return cty.StringVal(string(res)), nil
+	},
+})
+
 func EvalContext() *hcl.EvalContext {
 	return &hcl.EvalContext{
 		Variables: map[string]cty.Value{
 			"env": buildEnvVarMap(),
+		},
+		Functions: map[string]function.Function{
+			"from_file": fromFileFunc,
 		},
 	}
 }
