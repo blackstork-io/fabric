@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/gobwas/glob"
 	"github.com/hashicorp/hcl/v2"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -383,32 +384,51 @@ func (e *Engine) FetchData(ctx context.Context, target string) (_ plugin.Data, d
 	return loadedData.FetchData(ctx)
 }
 
-func (e *Engine) loadEnv(ctx context.Context) plugin.MapData {
-	requiredPrefix := "FABRIC_"
-	if e.config != nil && e.config.EnvVarsPrefix != nil {
-		requiredPrefix = *e.config.EnvVarsPrefix
+var defaultPattern = glob.MustCompile("FABRIC_*")
+
+func (e *Engine) loadEnv(ctx context.Context) (envMap plugin.MapData, diags diagnostics.Diag) {
+	pattern := defaultPattern
+	envMap = plugin.MapData{}
+	if e.config != nil && e.config.EnvVarsPattern != nil {
+		pat := *e.config.EnvVarsPattern
+		trimmedPat := strings.TrimSpace(pat)
+		if trimmedPat != pat {
+			diags.AddWarn(
+				"`expose_env_vars_with_pattern` contains whitespace",
+				"Leading and trailing whitespace is ignored",
+			)
+		}
+		var err error
+		pattern, err = glob.Compile(trimmedPat)
+		if err != nil {
+			diags.AddWarn(
+				"Failed to parse `expose_env_vars_with_pattern`, no env vars will be exposed",
+				err.Error(),
+			)
+			return
+		}
 	}
-	envMap := plugin.MapData{}
 	evalCtx := utils.EvalContextByVar(fabctx.GetEvalContext(ctx), "env")
 	if evalCtx == nil {
-		return envMap
+		return
 	}
 	for k, v := range evalCtx.Variables["env"].AsValueMap() {
-		if !strings.HasPrefix(k, requiredPrefix) {
+		if !pattern.Match(k) {
 			continue
 		}
 		envMap[k] = plugin.StringData(v.AsString())
 	}
-	return envMap
+	return
 }
 
-func (e *Engine) initialDataCtx(ctx context.Context) plugin.MapData {
+func (e *Engine) initialDataCtx(ctx context.Context) (data plugin.MapData, diags diagnostics.Diag) {
 	if e.env == nil {
-		e.env = e.loadEnv(ctx)
+		e.env, diags = e.loadEnv(ctx)
 	}
-	return plugin.MapData{
+	data = plugin.MapData{
 		"env": e.env,
 	}
+	return
 }
 
 func (e *Engine) RenderContent(ctx context.Context, target string) (_ plugin.Content, _ plugin.Data, diags diagnostics.Diag) {
@@ -427,7 +447,11 @@ func (e *Engine) RenderContent(ctx context.Context, target string) (_ plugin.Con
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
-	content, data, diag := doc.RenderContent(ctx, e.initialDataCtx(ctx))
+	dataCtx, diag := e.initialDataCtx(ctx)
+	if diags.Extend(diag) {
+		return
+	}
+	content, data, diag := doc.RenderContent(ctx, dataCtx)
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
@@ -450,7 +474,11 @@ func (e *Engine) Publish(ctx context.Context, target string) (_ plugin.Content, 
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
-	content, data, diag := doc.Publish(ctx, e.initialDataCtx(ctx))
+	dataCtx, diag := e.initialDataCtx(ctx)
+	if diags.Extend(diag) {
+		return
+	}
+	content, data, diag := doc.Publish(ctx, dataCtx)
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}

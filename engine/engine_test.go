@@ -217,7 +217,7 @@ func TestEnvPrefix(t *testing.T) {
 		[]string{
 			`
 			fabric {
-				expose_env_vars_with_prefix = "FABRIC_TEST_"
+				expose_env_vars_with_pattern = "FABRIC_TEST_*"
 			}
 			document "test-doc" {
 				content text {
@@ -237,7 +237,7 @@ func TestEnvPrefix(t *testing.T) {
 		[]string{
 			`
 			fabric {
-				expose_env_vars_with_prefix = ""
+				expose_env_vars_with_pattern = ""
 			}
 			document "test-doc" {
 				content text {
@@ -248,10 +248,77 @@ func TestEnvPrefix(t *testing.T) {
 		},
 		"test-doc",
 		[]string{
-			"OTHER_VAR\nFABRIC_VAR\nFABRIC_TEST_VAR",
+			"<no value>\n<no value>\n<no value>",
 		},
 		diagtest.Asserts{},
 	)
+	renderTest(
+		t, "Empty",
+		[]string{
+			`
+			fabric {
+				expose_env_vars_with_pattern =  "\t FABRIC_TEST_*   "
+			}
+			document "test-doc" {
+				content text {
+					value = "{{.env.OTHER_VAR}}\n{{.env.FABRIC_VAR}}\n{{.env.FABRIC_TEST_VAR}}"
+				}
+			}
+			`,
+		},
+		"test-doc",
+		[]string{
+			"<no value>\n<no value>\nFABRIC_TEST_VAR",
+		},
+		diagtest.Asserts{{
+			diagtest.IsWarning,
+			diagtest.SummaryContains("contains whitespace"),
+		}},
+	)
+	renderTest(
+		t, "ErrorInPattern",
+		[]string{
+			`
+			fabric {
+				expose_env_vars_with_pattern =  "FABRIC_TEST_["
+			}
+			document "test-doc" {
+				content text {
+					value = "{{.env.OTHER_VAR}}\n{{.env.FABRIC_VAR}}\n{{.env.FABRIC_TEST_VAR}}"
+				}
+			}
+			`,
+		},
+		"test-doc",
+		[]string{
+			"<no value>\n<no value>\n<no value>",
+		},
+		diagtest.Asserts{{
+			diagtest.IsWarning,
+			diagtest.SummaryContains("Failed to parse", "expose_env_vars_with_pattern"),
+		}},
+	)
+	// TODO: uncomment this test when switched away from gocty parsing for global config
+	// renderTest(
+	// 	t, "Null",
+	// 	[]string{
+	// 		`
+	// 		fabric {
+	// 			expose_env_vars_with_pattern = null
+	// 		}
+	// 		document "test-doc" {
+	// 			content text {
+	// 				value = "{{.env.OTHER_VAR}}\n{{.env.FABRIC_VAR}}\n{{.env.FABRIC_TEST_VAR}}"
+	// 			}
+	// 		}
+	// 		`,
+	// 	},
+	// 	"test-doc",
+	// 	[]string{
+	// 		"<no value>\n<no value>\n<no value>",
+	// 	},
+	// 	diagtest.Asserts{},
+	// )
 }
 
 func TestEngineRenderContent(t *testing.T) {

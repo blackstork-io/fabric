@@ -7,6 +7,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
 	github.com/elastic/go-elasticsearch/v8 v8.14.0
+	github.com/gobwas/glob v0.2.3
 	github.com/golang-cz/devslog v0.0.8
 	github.com/google/go-github/v58 v58.0.0
 	github.com/google/go-querystring v1.1.0
