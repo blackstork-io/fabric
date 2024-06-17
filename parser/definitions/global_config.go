@@ -4,6 +4,7 @@ type GlobalConfig struct {
 	CacheDir       string            `hcl:"cache_dir,optional"`
 	PluginRegistry *PluginRegistry   `hcl:"plugin_registry,block"`
 	PluginVersions map[string]string `hcl:"plugin_versions,optional"`
+	EnvVarsPattern *string           `hcl:"expose_env_vars_with_pattern,optional"`
 }
 
 type PluginRegistry struct {
@@ -26,6 +27,9 @@ func (g *GlobalConfig) Merge(other *GlobalConfig) {
 				g.PluginRegistry.MirrorDir = other.PluginRegistry.MirrorDir
 			}
 		}
+	}
+	if other.EnvVarsPattern != nil {
+		g.EnvVarsPattern = other.EnvVarsPattern
 	}
 	g.PluginVersions = other.PluginVersions
 }

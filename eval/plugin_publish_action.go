@@ -30,7 +30,7 @@ func (block *PluginPublishAction) Publish(ctx context.Context, dataCtx plugin.Ma
 	})
 }
 
-func LoadPluginPublishAction(publishers Publishers, node *definitions.ParsedPlugin) (_ *PluginPublishAction, diags diagnostics.Diag) {
+func LoadPluginPublishAction(ctx context.Context, publishers Publishers, node *definitions.ParsedPlugin) (_ *PluginPublishAction, diags diagnostics.Diag) {
 	p, ok := publishers.Publisher(node.PluginName)
 	if !ok {
 		return nil, diagnostics.Diag{{
@@ -41,7 +41,7 @@ func LoadPluginPublishAction(publishers Publishers, node *definitions.ParsedPlug
 	}
 	var cfg cty.Value
 	if p.Config != nil && !p.Config.IsEmpty() {
-		cfg, diags = node.Config.ParseConfig(p.Config)
+		cfg, diags = node.Config.ParseConfig(ctx, p.Config)
 		if diags.HasErrors() {
 			return nil, diags
 		}
@@ -98,7 +98,7 @@ func LoadPluginPublishAction(publishers Publishers, node *definitions.ParsedPlug
 		}
 	}
 	var args cty.Value
-	args, diag := node.Invocation.ParseInvocation(p.Args)
+	args, diag := node.Invocation.ParseInvocation(ctx, p.Args)
 	if diags.Extend(diag) {
 		return nil, diags
 	}

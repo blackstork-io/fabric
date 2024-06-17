@@ -25,7 +25,7 @@ func (action *PluginDataAction) FetchData(ctx context.Context) (plugin.Data, dia
 	})
 }
 
-func LoadDataAction(sources DataSources, node *definitions.ParsedPlugin) (_ *PluginDataAction, diags diagnostics.Diag) {
+func LoadDataAction(ctx context.Context, sources DataSources, node *definitions.ParsedPlugin) (_ *PluginDataAction, diags diagnostics.Diag) {
 	ds, ok := sources.DataSource(node.PluginName)
 	if !ok {
 		return nil, diagnostics.Diag{{
@@ -36,7 +36,7 @@ func LoadDataAction(sources DataSources, node *definitions.ParsedPlugin) (_ *Plu
 	}
 	var cfg cty.Value
 	if ds.Config != nil && !ds.Config.IsEmpty() {
-		cfg, diags = node.Config.ParseConfig(ds.Config)
+		cfg, diags = node.Config.ParseConfig(ctx, ds.Config)
 		if diags.HasErrors() {
 			return nil, diags
 		}
@@ -51,7 +51,7 @@ func LoadDataAction(sources DataSources, node *definitions.ParsedPlugin) (_ *Plu
 		})
 	}
 	var args cty.Value
-	args, diag := node.Invocation.ParseInvocation(ds.Args)
+	args, diag := node.Invocation.ParseInvocation(ctx, ds.Args)
 	if diags.Extend(diag) {
 		return nil, diags
 	}

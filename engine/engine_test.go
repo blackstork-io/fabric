@@ -186,6 +186,141 @@ func TestEngineLint(t *testing.T) {
 	)
 }
 
+func TestEnvPrefix(t *testing.T) {
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		AddSource: true,
+		Level:     slog.LevelWarn,
+	})))
+	t.Setenv("OTHER_VAR", "OTHER_VAR")
+	t.Setenv("FABRIC_VAR", "FABRIC_VAR")
+	t.Setenv("FABRIC_TEST_VAR", "FABRIC_TEST_VAR")
+
+	renderTest(
+		t, "Default",
+		[]string{
+			`
+			document "test-doc" {
+				content text {
+					value = "{{.env.OTHER_VAR}}\n{{.env.FABRIC_VAR}}\n{{.env.FABRIC_TEST_VAR}}"
+				}
+			}
+			`,
+		},
+		"test-doc",
+		[]string{
+			"<no value>\nFABRIC_VAR\nFABRIC_TEST_VAR",
+		},
+		diagtest.Asserts{},
+	)
+	renderTest(
+		t, "Custom",
+		[]string{
+			`
+			fabric {
+				expose_env_vars_with_pattern = "FABRIC_TEST_*"
+			}
+			document "test-doc" {
+				content text {
+					value = "{{.env.OTHER_VAR}}\n{{.env.FABRIC_VAR}}\n{{.env.FABRIC_TEST_VAR}}"
+				}
+			}
+			`,
+		},
+		"test-doc",
+		[]string{
+			"<no value>\n<no value>\nFABRIC_TEST_VAR",
+		},
+		diagtest.Asserts{},
+	)
+	renderTest(
+		t, "Empty",
+		[]string{
+			`
+			fabric {
+				expose_env_vars_with_pattern = ""
+			}
+			document "test-doc" {
+				content text {
+					value = "{{.env.OTHER_VAR}}\n{{.env.FABRIC_VAR}}\n{{.env.FABRIC_TEST_VAR}}"
+				}
+			}
+			`,
+		},
+		"test-doc",
+		[]string{
+			"<no value>\n<no value>\n<no value>",
+		},
+		diagtest.Asserts{},
+	)
+	renderTest(
+		t, "Empty",
+		[]string{
+			`
+			fabric {
+				expose_env_vars_with_pattern =  "\t FABRIC_TEST_*   "
+			}
+			document "test-doc" {
+				content text {
+					value = "{{.env.OTHER_VAR}}\n{{.env.FABRIC_VAR}}\n{{.env.FABRIC_TEST_VAR}}"
+				}
+			}
+			`,
+		},
+		"test-doc",
+		[]string{
+			"<no value>\n<no value>\nFABRIC_TEST_VAR",
+		},
+		diagtest.Asserts{{
+			diagtest.IsWarning,
+			diagtest.SummaryContains("contains whitespace"),
+		}},
+	)
+	renderTest(
+		t, "ErrorInPattern",
+		[]string{
+			`
+			fabric {
+				expose_env_vars_with_pattern =  "FABRIC_TEST_["
+			}
+			document "test-doc" {
+				content text {
+					value = "{{.env.OTHER_VAR}}\n{{.env.FABRIC_VAR}}\n{{.env.FABRIC_TEST_VAR}}"
+				}
+			}
+			`,
+		},
+		"test-doc",
+		[]string{
+			"<no value>\n<no value>\n<no value>",
+		},
+		diagtest.Asserts{{
+			diagtest.IsWarning,
+			diagtest.SummaryContains("Failed to parse", "expose_env_vars_with_pattern"),
+		}},
+	)
+	// TODO: uncomment this test when switched away from gocty parsing for global config
+	// renderTest(
+	// 	t, "Null",
+	// 	[]string{
+	// 		`
+	// 		fabric {
+	// 			expose_env_vars_with_pattern = null
+	// 		}
+	// 		document "test-doc" {
+	// 			content text {
+	// 				value = "{{.env.OTHER_VAR}}\n{{.env.FABRIC_VAR}}\n{{.env.FABRIC_TEST_VAR}}"
+	// 			}
+	// 		}
+	// 		`,
+	// 	},
+	// 	"test-doc",
+	// 	[]string{
+	// 		"<no value>\n<no value>\n<no value>",
+	// 	},
+	// 	diagtest.Asserts{},
+	// )
+}
+
 func TestEngineRenderContent(t *testing.T) {
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 		AddSource: true,

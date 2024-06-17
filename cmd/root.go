@@ -20,7 +20,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/term"
 
-	"github.com/blackstork-io/fabric/cmd/internal/fabctx"
+	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/cmd/internal/multilog"
 	"github.com/blackstork-io/fabric/cmd/internal/telemetry"
 )

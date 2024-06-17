@@ -48,7 +48,7 @@ func (doc *Document) FetchData(ctx context.Context) (plugin.Data, diagnostics.Di
 	return result, diags
 }
 
-func (doc *Document) RenderContent(ctx context.Context) (plugin.Content, plugin.Data, diagnostics.Diag) {
+func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugin.MapData) (plugin.Content, plugin.Data, diagnostics.Diag) {
 	data, diags := doc.FetchData(ctx)
 	if diags.HasErrors() {
 		return nil, nil, diags
@@ -59,10 +59,9 @@ func (doc *Document) RenderContent(ctx context.Context) (plugin.Content, plugin.
 	}
 	// static portion of the data context for this document
 	// will never change, all changes are made to the clone of this map
-	docDataCtx := plugin.MapData{
-		definitions.BlockKindData:     data,
-		definitions.BlockKindDocument: docData,
-	}
+	docDataCtx[definitions.BlockKindData] = data
+	docDataCtx[definitions.BlockKindDocument] = docData
+
 	diag := ApplyVars(ctx, doc.Vars, docDataCtx)
 
 	if diags.Extend(diag) {
@@ -106,8 +105,8 @@ func (doc *Document) RenderContent(ctx context.Context) (plugin.Content, plugin.
 	return result, data, diags
 }
 
-func (doc *Document) Publish(ctx context.Context) (plugin.Content, plugin.Data, diagnostics.Diag) {
-	content, data, diags := doc.RenderContent(ctx)
+func (doc *Document) Publish(ctx context.Context, docDataCtx plugin.MapData) (plugin.Content, plugin.Data, diagnostics.Diag) {
+	content, data, diags := doc.RenderContent(ctx, docDataCtx)
 	if diags.HasErrors() {
 		return nil, nil, diags
 	}
@@ -130,14 +129,14 @@ func (doc *Document) Publish(ctx context.Context) (plugin.Content, plugin.Data, 
 	return content, data, diags
 }
 
-func LoadDocument(plugins Plugins, node *definitions.ParsedDocument) (_ *Document, diags diagnostics.Diag) {
+func LoadDocument(ctx context.Context, plugins Plugins, node *definitions.ParsedDocument) (_ *Document, diags diagnostics.Diag) {
 	block := Document{
 		Meta: node.Meta,
 		Vars: node.Vars,
 	}
 	dataNames := make(map[[2]string]struct{})
 	for _, child := range node.Data {
-		decoded, diag := LoadDataAction(plugins, child)
+		decoded, diag := LoadDataAction(ctx, plugins, child)
 		if diags.Extend(diag) {
 			return nil, diags
 		}
@@ -154,14 +153,14 @@ func LoadDocument(plugins Plugins, node *definitions.ParsedDocument) (_ *Documen
 		block.DataBlocks = append(block.DataBlocks, decoded)
 	}
 	for _, child := range node.Content {
-		decoded, diag := LoadContent(plugins, child)
+		decoded, diag := LoadContent(ctx, plugins, child)
 		if diags.Extend(diag) {
 			return nil, diags
 		}
 		block.ContentBlocks = append(block.ContentBlocks, decoded)
 	}
 	for _, child := range node.Publish {
-		decoded, diag := LoadPluginPublishAction(plugins, child)
+		decoded, diag := LoadPluginPublishAction(ctx, plugins, child)
 		if diags.Extend(diag) {
 			return nil, diags
 		}

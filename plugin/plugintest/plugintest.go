@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/parser/evaluation"
+	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
@@ -60,7 +60,7 @@ func DecodeAndAssert(t *testing.T, spec dataspec.RootSpec, body string, dataCtx 
 	fm = map[string]*hcl.File{
 		filename: f,
 	}
-	val, dgs := dataspec.Decode(f.Body, spec, evaluation.EvalContext())
+	val, dgs := dataspec.Decode(f.Body, spec, fabctx.GetEvalContext(context.Background()))
 	if diags.Extend(dgs) {
 		return
 	}
@@ -78,7 +78,7 @@ func Decode(t *testing.T, spec dataspec.RootSpec, body string) (v cty.Value, dia
 		return
 	}
 
-	v, diag := dataspec.Decode(f.Body, spec, evaluation.EvalContext())
+	v, diag := dataspec.Decode(f.Body, spec, fabctx.GetEvalContext(context.Background()))
 	diags.Extend(diag)
 	return
 }

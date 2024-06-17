@@ -1,12 +1,13 @@
 package dataspec_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/parser/evaluation"
+	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -708,7 +709,8 @@ func TestValidation(t *testing.T) {
 					},
 				}
 			}
-			objVal, diag := dataspec.Decode(body, spec, evaluation.EvalContext())
+
+			objVal, diag := dataspec.Decode(body, spec, fabctx.GetEvalContext(context.Background()))
 			diags.Extend(diag)
 			tc.asserts.AssertMatch(t, diags, nil)
 			if diags.HasErrors() {

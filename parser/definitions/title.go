@@ -1,10 +1,13 @@
 package definitions
 
 import (
+	"context"
+
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -41,7 +44,7 @@ func (t *titleInvocation) MissingItemRange() hcl.Range {
 	return t.Expression.Range()
 }
 
-func (t *titleInvocation) ParseInvocation(spec dataspec.RootSpec) (val cty.Value, diags diagnostics.Diag) {
+func (t *titleInvocation) ParseInvocation(ctx context.Context, spec dataspec.RootSpec) (val cty.Value, diags diagnostics.Diag) {
 	// Titles can only be rendered once, so there's no reason to put `sync.Once` like in proper blocks
 	expr, ok := t.Expression.(hclsyntax.Expression)
 	if !ok {
@@ -68,7 +71,7 @@ func (t *titleInvocation) ParseInvocation(spec dataspec.RootSpec) (val cty.Value
 		},
 	}
 
-	val, diag := dataspec.Decode(body, spec, evaluation.EvalContext())
+	val, diag := dataspec.Decode(body, spec, fabctx.GetEvalContext(ctx))
 	diags.Extend(diag)
 	return
 }

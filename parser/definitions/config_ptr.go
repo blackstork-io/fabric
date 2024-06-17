@@ -1,6 +1,8 @@
 package definitions
 
 import (
+	"context"
+
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
@@ -21,8 +23,8 @@ func (c *ConfigPtr) Exists() bool {
 }
 
 // ParseConfig implements Configuration.
-func (c *ConfigPtr) ParseConfig(spec dataspec.RootSpec) (val cty.Value, diags diagnostics.Diag) {
-	return c.Cfg.ParseConfig(spec)
+func (c *ConfigPtr) ParseConfig(ctx context.Context, spec dataspec.RootSpec) (val cty.Value, diags diagnostics.Diag) {
+	return c.Cfg.ParseConfig(ctx, spec)
 }
 
 // Range implements Configuration.

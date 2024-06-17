@@ -10,15 +10,18 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/gobwas/glob"
 	"github.com/hashicorp/hcl/v2"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/eval"
 	"github.com/blackstork-io/fabric/parser"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/resolver"
 	"github.com/blackstork-io/fabric/plugin/runner"
@@ -37,6 +40,7 @@ type Engine struct {
 	lockFile *resolver.LockFile
 	resolver *resolver.Resolver
 	fileMap  map[string]*hcl.File
+	env      plugin.MapData
 }
 
 // New creates a new Engine instance with the provided options.
@@ -145,10 +149,10 @@ func (e *Engine) Lint(ctx context.Context, fullLint bool) (diags diagnostics.Dia
 	}()
 	for _, doc := range e.blocks.Documents {
 		e.logger.DebugContext(ctx, "Linting document", "document", doc.Name)
-		parsedDoc, diag := e.blocks.ParseDocument(doc)
+		parsedDoc, diag := e.blocks.ParseDocument(ctx, doc)
 		diags.Extend(diag)
 		if fullLint {
-			_, diag = eval.LoadDocument(e.runner, parsedDoc)
+			_, diag = eval.LoadDocument(ctx, e.runner, parsedDoc)
 			diags.Extend(diag)
 		}
 	}
@@ -263,11 +267,11 @@ func (e *Engine) loadGlobalData(ctx context.Context, source, name string) (_ *ev
 			Detail:   fmt.Sprintf("Data source named '%s' not found", name),
 		}}
 	}
-	parsedData, diag := e.blocks.ParsePlugin(data)
+	parsedData, diag := e.blocks.ParsePlugin(ctx, data)
 	if diags.Extend(diag) {
 		return nil, diags
 	}
-	loadedData, diag := eval.LoadDataAction(e.runner, parsedData)
+	loadedData, diag := eval.LoadDataAction(ctx, e.runner, parsedData)
 	if diags.Extend(diag) {
 		return nil, diags
 	}
@@ -310,7 +314,7 @@ func (e *Engine) loadDocumentData(ctx context.Context, doc, source, name string)
 			Detail:   fmt.Sprintf("Definition for document named '%s' not found", doc),
 		}}
 	}
-	docParsed, diag := e.blocks.ParseDocument(docBlock)
+	docParsed, diag := e.blocks.ParseDocument(ctx, docBlock)
 	if diags.Extend(diag) {
 		return nil, diags
 	}
@@ -324,7 +328,7 @@ func (e *Engine) loadDocumentData(ctx context.Context, doc, source, name string)
 			Detail:   fmt.Sprintf("Data source named '%s' not found", name),
 		}}
 	}
-	loadedData, diag := eval.LoadDataAction(e.runner, docParsed.Data[idx])
+	loadedData, diag := eval.LoadDataAction(ctx, e.runner, docParsed.Data[idx])
 	if diags.Extend(diag) {
 		return nil, diags
 	}
@@ -380,6 +384,53 @@ func (e *Engine) FetchData(ctx context.Context, target string) (_ plugin.Data, d
 	return loadedData.FetchData(ctx)
 }
 
+var defaultPattern = glob.MustCompile("FABRIC_*")
+
+func (e *Engine) loadEnv(ctx context.Context) (envMap plugin.MapData, diags diagnostics.Diag) {
+	pattern := defaultPattern
+	envMap = plugin.MapData{}
+	if e.config != nil && e.config.EnvVarsPattern != nil {
+		pat := *e.config.EnvVarsPattern
+		trimmedPat := strings.TrimSpace(pat)
+		if trimmedPat != pat {
+			diags.AddWarn(
+				"`expose_env_vars_with_pattern` contains whitespace",
+				"Leading and trailing whitespace is ignored",
+			)
+		}
+		var err error
+		pattern, err = glob.Compile(trimmedPat)
+		if err != nil {
+			diags.AddWarn(
+				"Failed to parse `expose_env_vars_with_pattern`, no env vars will be exposed",
+				err.Error(),
+			)
+			return
+		}
+	}
+	evalCtx := utils.EvalContextByVar(fabctx.GetEvalContext(ctx), "env")
+	if evalCtx == nil {
+		return
+	}
+	for k, v := range evalCtx.Variables["env"].AsValueMap() {
+		if !pattern.Match(k) {
+			continue
+		}
+		envMap[k] = plugin.StringData(v.AsString())
+	}
+	return
+}
+
+func (e *Engine) initialDataCtx(ctx context.Context) (data plugin.MapData, diags diagnostics.Diag) {
+	if e.env == nil {
+		e.env, diags = e.loadEnv(ctx)
+	}
+	data = plugin.MapData{
+		"env": e.env,
+	}
+	return
+}
+
 func (e *Engine) RenderContent(ctx context.Context, target string) (_ plugin.Content, _ plugin.Data, diags diagnostics.Diag) {
 	ctx, span := e.tracer.Start(ctx, "Engine.RenderContent", trace.WithAttributes(
 		attribute.String("target", target),
@@ -396,7 +447,11 @@ func (e *Engine) RenderContent(ctx context.Context, target string) (_ plugin.Con
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
-	content, data, diag := doc.RenderContent(ctx)
+	dataCtx, diag := e.initialDataCtx(ctx)
+	if diags.Extend(diag) {
+		return
+	}
+	content, data, diag := doc.RenderContent(ctx, dataCtx)
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
@@ -419,7 +474,11 @@ func (e *Engine) Publish(ctx context.Context, target string) (_ plugin.Content, 
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
-	content, data, diag := doc.Publish(ctx)
+	dataCtx, diag := e.initialDataCtx(ctx)
+	if diags.Extend(diag) {
+		return
+	}
+	content, data, diag := doc.Publish(ctx, dataCtx)
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
@@ -455,11 +514,11 @@ func (e *Engine) loadDocument(ctx context.Context, name string) (_ *eval.Documen
 		})
 		return nil, diags
 	}
-	parsedDoc, diag := e.blocks.ParseDocument(doc)
+	parsedDoc, diag := e.blocks.ParseDocument(ctx, doc)
 	if diags.Extend(diag) {
 		return nil, diags
 	}
-	loadedDoc, diag := eval.LoadDocument(e.runner, parsedDoc)
+	loadedDoc, diag := eval.LoadDocument(ctx, e.runner, parsedDoc)
 	if diags.Extend(diag) {
 		return nil, diags
 	}

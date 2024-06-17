@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"strings"
@@ -17,7 +18,7 @@ import (
 )
 
 // Evaluates a defined plugin.
-func (db *DefinedBlocks) ParsePlugin(plugin *definitions.Plugin) (res *definitions.ParsedPlugin, diags diagnostics.Diag) {
+func (db *DefinedBlocks) ParsePlugin(ctx context.Context, plugin *definitions.Plugin) (res *definitions.ParsedPlugin, diags diagnostics.Diag) {
 	if circularRefDetector.Check(plugin) {
 		// This produces a bit of an incorrect error and shouldn't trigger in normal operation
 		// but I re-check for the circular refs here out of abundance of caution:
@@ -32,7 +33,7 @@ func (db *DefinedBlocks) ParsePlugin(plugin *definitions.Plugin) (res *definitio
 		return
 	}
 	plugin.Once.Do(func() {
-		res, diags = db.parsePlugin(plugin)
+		res, diags = db.parsePlugin(ctx, plugin)
 		if diags.HasErrors() {
 			return
 		}
@@ -49,7 +50,7 @@ func (db *DefinedBlocks) ParsePlugin(plugin *definitions.Plugin) (res *definitio
 	return
 }
 
-func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *definitions.ParsedPlugin, diags diagnostics.Diag) {
+func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Plugin) (parsed *definitions.ParsedPlugin, diags diagnostics.Diag) {
 	res := definitions.ParsedPlugin{
 		PluginName: plugin.Name(),
 		BlockName:  plugin.BlockName(),
@@ -124,7 +125,7 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 
 	localVar, _ := utils.Pop(body.Attributes, definitions.AttrLocalVar)
 	var diag diagnostics.Diag
-	res.Vars, diag = ParseVars(varsBlock, localVar)
+	res.Vars, diag = ParseVars(ctx, varsBlock, localVar)
 	diags.Extend(diag)
 
 	invocation := &evaluation.BlockInvocation{
@@ -140,7 +141,7 @@ func (db *DefinedBlocks) parsePlugin(plugin *definitions.Plugin) (parsed *defini
 	switch {
 	case !pluginIsRef && !refFound: // happy path, no ref
 	case pluginIsRef && refFound: // happy path, ref present
-		baseEval, diag := db.parseRefBase(plugin, refBase.Expr)
+		baseEval, diag := db.parseRefBase(ctx, plugin, refBase.Expr)
 		if diags.Extend(diag) {
 			return
 		}
@@ -255,7 +256,7 @@ func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAtt
 	return
 }
 
-func (db *DefinedBlocks) parseRefBase(plugin *definitions.Plugin, base hcl.Expression) (baseEval *definitions.ParsedPlugin, diags diagnostics.Diag) {
+func (db *DefinedBlocks) parseRefBase(ctx context.Context, plugin *definitions.Plugin, base hcl.Expression) (baseEval *definitions.ParsedPlugin, diags diagnostics.Diag) {
 	basePlugin, diags := Resolve[*definitions.Plugin](db, base)
 	if diags.HasErrors() {
 		return
@@ -284,7 +285,7 @@ func (db *DefinedBlocks) parseRefBase(plugin *definitions.Plugin, base hcl.Expre
 		})
 		return
 	}
-	baseEval, diag := db.ParsePlugin(basePlugin)
+	baseEval, diag := db.ParsePlugin(ctx, basePlugin)
 	diags.Extend(diag)
 	return
 }

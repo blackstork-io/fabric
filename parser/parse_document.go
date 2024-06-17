@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
@@ -11,7 +12,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
-func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definitions.ParsedDocument, diags diagnostics.Diag) {
+func (db *DefinedBlocks) ParseDocument(ctx context.Context, d *definitions.Document) (doc *definitions.ParsedDocument, diags diagnostics.Diag) {
 	doc = &definitions.ParsedDocument{}
 	if title := d.Block.Body.Attributes[definitions.AttrTitle]; title != nil {
 		doc.Content = append(doc.Content, definitions.NewTitle(title, db.DefaultConfig))
@@ -27,7 +28,7 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 			if diags.Extend(diag) {
 				continue
 			}
-			call, diag := db.ParsePlugin(plugin)
+			call, diag := db.ParsePlugin(ctx, plugin)
 			if diags.Extend(diag) {
 				continue
 			}
@@ -83,7 +84,7 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 			if diags.Extend(diag) {
 				continue
 			}
-			parsedSection, diag := db.ParseSection(section)
+			parsedSection, diag := db.ParseSection(ctx, section)
 			if diags.Extend(diag) {
 				continue
 			}
@@ -109,7 +110,7 @@ func (db *DefinedBlocks) ParseDocument(d *definitions.Document) (doc *definition
 	}
 
 	var diag diagnostics.Diag
-	doc.Vars, diag = ParseVars(varsBlock, d.Block.Body.Attributes[definitions.AttrLocalVar])
+	doc.Vars, diag = ParseVars(ctx, varsBlock, d.Block.Body.Attributes[definitions.AttrLocalVar])
 	diags.Extend(diag)
 	return
 }
