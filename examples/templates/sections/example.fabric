@@ -12,7 +12,7 @@ document "example" {
   }
 
   section {
-    title = "Section 1"
+    title = "Section #1"
   
     content title {
       value = "Section TOC"
