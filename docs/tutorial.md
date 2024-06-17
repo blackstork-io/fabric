@@ -238,11 +238,11 @@ Add this block to `hello.fabric` file.
 Lets define the content block that uses `openai_text` content provider:
 
 ```hcl
-// ...
+# ...
 
 document "greeting" {
 
-  // ...
+  # ...
 
   content openai_text {
     local_var = query_jq("{planet: .vars.solar_system.planets[-1]}")
@@ -350,15 +350,9 @@ Add two `publish` blocks to the document template:
 ```hcl
 document "greeting" {
 
-  // ...
+  # ...
 
-  // Creating publishing to a local PDF file
-  publish local_file {
-    path = "./greeting-{{ now | date \"2006_01_02\" }}.{{.format}}"
-    format = "pdf"
-  }
-
-  // Creating publishing to a local HTML file
+  # Creating publishing to a local HTML file
   publish local_file {
     path = "./greeting-{{ now | date \"2006_01_02\" }}.{{.format}}"
     format = "html"
@@ -376,4 +370,4 @@ Congratulations! By completing this tutorial, you've gained a good understanding
 
 Take a look at the detailed [FCL specification]({{< ref "language" >}}), explore [the open-source templates]({{< ref "templates" >}}) the community made, and see if there are integrations for your tech stack in [Fabric plugins]({{< ref "plugins" >}}).
 
-If you have any questions, feel free to ask in the [Fabric Community Slack](https://fabric-community.slack.com/) and we'll be glad to assist you!
+If you have any questions, feel free to ask in the [Community Slack](https://fabric-community.slack.com/) and we'll be glad to assist you!

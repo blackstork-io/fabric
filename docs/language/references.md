@@ -1,7 +1,7 @@
 ---
 title: References
 type: docs
-weight: 80
+weight: 75
 ---
 
 # References
@@ -133,3 +133,7 @@ document "test-document" {
 }
 ```
 -->
+
+## Next steps
+
+To learn how to dynamically adapt the template structure to input data, see [Dynamic Blocks]({{< ref dynamic-blocks.md >}}) documentations.

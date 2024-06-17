@@ -2,7 +2,7 @@
 title: Publish Blocks
 description: Learn how to use Fabric publish blocks to define the destinations for produced documents.
 type: docs
-weight: 75
+weight: 72
 ---
 
 # Publish blocks
@@ -165,6 +165,8 @@ the details on the supported arguments per publisher.
   "configs.md#metadata" >}}) for details.
 - `config`: (optional) an inline configuration for the block. If provided, it takes precedence over
   the `config` argument and the default configuration for the publisher.
+- `vars`: (optional) a block with variable definitions. See [Variables]({{< ref
+  "context.md#variables" >}}) for the details.
 
 ## Execution
 

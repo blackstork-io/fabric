@@ -56,6 +56,8 @@ arguments.
 - `meta`: (optional) a block containing metadata for the block.
 - `config`: (optional) an inline configuration for the block. If provided, it takes precedence over
   the `config` argument and default configuration for the data source.
+- `vars`: (optional) a block with variable definitions. See [Variables]({{< ref
+  "context.md#variables" >}}) for the details.
 
 ## References
 

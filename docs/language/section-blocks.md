@@ -55,8 +55,10 @@ Similarly to the `content` blocks, the `section` blocks are rendered in the orde
 ## Supported nested blocks
 
 - `meta`: (optional) a block containing metadata for the block. See [Metadata]({{< ref "configs.md#metadata" >}}) for details.
-- `content`: see [Content Blocks]({{< ref content-blocks.md >}}) for the details.
-- `section`: nested `section` blocks.
+- `content`: (optional) see [Content Blocks]({{< ref content-blocks.md >}}) for the details.
+- `section`: (optional) nested `section` blocks.
+- `vars`: (optional) a block with variable definitions. See [Variables]({{< ref
+  "context.md#variables" >}}) for the details.
 
 ## References
 

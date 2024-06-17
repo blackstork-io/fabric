@@ -59,6 +59,8 @@ Content provider arguments differ per content provider. See the documentation fo
 
 - `meta`: (optional) a block containing metadata for the block. See [Metadata]({{< ref "configs.md#metadata" >}}) for details.
 - `config`: (optional) an inline configuration for the block. If provided, it takes precedence over the `config` argument and default configuration for the content provider.
+- `vars`: (optional) a block with variable definitions. See [Variables]({{< ref
+  "context.md#variables" >}}) for the details.
 
 ## References
 

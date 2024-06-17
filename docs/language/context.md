@@ -15,8 +15,7 @@ supported by the plugin).
 
 ## Keys
 
-The context is a dictionary. The values can be accessed using JSON paths, and the data can be
-filtered or mutated using JQ queries.
+The context is a dictionary. To access the values in the context, use JSON paths in [JQ queries](https://jqlang.github.io/jq/manual/).
 
 Using JQ-style JSON path syntax, the root keys are:
 
@@ -49,10 +48,10 @@ vars {
 }
 ```
 
-The `vars` block can be defined inside `document`, `section`, and `content` blocks.
+The `vars` block can be defined inside `document`, `section`, `content`, dynamic and reference blocks.
 
 The variable values can be static (like `foo` and `bar` in the example above) or results of data mutations
-(like `baz`, which contains the result of a JQ query applied to the context).
+(like a `query_jq()` function call for `baz` variable).
 
 When evaluated, the variable becomes available in the context under the `.vars` root keyword.
 For example, `.vars.foo` and `.vars.bar` refer to the `foo` and `bar` variables from the snippet
@@ -105,7 +104,9 @@ section {
 
 ### `query_jq()` function
 
-To filter and mutate the data in the context, use [JQ queries](https://jqlang.github.io/jq/manual/). The queries specified as calls of `query_jq()` function execute against the context and return the results into the variable.
+To filter and mutate the data in the context, use [JQ queries](https://jqlang.github.io/jq/manual/).
+The queries specified as calls of `query_jq()` function execute against the context and return the
+results into the variable.
 
 For example:
 
@@ -120,9 +121,9 @@ section {
       items_count = query_jq(".vars.items | length")
 
       items_uppercase = query_jq(
-        <<-JQ
-          .vars.items[1] | ascii_upcase
-        JQ
+        <<-EOT
+          .vars.items | map(ascii_upcase) | join(":")
+        EOT
       )
     }
 
