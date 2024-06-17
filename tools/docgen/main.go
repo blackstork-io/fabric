@@ -20,6 +20,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/github"
 	"github.com/blackstork-io/fabric/internal/graphql"
 	"github.com/blackstork-io/fabric/internal/hackerone"
+	"github.com/blackstork-io/fabric/internal/microsoft"
 	"github.com/blackstork-io/fabric/internal/nistnvd"
 	"github.com/blackstork-io/fabric/internal/openai"
 	"github.com/blackstork-io/fabric/internal/opencti"
@@ -309,6 +310,7 @@ func main() {
 		stixview.Plugin(version),
 		nistnvd.Plugin(version, nil),
 		snyk.Plugin(version, nil),
+		microsoft.Plugin(version, nil),
 	}
 	// generate markdown for each plugin
 	for _, p := range plugins {

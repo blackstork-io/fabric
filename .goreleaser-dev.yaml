@@ -106,3 +106,9 @@ builds:
     binary: "plugins/blackstork/snyk@{{ .Version }}"
     ldflags: "-X main.version={{.Version}}"
     no_unique_dist_dir: true
+
+  - id: microsoft
+    main: ./internal/microsoft/cmd
+    binary: "plugins/blackstork/microsoft@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    no_unique_dist_dir: true
