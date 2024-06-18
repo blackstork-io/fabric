@@ -86,11 +86,11 @@ func validateDataSource(t testing.TB, ds *plugin.DataSource) {
 	assert.NotNil(t, ds, "data source should not be nil")
 	assert.NotEmpty(t, ds.DataFunc, "data source should have a data function")
 	if ds.Config != nil {
-		assert.False(t, ds.Config.IsEmpty(), "data source config should have at least one attribute")
+		assert.False(t, ds.Config.IsEmpty(), "data source config should have at least one argument")
 		diagtest.AssertNoErrors(t, ds.Config.ValidateSpec(), nil, "data source config validation errors")
 	}
 	if ds.Args != nil {
-		assert.False(t, ds.Args.IsEmpty(), "data source args should have at least one attribute")
+		assert.False(t, ds.Args.IsEmpty(), "data source args should have at least one argument")
 		diagtest.AssertNoErrors(t, ds.Args.ValidateSpec(), nil, "data source args validation errors")
 	}
 }
@@ -100,12 +100,12 @@ func validateContentProvider(t testing.TB, cp *plugin.ContentProvider) {
 	assert.NotNil(t, cp, "content provider should not be nil")
 	assert.NotEmpty(t, cp.ContentFunc, "content provider should have a content function")
 	if cp.Config != nil {
-		assert.False(t, cp.Config.IsEmpty(), "content provider config should have at least one attribute")
+		assert.False(t, cp.Config.IsEmpty(), "content provider config should have at least one argument")
 		diagtest.AssertNoErrors(t, cp.Config.ValidateSpec(), nil, "content provider config validation errors")
 
 	}
 	if cp.Args != nil {
-		assert.False(t, cp.Args.IsEmpty(), "content provider args should have at least one attribute")
+		assert.False(t, cp.Args.IsEmpty(), "content provider args should have at least one argument")
 		diagtest.AssertNoErrors(t, cp.Args.ValidateSpec(), nil, "content provider args validation errors")
 	}
 }
@@ -115,14 +115,14 @@ func validatePublisher(t testing.TB, pub *plugin.Publisher) {
 	assert.NotNil(t, pub, "publisher should not be nil")
 	assert.NotEmpty(t, pub.PublishFunc, "publisher should have a publish function")
 	if pub.Config != nil {
-		assert.False(t, pub.Config.IsEmpty(), "publisher config should have at least one attribute")
+		assert.False(t, pub.Config.IsEmpty(), "publisher config should have at least one argument")
 		diagtest.AssertNoErrors(t, pub.Config.ValidateSpec(), nil, "publisher config validation errors")
 	}
 }
 
 func validateAttrSpec(t testing.TB, key string, spec *hcldec.AttrSpec) {
 	t.Helper()
-	assert.Equal(t, key, spec.Name, "attribute name should match")
-	assert.NotEmpty(t, spec.Name, "attribute name should not be empty")
-	assert.NotEmpty(t, spec.Type, "attribute type should not be empty")
+	assert.Equal(t, key, spec.Name, "argument name should match")
+	assert.NotEmpty(t, spec.Name, "argument name should not be empty")
+	assert.NotEmpty(t, spec.Type, "argument type should not be empty")
 }

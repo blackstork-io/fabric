@@ -19,7 +19,7 @@ type: docs
 Produces a table.
 
 Each cell template has access to the data context and the following variables:
-* `.rows` – the value of `rows_var` attribute
+* `.rows` – the value of `rows` argument
 * `.row.value` – the current row from `.rows` list
 * `.row.index` – the current row index
 * `.col.index` – the current column index
@@ -45,7 +45,7 @@ content table {
   #
   # Optional data.
   # Default value:
-  rows_var = null
+  rows = null
 
   # List of header and value go templates for each column
   #

@@ -164,7 +164,7 @@ func (s *TableGeneratorTestSuite) TestMissingHeader() {
 	})
 	plugintest.ReencodeCTY(s.T(), s.schema.Args, val, diagtest.Asserts{{
 		diagtest.IsError,
-		diagtest.DetailContains("attribute", "header", "required"),
+		diagtest.DetailContains("argument", "header", "required"),
 	}})
 }
 

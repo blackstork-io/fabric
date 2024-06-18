@@ -47,10 +47,10 @@ func makeCSVDataSource() *plugin.DataSource {
 		Doc: `
 		Loads CSV files with the names that match a provided ` + "`glob`" + ` pattern or a single file from a provided path.
 
-		Either ` + "`glob` or `path` attribute must be set." + `
+		Either ` + "`glob` or `path` argument must be set." + `
 
-		When ` + "`path`" + ` attribute is specified, the data source returns only the content of a file.
-		When ` + "`glob`" + ` attribute is specified, the data source returns a list of dicts that contain the content of a file and file's metadata.
+		When ` + "`path`" + ` argument is specified, the data source returns only the content of a file.
+		When ` + "`glob`" + ` argument is specified, the data source returns a list of dicts that contain the content of a file and file's metadata.
 
 		**Note**: the data source assumes that CSV file has a header: the data source turns each line into a map with the column titles as keys.
 

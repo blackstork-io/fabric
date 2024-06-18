@@ -60,10 +60,6 @@
         ]
       },
       {
-        "name": "inline",
-        "type": "data-source"
-      },
-      {
         "name": "json",
         "type": "data-source",
         "arguments": [
@@ -100,7 +96,7 @@
         "type": "content-provider",
         "arguments": [
           "columns",
-          "rows_var"
+          "rows"
         ]
       },
       {

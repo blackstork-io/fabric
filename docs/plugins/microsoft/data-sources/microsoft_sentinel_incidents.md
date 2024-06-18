@@ -1,5 +1,5 @@
 ---
-title: microsoft_sentinel_incidents
+title: "`microsoft_sentinel_incidents` data source"
 plugin:
   name: blackstork/microsoft
   description: "The `microsoft_sentinel_incidents` data source fetches incidents from Microsoft Sentinel"
@@ -36,7 +36,7 @@ Note the version constraint set for the plugin.
 
 ## Configuration
 
-The data source supports the following configuration parameters:
+The data source supports the following configuration arguments:
 
 ```hcl
 config data microsoft_sentinel_incidents {
@@ -80,7 +80,7 @@ config data microsoft_sentinel_incidents {
 
 ## Usage
 
-The data source supports the following parameters in the data blocks:
+The data source supports the following execution arguments:
 
 ```hcl
 data microsoft_sentinel_incidents {
