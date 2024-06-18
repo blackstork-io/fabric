@@ -30,7 +30,7 @@ builds:
       - darwin_amd64_v1
       - darwin_arm64
       - windows_amd64_v1
-      - windows_arm64_8
+      - windows_arm64
       - windows_386
 
 
