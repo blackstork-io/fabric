@@ -12,6 +12,7 @@ plugin:
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/{{ shortname .Name }}/"
   {{- end }}
 type: docs
+hideInMenu: true
 ---
 
 {{"{{"}}< plugin-header "{{ .Name }}" "{{ shortname .Name }}" "{{ .Version }}" >{{"}}"}}
@@ -50,4 +51,10 @@ fabric {
 ## Content providers
 
 {{"{{"}}< plugin-resources "{{ shortname $plugin.Name }}" "content-provider" >{{"}}"}}
+{{- end -}}
+
+{{- with .Publishers }}
+## Publishers
+
+{{"{{"}}< plugin-resources "{{ shortname $plugin.Name }}" "publisher" >{{"}}"}}
 {{- end -}}

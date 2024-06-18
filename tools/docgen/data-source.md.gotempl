@@ -1,5 +1,5 @@
 ---
-title: {{ .name }}
+title: "`{{ .name }}` data source"
 plugin:
   name: {{ .plugin.Name }}
   description: {{ .short_desc | quote }}
@@ -48,23 +48,23 @@ Note the version constraint set for the plugin.
 
 {{ $ctx := . -}}
 {{ with .data_source.Config -}}
-The data source supports the following configuration parameters:
+The data source supports the following configuration arguments:
 
 ```hcl
 {{ renderDoc . "config" "data" $ctx.name -}}
 ```
 {{- else -}}
-The data source doesn't support configuration.
+The data source doesn't support any configuration arguments.
 {{- end }}
 
 ## Usage
 
 {{with .data_source.Args -}}
-The data source supports the following parameters in the data blocks:
+The data source supports the following execution arguments:
 
 ```hcl
 {{ renderDoc . "data" $ctx.name -}}
 ```
 {{- else -}}
-The data source doesn't define any execution parameters.
+The data source doesn't define any execution arguments.
 {{- end -}}

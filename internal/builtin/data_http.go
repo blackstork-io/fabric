@@ -88,7 +88,7 @@ func makeHTTPDataSource(version string) *plugin.DataSource {
 						Type:       cty.String,
 						ExampleVal: cty.StringVal("passwd"),
 						Doc: `
-							Note: you can use function like "from_env_var()" to avoid storing credentials in plaintext
+							Note: avoid storing credentials in the templates. Use environment variables instead.
 						`,
 						Constraints: constraint.RequiredNonNull,
 					},
@@ -98,8 +98,13 @@ func makeHTTPDataSource(version string) *plugin.DataSource {
 		Doc: `
 		Loads data from a URL.
 
-		At the moment, the data source accepts only responses with UTF-8 charset and parses only responses with MIME types ` + "`text/csv`" + ` or ` + "`application/json`" + `. 
-		If MIME type of the response is ` + "`text/csv`" + ` or ` + "`application/json`" + `, the response content will be parsed and returned as a JSON structure (similar to the behaviour of CSV and JSON data sources). Otherwise, the response content will be returned as text`,
+		At the moment, the data source accepts only responses with UTF-8 charset and parses only responses
+		with MIME types ` + "`text/csv`" + ` or ` + "`application/json`" + `. 
+
+		If MIME type of the response is ` + "`text/csv`" + ` or ` + "`application/json`" + `, the response
+		content will be parsed and returned as a JSON structure (similar to the behaviour of CSV and JSON data
+		sources). Otherwise, the response content will be returned as text
+		`,
 	}
 }
 

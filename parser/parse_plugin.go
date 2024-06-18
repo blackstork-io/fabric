@@ -161,8 +161,8 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 	case pluginIsRef && !refFound:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
-			Summary:  "Ref block missing 'base' attribute",
-			Detail:   "Ref blocks must contain the 'base' attribute",
+			Summary:  "Ref block missing 'base' argument",
+			Detail:   "Ref blocks must contain the 'base' argument",
 			Subject:  body.MissingItemRange().Ptr(),
 			Context:  &body.SrcRange,
 		})
@@ -170,7 +170,7 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 	case !pluginIsRef && refFound:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
-			Summary:  "Non-ref block contains 'base' attribute",
+			Summary:  "Non-ref block contains 'base' argument",
 			Detail:   "Did you mean to make it a 'ref'?",
 			Subject:  refBase.Range().Ptr(),
 			Context:  &body.SrcRange,
@@ -201,14 +201,14 @@ func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAtt
 	case configAttr != nil && configBlock != nil:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
-			Summary:  "Both config attribute and block are specified",
+			Summary:  "Both config argument and block are specified",
 			Detail:   "Remove one of them",
 			Subject:  configBlock.DefRange().Ptr(),
 			Context:  plugin.Block.Body.Range().Ptr(),
 		})
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
-			Summary:  "Both config attribute and block are specified",
+			Summary:  "Both config argument and block are specified",
 			Detail:   "Remove one of them",
 			Subject:  configAttr.Range().Ptr(),
 			Context:  plugin.Block.Body.Range().Ptr(),
@@ -266,7 +266,7 @@ func (db *DefinedBlocks) parseRefBase(ctx context.Context, plugin *definitions.P
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid reference",
-			Detail:   fmt.Sprintf("'%s ref' block references a different kind of block (%s) in 'base' attribute", plugin.Kind(), basePlugin.Kind()),
+			Detail:   fmt.Sprintf("'%s ref' block references a different kind of block (%s) in 'base' argument", plugin.Kind(), basePlugin.Kind()),
 			Subject:  base.Range().Ptr(),
 			Context:  plugin.Block.Body.Range().Ptr(),
 		})

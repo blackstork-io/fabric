@@ -1,8 +1,8 @@
 ---
-title: rss
+title: "`rss` data source"
 plugin:
   name: blackstork/builtin
-  description: "Fetches an rss or atom feed"
+  description: "Fetches RSS / Atom feed from a URL"
   tags: ["rss","http"]
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -16,17 +16,19 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "rss" "data source" >}}
 
 ## Description
-Fetches an rss or atom feed
+Fetches RSS / Atom feed from a URL.
+
+The data source supports basic authentication.
 
 The data source is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 
 ## Configuration
 
-The data source doesn't support configuration.
+The data source doesn't support any configuration arguments.
 
 ## Usage
 
-The data source supports the following parameters in the data blocks:
+The data source supports the following execution arguments:
 
 ```hcl
 data rss {
@@ -42,7 +44,7 @@ data rss {
     # For example:
     username = "user@example.com"
 
-    # Note: you can use function like "from_env_var()" to avoid storing credentials in plaintext
+    # Note: avoid storing credentials in the templates. Use environment variables instead.
     #
     # Required string.
     # For example:

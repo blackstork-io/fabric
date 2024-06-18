@@ -3,17 +3,20 @@ title: Plugins
 description: Discover the power of Fabric plugins, which implement various data sources and content providers to enhance your templating experience. Data sources enable loading data from files, external services, APIs, or data storage, while content providers render document content locally or via external APIs, supporting text, tables, graphs, code, and more.
 type: docs
 weight: 50
-hideChildren: true
 ---
 
 # Plugins
 
-## Data sources and content providers
+## Data sources, content providers and publishers
 
-Fabric plugins implement various [data sources]({{< ref "data-sources.md" >}}) and [content providers]({{< ref "content-providers.md" >}}):
+Fabric plugins implement various [data sources]({{< ref "data-sources.md" >}}), [content providers]({{< ref "content-providers.md" >}}) and [publishers]({{< ref "publishers.md" >}}):
 
-- **data sources** are integrations responsible for loading data from the file, external service, API, or data storage.
-- **content providers** render the document content locally or through the external API (like LLM). The content types include text, tables, graphs, code and other elements.
+- **data sources** are integrations responsible for loading data from local or external sources:
+  files, external services and API, databases or cloud storage solutions.
+- **content providers** render the content locally or with external API (like LLM). The providers
+  produce various types of content: text, tables, graphs, code, etc.
+- **publishers** are outgoing integrations that deliver rendered document to local or external
+  destinations, for storage or dissemination.
 
 ## Dependencies
 
@@ -21,9 +24,11 @@ The global configuration must include all required plugins (see [Global configur
 
 ## Installation
 
-Plugin releases are independent from Fabric releases and have their own release cycle and version. You can find a list of plugins released by BlackStork at the [Releases page](https://github.com/blackstork-io/fabric/releases) in Fabric GitHub repository.
+Plugin releases are independent from Fabric releases and have their own release cycle and version.
+You can find a list of plugins released by BlackStork at the [Releases page](https://github.com/blackstork-io/fabric/releases)
+in Fabric GitHub repository.
 
-Required plugins can be downloaded and installed automatically with `fabric install` command. See [Installing plugins]({{< ref "../install.md#installing-plugins" >}}) for more details.
+To automatically download and install required plugins, use `fabric install` command. See [Installing plugins]({{< ref "../install.md#installing-plugins" >}}) for more details.
 
 ## Available plugins
 

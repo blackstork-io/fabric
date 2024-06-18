@@ -141,7 +141,7 @@ func (s *OpenAITextContentTestSuite) TestMissingPrompt() {
 		},
 		{
 			diagtest.IsError,
-			diagtest.SummaryEquals("Attribute must be non-null"),
+			diagtest.SummaryEquals("Argument value must be non-null"),
 			diagtest.DetailContains("prompt"),
 		},
 	})
@@ -160,7 +160,7 @@ func (s *OpenAITextContentTestSuite) TestMissingAPIKey() {
 		},
 		{
 			diagtest.IsError,
-			diagtest.SummaryEquals("Attribute must be non-null"),
+			diagtest.SummaryEquals("Argument value must be non-null"),
 			diagtest.DetailContains("api_key"),
 		},
 	})

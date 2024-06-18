@@ -8,6 +8,7 @@ plugin:
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/hackerone/"
 type: docs
+hideInMenu: true
 ---
 
 {{< plugin-header "blackstork/hackerone" "hackerone" "v0.4.1" >}}

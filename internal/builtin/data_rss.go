@@ -17,7 +17,6 @@ import (
 
 func makeRSSDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
-		Doc:      `Fetches an rss or atom feed`,
 		Tags:     []string{"rss", "http"},
 		DataFunc: fetchRSSData,
 		Args: dataspec.ObjectSpec{
@@ -44,13 +43,18 @@ func makeRSSDataSource() *plugin.DataSource {
 						Type:       cty.String,
 						ExampleVal: cty.StringVal("passwd"),
 						Doc: `
-							Note: you can use function like "from_env_var()" to avoid storing credentials in plaintext
+							Note: avoid storing credentials in the templates. Use environment variables instead.
 						`,
 						Constraints: constraint.RequiredNonNull,
 					},
 				},
 			},
 		},
+		Doc: `
+		Fetches RSS / Atom feed from a URL.
+
+		The data source supports basic authentication.
+		`,
 	}
 }
 

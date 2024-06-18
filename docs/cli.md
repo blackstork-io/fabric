@@ -18,7 +18,7 @@ The core Fabric commands are:
 To get more details, run `fabric --help`:
 
 ```text
-$ ./fabric --help
+$ fabric --help
 Usage:
   fabric [command]
 

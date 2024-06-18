@@ -232,7 +232,7 @@ func (s *TableGeneratorTestSuite) TestNilColumns() {
 	})
 	plugintest.ReencodeCTY(s.T(), s.schema.Args, val, diagtest.Asserts{{
 		diagtest.IsError,
-		diagtest.SummaryContains("Attribute must be non-null"),
+		diagtest.SummaryContains("Argument value must be non-null"),
 	}})
 }
 

@@ -24,7 +24,7 @@ func ParseVars(ctx context.Context, block *hclsyntax.Block, localVar *hclsyntax.
 			diags.Append(&hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  "Local var redefinition",
-				Detail:   "Local var is defined both in vars block and as a separate attribute",
+				Detail:   "Local var is defined both in vars block and as a separate argument",
 				Subject:  localVar.Range().Ptr(),
 				Context:  block.Body.Range().Ptr(),
 			})

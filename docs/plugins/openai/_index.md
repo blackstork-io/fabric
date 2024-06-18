@@ -8,6 +8,7 @@ plugin:
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/openai/"
 type: docs
+hideInMenu: true
 ---
 
 {{< plugin-header "blackstork/openai" "openai" "v0.4.1" >}}

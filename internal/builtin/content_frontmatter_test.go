@@ -105,7 +105,7 @@ func (s *FrontMatterGeneratorTestSuite) TestInvalidFormat() {
 	})
 	plugintest.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, diagtest.Asserts{{
 		diagtest.IsError,
-		diagtest.SummaryContains("Attribute", "not one of"),
+		diagtest.SummaryContains("Argument", "not one of"),
 	}})
 }
 

@@ -8,6 +8,7 @@ plugin:
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
 type: docs
+hideInMenu: true
 ---
 
 {{< plugin-header "blackstork/builtin" "builtin" "v0.4.1" >}}
@@ -22,3 +23,6 @@ type: docs
 ## Content providers
 
 {{< plugin-resources "builtin" "content-provider" >}}
+## Publishers
+
+{{< plugin-resources "builtin" "publisher" >}}

@@ -1,5 +1,5 @@
 ---
-title: splunk_search
+title: "`splunk_search` data source"
 plugin:
   name: blackstork/splunk
   description: ""
@@ -33,7 +33,7 @@ Note the version constraint set for the plugin.
 
 ## Configuration
 
-The data source supports the following configuration parameters:
+The data source supports the following configuration arguments:
 
 ```hcl
 config data splunk_search {
@@ -53,7 +53,7 @@ config data splunk_search {
 
 ## Usage
 
-The data source supports the following parameters in the data blocks:
+The data source supports the following execution arguments:
 
 ```hcl
 data splunk_search {

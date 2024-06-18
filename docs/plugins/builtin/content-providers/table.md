@@ -1,5 +1,5 @@
 ---
-title: table
+title: "`table` content provider"
 plugin:
   name: blackstork/builtin
   description: "Produces a table"
@@ -19,7 +19,7 @@ type: docs
 Produces a table.
 
 Each cell template has access to the data context and the following variables:
-* `.rows` – the value of `rows_var` attribute
+* `.rows` – the value of `rows` argument
 * `.row.value` – the current row from `.rows` list
 * `.row.index` – the current row index
 * `.col.index` – the current column index
@@ -32,11 +32,11 @@ The content provider is built-in, which means it's a part of `fabric` binary. It
 
 #### Configuration
 
-The content provider doesn't support any configuration parameters.
+The content provider doesn't support any configuration arguments.
 
 #### Usage
 
-The content provider supports the following execution parameters:
+The content provider supports the following execution arguments:
 
 ```hcl
 content table {
@@ -45,7 +45,7 @@ content table {
   #
   # Optional data.
   # Default value:
-  rows_var = null
+  rows = null
 
   # List of header and value go templates for each column
   #

@@ -59,14 +59,14 @@ func (pub *Publisher) Validate() diagnostics.Diag {
 	if pub.PublishFunc == nil {
 		diags = append(diags, &hcl.Diagnostic{
 			Severity: hcl.DiagError,
-			Summary:  "Incomplete Publisher shema",
+			Summary:  "Incomplete Publisher schema",
 			Detail:   "Publisher function not loaded",
 		})
 	}
 	if pub.Args == nil {
 		diags = append(diags, &hcl.Diagnostic{
 			Severity: hcl.DiagError,
-			Summary:  "Incomplete Publisher shema",
+			Summary:  "Incomplete Publisher schema",
 			Detail:   "Missing args schema",
 		})
 	}

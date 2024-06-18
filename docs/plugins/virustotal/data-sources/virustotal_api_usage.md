@@ -1,5 +1,5 @@
 ---
-title: virustotal_api_usage
+title: "`virustotal_api_usage` data source"
 plugin:
   name: blackstork/virustotal
   description: ""
@@ -33,7 +33,7 @@ Note the version constraint set for the plugin.
 
 ## Configuration
 
-The data source supports the following configuration parameters:
+The data source supports the following configuration arguments:
 
 ```hcl
 config data virustotal_api_usage {
@@ -45,7 +45,7 @@ config data virustotal_api_usage {
 
 ## Usage
 
-The data source supports the following parameters in the data blocks:
+The data source supports the following execution arguments:
 
 ```hcl
 data virustotal_api_usage {

@@ -8,6 +8,7 @@ plugin:
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/terraform/"
 type: docs
+hideInMenu: true
 ---
 
 {{< plugin-header "blackstork/terraform" "terraform" "v0.4.1" >}}

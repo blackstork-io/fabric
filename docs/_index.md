@@ -22,6 +22,7 @@ Together, Fabric CLI tool and FCL offer a comprehensive solution for organizatio
 - [Fabric CLI]({{< ref "cli.md" >}}) — Fabric CLI usage details.
 - [Tutorial]({{< ref "tutorial.md" >}}) — an extensive tutorial for starting with Fabric.
 - [Language]({{< ref "language.md" >}}) — Fabric Configuration Language details and main concepts.
-- [Data Sources]({{< ref "data-sources.md" >}}) — the data sources supported.
-- [Content Providers]({{< ref "content-providers.md" >}}) — the content providers supported.
 - [Plugins]({{< ref "plugins.md" >}}) — the documentation for the plugins Fabric supports.
+- [Data Sources]({{< ref "plugins/data-sources.md" >}}) — the data sources supported.
+- [Content Providers]({{< ref "plugins/content-providers.md" >}}) — the content providers supported.
+- [Publishers]({{< ref "plugins/publishers.md" >}}) — the outgoing integrations for rendered content.

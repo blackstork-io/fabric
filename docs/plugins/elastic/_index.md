@@ -8,6 +8,7 @@ plugin:
   version: "v0.4.1"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/elastic/"
 type: docs
+hideInMenu: true
 ---
 
 {{< plugin-header "blackstork/elastic" "elastic" "v0.4.1" >}}

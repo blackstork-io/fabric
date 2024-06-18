@@ -63,8 +63,8 @@ func (db *DefinedBlocks) parseSection(ctx context.Context, section *definitions.
 		if base == nil {
 			diags.Append(&hcl.Diagnostic{
 				Severity: hcl.DiagError,
-				Summary:  "Missing 'base' attribute",
-				Detail:   "Ref blocks must contain a 'base' attribute",
+				Summary:  "Missing 'base' argument",
+				Detail:   "Ref blocks must contain a 'base' argument",
 				Subject:  section.Block.Body.MissingItemRange().Ptr(),
 			})
 			return

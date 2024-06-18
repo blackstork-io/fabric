@@ -37,7 +37,7 @@ func (s *CodeTestSuite) TestMissingValue() {
 		"language": cty.NullVal(cty.String),
 	})
 	plugintest.ReencodeCTY(s.T(), s.schema.Args, val, diagtest.Asserts{{
-		diagtest.SummaryContains("Attribute must be non-null"),
+		diagtest.SummaryContains("Argument value must be non-null"),
 	}})
 }
 

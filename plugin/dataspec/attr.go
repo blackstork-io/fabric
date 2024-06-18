@@ -207,8 +207,8 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 		if a.Constraints.Is(constraint.NonNull) {
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
-				Summary:  "Attribute must be non-null",
-				Detail:   fmt.Sprintf("The attribute %q was either not defined or is null.", a.Name),
+				Summary:  "Argument value must be non-null",
+				Detail:   fmt.Sprintf("The argument %q is not defined or is null.", a.Name),
 			})
 		}
 	} else {
@@ -216,8 +216,8 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 		if a.Deprecated != "" {
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagWarning,
-				Summary:  "Deprecated attribute",
-				Detail:   fmt.Sprintf("The attribute %q is deprecated: %s", a.Name, a.Deprecated),
+				Summary:  "Deprecated argument",
+				Detail:   fmt.Sprintf("The argument %q is deprecated: %s", a.Name, a.Deprecated),
 			})
 		}
 
@@ -242,14 +242,14 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 					if min == max {
 						diags = append(diags, &hcl.Diagnostic{
 							Severity: hcl.DiagError,
-							Summary:  "Attribute length is not in range",
-							Detail:   fmt.Sprintf("The length of attribute %q must be exactly %d", a.Name, min),
+							Summary:  "Argument value length is not in range",
+							Detail:   fmt.Sprintf("The length of argument %q value must be exactly %d", a.Name, min),
 						})
 					} else {
 						diags = append(diags, &hcl.Diagnostic{
 							Severity: hcl.DiagError,
-							Summary:  "Attribute length is not in range",
-							Detail:   fmt.Sprintf("The length of attribute %q must be in range [%d; %d] (inclusive)", a.Name, min, max),
+							Summary:  "Argument value length is not in range",
+							Detail:   fmt.Sprintf("The length of argument %q value must be in range [%d; %d] (inclusive)", a.Name, min, max),
 						})
 					}
 				}
@@ -258,8 +258,8 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 				if length < min {
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
-						Summary:  "Attribute length is not in range",
-						Detail:   fmt.Sprintf("The length of attribute %q must be >= %d", a.Name, min),
+						Summary:  "Argument value length is not in range",
+						Detail:   fmt.Sprintf("The length of argument %q value must be >= %d", a.Name, min),
 					})
 				}
 			} else if !max.IsNull() {
@@ -267,8 +267,8 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 				if length > max {
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
-						Summary:  "Attribute length is not in range",
-						Detail:   fmt.Sprintf("The length of attribute %q must be <= %d", a.Name, max),
+						Summary:  "Argument value length is not in range",
+						Detail:   fmt.Sprintf("The length of argument %q value must be <= %d", a.Name, max),
 					})
 				}
 			}
@@ -279,8 +279,8 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 				if acc != big.Exact {
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
-						Summary:  "Attribute must be an integer",
-						Detail:   fmt.Sprintf("The attribute %q must be an integer", a.Name),
+						Summary:  "Argument value must be an integer",
+						Detail:   fmt.Sprintf("The argument %q value must be an integer", a.Name),
 					})
 				}
 			}
@@ -289,24 +289,24 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 				if val.GreaterThanOrEqualTo(min).And(val.LessThanOrEqualTo(max)).False() {
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
-						Summary:  "Attribute is not in range",
-						Detail:   fmt.Sprintf("The attribute %q must be in range [%s; %s] (inclusive)", a.Name, min.AsBigFloat().String(), max.AsBigFloat().String()),
+						Summary:  "Argument value is not in range",
+						Detail:   fmt.Sprintf("The argument %q must be in range [%s; %s] (inclusive)", a.Name, min.AsBigFloat().String(), max.AsBigFloat().String()),
 					})
 				}
 			} else if !min.IsNull() {
 				if val.GreaterThanOrEqualTo(min).False() {
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
-						Summary:  "Attribute is not in range",
-						Detail:   fmt.Sprintf("The attribute %q must be >= %s", a.Name, min.AsBigFloat().String()),
+						Summary:  "Argument value is not in range",
+						Detail:   fmt.Sprintf("The argument %q value must be >= %s", a.Name, min.AsBigFloat().String()),
 					})
 				}
 			} else if !max.IsNull() {
 				if val.LessThanOrEqualTo(max).False() {
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
-						Summary:  "Attribute is not in range",
-						Detail:   fmt.Sprintf("The attribute %q must be <= %s", a.Name, max.AsBigFloat().String()),
+						Summary:  "Argument value is not in range",
+						Detail:   fmt.Sprintf("The argument %q value must be <= %s", a.Name, max.AsBigFloat().String()),
 					})
 				}
 			}
@@ -315,8 +315,8 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 	if !a.OneOf.Validate(val) {
 		diags = append(diags, &hcl.Diagnostic{
 			Severity: hcl.DiagError,
-			Summary:  "Attribute is not one of the allowed values",
-			Detail:   fmt.Sprintf("The attribute %q must be one of: %s", a.Name, a.OneOf),
+			Summary:  "Argument value is not one of the allowed values",
+			Detail:   fmt.Sprintf("The argument %q value must be one of: %s", a.Name, a.OneOf),
 		})
 	}
 	return
@@ -325,15 +325,15 @@ func (a *AttrSpec) ValidateValue(val cty.Value) (diags hcl.Diagnostics) {
 func (a *AttrSpec) ValidateSpec() (diags diagnostics.Diag) {
 	if a.Constraints.Is(constraint.Required) {
 		if a.ExampleVal == cty.NilVal {
-			diags.AddWarn(fmt.Sprintf("Missing example value on required attibute %q", a.Name), "")
+			diags.AddWarn(fmt.Sprintf("Missing example value for a required argument %q", a.Name), "")
 		}
 		if a.DefaultVal != cty.NilVal {
-			diags.Add(fmt.Sprintf("Default value is specified for the required attribute %q = %s", a.Name, a.DefaultVal.GoString()), "")
+			diags.Add(fmt.Sprintf("Default value is specified for a required argument %q = %s", a.Name, a.DefaultVal.GoString()), "")
 		}
 	}
 
 	if a.Constraints.Is(constraint.Integer) && !(a.Type.Equals(cty.Number)) {
-		diags.Add(fmt.Sprintf("Integer constraint is specified for non-numeric attribute %q", a.Name), "")
+		diags.Add(fmt.Sprintf("Integer constraint is specified for a non-numeric argument %q", a.Name), "")
 	}
 	min := a.MinInclusive
 
@@ -385,7 +385,7 @@ func (a *AttrSpec) ValidateSpec() (diags diagnostics.Diag) {
 	if len(diags) == 0 {
 		if a.DefaultVal != cty.NilVal {
 			diag := a.ValidateValue(a.DefaultVal)
-			prefix := fmt.Sprintf("Default value for attribute %q: ", a.Name)
+			prefix := fmt.Sprintf("Default value for argument %q: ", a.Name)
 			for _, d := range diag {
 				if d.Severity != hcl.DiagError {
 					continue
@@ -396,7 +396,7 @@ func (a *AttrSpec) ValidateSpec() (diags diagnostics.Diag) {
 		}
 		if a.ExampleVal != cty.NilVal {
 			diag := a.ValidateValue(a.ExampleVal)
-			prefix := fmt.Sprintf("Example value for attribute %q: ", a.Name)
+			prefix := fmt.Sprintf("Example value for argument %q: ", a.Name)
 			for _, d := range diag {
 				if d.Severity != hcl.DiagError {
 					continue
