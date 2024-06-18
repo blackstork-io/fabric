@@ -31,16 +31,49 @@ Refer to [the documentation](https://blackstork.io/fabric/docs/) for in-depth de
 > [!NOTE]  
 > Fabric is currently in the early stages of development, and there may be some issues. If you have any suggestions, ideas, or bug reports, please share them in [Fabric Community slack](https://fabric-community.slack.com/).
 
+# Templates
+
+You can find free Fabric templates in [Fabric Templates](https://github.com/blackstork-io/fabric-templates) repository.
+
 # Installation
 
+# Usage
+
 ## Installing Fabric
+
+### Homebrew
+
+To install Fabric on macOS with [Homebrew](https://brew.sh/), run these commands:
+
+```bash
+# Install Fabric from the tap
+brew install blackstork-io/tools/fabric
+
+# Verify the version installed
+fabric --version
+```
+
+It's recommended to use `blackstork-io/tools` tap when installing Fabric with Homebrew. The tap is
+updated automatically with every release.
+
+### Docker
+
+The Docker images for Fabric are hosted in [Docker Hub](https://hub.docker.com/r/blackstorkio/fabric/tags).
+
+To run Fabric as a Docker image use a full name `blackstorkio/fabric`:
+
+```bash
+docker run blackstorkio/fabric
+```
+
+### GitHub releases
 
 Fabric binaries for Windows, macOS, and Linux are available at ["Releases"](https://github.com/blackstork-io/fabric/releases) page in the project's GitHub.
 
 To install Fabric:
 
 - **download a release archive**: choose and download Fabric release archive appropriate for your operating system (Windows, macOS/Darwin, or Linux) and architecture from ["Releases"](https://github.com/blackstork-io/fabric/releases) page;
-- **unpack**: extract the contents of the downloaded release archive into a preferred directory.
+- **unpack**: extract the contents of the downloaded release archive into a preferred directory;
 
 For example, the steps for macOS (arm64) are:
 
@@ -49,8 +82,7 @@ For example, the steps for macOS (arm64) are:
 mkdir fabric-bin
 
 # Download the latest release of Fabric
-wget https://github.com/blackstork-io/fabric/releases/latest/download/fabric_darwin_arm64.tar.gz \
-    -O ./fabric_darwin_arm64.tar.gz
+wget https://github.com/blackstork-io/fabric/releases/latest/download/fabric_darwin_arm64.tar.gz -O ./fabric_darwin_arm64.tar.gz
 
 # Unpack Fabric release archive into `fabric-bin` folder
 tar -xvzf ./fabric_darwin_arm64.tar.gz -C ./fabric-bin
@@ -58,43 +90,6 @@ tar -xvzf ./fabric_darwin_arm64.tar.gz -C ./fabric-bin
 # Verify that `fabric` runs
 ./fabric-bin/fabric --help
 ```
-
-## Installing Fabric plugins
-
-Fabric relies on [the plugins](https://blackstork.io/fabric/docs/plugins/) for implementing the integrations with various data sources, platforms, and services.
-
-Before the plugins can be used during the template rendering, they must be installed. Fabric's sub-command `install` can install the plugins automatically from the registry.
-
-To install the plugins:
-
-- **add all necessary plugins into the global configuration**: [the global configuration](https://blackstork.io/fabric/docs/language/configs/#global-configuration) has a list of plugins dependencies in `plugin_versions` map. Add the plugins you want to install in the map with a preferred version constraint.
-
-  ```hcl
-  fabric {
-    plugin_versions = {
-      "blackstork/openai" = ">= 0.0.1",
-      "blackstork/elastic" = ">= 0.0.1",
-    }
-  }
-  ```
-
-- **install the plugins**: run `install` sub-command to install the plugins. For example:
-
-  ```bash
-  $ ./fabric install
-  Mar 11 19:20:09.085 INF Searching plugin name=blackstork/elastic constraints=">=v0.0.1"
-  Mar 11 19:20:09.522 INF Installing plugin name=blackstork/elastic version=0.4.0
-  Mar 11 19:20:10.769 INF Searching plugin name=blackstork/openai constraints=">=v0.0.1"
-  Mar 11 19:20:10.787 INF Installing plugin name=blackstork/openai version=0.4.0
-  $
-  ```
-
-The plugins are downloaded and installed in `./fabric` folder.
-
-> [!NOTE]  
-> It's not necessary to install any plugins if you are only using built-in [data sources](https://blackstork.io/fabric/docs/plugins/builtin/#data-sources) and [content providers](https://blackstork.io/fabric/docs/plugins/builtin/#content-providers) in your templates
-
-# Usage
 
 The command line interface to Fabric is `fabric` CLI tool.
 
@@ -130,19 +125,19 @@ Flags:
 Use "fabric [command] --help" for more information about a command.
 ```
 
-# Templates
-
-You can find free Fabric templates in [Fabric Templates](https://github.com/blackstork-io/fabric-templates) repository.
-
 # Documentation
 
-Visit [https://blackstork.io/fabric/docs/](https://blackstork.io/fabric/docs/) for full documentation.
+Visit [https://blackstork.io/fabric/docs/](https://blackstork.io/fabric/docs/) to see full documentation for Fabric.
 
 # Security
 
-If you suspect any vulnerabilities within Fabric, please promptly report them using GitHub's [security advisory reporting](https://github.com/blackstork-io/fabric/security/advisories/new). We treat every report with the utmost seriousness and commit to conducting a thorough investigation.
+If you suspect any vulnerabilities within Fabric, please report them using GitHub's [security
+advisory reporting](https://github.com/blackstork-io/fabric/security/advisories/new). We treat every
+report with the utmost seriousness and commit to conducting a thorough investigation.
 
-We kindly request that you converse with us before making any public disclosures. This precautionary step ensures that no excessive information is divulged prematurely, allowing us to prepare a patch. Additionally, it gives users enough time to upgrade and enhance their system security.
+We kindly request that you task with us before making any public disclosures. This precautionary
+step ensures that no excessive information is shared prematurely, allowing us to prepare a patch.
+It also gives users enough time to upgrade.
 
 # License
 

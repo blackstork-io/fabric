@@ -93,18 +93,17 @@ func New(options ...Option) *FabCtx {
 		opt(&opts)
 	}
 
-	if !opts.signals {
-		return &FabCtx{
-			mainCtx:    context.Background(),
-			cleanupCtx: context.Background(),
-			evalCtx:    newEvalContext(),
-		}
+	ctx := FabCtx{
+		evalCtx: newEvalContext(),
 	}
 
-	var (
-		ctx                       FabCtx
-		mainCancel, cleanupCancel context.CancelCauseFunc
-	)
+	if !opts.signals {
+		ctx.mainCtx = context.Background()
+		ctx.cleanupCtx = context.Background()
+		return &ctx
+	}
+
+	var mainCancel, cleanupCancel context.CancelCauseFunc
 	ctx.cleanupCtx, cleanupCancel = context.WithCancelCause(context.Background())
 	ctx.mainCtx, mainCancel = context.WithCancelCause(ctx.cleanupCtx)
 

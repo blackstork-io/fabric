@@ -10,6 +10,31 @@ code_blocks_no_wrap: true
 
 ## Installing Fabric
 
+### Homebrew
+
+To install Fabric on macOS with [Homebrew](https://brew.sh/), run these commands:
+
+```bash
+# Install Fabric from the tap
+brew install blackstork-io/tools/fabric
+
+# Verify the version installed
+fabric --version
+```
+
+It's recommended to use `blackstork-io/tools` tap when installing Fabric with Homebrew. The tap is
+updated automatically with every release.
+
+### Docker
+
+The Docker images for Fabric are hosted in [Docker Hub](https://hub.docker.com/r/blackstorkio/fabric/tags).
+
+To run Fabric as a Docker image use a full name `blackstorkio/fabric`:
+
+```bash
+docker run blackstorkio/fabric
+```
+
 ### GitHub releases
 
 Fabric binaries for Windows, macOS, and Linux are available at ["Releases"](https://github.com/blackstork-io/fabric/releases) page in the project's GitHub.
@@ -37,11 +62,13 @@ tar -xvzf ./fabric_darwin_arm64.tar.gz -C ./fabric-bin
 
 ## Installing plugins
 
-Fabric uses [plugins]({{< ref "plugins.md" >}}) that implementing integrations with various data sources, platforms, and services. Before the plugins can be used during template rendering, they must be installed. Fabric's sub-command `install` can install the plugins automatically from the registry (`https://registry.blackstork.io`).
+Fabric uses [plugins]({{< ref "plugins.md" >}}) for integrations with various data sources, platforms, and services.
+
+Before the plugins can be used for template rendering, they must be installed. Fabric has a sub-command `install` that automatically installs all required plugins from the registry (`https://registry.blackstork.io` is the root endpoint for the registry).
 
 To install the plugins:
 
-- **add all necessary plugins into the global configuration**: [the global configuration]({{< ref "language/configs.md#global-configuration" >}}) has a list of plugins dependencies in `plugin_versions` map. Add the plugins you would like to install in the map with a preferred version constraint.
+- **add necessary plugins to the list in global configuration**: [the global configuration]({{< ref "language/configs.md#global-configuration" >}}) has a list of plugins dependencies in `plugin_versions` map. Add the plugins to install in the map with a preferred version constraint.
 
   ```hcl
   fabric {
@@ -63,14 +90,12 @@ To install the plugins:
   $
   ```
 
-The plugins are downloaded and installed in `./.fabric` folder or in the location specified in `cache_dir` in [the global configuration]({{< ref "language/configs.md#global-configuration" >}}).
+Fabric downloads and installs plugins in `./.fabric` folder, or in the location specified in `cache_dir` in [the global configuration]({{< ref "language/configs.md#global-configuration" >}}).
 
 {{< hint note >}}
-
-It's not necessary to install any plugins if you are only using built-in [data sources]({{< ref "plugins/builtin/_index.md#data-sources" >}}) and [content providers]({{< ref "plugins/builtin/_index.md#content-providers" >}}) in your templates
-
+There is no need to install plugins if you are only using resources from a [built-in plugin]({{< ref "plugins/builtin/_index.md" >}}) in the templates.
 {{</ hint >}}
 
 ## Next step
 
-That's it! You're now ready to use Fabric. Take a look at [the tutorial]({{< ref "tutorial.md" >}}) to see how to create and render the templates.
+That's it! You're now ready to use Fabric. Take a look at [Tutorial]({{< ref "tutorial.md" >}}) to see how to create and render the templates.
