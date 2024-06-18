@@ -58,7 +58,7 @@ func TestValidation(t *testing.T) {
 				},
 				{
 					diagtest.IsError,
-					diagtest.SummaryContains("Attribute must be non-null"),
+					diagtest.SummaryContains("Argument value must be non-null"),
 				},
 			},
 		},
@@ -74,7 +74,7 @@ func TestValidation(t *testing.T) {
 			asserts: diagtest.Asserts{
 				{
 					diagtest.IsError,
-					diagtest.SummaryContains("Attribute must be non-null"),
+					diagtest.SummaryContains("Argument value must be non-null"),
 				},
 			},
 		},
@@ -146,7 +146,7 @@ func TestValidation(t *testing.T) {
 			asserts: diagtest.Asserts{
 				{
 					diagtest.IsError,
-					diagtest.SummaryContains("Attribute length is not in range"),
+					diagtest.SummaryContains("Argument value length is not in range"),
 					diagtest.DetailContains(">=", "10"),
 				},
 			},
@@ -177,7 +177,7 @@ func TestValidation(t *testing.T) {
 			asserts: diagtest.Asserts{
 				{
 					diagtest.IsError,
-					diagtest.SummaryContains("Attribute length is not in range"),
+					diagtest.SummaryContains("Argument value length is not in range"),
 					diagtest.DetailContains("<=", "2"),
 				},
 			},
@@ -196,7 +196,7 @@ func TestValidation(t *testing.T) {
 			asserts: diagtest.Asserts{
 				{
 					diagtest.IsError,
-					diagtest.SummaryContains("Attribute length is not in range"),
+					diagtest.SummaryContains("Argument value length is not in range"),
 					diagtest.DetailContains("1", "3"),
 				},
 			},
@@ -228,7 +228,7 @@ func TestValidation(t *testing.T) {
 			asserts: diagtest.Asserts{
 				{
 					diagtest.IsError,
-					diagtest.SummaryContains("Attribute length is not in range"),
+					diagtest.SummaryContains("Argument value length is not in range"),
 					diagtest.DetailContains("exactly", "5"),
 				},
 			},
@@ -340,7 +340,7 @@ func TestValidation(t *testing.T) {
 			inputVal: cty.NumberIntVal(0),
 			asserts: diagtest.Asserts{{
 				diagtest.IsError,
-				diagtest.SummaryContains("Attribute is not in range"),
+				diagtest.SummaryContains("Argument value is not in range"),
 				diagtest.DetailContains(`>=`),
 			}},
 		},
@@ -368,7 +368,7 @@ func TestValidation(t *testing.T) {
 			inputVal: cty.NumberFloatVal(2.7),
 			asserts: diagtest.Asserts{{
 				diagtest.IsError,
-				diagtest.SummaryContains("Attribute is not in range"),
+				diagtest.SummaryContains("Argument value is not in range"),
 			}},
 		},
 		{
@@ -397,7 +397,7 @@ func TestValidation(t *testing.T) {
 			inputVal: cty.NumberFloatVal(4.2),
 			asserts: diagtest.Asserts{{
 				diagtest.IsError,
-				diagtest.SummaryContains("Attribute is not in range"),
+				diagtest.SummaryContains("Argument value is not in range"),
 			}},
 		},
 		{
@@ -512,7 +512,7 @@ func TestValidation(t *testing.T) {
 			inputVal: cty.NumberFloatVal(4.2),
 			asserts: diagtest.Asserts{{
 				diagtest.IsError,
-				diagtest.SummaryContains("Attribute is not in range"),
+				diagtest.SummaryContains("Argument value is not in range"),
 			}, {
 				diagtest.IsWarning,
 				diagtest.SummaryContains("Deprecated"),
