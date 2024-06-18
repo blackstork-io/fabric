@@ -19,7 +19,7 @@ func decodeCtyValue(src *CtyValue) (cty.Value, error) {
 		return cty.NilVal, err
 	}
 	switch {
-	case t.IsPrimitiveType() && src.GetPrimitive() != nil:
+	case t.IsPrimitiveType():
 		return decodeCtyPrimitiveValue(src.GetPrimitive())
 	case t.IsObjectType() || t.IsMapType():
 		return decodeCtyMapLike(t, src.GetMapLike().GetElements())
@@ -83,6 +83,9 @@ func decodeCtyListLike(t cty.Type, src []*CtyValue) (cty.Value, error) {
 }
 
 func decodeCtyPrimitiveValue(src *CtyPrimitiveValue) (cty.Value, error) {
+	if src == nil {
+		return cty.NilVal, nil
+	}
 	switch data := src.GetData().(type) {
 	case *CtyPrimitiveValue_Bln:
 		return cty.BoolVal(data.Bln), nil
