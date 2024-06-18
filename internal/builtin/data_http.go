@@ -88,7 +88,7 @@ func makeHTTPDataSource(version string) *plugin.DataSource {
 						Type:       cty.String,
 						ExampleVal: cty.StringVal("passwd"),
 						Doc: `
-							Note: you can use function like "from_env_var()" to avoid storing credentials in plaintext
+							Note: avoid storing credentials in the templates. Use environment variables instead.
 						`,
 						Constraints: constraint.RequiredNonNull,
 					},
