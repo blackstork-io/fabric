@@ -341,18 +341,20 @@ Neptune is the eighth planet from the Sun in our solar system and is the coldest
 
 ## Publishing
 
-We can already use the Markdown output (and render it with a Markdown editor like [MacDown](https://macdown.uranusjr.com/)), but it might be better to produce formatted HTML and PDF documents.
+We can already use the Markdown output (and render it with a Markdown editor, for example
+[MacDown](https://macdown.uranusjr.com/)), but sometimes it's convenient to produce formatted HTML and PDF
+documents right away.
 
-To format the document as HTML or PDF, and publish them to a local or an external destination, we use `publish` blocks.
+To format the document and publish it to a local or an external destination, use `publish` blocks.
 
-Add two `publish` blocks to the document template:
+Add a `publish` block to the document template:
 
 ```hcl
 document "greeting" {
 
   # ...
 
-  # Creating publishing to a local HTML file
+  # Publishing to a local HTML file
   publish local_file {
     path = "./greeting-{{ now | date \"2006_01_02\" }}.{{.format}}"
     format = "html"
@@ -361,13 +363,28 @@ document "greeting" {
 }
 ```
 
-Note, that both `publish` blocks use Go template strings as values for the `path` arguments. This
-allows us to have current date in a filename of the output files.
+Note, that `publish` block supports Go template strings as values for the `path` argument. This
+allows us to use dynamic paths - in this case, the filename contains a date and the output format.
+
+To render an publish the document, use `--publish` flag when running `fabric render`:
+
+FIXME: TORUN
+
+```bash
+$ fabric render document.greeting --publish
+Jun  2 12:48:08.899 INF Writing to a file path=/tmp/example_2024_06_02.pdf
+Jun  2 12:48:09.182 INF Writing to a file path=/tmp/example_2024_06_02.html
+Jun  2 12:48:09.183 INF Writing to a file path=/tmp/example_2024_06_02.md
+```
 
 # Next steps
 
-Congratulations! By completing this tutorial, you've gained a good understanding of Fabric and its core principles.
+Congratulations! By completing this tutorial, you've gained a good understanding of Fabric and its
+core principles.
 
-Take a look at the detailed [FCL specification]({{< ref "language" >}}), explore [the open-source templates]({{< ref "templates" >}}) the community made, and see if there are integrations for your tech stack in [Fabric plugins]({{< ref "plugins" >}}).
+Take a look at the detailed [FCL specification]({{< ref "language" >}}), explore [the open-source
+templates]({{< ref "templates" >}}) the community made, and see if there are integrations for your
+tech stack in [Fabric plugins]({{< ref "plugins" >}}).
 
-If you have any questions, feel free to ask in the [Community Slack](https://fabric-community.slack.com/) and we'll be glad to assist you!
+If you have any questions, feel free to ask in the [Community
+Slack](https://fabric-community.slack.com/) and we'll be glad to assist you!
