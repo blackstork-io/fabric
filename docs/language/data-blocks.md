@@ -53,7 +53,7 @@ arguments.
 
 ## Supported nested blocks
 
-- `meta`: (optional) a block containing metadata for the block.
+- `meta`: (optional) a block containing metadata for the block. See [Metadata]({{< ref "configs.md#metadata" >}}) for details.
 - `config`: (optional) an inline configuration for the block. If provided, it takes precedence over
   the `config` argument and default configuration for the data source.
 - `vars`: (optional) a block with variable definitions. See [Variables]({{< ref

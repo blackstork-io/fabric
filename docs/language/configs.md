@@ -9,11 +9,15 @@ weight: 20
 
 ## Global configuration
 
-The `fabric` configuration block serves as the global configuration for Fabric, offering a centralized space for defining essential aspects such as plugin dependencies and local directory paths.
+The `fabric` configuration block serves as the global configuration for Fabric. Use it to define
+configuration properties, including default behavior, plugin dependencies, and local paths.
 
 ```hcl
 fabric {
-  ...
+  plugin_versions = {
+    "blackstork/elastic" = ">0.4.1"
+    "blackstork/openai" = ">0.4.1"
+  }
 }
 ```
 
@@ -21,8 +25,19 @@ Within the codebase, only one `fabric` block can be defined.
 
 ### Supported arguments
 
-- `plugin_versions`: (required) a map that aligns namespaced plugin names with version constraints in SemVer (refer to Terraform [version constraint syntax](https://developer.hashicorp.com/terraform/language/expressions/version-constraints#version-constraint-syntax)).
-- `cache_dir`: (optional) a path to a directory on the local file system. The default value is `.fabric` directory in the current folder. If the directory doesn't exist, Fabric creates it upon the first run.
+- `plugin_versions`: (optional) a map of plugin dependencies. The version constraints are defined in
+  SemVer (refer to Terraform [version constraint
+  syntax](https://developer.hashicorp.com/terraform/language/expressions/version-constraints#version-constraint-syntax)).
+- `expose_env_vars_with_pattern`: (optional) a glob pattern for filtering the environment variables
+  exposed in the templates by name. Default value is `FABRIC_*`. To expose all environment
+  variables, set the value to `*`. See [Environment variables]({{< ref
+  "configs.md#environment-variables">}}) for the details.
+- `cache_dir`: (optional) a path to a directory on the local file system. The default value is
+  `.fabric` - a directory in the current folder. If the directory doesn't exist, Fabric will create
+  it during the first run.
+
+To install all dependencies defined in `plugin_versions`, run `fabric install` command (see
+[Installing plugins]({{< ref "install.md#installing-plugins" >}}) for more details)
 
 ### Supported nested blocks
 
@@ -85,7 +100,7 @@ The arguments allowed in the configuration block depend on the data source / con
 
 ### Supported nested blocks
 
-`config` blocks don't support nested blocks.
+- `meta`: (optional) a block containing metadata for the block. See [Metadata]({{< ref "configs.md#metadata" >}}) for details.
 
 ### Example
 
@@ -95,7 +110,7 @@ config data csv {
 }
 
 config content openai_text {
-  api_key = "some-openai-api-key"
+  api_key = env.FABRIC_OPENAI_API_KEY
   system_prompt = "You are the best at saying Hi!"
 }
 
@@ -120,17 +135,48 @@ document "test-document" {
 }
 ```
 
+## Environment variables
+
+Fabric templates can be configured with environment variables, either set in the shell or provided
+in `.env` file.
+
+The values of environment variables are available through global `env` namespace and inside the context under `.env` root.
+
+For example:
+
+```hcl
+config data elasticsearch {
+  basic_auth_username = "elastic"
+  basic_auth_password = env.ELASTICSEARCH_PASSWORD
+}
+
+content text {
+  local_var = query_jq(".env.FOOBAR | split(\",\") | length")
+  value = "There are {{ .vars.local }} elements in `FOOBAR` env var"
+}
+```
+
+{{< hint warning >}}
+Fabric limits which environment variables are exposed inside the templates. By default, only the
+variables that match `FABRIC_*` name glob pattern are available under `env` namespace and in the
+evaluation context. The glob pattern is configured using `expose_env_vars_with_pattern` argument
+in [Global configuration]({{< ref "configs.md#global-configuration">}}).
+
+Name-based filtering minimizes the risk of unintentionally leaking sensitive environment variables to
+untrustworthy plugins. It's recommended to use restrictive glob patterns as much as possible.
+{{< /hint >}}
+
 ## Metadata
 
-The metadata for the template or the block can be defined with `meta` block. The metadata includes the name of the template, the tags, the names of the authors, license, version, etc.
-block license, etc.
+Define the metadata for a template or a block using the `meta` block. The metadata includes the
+template name, tags, authors' names, license, version, and other relevant information.
 
 `meta` block supports following arguments:
 
 - `name` — name of the template or the block
 - `description` — description of the template or the block
 - `url` — a string with a URL
-- `license` — the license that applies to the template or the block where `meta` is defined
+- `license` — the license that applies to the template or the block
 - `authors` — a list of the authors
 - `tags` — a list of tags
 - `updated_at` — ISO8601-formatted date with time

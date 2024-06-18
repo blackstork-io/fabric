@@ -2,6 +2,7 @@
 title: Dynamic Blocks
 type: docs
 weight: 80 
+draft: true
 ---
 
 # Dynamic blocks

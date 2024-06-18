@@ -132,8 +132,8 @@ document "test-document" {
 
 }
 ```
--->
 
 ## Next steps
 
-To learn how to dynamically adapt the template structure to input data, see [Dynamic Blocks]({{< ref dynamic-blocks.md >}}) documentations.
+To learn how to dynamically adapt the template structure to input data, see Dynamic Blocks documentations.
+-->
