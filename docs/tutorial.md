@@ -267,6 +267,7 @@ If you would like to specify a system prompt for OpenAI API, you can set it up i
 The complete content of the `hello.fabric` file should look like this:
 
 FIXME: TORUN
+
 ```hcl
 fabric {
   plugin_versions = {
