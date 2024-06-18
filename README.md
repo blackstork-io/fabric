@@ -31,6 +31,10 @@ Refer to [the documentation](https://blackstork.io/fabric/docs/) for in-depth de
 > [!NOTE]  
 > Fabric is currently in the early stages of development, and there may be some issues. If you have any suggestions, ideas, or bug reports, please share them in [Fabric Community slack](https://fabric-community.slack.com/).
 
+# Templates
+
+You can find free Fabric templates in [Fabric Templates](https://github.com/blackstork-io/fabric-templates) repository.
+
 # Installation
 
 ## Installing Fabric
@@ -129,10 +133,6 @@ Flags:
 
 Use "fabric [command] --help" for more information about a command.
 ```
-
-# Templates
-
-You can find free Fabric templates in [Fabric Templates](https://github.com/blackstork-io/fabric-templates) repository.
 
 # Documentation
 
