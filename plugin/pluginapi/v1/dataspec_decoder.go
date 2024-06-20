@@ -10,7 +10,7 @@ import (
 
 func decodeRootSpec(src *Spec) (dataspec.RootSpec, error) {
 	sp, err := decodeSpec(src)
-	if err != nil {
+	if sp == nil || err != nil {
 		return nil, err
 	}
 	rs, ok := sp.(dataspec.RootSpec)
