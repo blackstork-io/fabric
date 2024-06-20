@@ -34,25 +34,29 @@ func versionFromBuildInfo() (result string) {
 		return
 	}
 	if info.Main.Version != "(devel)" {
-		result = info.Main.Version
+		result = strings.ToLower(info.Main.Version)
 		if !strings.HasPrefix(result, "v") {
 			result = "v" + result
 		}
 		return
 	}
+	var meta []string
 	// It's a dev version not built by goreleaser, add extra info
 	dirtyIdx := slices.IndexFunc(info.Settings, func(s debug.BuildSetting) bool {
 		return s.Key == "vcs.modified"
 	})
 	if dirtyIdx != -1 && info.Settings[dirtyIdx].Value == "true" {
-		result += "+dirty"
+		meta = append(meta, "dirty")
 	}
 
 	shaIdx := slices.IndexFunc(info.Settings, func(s debug.BuildSetting) bool {
 		return s.Key == "vcs.revision"
 	})
 	if shaIdx != -1 {
-		result = fmt.Sprintf("%s+rev.%s", result, info.Settings[shaIdx].Value)
+		meta = append(meta, "rev", info.Settings[shaIdx].Value)
+	}
+	if len(meta) != 0 {
+		result += "+" + strings.Join(meta, ".")
 	}
 	return
 }
