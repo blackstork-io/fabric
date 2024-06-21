@@ -13,19 +13,19 @@ The block signature includes the name of the content provider that will execute 
 ```hcl
 # Root-level definition of a content block
 content <content-provider-name> "<block-name>" {
-  ...
+  # ...
 }
 
 document "foobar" {
 
   # In-document named definition of a content block
   content <content-provider-name> "<block-name>" {
-    ...
+    # ...
   }
 
   # In-document anonymous definition of a content block
   content <content-provider-name> {
-    ...
+    # ...
   }
 
 }

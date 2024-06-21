@@ -14,7 +14,7 @@ document "<document-name>" {
 
   title = "<document title>"
 
-  ...
+  # ...
 }
 ```
 

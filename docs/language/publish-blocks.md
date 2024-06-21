@@ -24,12 +24,12 @@ document "foobar" {
 
   # In-document named definition of a publish block
   publish <publisher-name> "<block-name>" {
-    ...
+    # ...
   }
 
   # In-document anonymous definition of a publish block
   publish <publisher-name> {
-    ...
+    # ...
   }
 
 }

@@ -84,7 +84,7 @@ data source / content provider / publisher name, and a block name:
 
 ```hcl
 config <block-type> <source/provider/publisher-name> "<name>" {
-  ...
+  # ...
 }
 ```
 
