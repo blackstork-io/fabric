@@ -64,12 +64,12 @@ func (r *Resolver) Install(ctx context.Context, lockFile *LockFile, upgrade bool
 	chain := makeSourceChain(r.sources...)
 	// resolve the plugins by the latest version that matches the constraints
 	for name, constraint := range lookupMap {
-		r.logger.InfoContext(ctx, "Searching plugin", "name", name.String(), "constraints", constraint.String())
+		r.logger.InfoContext(ctx, "Looking for a plugin", "name", name.String(), "constraints", constraint.String())
 		list, err := chain.Lookup(ctx, name)
 		if err != nil {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
-				Summary:  fmt.Sprintf("Failed to lookup plugin '%s'", name),
+				Summary:  fmt.Sprintf("Failed to find plugin '%s'", name),
 				Detail:   err.Error(),
 			}}
 		}
@@ -77,7 +77,7 @@ func (r *Resolver) Install(ctx context.Context, lockFile *LockFile, upgrade bool
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  fmt.Sprintf("Plugin '%s' not found", name),
-				Detail:   "Could not find version for the current platform",
+				Detail:   "Can't find requested plugin version for the current platform",
 			}}
 		}
 		// filter out the versions that do not match the constraint
@@ -94,7 +94,7 @@ func (r *Resolver) Install(ctx context.Context, lockFile *LockFile, upgrade bool
 		max := slices.MaxFunc(matches, func(a, b Version) int {
 			return a.Compare(b)
 		})
-		r.logger.InfoContext(ctx, "Installing plugin", "name", name.String(), "version", max.String())
+		r.logger.InfoContext(ctx, "Installing the plugin", "name", name.String(), "version", max.String())
 		var checksums []Checksum
 		// check if the plugin with the same version is already in the lock file
 		lockIdx := slices.IndexFunc(lockFile.Plugins, func(lock PluginLock) bool {
@@ -140,7 +140,7 @@ func (r *Resolver) Install(ctx context.Context, lockFile *LockFile, upgrade bool
 		if _, ok := check.Removed[lock.Name]; ok {
 			continue
 		}
-		r.logger.InfoContext(ctx, "Installing plugin", "name", lock.Name.String(), "version", lock.Version.String())
+		r.logger.InfoContext(ctx, "Installing the plugin", "name", lock.Name.String(), "version", lock.Version.String())
 		_, err := chain.Resolve(ctx, lock.Name, lock.Version, lock.Checksums)
 		if err != nil {
 			return nil, diagnostics.Diag{{
