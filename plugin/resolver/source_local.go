@@ -47,7 +47,7 @@ func NewLocal(path string, logger *slog.Logger, tracer trace.Tracer) *LocalSourc
 	if tracer == nil {
 		tracer = tracenoop.Tracer{}
 	}
-	logger = logger.With("source", "local")
+	logger = logger.With("source", "local").With("path", path)
 	return &LocalSource{
 		path:   path,
 		tracer: tracer,
@@ -75,9 +75,10 @@ func (source LocalSource) Lookup(ctx context.Context, name Name) (_ []Version, e
 	pluginDir := filepath.Join(source.path, name.Namespace())
 	entries, err := os.ReadDir(pluginDir)
 	if os.IsNotExist(err) {
+		source.logger.DebugContext(ctx, "Plugins dir is not found", "name", name)
 		return nil, nil
 	} else if err != nil {
-		return nil, fmt.Errorf("failed to read plugin fronm local dir '%s': %w", source.path, err)
+		return nil, fmt.Errorf("failed to read plugin from local dir '%s': %w", source.path, err)
 	}
 	var matches []Version
 	for _, entry := range entries {
@@ -98,6 +99,10 @@ func (source LocalSource) Lookup(ctx context.Context, name Name) (_ []Version, e
 		}
 		matches = append(matches, Version{version})
 	}
+	source.logger.DebugContext(
+		ctx, "Plugin versions found for a plugin name",
+		"name", name,
+		"matches_count", len(matches))
 	return matches, nil
 }
 

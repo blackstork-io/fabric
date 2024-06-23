@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/fs"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -172,11 +173,20 @@ func (e *Engine) LoadPluginResolver(ctx context.Context, includeRemote bool) (di
 		span.End()
 	}()
 	pluginDir := filepath.Join(e.config.CacheDir, "plugins")
+	// Adding a cache dir plugins as a local source
 	sources := []resolver.Source{
 		resolver.NewLocal(pluginDir, e.logger, e.tracer),
 	}
 	if e.config.PluginRegistry != nil {
 		if e.config.PluginRegistry.MirrorDir != "" {
+			mirrorDirInfo, err := os.Stat(e.config.PluginRegistry.MirrorDir)
+			if err != nil || !mirrorDirInfo.IsDir() {
+				return diagnostics.Diag{{
+					Severity: hcl.DiagError,
+					Summary:  "Can't find a mirror directory",
+					Detail:   fmt.Sprintf("Can't find a directory specified as a mirror: %s", e.config.PluginRegistry.MirrorDir),
+				}}
+			}
 			sources = append(sources, resolver.NewLocal(e.config.PluginRegistry.MirrorDir, e.logger, e.tracer))
 		}
 		if includeRemote && e.config.PluginRegistry.BaseURL != "" {
