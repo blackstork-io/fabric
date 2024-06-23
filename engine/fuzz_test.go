@@ -70,7 +70,7 @@ func FuzzEngine(f *testing.F) {
 			return
 		}
 		if publish {
-			eng.Publish(ctx, string(target))
+			eng.RenderAndPublishContent(ctx, string(target))
 		} else {
 			eng.RenderContent(ctx, string(target))
 		}

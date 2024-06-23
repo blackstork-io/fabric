@@ -163,7 +163,7 @@ var rootCmd = &cobra.Command{
 		logger = logger.With("command", cmd.Name())
 		slog.SetDefault(logger)
 		slog.SetLogLoggerLevel(slog.LevelDebug)
-		slog.DebugContext(ctx, "Run")
+		slog.DebugContext(ctx, "Starting the execution")
 		if strings.Contains(version, "-dev") {
 			slog.WarnContext(ctx, "This is a dev version of the software!", "version", version)
 		}

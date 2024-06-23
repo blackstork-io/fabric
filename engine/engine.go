@@ -117,7 +117,7 @@ func (e *Engine) Install(ctx context.Context, upgrade bool) (diags diagnostics.D
 
 func (e *Engine) ParseDir(ctx context.Context, sourceDir fs.FS) (diags diagnostics.Diag) {
 	ctx, span := e.tracer.Start(ctx, "Engine.ParseDir")
-	e.logger.InfoContext(ctx, "Parsing fabric files")
+	e.logger.InfoContext(ctx, "Parsing fabric files", "directory", fmt.Sprint(sourceDir))
 	defer func() {
 		if diags.HasErrors() {
 			span.RecordError(diags)
@@ -163,7 +163,7 @@ func (e *Engine) LoadPluginResolver(ctx context.Context, includeRemote bool) (di
 	ctx, span := e.tracer.Start(ctx, "Engine.LoadPluginResolver", trace.WithAttributes(
 		attribute.String("includeRemote", fmt.Sprint(includeRemote)),
 	))
-	e.logger.InfoContext(ctx, "Loading plugin resolver", "includeRemote", includeRemote)
+	e.logger.DebugContext(ctx, "Loading plugin resolver", "includeRemote", includeRemote)
 	defer func() {
 		if diags.HasErrors() {
 			span.RecordError(diags)
@@ -207,7 +207,7 @@ func (e *Engine) LoadPluginResolver(ctx context.Context, includeRemote bool) (di
 
 func (e *Engine) LoadPluginRunner(ctx context.Context) (diags diagnostics.Diag) {
 	ctx, span := e.tracer.Start(ctx, "Engine.LoadPluginRunner")
-	e.logger.InfoContext(ctx, "Loading plugin runner")
+	e.logger.DebugContext(ctx, "Loading plugin runner")
 	defer func() {
 		if diags.HasErrors() {
 			span.RecordError(diags)
@@ -387,6 +387,7 @@ func (e *Engine) FetchData(ctx context.Context, target string) (_ plugin.Data, d
 var defaultPattern = glob.MustCompile("FABRIC_*")
 
 func (e *Engine) loadEnv(ctx context.Context) (envMap plugin.MapData, diags diagnostics.Diag) {
+	e.logger.DebugContext(ctx, "Loading env variables")
 	pattern := defaultPattern
 	envMap = plugin.MapData{}
 	if e.config != nil && e.config.EnvVarsPattern != nil {
@@ -394,8 +395,8 @@ func (e *Engine) loadEnv(ctx context.Context) (envMap plugin.MapData, diags diag
 		trimmedPat := strings.TrimSpace(pat)
 		if trimmedPat != pat {
 			diags.AddWarn(
-				"`expose_env_vars_with_pattern` contains whitespace",
-				"Leading and trailing whitespace is ignored",
+				"`expose_env_vars_with_pattern` contains a whitespace",
+				"Leading and trailing whitespaces are ignored",
 			)
 		}
 		var err error
@@ -431,11 +432,11 @@ func (e *Engine) initialDataCtx(ctx context.Context) (data plugin.MapData, diags
 	return
 }
 
-func (e *Engine) RenderContent(ctx context.Context, target string) (_ plugin.Content, _ plugin.Data, diags diagnostics.Diag) {
+func (e *Engine) RenderContent(ctx context.Context, target string) (doc *eval.Document, content plugin.Content, data plugin.Data, diags diagnostics.Diag) {
 	ctx, span := e.tracer.Start(ctx, "Engine.RenderContent", trace.WithAttributes(
 		attribute.String("target", target),
 	))
-	e.logger.InfoContext(ctx, "Rendering content", "target", target)
+	e.logger.InfoContext(ctx, "Rendering the content", "target", target)
 	defer func() {
 		if diags.HasErrors() {
 			span.RecordError(diags)
@@ -445,24 +446,27 @@ func (e *Engine) RenderContent(ctx context.Context, target string) (_ plugin.Con
 	}()
 	doc, diag := e.loadDocument(ctx, target)
 	if diags.Extend(diag) {
-		return nil, nil, diags
+		return nil, nil, nil, diags
 	}
 	dataCtx, diag := e.initialDataCtx(ctx)
 	if diags.Extend(diag) {
 		return
 	}
-	content, data, diag := doc.RenderContent(ctx, dataCtx)
+	content, data, diag = doc.RenderContent(ctx, dataCtx)
 	if diags.Extend(diag) {
-		return nil, nil, diags
+		return nil, nil, nil, diags
 	}
-	return content, data, diags
+	return doc, content, data, diags
 }
 
-func (e *Engine) Publish(ctx context.Context, target string) (_ plugin.Content, _ plugin.Data, diags diagnostics.Diag) {
+func (e *Engine) RenderAndPublishContent(ctx context.Context, target string) (content plugin.Content, diags diagnostics.Diag) {
+	doc, content, dataCtx, diag := e.RenderContent(ctx, target)
+	if diags.Extend(diag) {
+		return nil, diags
+	}
 	ctx, span := e.tracer.Start(ctx, "Engine.Publish", trace.WithAttributes(
 		attribute.String("target", target),
 	))
-	e.logger.InfoContext(ctx, "Publishing document", "target", target)
 	defer func() {
 		if diags.HasErrors() {
 			span.RecordError(diags)
@@ -470,26 +474,19 @@ func (e *Engine) Publish(ctx context.Context, target string) (_ plugin.Content, 
 		}
 		span.End()
 	}()
-	doc, diag := e.loadDocument(ctx, target)
+	e.logger.InfoContext(ctx, "Publishing the content", "target", target)
+	diag = doc.Publish(ctx, content, dataCtx)
 	if diags.Extend(diag) {
-		return nil, nil, diags
+		return nil, diags
 	}
-	dataCtx, diag := e.initialDataCtx(ctx)
-	if diags.Extend(diag) {
-		return
-	}
-	content, data, diag := doc.Publish(ctx, dataCtx)
-	if diags.Extend(diag) {
-		return nil, nil, diags
-	}
-	return content, data, diags
+	return content, diags
 }
 
 func (e *Engine) loadDocument(ctx context.Context, name string) (_ *eval.Document, diags diagnostics.Diag) {
 	ctx, span := e.tracer.Start(ctx, "Engine.loadDocument", trace.WithAttributes(
 		attribute.String("target", name),
 	))
-	e.logger.InfoContext(ctx, "Loading document", "target", name)
+	e.logger.InfoContext(ctx, "Loading the template", "document", name)
 	defer func() {
 		if diags.HasErrors() {
 			span.RecordError(diags)
@@ -510,7 +507,7 @@ func (e *Engine) loadDocument(ctx context.Context, name string) (_ *eval.Documen
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Document not found",
-			Detail:   fmt.Sprintf("Definition for document named '%s' not found", name),
+			Detail:   fmt.Sprintf("Document template '%s' not found", name),
 		})
 		return nil, diags
 	}
