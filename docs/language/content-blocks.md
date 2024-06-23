@@ -31,13 +31,18 @@ document "foobar" {
 }
 ```
 
-The order of the `content` blocks in the template determines the order of the generated content in the document.
+The order of the `content` blocks in the template determines the order of the generated content in
+the document.
 
-If the block is placed at the root level of the file, outside of the `document` block, both names – the content provider name and the block name – are required. A combination of block type `content`, content provider name, and block name serves as a unique identifier of a block within the codebase.
+If the block is at the root level of the file, outside of the `document` block, both names –
+the content provider name and the block name – are required. A combination of block type `content`,
+content provider name, and block name serves as a unique identifier of a block within the codebase.
 
-If the content block is defined within the document template, only a content provider name is required and a block name is optional.
+If the content block is defined within the document template, only a content provider name is
+required and a block name is optional.
 
-A content block is rendered by a specified content provider. See [Content Providers]({{< ref "content-providers.md" >}}) for the list of the content providers supported by Fabric.
+A content block is rendered by a specified content provider. See [Content Providers]({{< ref
+"content-providers.md" >}}) for the list of the content providers supported by Fabric.
 
 ## Supported arguments
 
@@ -68,11 +73,10 @@ See [References]({{< ref references.md >}}) for the details about referencing co
 
 ## Example
 
-FIXME: TORUN
 ```hcl
 config content openai_text "test_account" {
   # Reading a key from an environment variable
-  api_key = env.FABRIC_OPENAI_KEY
+  api_key = env.OPENAI_API_KEY
 }
 
 document "test-doc" {
@@ -83,7 +87,7 @@ document "test-doc" {
 
   content text {
     # Query contains a JQ query executed against the context
-    local_var = ".vars.items | length"
+    local_var = query_jq(".vars.items | length")
 
     # The context can be accessed in Go templates
     value = "There are {{ .vars.local }} items: {{ .vars.items | toPrettyJson }}"
@@ -105,14 +109,19 @@ document "test-doc" {
 produces the following output:
 
 ```text
-There are 3 items
+There are 3 items: [
+  "aaa",
+  "bbb",
+  "ccc"
+]
 
-In the vast expanse of the universe, three brave astronauts, aaa, bbb, and ccc, embarked on
-a daring mission of space exploration. As they soared through the galaxies, their unwavering
-determination and unyielding teamwork propelled them towards uncharted territories,
-uncovering hidden wonders and pushing the boundaries of human understanding.
-Together, aaa, bbb, and ccc, etched their names in the stars as pioneers of a new era,
-forever inspiring generations to dream beyond the confines of Earth.
+In the vast expanse of outer space, aaa, bbb, and ccc embarked on a daring mission of exploration.
+Their spaceship soared through the galaxies, encountering unknown planets and celestial bodies. With
+aaa's courage leading the way, bbb's wisdom guiding their decisions, and ccc's ingenuity solving the
+complex challenges they faced, the trio delved deeper into the mysteries of the cosmos. Together,
+they pushed the boundaries of what was thought possible, and with each discovery, their bond grew
+stronger. In the endless sea of stars, they found not only the wonders of the universe but also the
+strength of their friendship.
 ```
 
 ## Next steps

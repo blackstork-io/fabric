@@ -11,13 +11,13 @@ weight: 72
 
 `publish` blocks define the format and the destinations for document delivery.
 
-After the rendering, the document published to a local (for example, a file on a filesystem) or an
+After rendering, the document is published to a local (for example, a file on a filesystem) or an
 external destination (for example, Google Drive or GitHub), formatted as Markdown, PDF, or HTML.
-`publish` blocks, similar to `data` blocks, define the integrations to be executed, but in this case
-to publish a document.
+`publish` blocks, similar to `data` blocks, define the integrations. In this case the integrations
+are responsible for document delivery.
 
 Similar to `data` and `content` blocks, `publish` block signature includes the name of the publisher
-that will execute the outgoing integration.
+that will execute the integration:
 
 ```hcl
 document "foobar" {
@@ -35,32 +35,36 @@ document "foobar" {
 }
 ```
 
-Fabric executes `publish` blocks as the last step of processing, after the document is rendered
-and ready for formatting and delivery.
-
 If `publish` block is placed at the root level of the file, outside of the `document` block, both
 names – the publisher name and the block name – are required. A combination of block type `publish`,
 a publisher name, and a block name serves as a unique identifier of a block within the codebase.
 
-If `publish` block is defined within the document, only a publisher name is needed and a block name is optional.
+If `publish` block is defined within the document, only a publisher name is needed and a block name
+is optional.
 
-Every `publish` block is executed by a corresponding publisher. See [Publishers]({{< ref publishers.md >}}) for the list of supported publishers.
+Every `publish` block is executed by a corresponding publisher. See [Publishers]({{< ref
+publishers.md >}}) for the list of supported publishers.
+
+Fabric executes `publish` blocks as the last step of the processing, after the document is rendered
+and ready for formatting and delivery.
 
 ## Formatting
 
 Fabric supports a set of formatting options for the output documents: Markdown, PDF, and HTML.
 
-The publishers declare the formats they support. See the documentation for a specific publisher
-([Publishers]({{< ref publishers.md >}}) for more information. For example, [`local_file`]({{< ref
-"local_file.md" >}}) publisher supports all three types: `md`, `pdf` and `html`
+The publishers declare the formats they support (see the documentation for a specific publisher
+([Publishers]({{< ref publishers.md >}}) for more information). For example, [`local_file`]({{< ref
+"local_file.md" >}}) publisher supports all three format types: `md`, `pdf` and `html`
 
-### Customizing HTML formatting
+### HTML formatting
 
-Fabric can customize the HTML output, adding JS script and CSS file tags, or including JS or CSS
-code inline.
+The template authors can configure HTML formatting: to add JS script and CSS script tags, or include
+JS or CSS code inline.
 
 To customize the produced HTML document, use `frontmatter` content block on the root level of the
-document template. The supported fields are:
+document template.
+
+The supported fields are:
 
 - `title` — a string, used as a HTML page title. If not set, the formatter will use the first title
   from the template. If the template has no title elements, "Untitled" value will be used.
@@ -111,7 +115,7 @@ document "test" {
 }
 ```
 
-when rendered and published, will produce `./test-document.html` file with content:
+The template, when rendered and published, will produce `./test-document.html` file containing:
 
 ```html
 <!DOCTYPE html>
@@ -136,14 +140,15 @@ when rendered and published, will produce `./test-document.html` file with conte
 </head>
 <body>
  <h1 id="main-document-title">Main Document Title</h1>
- <p>Test Body</p>
+<p>Test Body</p>
 </body>
 </html>
 ```
 
 ## Supported arguments
 
-The arguments provided in the block are either generic arguments or publisher-specific input parameters.
+The arguments supported in the `publish` block are either generic arguments or publisher-specific
+arguments.
 
 ### Generic arguments
 
@@ -151,12 +156,12 @@ The arguments provided in the block are either generic arguments or publisher-sp
   takes precedence over the default configuration. See [Publisher configuration]({{< ref
   "configs.md#publisher-configuration" >}}) for the details.
 - `format`: (optional) a format of the output, `md` (Markdown) by default. The publishers declare
-  the formats they support. See the documentation for a specific publisher ([Publishers]({{< ref
-  publishers.md >}}) for more information.
+  the formats they support. See the documentation for a specific publisher for more information
+  ([Publishers]({{< ref publishers.md >}}).
 
 ### Publisher arguments
 
-A publisher might support the execution arguments. See [Publishers]({{< ref publishers.md >}}) for
+A publisher might define the arguments it supports. See [Publishers]({{< ref publishers.md >}}) for
 the details on the supported arguments per publisher.
 
 ## Supported nested blocks

@@ -28,10 +28,10 @@ Within the codebase, only one `fabric` block can be defined.
 - `plugin_versions`: (optional) a map of plugin dependencies. The version constraints are defined in
   SemVer (refer to Terraform [version constraint
   syntax](https://developer.hashicorp.com/terraform/language/expressions/version-constraints#version-constraint-syntax)).
-- `expose_env_vars_with_pattern`: (optional) a glob pattern for filtering the environment variables
-  exposed in the templates by name. Default value is `FABRIC_*`. To expose all environment
-  variables, set the value to `*`. See [Environment variables]({{< ref
-  "configs.md#environment-variables">}}) for the details.
+- `expose_env_vars_with_pattern`: (optional) a glob pattern for environment variable names. Only the
+  environment variables that match the pattern are exposed in the evaluation context. Default value
+  is `FABRIC_*`. To expose all environment variables, set the value to `*`. See [Environment
+  variables]({{< ref "configs.md#environment-variables">}}) for the details.
 - `cache_dir`: (optional) a path to a directory on the local file system. The default value is
   `.fabric` - a directory in the current folder. If the directory doesn't exist, Fabric will create
   it during the first run.
@@ -110,7 +110,7 @@ config data csv {
 }
 
 config content openai_text {
-  api_key = env.FABRIC_OPENAI_API_KEY
+  api_key = env.OPENAI_API_KEY
   system_prompt = "You are the best at saying Hi!"
 }
 
@@ -140,7 +140,8 @@ document "test-document" {
 Fabric templates can be configured with environment variables, either set in the shell or provided
 in `.env` file.
 
-The values of environment variables are available through global `env` namespace and inside the context under `.env` root.
+The values of environment variables are available through global `env` object and in the context
+under `.env` root.
 
 For example:
 
@@ -157,13 +158,16 @@ content text {
 ```
 
 {{< hint warning >}}
-Fabric limits which environment variables are exposed inside the templates. By default, only the
-variables that match `FABRIC_*` name glob pattern are available under `env` namespace and in the
-evaluation context. The glob pattern is configured using `expose_env_vars_with_pattern` argument
-in [Global configuration]({{< ref "configs.md#global-configuration">}}).
 
-Name-based filtering minimizes the risk of unintentionally leaking sensitive environment variables to
-untrustworthy plugins. It's recommended to use restrictive glob patterns as much as possible.
+To minimize the risk of unintentionally leaking sensitive environment variables to untrustworthy
+plugins, Fabric limits which environment variables are exposed in the evaluation context.
+
+Only the variables with names that match the pattern set in `expose_env_vars_with_pattern` argument
+(see [Global configuration]({{< ref "configs.md#global-configuration">}})) are available under `.env` key in the evaluation context.
+
+It's recommended to use the most restrictive glob pattern possible.
+
+Note, the filtering doesn't apply to the variables exposed in `env` object.
 {{< /hint >}}
 
 ## Metadata

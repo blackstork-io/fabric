@@ -1,6 +1,6 @@
 ---
 title: Evaluation Context
-description: Learn about the evaluation context, the shared data structure that holds data available for the blocks the Fabric configuration language files.
+description: Learn about the evaluation context, the data structure that during rendering holds data available for the Fabric template blocks.
 type: docs
 weight: 45
 ---
@@ -10,7 +10,7 @@ weight: 45
 The evaluation context keeps all available data during the template evaluation. This includes the
 results of `data` block executions, the template metadata, and defined variables.
 
-The context data can be queried with `query_jq()` function and is available in Go templates (if
+The context data can be queried with `query_jq()` function and accessed in Go templates (if
 supported by the plugin).
 
 ## Keys
@@ -26,6 +26,7 @@ Using JQ-style JSON path syntax, the root keys are:
 - `.vars` — holds the values of variables defined in the current or parent blocks.
 
 The context also can contain local properties:
+
 - `.section` — holds the data about the current section, when called inside one. Similar to
   `.document.meta`, `.section.meta` contains the data from `meta` block defined inside the section.
 - `.content` — holds the data about the current content block, when called inside one. Similar to
@@ -50,17 +51,16 @@ vars {
 
 The `vars` block can be defined inside `document`, `section`, `content`, dynamic and reference blocks.
 
-The variable values can be static (like `foo` and `bar` in the example above) or results of data mutations
-(like a `query_jq()` function call for `baz` variable).
+The variable can hold static values (like `foo` in the example above) or the results of data
+mutations (like `bar` that holds the result of JQ query executed in `query_jq()`).
 
-When evaluated, the variable becomes available in the context under the `.vars` root keyword.
-For example, `.vars.foo` and `.vars.bar` refer to the `foo` and `bar` variables from the snippet
-above.
+After evaluation the variables become available in the context under the `.vars` root keyword.
+For example, `.vars.foo` and `.vars.bar` JQ paths refer to the values of `foo` and `bar` variables.
 
 ### Local variable
 
-A shortcut for defining a single local variable is to use `local_var` argument, which sets
-`.vars.local` variable.
+To define a local variable, use `local_var` argument. It's a shortcut that defines a single local
+variable named `local` in the current block.
 
 For example:
 
@@ -71,13 +71,13 @@ content text {
 }
 ```
 
-will render `Hello, World!`.
+content block will render `Hello, World!`.
 
 ### Inheritance
 
-Variables defined in a parent block (such as `document` or `section`) are available for use in nested
-blocks. Nested blocks can redefine a variable in their context, overwriting the parent variable's
-value.
+Variables defined in a parent block (such as `document` or `section`) are available for use in
+nested blocks. Note that nested blocks can redefine a variable in their context, overwriting the
+parent variable's value.
 
 For example:
 
@@ -102,11 +102,12 @@ section {
 }
 ```
 
-### `query_jq()` function
+### Querying the context
 
 To filter and mutate the data in the context, use [JQ queries](https://jqlang.github.io/jq/manual/).
-The queries specified as calls of `query_jq()` function execute against the context and return the
-results into the variable.
+
+`query_jq()` function accepts a string argument as a query, executes the query against the
+evaluation context, and returns the results.
 
 For example:
 

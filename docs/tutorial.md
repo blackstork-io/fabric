@@ -8,16 +8,17 @@ code_blocks_no_wrap: true
 
 # Tutorial
 
-This tutorial provides comprehensive guidance on using Fabric and the [Fabric Configuration Language]({{< ref "language" >}}) (FCL) for document generation. We'll systematically cover creating a basic template, incorporating data blocks, applying data filtering and mutation, installing plugins, and rendering text with external content providers.
+This tutorial provides comprehensive guidance on using Fabric and the [Fabric Configuration
+Language]({{< ref "language" >}}) (FCL) for document generation. We'll systematically cover creating
+a basic template, incorporating data blocks, applying data filtering and mutation, installing
+plugins, and rendering text with external content providers.
 
 ## Prerequisites
 
-To effectively follow this tutorial, ensure you have the following:
+Before you follow this tutorial, make sure you have the following:
 
 - Fabric CLI [installed]({{< ref "install.md" >}}) and `fabric` CLI command available
 - (optional) OpenAI API token
-
-Throughout this tutorial, the command examples were executed in macOS Sonoma `zsh` shell.
 
 ## Hello, Fabric
 
@@ -36,8 +37,8 @@ document "greeting" {
 }
 ```
 
-In this code snippet, `document.greeting` block defines a template with a single anonymous content
-block containing the static text "Hello, Fabric!"
+In this snippet, `document.greeting` block defines a template with a single anonymous content
+block with the static text "Hello, Fabric!"
 
 To render the document, execute `fabric` command in the directory with `hello.fabric` file, or
 explicitly specify a path to another directory with `--source-dir` CLI argument:
@@ -46,7 +47,7 @@ explicitly specify a path to another directory with `--source-dir` CLI argument:
 fabric render document.greeting
 ```
 
-The output should resemble the following:
+The command should produce `Hello, Fabric!` string:
 
 ```shell
 $ fabric render document.greeting
@@ -55,10 +56,10 @@ Hello, Fabric!
 
 ## Document title
 
-Documents typically include titles, so the document block supports `title` argument as an
-easy way to set a title for a document.
+Documents usually have titles and the `document` block supports `title` argument as an
+easy way to set a title.
 
-With the new `title` argument, `document.greeting` template would look like this:
+With the new `title` argument, `document.greeting` template should look like this:
 
 ```hcl
 document "greeting" {
@@ -73,7 +74,8 @@ document "greeting" {
 ```
 
 {{< hint note >}}
-`title` argument for `document` block is a syntactic sugar that Fabric will translate into `content.title` block:
+`title` argument for `document` block is a syntactic sugar translated into `content.title` block
+during rendering:
 
 ```hcl
 content title {
@@ -81,10 +83,11 @@ content title {
 }
 ```
 
-See [`content.title`]({{< ref "plugins/builtin/content-providers/title" >}}) content providers documentations for the details.
+See [`content.title`]({{< ref "plugins/builtin/content-providers/title" >}}) content provider
+documentation for the details.
 {{< /hint >}}
 
-The rendered output should now include the document title:
+The rendered Markdown output should now include the document title:
 
 ```markdown
 $ fabric render document.greeting
@@ -95,9 +98,10 @@ Hello, Fabric!
 
 ## Variables
 
-For this tutorial, we will use variables instead of defining the data requirements.
+For this tutorial, instead of defining the data requirements with `data` blocks, we will use
+variables defined in `vars` block.
 
-Change the template in the `hello.fabric` file to include a `data` block and add another
+Change the template in the `hello.fabric` file to include a `vars` block and add another
 `content.text` block:
 
 ```hcl
@@ -129,15 +133,15 @@ document "greeting" {
 }
 ```
 
-The content blocks can access and transform the data available in the context (see [Evaluation Context]({{< ref context.md >}})) with [JQ queries](https://jqlang.github.io/jq/manual/). By
-specifying `local_var` argument, we're using a shortcut that defines a variable called `local` for
-us. The query will be executed against the context and the results will be stored in the context
-under `.vars.local` path.
+Here, we defined inline data inside `vars` block (see [Variables]({{< ref
+"context.md#variables">}})), used `local_var` (see [Local variable]({{< ref
+"context.md#local-variable" >}})), and queried it with `query_jq()` function (see [Querying the
+context]({{< ref "context.md#querying-the-context" >}})) inside the `content` block.
 
-As you can see, `value` argument in the new content block contains a template string –
-`content.text` blocks support [Go templates](https://pkg.go.dev/text/template) out-of-the-box. The
-templates can access the evaluation context, so it's easy to include `local` or
-`solar_system.moons_count` variable values.
+The `value` argument in the new content block is a template string – `content.text` blocks support
+[Go templates](https://pkg.go.dev/text/template) in `value` argument. The templates can access the
+evaluation context, so it's easy to use JSON path and include the values of `local` and
+`solar_system.moons_count` variables.
 
 The rendered output will now include the new sentence:
 
@@ -152,15 +156,15 @@ There are 8 planets and 146 moons in our solar system.
 
 ## Content providers
 
-Fabric seamlessly integrates with external APIs for content generation. An excellent example is the
-use of the OpenAI API to dynamically generate text through prompts.
+Fabric uses both internal implementations and integrates with external APIs for content generation.
+An excellent example is the use of the OpenAI API to dynamically generate text with prompts.
 
 In scenarios where providing the exact text or a template string for the content block proves
-challenging or impossible, leveraging generative AI for summarization becomes invaluable. This
-enables users to dynamically create context-aware text.
+challenging or impossible, we can leverage generative AI for text generation. This allows us to
+dynamically create context-aware text.
 
-In this tutorial, we will use the [`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}})
-content provider to generate text with ChatGPT through OpenAI API.
+Lets use [`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}}) content
+provider for generating text with OpenAI API.
 
 ### Installation
 
@@ -168,7 +172,7 @@ Before using [`openai_text`]({{< ref "plugins/openai/content-providers/openai_te
 provider, it's necessary to add [`blackstork/openai`]({{< ref "plugins/openai" >}}) plugin as a
 dependency and install it locally.
 
-To start, update the `hello.fabric` file with the global configuration block:
+First, update the `hello.fabric` file with the global configuration block:
 
 ```hcl
 fabric {
@@ -205,10 +209,10 @@ document "greeting" {
 }
 ```
 
-Here, a plugin name `blackstork/openai` was added to the list of dependencies in the `plugin_versions` argument
+Here, plugin `blackstork/openai` is in the list of dependencies, listed in `plugin_versions` argument
 in [the global configuration]({{< ref "language/configs.md#global-configuration" >}}).
 
-With the `hello.fabric` file updated, you can install all required plugins with the `fabric install` command:
+With updated `hello.fabric` file, install all required plugins with the `fabric install` command:
 
 ```shell
 $ fabric install
@@ -217,13 +221,23 @@ Mar 11 19:20:10.787 INF Installing plugin name=blackstork/openai version=0.4.0
 $
 ```
 
-Fabric fetched the `blackstork/openai` plugin release from the plugin registry and installed it in the local `./.fabric/` folder.
+Fabric fetched the `blackstork/openai` plugin release from the plugin registry and installed it in
+the local `./.fabric/` folder.
+
+The versions in the command output on your system might be different. With `>= 0.4.0` version
+constraint, Fabric will install the latest stable version (higher than `0.4.0`) of the plugin.
 
 ### Configuration
 
-[`openai_text`]({{< ref "plugins/openai/content-providers/openai_text" >}}) content provider requires an OpenAI API key. The key can be set in the provider's configuration block. It's recommended to store credentials and API keys separately from Fabric code, and using the `env` object to read the key from the `OPENAI_API_KEY` environment variable.
+OpenAI API requires API key for authentication. The key must be set in [`openai_text`]({{< ref
+"plugins/openai/content-providers/openai_text" >}}) provider's configuration block. It's recommended
+to store credentials separately from Fabric code, and use the `env` object (see [Environment variables]({{< ref
+"configs.md#environment-variables" >}})).
 
-The `config` block for the `openai_text` content provider would look like this:
+We can specify OpenAI API key in `OPENAI_API_KEY` environment variable and access it in Fabric file
+with `env.OPENAI_API_KEY`.
+
+The `config` block for the `openai_text` content provider would looks like this:
 
 ```hcl
 config content openai_text {
@@ -231,7 +245,7 @@ config content openai_text {
 }
 ```
 
-Add this block to `hello.fabric` file.
+Add this block to the root level of `hello.fabric` file, outside `document` block.
 
 ### Usage
 
@@ -256,17 +270,15 @@ document "greeting" {
 }
 ```
 
-A JQ query `"{planet: .vars.solar_system.planets[-1]}` fetches the last item from the list
-(`Neptune`) and creates a new JSON object `{"planet": "Neptune"}`. The results of the query
-execution are stored in `local` variable in the context.
+In this block we again use `local_var`. A JQ query `"{planet: .vars.solar_system.planets[-1]}`
+fetches the last item from the list of planets (`Neptune`) and creates a new JSON object `{"planet":
+"Neptune"}`.
 
 {{< hint note >}}
 If you would like to specify a system prompt for OpenAI API, you can set it up in the configuration for `openai_text` provider. See the provider's [documentation]({{< ref "plugins/openai/content-providers/openai_text" >}}) for more configuration options.
 {{< /hint >}}
 
 The complete content of the `hello.fabric` file should look like this:
-
-FIXME: TORUN
 
 ```hcl
 fabric {
@@ -281,12 +293,13 @@ config content openai_text {
 
 document "greeting" {
 
-  vars "solar_system" {
-    planets = [
-      "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"
-    ]
-
-    moons_count = 146
+  vars {
+    solar_system = {
+      planets = [
+        "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"
+      ]
+      moons_count = 146
+    }
   }
 
   title = "The Greeting"
@@ -315,7 +328,7 @@ document "greeting" {
 }
 ```
 
-To render the document, `OPENAI_API_KEY` environment variable must be provided. We can set it for `fabric` command execution:
+To render the document, set `OPENAI_API_KEY` environment variable when running `fabric` command:
 
 ```shell
 $ OPENAI_API_KEY="<key-value>" fabric render document.greeting
@@ -330,23 +343,29 @@ The results of the render should look similar to the following:
 
 ```bash
 $ OPENAI_API_KEY="<key-value>" ./fabric render document.greeting
-Mar 11 20:39:17.834 INF Loading plugin name=blackstork/openai path=.fabric/plugins/blackstork/openai@0.4.0
+fabric render document.greeting
+Jun 23 17:14:23.910 INF Parsing fabric files command=render
+Jun 23 17:14:23.912 INF Loading plugin resolver command=render includeRemote=false
+Jun 23 17:14:23.912 INF Loading plugin runner command=render
+Jun 23 17:14:23.939 INF Rendering content command=render target=greeting
+Jun 23 17:14:23.939 INF Loading document command=render target=greeting
 # The Greeting
 
 Hello, Fabric!
 
 There are 8 planets and 146 moons in our solar system.
 
-Neptune is the eighth planet from the Sun in our solar system and is the coldest planet. It has average temperatures of minus 353 degrees Fahrenheit (minus 214 degrees Celsius).
+Neptune is the eighth and farthest known planet from the Sun in the Solar System. It is classified as an ice giant and is the fourth-largest planet by diameter.
 ```
 
 ## Publishing
 
-We can already use the Markdown output (and render it with a Markdown editor, for example
-[MacDown](https://macdown.uranusjr.com/)), but sometimes it's convenient to produce formatted HTML and PDF
-documents right away.
+By default, Fabric prints rendered document into standard output formatted as Markdown. We can use
+any Markdown editor, for example [MacDown](https://macdown.uranusjr.com/) for macOS, to render
+Markdown, but it's also possible to produce HTML and PDF documents with Fabric.
 
-To format the document and publish it to a local or an external destination, use `publish` blocks.
+To format the document as HTML, PDF, or Markdown, and publish it to a local or an external
+destination, use `publish` blocks.
 
 Add a `publish` block to the document template:
 
@@ -364,19 +383,46 @@ document "greeting" {
 }
 ```
 
-Note, that `publish` block supports Go template strings as values for the `path` argument. This
-allows us to use dynamic paths - in this case, the filename contains a date and the output format.
+Note that similarly to `content.text` blocks, `publish` block supports Go template string as the
+`path` argument value. This means we can specify a dynamic path for the output file - in this case,
+the filename will contain a date and the output format.
 
-To render an publish the document, use `--publish` flag when running `fabric render`:
-
-FIXME: TORUN
+To render the document and publish the output to a local file, use `--publish` flag when running `fabric render`:
 
 ```bash
 $ fabric render document.greeting --publish
-Jun  2 12:48:08.899 INF Writing to a file path=/tmp/example_2024_06_02.pdf
-Jun  2 12:48:09.182 INF Writing to a file path=/tmp/example_2024_06_02.html
-Jun  2 12:48:09.183 INF Writing to a file path=/tmp/example_2024_06_02.md
+Jun 23 17:28:03.027 INF Parsing fabric files command=render
+Jun 23 17:28:03.028 INF Loading plugin resolver command=render includeRemote=false
+Jun 23 17:28:03.028 INF Loading plugin runner command=render
+Jun 23 17:28:03.056 INF Publishing document command=render target=greeting
+Jun 23 17:28:03.056 INF Loading document command=render target=greeting
+Jun 23 17:28:04.213 INF Writing to a file command=render path=/tmp/greeting-2024_06_23.html
+$
 ```
+
+You can find the produced HTML file in the current directory (or at the path specified in `path`
+argument). The file contents should look similar to this:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Greeting</title>
+</head>
+<body>
+ <h1 id="the-greeting">The Greeting</h1>
+<p>Hello, Fabric!</p>
+<p>There are 8 planets and 146 moons in our solar system.</p>
+<p>Neptune is the eighth and most distant planet in our solar system, located about 4.5 billion kilometers away from the Sun.</p>
+
+</body>
+</html>
+```
+
+To learn hot to add JS and CSS to the produced HTML document, see [Formatting]({{< ref
+"publish-blocks.md#formatting" >}}) documentation.
 
 # Next steps
 
