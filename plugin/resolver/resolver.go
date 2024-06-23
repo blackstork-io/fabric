@@ -77,7 +77,7 @@ func (r *Resolver) Install(ctx context.Context, lockFile *LockFile, upgrade bool
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  fmt.Sprintf("Plugin '%s' not found", name),
-				Detail:   "Can't find requested plugin version for the current platform",
+				Detail:   "Can't find requested plugin for the current platform",
 			}}
 		}
 		// filter out the versions that do not match the constraint
