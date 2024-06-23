@@ -44,7 +44,7 @@ To install Fabric:
 - **download a release archive**: choose and download Fabric release archive appropriate for your operating system (Windows, macOS/Darwin, or Linux) and architecture from ["Releases"](https://github.com/blackstork-io/fabric/releases) page;
 - **unpack**: extract the contents of the downloaded release archive into a preferred directory;
 
-For example, the steps for macOS (arm64) are:
+For example, the steps to install the latest Fabric release from GitHub on macOS (arm64) are:
 
 ```bash
 # Create a folder
