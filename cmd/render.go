@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -50,9 +49,6 @@ var renderCmd = &cobra.Command{
 		}
 		ctx := cmd.Context()
 		logger := slog.Default()
-
-		ctx = context.WithValue(ctx, "logger", *logger)
-		ctx = context.WithValue(ctx, "document", target)
 
 		var diags diagnostics.Diag
 		eng := engine.New(
