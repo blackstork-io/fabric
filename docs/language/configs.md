@@ -159,8 +159,7 @@ content text {
 
 {{< hint warning >}}
 
-To minimize the risk of unintentionally leaking sensitive environment variables to untrustworthy
-plugins, Fabric limits which environment variables are exposed in the evaluation context.
+In accordance with the principle of least privilege, Fabric limits which environment variables are exposed to plugins in the evaluation context.
 
 Only the variables with names that match the pattern set in `expose_env_vars_with_pattern` argument
 (see [Global configuration]({{< ref "configs.md#global-configuration">}})) are available under `.env` key in the evaluation context.
