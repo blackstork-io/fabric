@@ -237,7 +237,7 @@ to store credentials separately from Fabric code, and use the `env` object (see 
 We can specify OpenAI API key in `OPENAI_API_KEY` environment variable and access it in Fabric file
 with `env.OPENAI_API_KEY`.
 
-The `config` block for the `openai_text` content provider would looks like this:
+The `config` block for the `openai_text` content provider looks like this:
 
 ```hcl
 config content openai_text {
