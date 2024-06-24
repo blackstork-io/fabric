@@ -272,7 +272,7 @@ func TestEnvPrefix(t *testing.T) {
 		},
 		diagtest.Asserts{{
 			diagtest.IsWarning,
-			diagtest.SummaryContains("contains whitespace"),
+			diagtest.SummaryContains("contains a whitespace"),
 		}},
 	)
 	renderTest(

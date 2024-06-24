@@ -14,22 +14,22 @@ argument:
 
 ```hcl
 content <content-provider> "<block-name>" {
-  ...
+  # ...
 }
 
 data <data-source> "<block-name>" {
-  ...
+  # ...
 }
 
 section "<block-name>" {
-  ...
+  # ...
 }
 
 document "foo" {
 
   <block-type> ref "<block-name>" {
     base = <block-identifier-with-matching-block-type>
-    ... 
+    # ...
   }
 
   content ref {
@@ -91,7 +91,7 @@ Fabric supports an explicit way for the content block to require the input data 
 ```hcl
 data elasticsearch "foo" {
   index = "test-index"
-  ...
+  # ...
 }
 
 content text "qux" {

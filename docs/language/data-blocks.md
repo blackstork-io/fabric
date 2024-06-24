@@ -14,14 +14,14 @@ The block signature includes the name of the data source that will execute the d
 ```hcl
 # Root-level definition of a data block
 data <data-source-name> "<block-name>" {
-  ...
+  # ...
 }
 
 document "foobar" {
 
   # In-document definition of a data block
   data <data-source-name> "<block-name>" {
-    ...
+    # ...
   }
 
 }

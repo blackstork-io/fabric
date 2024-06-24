@@ -37,7 +37,7 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 		diags := eng.ParseDir(ctx, sourceDir)
 		if !diags.HasErrors() {
 			if !diags.Extend(eng.LoadPluginResolver(ctx, false)) && !diags.Extend(eng.LoadPluginRunner(ctx)) {
-				content, _, diag := eng.RenderContent(ctx, docName)
+				_, content, _, diag := eng.RenderContent(ctx, docName)
 				diags.Extend(diag)
 				res = mdprint.PrintString(content)
 			}
