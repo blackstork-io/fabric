@@ -76,8 +76,8 @@ content block will render `Hello, World!`.
 ### Inheritance
 
 Variables defined in a parent block (such as `document` or `section`) are available for use in
-nested blocks. Note that nested blocks can redefine a variable in their context, overwriting the
-parent variable's value.
+nested blocks. Note that nested blocks can redefine a variable in their context, shadowing the
+parent variable's value inside their scope.
 
 For example:
 
