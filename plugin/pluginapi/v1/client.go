@@ -30,7 +30,6 @@ func NewClient(name, binaryPath string, logger *slog.Logger) (p *plugin.Schema, 
 			// disable code location reporting, it's always going to be incorrect
 			// for remote plugin logs
 			sloghclog.AddSource(false),
-			sloghclog.Level(slog.LevelInfo), // debug is too noisy for plugins
 		),
 		GRPCDialOptions: []grpc.DialOption{
 			grpc.WithDefaultCallOptions(

@@ -21,6 +21,7 @@ func Serve(schema *plugin.Schema) {
 			opts = append(opts, grpc.MaxRecvMsgSize(defaultMsgSize))
 			return grpc.NewServer(opts...)
 		},
+		Logger: loggerForGoplugin(),
 	})
 }
 
