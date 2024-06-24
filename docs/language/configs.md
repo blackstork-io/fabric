@@ -166,7 +166,7 @@ Only the variables with names that match the pattern set in `expose_env_vars_wit
 
 It's recommended to use the most restrictive glob pattern possible.
 
-Note, the filtering doesn't apply to the variables exposed in `env` object.
+Note, that the filtering doesn't apply to the variables exposed in `env` object: it's the user's responsibility to make sure that their Fabric template doesn't expose sensitive environment variables.
 {{< /hint >}}
 
 ## Metadata
