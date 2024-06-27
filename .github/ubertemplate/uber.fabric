@@ -4,7 +4,7 @@ fabric {
   }
 
   plugin_registry {
-    mirror_dir = env.FABRIC_PLUGIN_DIR
+    mirror_dir = "./dist/plugins"
   }
 }
 
