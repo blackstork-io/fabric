@@ -1,11 +1,11 @@
 fabric {
   plugin_versions = {
-    "blackstork/nist_nvd" = "= v0.0.0-dev"
+    "blackstork/nist_nvd" = "^0"
   }
 
   plugin_registry {
     # Fabric is executed from `dist` dir
-    mirror_dir = "./plugins"
+    mirror_dir = "./plugins/"
   }
 }
 
