@@ -29,14 +29,13 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
-      - uses: extractions/setup-just@v1
       - uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
           version: latest
           install-only: true
       - name: Build everything
-        run: just build
+        run: goreleaser build --config ./.goreleaser-dev.yaml --single-target --snapshot --clean
       - name: Copy template to the temp dir
         run: cp .github/ubertemplate/*.fabric ${{ runner.temp }}/
       - name: Install plugins
