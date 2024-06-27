@@ -1,0 +1,21 @@
+fabric {
+  plugin_versions = {
+    "blackstork/nist_nvd" = ">= v0.4.1"
+  }
+
+  plugins_registry {
+    mirror_dir = env.FABRIC_PLUGIN_DIR
+  }
+}
+
+
+document "ubertemplate" {
+
+  data rss "blackstork_blog" {
+    url = "https://blackstork.io/blog/index.xml"
+  }
+
+  data nist_nvd_cves "cves" {
+    limit = 1
+  }
+}
