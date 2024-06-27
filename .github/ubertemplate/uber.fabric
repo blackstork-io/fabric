@@ -1,9 +1,9 @@
 fabric {
   plugin_versions = {
-    "blackstork/nist_nvd" = ">= v0.4.1"
+    "blackstork/nist_nvd" = ">= v0.0.0"
   }
 
-  plugins_registry {
+  plugin_registry {
     mirror_dir = env.FABRIC_PLUGIN_DIR
   }
 }
