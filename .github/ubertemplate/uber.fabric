@@ -1,6 +1,6 @@
 fabric {
   plugin_versions = {
-    "blackstork/nist_nvd" = ">= v0.0.0"
+    "blackstork/nist_nvd" = "= v0.0.0-dev"
   }
 
   plugin_registry {

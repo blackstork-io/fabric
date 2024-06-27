@@ -45,7 +45,6 @@ jobs:
           ./fabric install --source-dir ${{ runner.temp }}/
       - name: Run commands
         run: |
-          export FABRIC_PLUGIN_DIR=$(pwd)/dist/plugins
           cd dist
           ./fabric data document.ubertemplate.data.rss.blackstork_blog --source-dir ${{ runner.temp }}
           ./fabric data document.ubertemplate.data.nist_nvd_cves.cves --source-dir ${{ runner.temp }}
