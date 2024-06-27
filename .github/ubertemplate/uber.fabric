@@ -4,7 +4,8 @@ fabric {
   }
 
   plugin_registry {
-    mirror_dir = "./dist/plugins"
+    # Fabric is executed from `dist` dir
+    mirror_dir = "./plugins"
   }
 }
 
