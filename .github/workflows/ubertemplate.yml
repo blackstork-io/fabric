@@ -30,6 +30,7 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - uses: extractions/setup-just@v1
+      - uses: goreleaser/goreleaser-action@v5
       - name: Build everything
         run: just build
       - name: Copy template to the temp dir
