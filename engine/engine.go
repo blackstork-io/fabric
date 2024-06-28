@@ -11,7 +11,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/gobwas/glob"
 	"github.com/hashicorp/hcl/v2"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -59,7 +58,8 @@ func New(options ...Option) *Engine {
 				BaseURL:   opts.registryBaseURL,
 				MirrorDir: "",
 			},
-			CacheDir: opts.cacheDir,
+			CacheDir:       opts.cacheDir,
+			EnvVarsPattern: definitions.DefaultEnvVarsPattern,
 		},
 	}
 }
@@ -131,7 +131,10 @@ func (e *Engine) ParseDir(ctx context.Context, sourceDir fs.FS) (diags diagnosti
 		return
 	}
 	if e.blocks.GlobalConfig != nil {
-		e.config.Merge(e.blocks.GlobalConfig)
+		cfg, diag := e.blocks.GlobalConfig.Parse(ctx)
+		if !diags.Extend(diag) {
+			e.config.Merge(cfg)
+		}
 	}
 	return
 }
@@ -394,37 +397,18 @@ func (e *Engine) FetchData(ctx context.Context, target string) (_ plugin.Data, d
 	return loadedData.FetchData(ctx)
 }
 
-var defaultPattern = glob.MustCompile("FABRIC_*")
-
 func (e *Engine) loadEnv(ctx context.Context) (envMap plugin.MapData, diags diagnostics.Diag) {
 	e.logger.DebugContext(ctx, "Loading env variables")
-	pattern := defaultPattern
 	envMap = plugin.MapData{}
-	if e.config != nil && e.config.EnvVarsPattern != nil {
-		pat := *e.config.EnvVarsPattern
-		trimmedPat := strings.TrimSpace(pat)
-		if trimmedPat != pat {
-			diags.AddWarn(
-				"`expose_env_vars_with_pattern` contains a whitespace",
-				"Leading and trailing whitespaces are ignored",
-			)
-		}
-		var err error
-		pattern, err = glob.Compile(trimmedPat)
-		if err != nil {
-			diags.AddWarn(
-				"Failed to parse `expose_env_vars_with_pattern`, no env vars will be exposed",
-				err.Error(),
-			)
-			return
-		}
+	if e.config == nil || e.config.EnvVarsPattern == nil {
+		return
 	}
 	evalCtx := utils.EvalContextByVar(fabctx.GetEvalContext(ctx), "env")
 	if evalCtx == nil {
 		return
 	}
 	for k, v := range evalCtx.Variables["env"].AsValueMap() {
-		if !pattern.Match(k) {
+		if !e.config.EnvVarsPattern.Match(k) {
 			continue
 		}
 		envMap[k] = plugin.StringData(v.AsString())
