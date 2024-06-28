@@ -13,11 +13,11 @@ type Encoder[T any] struct {
 	// This includes primitives, unknown types and nulls.
 	EncodeVal        func(val cty.Value) (T, diagnostics.Diag)
 	EncodePluginData func(val plugin.Data) (T, diagnostics.Diag)
-	MapEncoder       func(val cty.Value) CollectionEncoder[T]
-	ObjectEncoder    func(val cty.Value) CollectionEncoder[T]
-	ListEncoder      func(val cty.Value) CollectionEncoder[T]
-	TupleEncoder     func(val cty.Value) CollectionEncoder[T]
-	SetEncoder       func(val cty.Value) CollectionEncoder[T]
+	MapEncoder       func(val cty.Value) (CollectionEncoder[T], diagnostics.Diag)
+	ObjectEncoder    func(val cty.Value) (CollectionEncoder[T], diagnostics.Diag)
+	ListEncoder      func(val cty.Value) (CollectionEncoder[T], diagnostics.Diag)
+	TupleEncoder     func(val cty.Value) (CollectionEncoder[T], diagnostics.Diag)
+	SetEncoder       func(val cty.Value) (CollectionEncoder[T], diagnostics.Diag)
 }
 
 func (e *Encoder[T]) Encode(path cty.Path, val cty.Value) (result T, diags diagnostics.Diag) {
@@ -36,15 +36,19 @@ func (e *Encoder[T]) Encode(path cty.Path, val cty.Value) (result T, diags diagn
 	switch {
 	case ty.IsObjectType():
 		isObj = true
-		enc = e.ObjectEncoder(val)
+		enc, diag = e.ObjectEncoder(val)
 	case ty.IsMapType():
-		enc = e.MapEncoder(val)
+		enc, diag = e.MapEncoder(val)
 	case ty.IsListType():
-		enc = e.ListEncoder(val)
+		enc, diag = e.ListEncoder(val)
 	case ty.IsTupleType():
-		enc = e.TupleEncoder(val)
+		enc, diag = e.TupleEncoder(val)
 	case ty.IsSetType():
-		enc = e.SetEncoder(val)
+		enc, diag = e.SetEncoder(val)
+	}
+	addPathIfMissing(diag, path)
+	if diags.Extend(diag) {
+		return
 	}
 	if enc != nil {
 		if !val.IsNull() && val.IsKnown() {
@@ -54,26 +58,21 @@ func (e *Encoder[T]) Encode(path cty.Path, val cty.Value) (result T, diags diagn
 				path[len(path)-1] = valToStep(k, isObj)
 				var res T
 				res, diag = e.Encode(path, v)
+				if !diag.HasErrors() {
+					diag.Extend(enc.Add(k, res))
+				}
+				addPathIfMissing(diag, path)
 				diags.Extend(diag)
-				diags.Extend(enc.Add(k, res))
 			}
 			path = path[:len(path)-1]
 		}
 		result, diag = enc.Encode()
-		addPathIfMissing(diag, path)
-		diags.Extend(diag)
-		return
-	}
-
-	if plugin.EncapsulatedData.ValDecodable(val) {
+	} else if plugin.EncapsulatedData.ValDecodable(val) {
 		data := *plugin.EncapsulatedData.MustFromCty(val)
 		result, diag = e.EncodePluginData(data)
-		addPathIfMissing(diag, path)
-		diags.Extend(diag)
-		return
+	} else {
+		result, diag = e.EncodeVal(val)
 	}
-
-	result, diag = e.EncodeVal(val)
 	addPathIfMissing(diag, path)
 	diags.Extend(diag)
 	return

@@ -290,35 +290,32 @@ func TestEnvPrefix(t *testing.T) {
 			`,
 		},
 		"test-doc",
-		[]string{
-			"<no value>\n<no value>\n<no value>",
-		},
+		nil,
 		diagtest.Asserts{{
-			diagtest.IsWarning,
+			diagtest.IsError,
 			diagtest.SummaryContains("Failed to parse", "expose_env_vars_with_pattern"),
 		}},
 	)
-	// TODO: uncomment this test when switched away from gocty parsing for global config
-	// renderTest(
-	// 	t, "Null",
-	// 	[]string{
-	// 		`
-	// 		fabric {
-	// 			expose_env_vars_with_pattern = null
-	// 		}
-	// 		document "test-doc" {
-	// 			content text {
-	// 				value = "{{.env.OTHER_VAR}}\n{{.env.FABRIC_VAR}}\n{{.env.FABRIC_TEST_VAR}}"
-	// 			}
-	// 		}
-	// 		`,
-	// 	},
-	// 	"test-doc",
-	// 	[]string{
-	// 		"<no value>\n<no value>\n<no value>",
-	// 	},
-	// 	diagtest.Asserts{},
-	// )
+	renderTest(
+		t, "Null",
+		[]string{
+			`
+			fabric {
+				expose_env_vars_with_pattern = null
+			}
+			document "test-doc" {
+				content text {
+					value = "{{.env.OTHER_VAR}}\n{{.env.FABRIC_VAR}}\n{{.env.FABRIC_TEST_VAR}}"
+				}
+			}
+			`,
+		},
+		"test-doc",
+		[]string{
+			"<no value>\n<no value>\n<no value>",
+		},
+		diagtest.Asserts{},
+	)
 }
 
 func TestEngineRenderContent(t *testing.T) {

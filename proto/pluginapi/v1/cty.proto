@@ -4,64 +4,67 @@ package pluginapi.v1;
 
 import "pluginapi/v1/data.proto";
 
+message Cty {
+    message Primitive {
+        oneof data {
+            string str = 1;
+            // empty value is used for marking the type
+            bytes  num = 2;
+            bool   bln = 3;
+        }
+    }
+    message Object{
+        message Attr {
+            Cty  data     = 1;
+            bool optional = 2;
+        }
+        map<string, Attr> data = 1;
+    }
+
+    message Mapping{
+        map<string, Cty> data = 1;
+        // Original map is empty, element was added to preserve the type
+        bool onlyType = 2;
+    }
+
+    message Sequence{
+        repeated Cty data = 1;
+        // Original sequence is empty, element added to preserve the type
+        // Not true for empty tuples, since they are valid values
+        bool onlyType = 2;
+    }
+
+    message Capsule {
+        oneof data {
+            Data pluginData = 1;
+            Data delayedEval = 2;
+        }
+    }
+    message Dynamic {}
+    // Cty with nil data is decoded as cty.NilVal
+    oneof data {
+        Primitive primitive =  1;
+        Object    object    =  2;
+        Mapping   map       =  3;
+        Sequence  list      =  4;
+        Sequence  set       =  5;
+        Sequence  tuple     =  6;
+        // Specifies type of null value
+        CtyType   null      =  7;
+        Capsule   caps      =  8;
+        // Specifies type of the unknown value
+        CtyType   unknown   =  9;
+        // DynamicPseudoType
+        Dynamic   dyn       = 10;
+    }
+}
+
+// Forces decoding of the inner Cty as a type
 message CtyType {
-    oneof data {
-        CtyPrimitiveType     primitive      = 1;
-        CtyObjectType        object         = 2;
-        CtyType              map            = 3;
-        CtyType              list           = 4;
-        CtyType              set            = 5;
-        CtyTupleType         tuple          = 6;
-        CtyDynamicPseudoType dynamic_pseudo = 7;
-        CtyCapsuleType       encapsulated   = 8;
-    }
+    Cty type = 1;
 }
 
-message CtyObjectType {
-    map<string, CtyType> attrs = 1;
-}
-
-message CtyTupleType {
-    repeated CtyType elements = 1;
-}
-
-message CtyDynamicPseudoType {}
-
-enum CtyCapsuleType {
-    CAPSULE_UNSPECIFIED  = 0;
-    CAPSULE_PLUGIN_DATA  = 1;
-    CAPSULE_DELAYED_EVAL = 2;
-}
-
-enum CtyPrimitiveType {
-    KIND_UNSPECIFIED = 0;
-    KIND_STRING      = 1;
-    KIND_NUMBER      = 2;
-    KIND_BOOL        = 3;
-}
-
+// Forces decoding of the inner Cty as a value
 message CtyValue {
-    CtyType type = 1;
-    oneof   data {
-        CtyPrimitiveValue primitive  = 2;
-        CtyMapLike        mapLike    = 8;
-        CtyListLike       listLike   = 9;
-        Data              pluginData = 10;
-    }
-}
-
-message CtyPrimitiveValue {
-    oneof data {
-        string str = 1;
-        double num = 2;
-        bool   bln = 3;
-    }
-}
-
-message CtyListLike {
-    repeated CtyValue elements = 1;
-}
-
-message CtyMapLike {
-    map<string, CtyValue> elements = 1;
+    Cty value = 1;
 }
