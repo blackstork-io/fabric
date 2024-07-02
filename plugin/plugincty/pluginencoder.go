@@ -28,11 +28,11 @@ var _ ctyencoder.CollectionEncoder[plugin.Data] = nullEncoder{}
 
 type mapEncoder plugin.MapData
 
-func newMapEncoder(val cty.Value) ctyencoder.CollectionEncoder[plugin.Data] {
+func newMapEncoder(val cty.Value) (ctyencoder.CollectionEncoder[plugin.Data], diagnostics.Diag) {
 	if val.IsNull() || !val.IsKnown() {
-		return nullEncoder{}
+		return nullEncoder{}, nil
 	}
-	return mapEncoder(make(plugin.MapData, val.LengthInt()))
+	return mapEncoder(make(plugin.MapData, val.LengthInt())), nil
 }
 
 var _ ctyencoder.CollectionEncoder[plugin.Data] = mapEncoder{}
@@ -55,12 +55,12 @@ func (m mapEncoder) Add(k cty.Value, v plugin.Data) diagnostics.Diag {
 
 type listEncoder plugin.ListData
 
-func newListEncoder(val cty.Value) ctyencoder.CollectionEncoder[plugin.Data] {
+func newListEncoder(val cty.Value) (ctyencoder.CollectionEncoder[plugin.Data], diagnostics.Diag) {
 	if val.IsNull() || !val.IsKnown() {
-		return nullEncoder{}
+		return nullEncoder{}, nil
 	}
 	l := listEncoder(make(plugin.ListData, 0, val.LengthInt()))
-	return &l
+	return &l, nil
 }
 
 var _ ctyencoder.CollectionEncoder[plugin.Data] = mapEncoder{}

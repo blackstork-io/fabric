@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 
 	"github.com/blackstork-io/fabric/parser/definitions"
@@ -214,14 +213,24 @@ func parseBlockDefinitions(body *hclsyntax.Body) (res *DefinedBlocks, diags diag
 			}
 			diags.Append(AddIfMissing(res.Config, *key, cfg))
 		case definitions.BlockKindGlobalConfig:
-			var globalCfg definitions.GlobalConfig
-			if diags.Extend(gohcl.DecodeBody(block.Body, nil, &globalCfg)) {
+			if res.GlobalConfig != nil {
+				origRng := res.GlobalConfig.GetHCLBlock().DefRange
+				diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "Global config redefinition",
+					Detail: fmt.Sprintf(
+						"Global config must be defined at most once. Original definition at %s:%d",
+						origRng.Filename, origRng.Start.Line,
+					),
+					Subject: block.DefRange().Ptr(),
+				})
 				continue
 			}
-			if res.GlobalConfig != nil {
-				diags.Add("Global config declared multiple times", "")
+			cfg, diag := definitions.DefineGlobalConfig(block)
+			if diags.Extend(diag) {
+				continue
 			}
-			res.GlobalConfig = &globalCfg
+			res.GlobalConfig = cfg
 		default:
 			diags.Append(definitions.NewNestingDiag(
 				"Top level of fabric document",

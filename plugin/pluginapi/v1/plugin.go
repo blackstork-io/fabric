@@ -74,33 +74,21 @@ func (p *grpcPlugin) callOptions() []grpc.CallOption {
 }
 
 func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient) plugin.ProvideContentFunc {
-	return func(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.ProvideContentParams) (result *plugin.ContentResult, diags diagnostics.Diag) {
 		p.logger.DebugContext(ctx, "Calling content provider", "name", name)
 		defer func(start time.Time) {
 			p.logger.DebugContext(ctx, "Called content provider", "name", name, "took", time.Since(start))
 		}(time.Now())
 		if params == nil {
-			return nil, diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Nil params",
-				Detail:   "Nil params",
-			}}
+			diags.Add("Content provider error", "Nil params")
+			return
 		}
-		cfgEncoded, err := encodeCtyValue(params.Config)
-		if err != nil {
-			return nil, diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to encode config",
-				Detail:   err.Error(),
-			}}
-		}
-		argsEncoded, err := encodeCtyValue(params.Args)
-		if err != nil {
-			return nil, diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to encode args",
-				Detail:   err.Error(),
-			}}
+		cfgEncoded, diag := encodeCtyValue(params.Config)
+		diags.Extend(diag)
+		argsEncoded, diag := encodeCtyValue(params.Args)
+		diags.Extend(diag)
+		if diags.HasErrors() {
+			return
 		}
 		res, err := client.ProvideContent(ctx, &ProvideContentRequest{
 			Provider:    name,
@@ -109,96 +97,58 @@ func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient)
 			DataContext: encodeMapData(params.DataContext),
 			ContentId:   params.ContentID,
 		}, p.callOptions()...)
-		if err != nil {
-			return nil, diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to generate content",
-				Detail:   err.Error(),
-			}}
+		if diags.AppendErr(err, "Failed to generate content") {
+			return
 		}
-		result := decodeContentResult(res.Result)
-		diags := decodeDiagnosticList(res.Diagnostics)
+		result = decodeContentResult(res.GetResult())
+		diags.Extend(decodeDiagnosticList(res.GetDiagnostics()))
 		return result, diags
 	}
 }
 
 func (p *grpcPlugin) clientDataFunc(name string, client PluginServiceClient) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (data plugin.Data, diags diagnostics.Diag) {
 		p.logger.DebugContext(ctx, "Calling data source", "name", name)
 		defer func(start time.Time) {
 			p.logger.DebugContext(ctx, "Called data source", "name", name, "took", time.Since(start))
 		}(time.Now())
 		if params == nil {
-			return nil, diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Nil params",
-				Detail:   "Nil params",
-			}}
+			diags.Add("Data source error", "Nil params")
+			return
 		}
-		cfgEncoded, err := encodeCtyValue(params.Config)
-		if err != nil {
-			return nil, diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to encode config",
-				Detail:   err.Error(),
-			}}
-		}
-		argsEncoded, err := encodeCtyValue(params.Args)
-		if err != nil {
-			return nil, diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to encode args",
-				Detail:   err.Error(),
-			}}
-		}
+		cfgEncoded, diag := encodeCtyValue(params.Config)
+		diags.Extend(diag)
+		argsEncoded, diag := encodeCtyValue(params.Args)
+		diags.Extend(diag)
 
 		res, err := client.RetrieveData(ctx, &RetrieveDataRequest{
 			Source: name,
 			Config: cfgEncoded,
 			Args:   argsEncoded,
 		}, p.callOptions()...)
-		if err != nil {
-			return nil, diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to fetch data",
-				Detail:   err.Error(),
-			}}
+		if diags.AppendErr(err, "Failed to fetch data") {
+			return
 		}
-		data := decodeData(res.Data)
-		diags := decodeDiagnosticList(res.Diagnostics)
-		return data, diags
+		data = decodeData(res.GetData())
+		diags.Extend(decodeDiagnosticList(res.GetDiagnostics()))
+		return
 	}
 }
 
 func (p *grpcPlugin) clientPublishFunc(name string, client PluginServiceClient) plugin.PublishFunc {
-	return func(ctx context.Context, params *plugin.PublishParams) diagnostics.Diag {
+	return func(ctx context.Context, params *plugin.PublishParams) (diags diagnostics.Diag) {
 		p.logger.DebugContext(ctx, "Calling publisher", "name", name)
 		defer func(start time.Time) {
 			p.logger.DebugContext(ctx, "Called publisher", "name", name, "took", time.Since(start))
 		}(time.Now())
 		if params == nil {
-			return diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Nil params",
-				Detail:   "Nil params",
-			}}
+			diags.Add("Publisher error", "Nil params")
+			return
 		}
-		argsEncoded, err := encodeCtyValue(params.Args)
-		if err != nil {
-			return diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to encode args",
-				Detail:   err.Error(),
-			}}
-		}
-		cfgEncoded, err := encodeCtyValue(params.Config)
-		if err != nil {
-			return diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to encode config",
-				Detail:   err.Error(),
-			}}
-		}
+		argsEncoded, diag := encodeCtyValue(params.Args)
+		diags.Extend(diag)
+		cfgEncoded, diag := encodeCtyValue(params.Config)
+		diags.Extend(diag)
 		datactx := encodeMapData(params.DataContext)
 		format := encodeOutputFormat(params.Format)
 		res, err := client.Publish(ctx, &PublishRequest{
@@ -208,13 +158,15 @@ func (p *grpcPlugin) clientPublishFunc(name string, client PluginServiceClient) 
 			DataContext: datactx,
 			Format:      format,
 		}, p.callOptions()...)
-		if err != nil {
+
+		if diags.AppendErr(err, "Failed to publish") {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Failed to publish",
 				Detail:   err.Error(),
 			}}
 		}
-		return decodeDiagnosticList(res.Diagnostics)
+		diags.Extend(decodeDiagnosticList(res.GetDiagnostics()))
+		return
 	}
 }
