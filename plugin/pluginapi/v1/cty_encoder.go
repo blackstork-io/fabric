@@ -284,7 +284,7 @@ func encodeCty(val cty.Value, ty cty.Type) *Cty {
 				},
 			}
 		default:
-			panic("unreachable")
+			panic(fmt.Errorf("unxpected type (not a list, set or tuple: %q", ty.FriendlyName()))
 		}
 	case ty.IsCapsuleType():
 		if !(plugin.EncapsulatedData.CtyTypeEqual(ty) || dataquery.DelayedEvalType.CtyTypeEqual(ty)) {
@@ -311,7 +311,7 @@ func encodeCty(val cty.Value, ty cty.Type) *Cty {
 				PluginData: encodeData(data),
 			}
 		default:
-			panic("unreachable")
+			panic(fmt.Errorf("unexpected capsule type: %q", ty.FriendlyName()))
 		}
 		return &Cty{
 			Data: &Cty_Caps{

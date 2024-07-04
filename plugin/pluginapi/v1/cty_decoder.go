@@ -188,7 +188,7 @@ func decodeCty(val *Cty, decodeType bool) (retVal cty.Value, retTy cty.Type) {
 				}
 				return
 			}
-			panic("unreachable")
+			panic("No values received in the map")
 		} else {
 			vals := make(map[string]cty.Value, len(values))
 			for key, value = range values {
