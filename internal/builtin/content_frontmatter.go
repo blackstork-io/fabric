@@ -87,7 +87,7 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 	case "json":
 		result, err = renderJSONFrontMatter(m)
 	default:
-		panic("unreachable")
+		panic(fmt.Errorf("Unknown format type: %s", format))
 	}
 	if err != nil {
 		return nil, diagnostics.Diag{{
