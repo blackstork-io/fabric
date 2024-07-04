@@ -154,7 +154,7 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 			slog.DebugContext(ctx, "Sending normal search request", "size", size)
 			data, err = search(client.Search, params.Args, size)
 		} else {
-			slog.DebugContext(ctx,"Starting a scroll search request", "size", size)
+			slog.DebugContext(ctx, "Starting a scroll search request", "size", size)
 			data, err = searchWithScroll(client, params.Args, size)
 		}
 	}
