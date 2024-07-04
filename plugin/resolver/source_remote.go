@@ -65,7 +65,7 @@ func NewRemote(options RemoteOptions) *RemoteSource {
 	if options.Tracer == nil {
 		options.Tracer = tracenoop.Tracer{}
 	}
-	options.Logger = options.Logger.With("source", "remote")
+	options.Logger = options.Logger.With("source", "remote").With("url", options.BaseURL)
 	return &RemoteSource{
 		baseURL:     options.BaseURL,
 		downloadDir: options.DownloadDir,
