@@ -2,6 +2,7 @@ package elastic
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
@@ -79,7 +80,7 @@ func makeElasticSearchDataSource() *plugin.DataSource {
 			},
 			&dataspec.AttrSpec{
 				Name: "aggs",
-				Type: cty.Map(cty.DynamicPseudoType),
+				Type: cty.DynamicPseudoType,
 			},
 			&dataspec.AttrSpec{
 				Name: "only_hits",
@@ -150,8 +151,10 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 			}
 		}
 		if size <= maxSimpleSearchResultsSize {
+			slog.DebugContext(ctx, "Sending normal search request", "size", size)
 			data, err = search(client.Search, params.Args, size)
 		} else {
+			slog.DebugContext(ctx,"Starting a scroll search request", "size", size)
 			data, err = searchWithScroll(client, params.Args, size)
 		}
 	}
@@ -161,6 +164,8 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 			Summary:  "Failed to fetch data",
 			Detail:   err.Error(),
 		})
+	} else {
+		slog.DebugContext(ctx, "Returning data received from Elasticsearch")
 	}
 	return data, diags
 }
