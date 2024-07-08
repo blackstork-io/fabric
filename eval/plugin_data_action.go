@@ -19,13 +19,19 @@ type PluginDataAction struct {
 }
 
 func (action *PluginDataAction) FetchData(ctx context.Context) (plugin.Data, diagnostics.Diag) {
-	return action.Source.Execute(ctx, &plugin.RetrieveDataParams{
+	res, diags := action.Source.Execute(ctx, &plugin.RetrieveDataParams{
 		Config: action.Config,
 		Args:   action.Args,
 	})
+	diags.DefaultSubject(action.SrcRange.Ptr())
+	return res, diags
 }
 
 func LoadDataAction(ctx context.Context, sources DataSources, node *definitions.ParsedPlugin) (_ *PluginDataAction, diags diagnostics.Diag) {
+	defer func() {
+		diags.DefaultSubject(node.Invocation.Range().Ptr())
+	}()
+
 	ds, ok := sources.DataSource(node.PluginName)
 	if !ok {
 		return nil, diagnostics.Diag{{
