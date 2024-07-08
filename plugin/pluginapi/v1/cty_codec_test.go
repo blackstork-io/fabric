@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
@@ -12,35 +12,26 @@ import (
 
 func roundTrip(t *testing.T, val cty.Value) (decVal cty.Value, decTy cty.Type) {
 	t.Helper()
-	encVal, diag := encodeCtyValue(val)
-	if diag.HasErrors() {
-		t.Fatalf("Failed to encode value: %s", diag)
-	}
-	decVal, err := decodeCtyValue(encVal)
-	if err != nil {
-		t.Fatalf("Failed to decode value: %s", err)
-	}
-	if !decVal.RawEquals(val) {
-		t.Fatalf("Roundtrip failed: got %s", decVal.GoString())
-	}
+	require := require.New(t)
 
+	encVal, diag := encodeCtyValue(val)
+	require.False(diag.HasErrors(), "Failed to encode value", diag)
+	decVal, err := decodeCtyValue(encVal)
+	require.NoError(err, "Failed to decode value")
+	require.True(decVal.RawEquals(val), "Roundtrip failed: got", decVal.GoString())
 	decTy = roundTripType(t, val.Type())
 	return
 }
 
 func roundTripType(t *testing.T, ty cty.Type) (decTy cty.Type) {
 	t.Helper()
+	require := require.New(t)
+
 	encTy, diag := encodeCtyType(ty)
-	if diag.HasErrors() {
-		t.Fatalf("Failed to encode type: %s", diag)
-	}
+	require.False(diag.HasErrors(), "Failed to encode type", diag)
 	decTy, err := decodeCtyType(encTy)
-	if err != nil {
-		t.Fatalf("Failed to decode type: %s", err)
-	}
-	if !decTy.Equals(ty) {
-		t.Fatalf("Roundtrip failed: got %s", decTy.GoString())
-	}
+	require.NoError(err, "Failed to decode type")
+	require.True(decTy.Equals(ty), "Roundtrip failed: got", decTy.GoString())
 	return
 }
 
@@ -167,15 +158,14 @@ func TestCtyCodecRoundtrip(t *testing.T) {
 
 func TestCtyCodecNil(t *testing.T) {
 	var err error
+	require := require.New(t)
+
 	t.Logf("Testing Nil roundtrip")
 	encVal, diag := encodeCtyValue(cty.NilVal)
-	if diag.HasErrors() {
-		t.Fatalf("Failed to encode value: %s", diag)
-	}
+	require.False(diag.HasErrors(), "Failed to encode value", diag)
 	decVal, err := decodeCtyValue(encVal)
-	if err != nil {
-		t.Fatalf("Failed to decode value: %s", err)
-	}
+	require.NoError(err, "Failed to decode value")
+
 	if decVal != cty.NilVal {
 		t.Fatalf("Value roundtrip failed: got %s", decVal.GoString())
 	}
@@ -196,6 +186,8 @@ func TestCtyCodecNil(t *testing.T) {
 }
 
 func TestCtyCodecObjectOptional(t *testing.T) {
+	require := require.New(t)
+
 	ty := cty.ObjectWithOptionalAttrs(
 		map[string]cty.Type{
 			"required": cty.String,
@@ -203,13 +195,15 @@ func TestCtyCodecObjectOptional(t *testing.T) {
 		},
 		[]string{"optional"},
 	)
-	assert.True(t, ty.AttributeOptional("optional"))
+	require.True(ty.AttributeOptional("optional"))
 
 	decTy := roundTripType(t, ty)
-	assert.True(t, decTy.AttributeOptional("optional"))
+	require.True(decTy.AttributeOptional("optional"))
 }
 
 func TestCtyCodecCapsule(t *testing.T) {
+	require := require.New(t)
+
 	var err error
 	t.Logf("Testing Capsule roundtrip")
 
@@ -225,30 +219,12 @@ func TestCtyCodecCapsule(t *testing.T) {
 
 	ctyVal := plugin.EncapsulatedData.ToCty(&data)
 	encVal, diag := encodeCtyValue(ctyVal)
-	if diag.HasErrors() {
-		t.Fatalf("Failed to encode value: %s", diag)
-	}
+	require.False(diag.HasErrors(), "Failed to encode value", diag)
+
 	decVal, err := decodeCtyValue(encVal)
-	if err != nil {
-		t.Fatalf("Failed to decode value: %s", err)
-	}
+	require.NoError(err, "Failed to decode value")
 
 	decData := plugin.EncapsulatedData.MustFromCty(decVal)
-	assert.Equal(t, &data, decData)
-
+	require.Equal(&data, decData)
 	roundTripType(t, plugin.EncapsulatedData.CtyType())
-
-	// t.Logf("Testing NilType roundtrip")
-	// encTy, diag := encodeCtyType(cty.NilType)
-	// if diag.HasErrors() {
-	// 	t.Fatalf("Failed to encode type: %s", diag)
-	// }
-	// decTy, err := decodeCtyType(encTy)
-	// if err != nil {
-	// 	t.Fatalf("Failed to decode type: %s", err)
-	// }
-	// if decTy != cty.NilType {
-	// 	t.Fatalf("Type roundtrip failed: got %s", decTy.GoString())
-	// }
-	// return
 }
