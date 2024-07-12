@@ -43,6 +43,10 @@ func encodeData(d plugin.Data) *Data {
 				},
 			},
 		}
+	default:
+		if cd, ok := d.(plugin.ConvertibleData); ok {
+			return encodeData(cd.AsJQData())
+		}
 	}
 	panic(fmt.Errorf("unexpected plugin data type: %T", d))
 }
