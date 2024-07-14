@@ -48,9 +48,11 @@ var renderCmd = &cobra.Command{
 			return fmt.Errorf("target should have the format '%s<name_of_the_document>'", docPrefix)
 		}
 		ctx := cmd.Context()
+		logger := slog.Default()
+
 		var diags diagnostics.Diag
 		eng := engine.New(
-			engine.WithLogger(slog.Default()),
+			engine.WithLogger(logger),
 			engine.WithTracer(tracer),
 			engine.WithBuiltIn(builtin.Plugin(version, slog.Default(), tracer)),
 		)
@@ -77,13 +79,21 @@ var renderCmd = &cobra.Command{
 		}
 		var content plugin.Content
 		if publish {
-			content, _, diag = eng.Publish(ctx, target)
+			content, diag = eng.RenderAndPublishContent(ctx, target)
 		} else {
-			content, _, diag = eng.RenderContent(ctx, target)
+			_, content, _, diag = eng.RenderContent(ctx, target)
 		}
 		if diags.Extend(diag) {
 			return diags
 		}
+
+		// If publish requested, no need to print out to stdout
+		if publish {
+			return nil
+		}
+
+		logger.InfoContext(ctx, "Printing to stdout", "format", format)
+
 		var printer print.Printer
 		switch format {
 		case "md":
@@ -97,9 +107,14 @@ var renderCmd = &cobra.Command{
 		printer = print.WithLogging(printer, slog.Default(), slog.String("format", format))
 		printer = print.WithTracing(printer, tracer, attribute.String("format", format))
 		err = printer.Print(ctx, os.Stdout, content)
+
 		if err != nil {
 			diags.AppendErr(err, "Error while printing")
 		}
+
+		// Making sure the stdout printout has a linebreak at the end
+		fmt.Printf("\n")
+
 		return nil
 	},
 }

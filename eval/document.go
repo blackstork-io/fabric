@@ -2,6 +2,7 @@ package eval
 
 import (
 	"context"
+	"log/slog"
 	"maps"
 	"slices"
 
@@ -21,6 +22,8 @@ type Document struct {
 }
 
 func (doc *Document) FetchData(ctx context.Context) (plugin.Data, diagnostics.Diag) {
+	logger := *slog.Default()
+	logger.DebugContext(ctx, "Fetching data for the document template")
 	result := make(plugin.MapData)
 	diags := diagnostics.Diag{}
 	for _, block := range doc.DataBlocks {
@@ -49,6 +52,8 @@ func (doc *Document) FetchData(ctx context.Context) (plugin.Data, diagnostics.Di
 }
 
 func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugin.MapData) (plugin.Content, plugin.Data, diagnostics.Diag) {
+	logger := *slog.Default()
+	logger.DebugContext(ctx, "Fetching data for the document template")
 	data, diags := doc.FetchData(ctx)
 	if diags.HasErrors() {
 		return nil, nil, diags
@@ -102,14 +107,12 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugin.MapDat
 	}
 	// compact the content tree to remove empty content nodes
 	result.Compact()
-	return result, data, diags
+	return result, docDataCtx, diags
 }
 
-func (doc *Document) Publish(ctx context.Context, docDataCtx plugin.MapData) (plugin.Content, plugin.Data, diagnostics.Diag) {
-	content, data, diags := doc.RenderContent(ctx, docDataCtx)
-	if diags.HasErrors() {
-		return nil, nil, diags
-	}
+func (doc *Document) Publish(ctx context.Context, content plugin.Content, data plugin.Data) diagnostics.Diag {
+	logger := *slog.Default()
+	logger.DebugContext(ctx, "Fetching data for the document template")
 	docData := plugin.MapData{
 		definitions.BlockKindContent: content.AsData(),
 	}
@@ -120,13 +123,14 @@ func (doc *Document) Publish(ctx context.Context, docDataCtx plugin.MapData) (pl
 		definitions.BlockKindData:     data,
 		definitions.BlockKindDocument: docData,
 	}
+	var diags diagnostics.Diag
 	for _, block := range doc.PublishBlocks {
 		diag := block.Publish(ctx, dataCtx)
-		if diags.Extend(diag) {
-			return nil, nil, diags
+		if diag != nil {
+			diags.Extend(diag)
 		}
 	}
-	return content, data, diags
+	return diags
 }
 
 func LoadDocument(ctx context.Context, plugins Plugins, node *definitions.ParsedDocument) (_ *Document, diags diagnostics.Diag) {

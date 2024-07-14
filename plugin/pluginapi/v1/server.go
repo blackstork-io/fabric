@@ -2,6 +2,7 @@ package pluginapiv1
 
 import (
 	context "context"
+	"log/slog"
 
 	goplugin "github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
@@ -21,6 +22,7 @@ func Serve(schema *plugin.Schema) {
 			opts = append(opts, grpc.MaxRecvMsgSize(defaultMsgSize))
 			return grpc.NewServer(opts...)
 		},
+		Logger: loggerForGoplugin(),
 	})
 }
 
@@ -30,6 +32,15 @@ type grpcServer struct {
 }
 
 func (srv *grpcServer) GetSchema(ctx context.Context, req *GetSchemaRequest) (*GetSchemaResponse, error) {
+	slog.DebugContext(ctx, "GetSchema")
+	defer func() {
+		if r := recover(); r != nil {
+			slog.ErrorContext(ctx, "GetSchema done", "panic", r)
+			panic(r)
+		} else {
+			slog.DebugContext(ctx, "GetSchema done")
+		}
+	}()
 	schema, err := encodeSchema(srv.schema)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to encode schema: %v", err)
@@ -38,6 +49,15 @@ func (srv *grpcServer) GetSchema(ctx context.Context, req *GetSchemaRequest) (*G
 }
 
 func (srv *grpcServer) RetrieveData(ctx context.Context, req *RetrieveDataRequest) (*RetrieveDataResponse, error) {
+	slog.DebugContext(ctx, "RetrieveData")
+	defer func() {
+		if r := recover(); r != nil {
+			slog.ErrorContext(ctx, "RetrieveData done", "panic", r)
+			panic(r)
+		} else {
+			slog.DebugContext(ctx, "RetrieveData done")
+		}
+	}()
 	source := req.GetSource()
 	cfg, err := decodeCtyValue(req.GetConfig())
 	if err != nil {
@@ -58,6 +78,15 @@ func (srv *grpcServer) RetrieveData(ctx context.Context, req *RetrieveDataReques
 }
 
 func (srv *grpcServer) ProvideContent(ctx context.Context, req *ProvideContentRequest) (*ProvideContentResponse, error) {
+	slog.DebugContext(ctx, "ProvideContent")
+	defer func() {
+		if r := recover(); r != nil {
+			slog.ErrorContext(ctx, "ProvideContent done", "panic", r)
+			panic(r)
+		} else {
+			slog.DebugContext(ctx, "ProvideContent done")
+		}
+	}()
 	provider := req.GetProvider()
 	cfg, err := decodeCtyValue(req.GetConfig())
 	if err != nil {
@@ -81,6 +110,15 @@ func (srv *grpcServer) ProvideContent(ctx context.Context, req *ProvideContentRe
 }
 
 func (srv *grpcServer) Publish(ctx context.Context, req *PublishRequest) (*PublishResponse, error) {
+	slog.DebugContext(ctx, "Publish")
+	defer func() {
+		if r := recover(); r != nil {
+			slog.ErrorContext(ctx, "Publish done", "panic", r)
+			panic(r)
+		} else {
+			slog.DebugContext(ctx, "Publish done")
+		}
+	}()
 	publisher := req.GetPublisher()
 	cfg, err := decodeCtyValue(req.GetConfig())
 	if err != nil {

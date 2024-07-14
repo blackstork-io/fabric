@@ -29,6 +29,8 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     gcflags: all=-N -l
     no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
   - id: github
     main: ./internal/github/cmd
@@ -36,6 +38,8 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     gcflags: all=-N -l
     no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
   - id: graphql
     main: ./internal/graphql/cmd
@@ -43,6 +47,8 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     gcflags: all=-N -l
     no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
   - id: openai
     main: ./internal/openai/cmd
@@ -50,6 +56,8 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     gcflags: all=-N -l
     no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
   - id: opencti
     main: ./internal/opencti/cmd
@@ -57,6 +65,8 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     gcflags: all=-N -l
     no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
   - id: nistnvd
     main: ./internal/nistnvd/cmd
@@ -64,6 +74,8 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     gcflags: all=-N -l
     no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
   - id: postgresql
     main: ./internal/postgresql/cmd
@@ -71,6 +83,8 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     gcflags: all=-N -l
     no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
   - id: sqlite
     main: ./internal/sqlite/cmd
@@ -78,6 +92,8 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     gcflags: all=-N -l
     no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
   - id: terraform
     main: ./internal/terraform/cmd
@@ -85,6 +101,8 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     gcflags: all=-N -l
     no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
   - id: hackerone
     main: ./internal/hackerone/cmd
@@ -92,6 +110,8 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     gcflags: all=-N -l
     no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
   - id: virustotal
     main: ./internal/virustotal/cmd
@@ -99,6 +119,8 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     gcflags: all=-N -l
     no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
   - id: splunk
     main: ./internal/splunk/cmd
@@ -106,6 +128,8 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     gcflags: all=-N -l
     no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
   - id: stixview
     main: ./internal/stixview/cmd
@@ -113,6 +137,8 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     gcflags: all=-N -l
     no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
   - id: snyk
     main: ./internal/snyk/cmd
@@ -120,6 +146,8 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     gcflags: all=-N -l
     no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
   - id: microsoft
     main: ./internal/microsoft/cmd
@@ -127,3 +155,5 @@ builds:
     ldflags: "-X main.version={{.Version}}"
     gcflags: all=-N -l
     no_unique_dist_dir: true
+    tags:
+      - fabricplugin

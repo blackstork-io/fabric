@@ -1,6 +1,8 @@
 package pluginapiv1
 
 import (
+	"fmt"
+
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 )
@@ -41,8 +43,12 @@ func encodeData(d plugin.Data) *Data {
 				},
 			},
 		}
+	default:
+		if cd, ok := d.(plugin.ConvertibleData); ok {
+			return encodeData(cd.AsJQData())
+		}
 	}
-	panic("unreachable")
+	panic(fmt.Errorf("unexpected plugin data type: %T", d))
 }
 
 func encodeMapData(m plugin.MapData) *MapData {

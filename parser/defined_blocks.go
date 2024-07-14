@@ -13,7 +13,7 @@ import (
 // Collection of defined blocks
 
 type DefinedBlocks struct {
-	GlobalConfig *definitions.GlobalConfig
+	GlobalConfig *definitions.GlobalConfigDefinition
 	Config       map[definitions.Key]*definitions.Config
 	Documents    map[string]*definitions.Document
 	Sections     map[string]*definitions.Section

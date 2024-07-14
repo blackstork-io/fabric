@@ -9,12 +9,11 @@ import (
 
 type PathExtra cty.Path
 
-func (p PathExtra) improveDiagnostic(diag *hcl.Diagnostic) {
+func (p PathExtra) String() string {
 	if len(p) == 0 {
-		return
+		return ""
 	}
-	sb := []byte(diag.Detail)
-	sb = append(sb, "\nHappened while evaluating value at:\n"...)
+	var sb []byte
 	for _, step := range p {
 		switch step := step.(type) {
 		case cty.GetAttrStep:
@@ -37,7 +36,14 @@ func (p PathExtra) improveDiagnostic(diag *hcl.Diagnostic) {
 		}
 		sb = fmt.Appendf(sb, "[%+v]", step)
 	}
-	diag.Detail = string(sb)
+	return string(sb)
+}
+
+func (p PathExtra) improveDiagnostic(diag *hcl.Diagnostic) {
+	if len(p) == 0 {
+		return
+	}
+	diag.Detail = fmt.Sprintf("%s\nHappened while evaluating value at:\n%s", diag.Detail, p)
 }
 
 func NewPathExtra(p cty.Path) PathExtra {

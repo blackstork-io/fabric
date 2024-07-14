@@ -24,7 +24,7 @@ func (m *MetaBlock) AsJQData() plugin.Data {
 	for i, author := range m.Authors {
 		authors[i] = plugin.StringData(author)
 	}
-	return plugin.ConvMapData{
+	return plugin.MapData{
 		"authors": authors,
 		"name":    plugin.StringData(m.Name),
 		"tags":    tags,

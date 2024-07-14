@@ -6,7 +6,9 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"runtime/debug"
 	"strings"
+	"time"
 
 	"github.com/golang-cz/devslog"
 	"github.com/lmittmann/tint"
@@ -135,6 +137,7 @@ var rootCmd = &cobra.Command{
 						Level:       opts.Level,
 						ReplaceAttr: opts.ReplaceAttr,
 						NoColor:     !cliArgs.colorize,
+						TimeFormat:  time.DateTime,
 					},
 				)
 			}
@@ -163,7 +166,7 @@ var rootCmd = &cobra.Command{
 		logger = logger.With("command", cmd.Name())
 		slog.SetDefault(logger)
 		slog.SetLogLoggerLevel(slog.LevelDebug)
-		slog.DebugContext(ctx, "Run")
+		slog.DebugContext(ctx, "Starting the execution")
 		if strings.Contains(version, "-dev") {
 			slog.WarnContext(ctx, "This is a dev version of the software!", "version", version)
 		}
@@ -199,7 +202,7 @@ func Execute() {
 func recoverExecute(ctx context.Context, cmd *cobra.Command) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			slog.ErrorContext(rootCtx, "Panic", "error", r)
+			slog.ErrorContext(rootCtx, "Panic", "error", r, "stack", string(debug.Stack()))
 			err = fmt.Errorf("panic: %v", r)
 		}
 	}()

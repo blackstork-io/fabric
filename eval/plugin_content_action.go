@@ -19,7 +19,6 @@ type PluginContentAction struct {
 }
 
 func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugin.MapData, doc, parent *plugin.ContentSection, contentID uint32) (res *plugin.ContentResult, diags diagnostics.Diag) {
-	var diag diagnostics.Diag
 	contentMap := plugin.MapData{}
 	if action.PluginAction.Meta != nil {
 		contentMap[definitions.BlockKindMeta] = action.PluginAction.Meta.AsJQData()
@@ -28,7 +27,7 @@ func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx pl
 	docData.(plugin.MapData)[definitions.BlockKindContent] = doc.AsData()
 	dataCtx[definitions.BlockKindDocument] = docData
 	dataCtx[definitions.BlockKindContent] = contentMap
-	diag = ApplyVars(ctx, action.Vars, dataCtx)
+	diag := ApplyVars(ctx, action.Vars, dataCtx)
 	if diags.Extend(diag) {
 		return
 	}

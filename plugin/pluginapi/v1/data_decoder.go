@@ -1,6 +1,8 @@
 package pluginapiv1
 
 import (
+	"fmt"
+
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 )
@@ -20,7 +22,7 @@ func decodeData(src *Data) plugin.Data {
 	case *Data_ListVal:
 		return plugin.ListData(utils.FnMap(src.GetListVal().GetValue(), decodeData))
 	}
-	panic("unreachable")
+	panic(fmt.Sprintf("Unexpected src data type: %T", src.GetData()))
 }
 
 func decodeMapData(src map[string]*Data) plugin.MapData {
