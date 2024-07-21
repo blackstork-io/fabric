@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/zclconf/go-cty/cty"
 	"io"
 	"log/slog"
 	"net/http"
@@ -14,8 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blackstork-io/fabric/plugin"
 	"github.com/stretchr/testify/suite"
+	"github.com/zclconf/go-cty/cty"
+
+	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 // HTTPClientTestSuite is a test suite for contract testing http data source
@@ -61,12 +63,11 @@ func (s *HTTPClientTestSuite) TestErrors() {
 	s.Nil(result)
 	s.Error(err)
 
-	var expectedError = "the server responded with status code 429"
+	expectedError := "the server responded with status code 429"
 	s.Contains(err.Error(), expectedError)
 }
 
 func (s *HTTPClientTestSuite) TestBasicAuth() {
-
 	username := "test-user"
 	password := "test-password"
 	expectedToken := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password)))
@@ -160,18 +161,24 @@ func (s *HTTPClientTestSuite) TestFetchHTTPDataJSON() {
 	ctx := context.Background()
 
 	params := plugin.RetrieveDataParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"url":      cty.StringVal(srv.URL),
-			"method":   cty.StringVal(method),
-			"insecure": cty.BoolVal(insecure),
-			"timeout":  cty.StringVal("1s"),
-			"headers":  cty.NullVal(cty.Map(cty.String)),
-			"body":     cty.NullVal(cty.String),
-			"basic_auth": cty.ObjectVal(map[string]cty.Value{
-				"username": cty.StringVal(username),
-				"password": cty.StringVal(password),
-			}),
-		}),
+		Args: dataspec.NewBlock(
+			[]string{"args"},
+			map[string]cty.Value{
+				"url":      cty.StringVal(srv.URL),
+				"method":   cty.StringVal(method),
+				"insecure": cty.BoolVal(insecure),
+				"timeout":  cty.StringVal("1s"),
+				"headers":  cty.NullVal(cty.Map(cty.String)),
+				"body":     cty.NullVal(cty.String),
+			},
+			dataspec.NewBlock(
+				[]string{"basic_auth"},
+				map[string]cty.Value{
+					"username": cty.StringVal(username),
+					"password": cty.StringVal(password),
+				},
+			),
+		),
 	}
 
 	data, diags := fetchHTTPData(ctx, &params, version)
@@ -215,18 +222,24 @@ func (s *HTTPClientTestSuite) TestFetchHTTPDataCSV() {
 	ctx := context.Background()
 
 	params := plugin.RetrieveDataParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"url":      cty.StringVal(srv.URL),
-			"method":   cty.StringVal(method),
-			"insecure": cty.BoolVal(insecure),
-			"timeout":  cty.StringVal("1s"),
-			"headers":  cty.NullVal(cty.Map(cty.String)),
-			"body":     cty.NullVal(cty.String),
-			"basic_auth": cty.ObjectVal(map[string]cty.Value{
-				"username": cty.StringVal(username),
-				"password": cty.StringVal(password),
-			}),
-		}),
+		Args: dataspec.NewBlock(
+			[]string{"args"},
+			map[string]cty.Value{
+				"url":      cty.StringVal(srv.URL),
+				"method":   cty.StringVal(method),
+				"insecure": cty.BoolVal(insecure),
+				"timeout":  cty.StringVal("1s"),
+				"headers":  cty.NullVal(cty.Map(cty.String)),
+				"body":     cty.NullVal(cty.String),
+			},
+			dataspec.NewBlock(
+				[]string{"basic_auth"},
+				map[string]cty.Value{
+					"username": cty.StringVal(username),
+					"password": cty.StringVal(password),
+				},
+			),
+		),
 	}
 
 	data, diags := fetchHTTPData(ctx, &params, version)
@@ -273,18 +286,24 @@ func (s *HTTPClientTestSuite) TestFetchHTTPDataUnknownType() {
 	ctx := context.Background()
 
 	params := plugin.RetrieveDataParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"url":      cty.StringVal(srv.URL),
-			"method":   cty.StringVal(method),
-			"insecure": cty.BoolVal(insecure),
-			"timeout":  cty.StringVal("1s"),
-			"headers":  cty.NullVal(cty.Map(cty.String)),
-			"body":     cty.NullVal(cty.String),
-			"basic_auth": cty.ObjectVal(map[string]cty.Value{
-				"username": cty.StringVal(username),
-				"password": cty.StringVal(password),
-			}),
-		}),
+		Args: dataspec.NewBlock(
+			[]string{"args"},
+			map[string]cty.Value{
+				"url":      cty.StringVal(srv.URL),
+				"method":   cty.StringVal(method),
+				"insecure": cty.BoolVal(insecure),
+				"timeout":  cty.StringVal("1s"),
+				"headers":  cty.NullVal(cty.Map(cty.String)),
+				"body":     cty.NullVal(cty.String),
+			},
+			dataspec.NewBlock(
+				[]string{"basic_auth"},
+				map[string]cty.Value{
+					"username": cty.StringVal(username),
+					"password": cty.StringVal(password),
+				},
+			),
+		),
 	}
 
 	data, diags := fetchHTTPData(ctx, &params, version)

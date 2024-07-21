@@ -12,6 +12,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/microsoft/client"
 	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/microsoft/client"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 type SentinelIncidentsDataSourceTestSuite struct {
@@ -72,7 +73,7 @@ func (s *SentinelIncidentsDataSourceTestSuite) Testlimit() {
 		},
 	}, nil)
 	res, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"tenant_id":           cty.StringVal("test_tenant_id"),
 			"client_id":           cty.StringVal("test_client_id"),
 			"client_secret":       cty.StringVal("test_client_secret"),
@@ -80,10 +81,8 @@ func (s *SentinelIncidentsDataSourceTestSuite) Testlimit() {
 			"resource_group_name": cty.StringVal("test_resource_group_name"),
 			"workspace_name":      cty.StringVal("test_workspace_name"),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"limit":    cty.NumberIntVal(123),
-			"filter":   cty.NullVal(cty.String),
-			"order_by": cty.NullVal(cty.String),
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
+			"limit": cty.NumberIntVal(123),
 		}),
 	})
 	s.Equal("test_token", s.storedTkn)
@@ -121,7 +120,7 @@ func (s *SentinelIncidentsDataSourceTestSuite) TestFull() {
 		},
 	}, nil)
 	res, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"tenant_id":           cty.StringVal("test_tenant_id"),
 			"client_id":           cty.StringVal("test_client_id"),
 			"client_secret":       cty.StringVal("test_client_secret"),
@@ -129,7 +128,7 @@ func (s *SentinelIncidentsDataSourceTestSuite) TestFull() {
 			"resource_group_name": cty.StringVal("test_resource_group_name"),
 			"workspace_name":      cty.StringVal("test_workspace_name"),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"filter":   cty.StringVal("test_filter"),
 			"order_by": cty.StringVal("test_order_by"),
 			"limit":    cty.NumberIntVal(10),
@@ -163,7 +162,7 @@ func (s *SentinelIncidentsDataSourceTestSuite) TestError() {
 		Top:               client.Int(10),
 	}).Return(nil, errTest)
 	_, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"tenant_id":           cty.StringVal("test_tenant_id"),
 			"client_id":           cty.StringVal("test_client_id"),
 			"client_secret":       cty.StringVal("test_client_secret"),
@@ -171,10 +170,8 @@ func (s *SentinelIncidentsDataSourceTestSuite) TestError() {
 			"resource_group_name": cty.StringVal("test_resource_group_name"),
 			"workspace_name":      cty.StringVal("test_workspace_name"),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"limit":    cty.NumberIntVal(10),
-			"filter":   cty.NullVal(cty.String),
-			"order_by": cty.NullVal(cty.String),
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
+			"limit": cty.NumberIntVal(10),
 		}),
 	})
 	s.Equal("test_token", s.storedTkn)

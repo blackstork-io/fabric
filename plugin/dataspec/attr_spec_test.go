@@ -28,6 +28,16 @@ func TestValidation(t *testing.T) {
 				Name: "test",
 				Type: cty.String,
 			},
+			inputVal:    cty.NullVal(cty.String),
+			expectedVal: cty.NullVal(cty.String),
+		},
+		{
+			name: "basicAttributeMissing",
+			obj: &dataspec.AttrSpec{
+				Name: "test",
+				Type: cty.String,
+			},
+			inputVal:    cty.NilVal,
 			expectedVal: cty.NullVal(cty.String),
 		},
 		{
@@ -56,10 +66,6 @@ func TestValidation(t *testing.T) {
 					diagtest.IsError,
 					diagtest.SummaryContains("Missing required argument"),
 				},
-				{
-					diagtest.IsError,
-					diagtest.SummaryContains("Argument value must be non-null"),
-				},
 			},
 		},
 		{
@@ -74,7 +80,7 @@ func TestValidation(t *testing.T) {
 			asserts: diagtest.Asserts{
 				{
 					diagtest.IsError,
-					diagtest.SummaryContains("Argument value must be non-null"),
+					diagtest.SummaryContains("Attribute must be non-null"),
 				},
 			},
 		},
@@ -102,7 +108,7 @@ func TestValidation(t *testing.T) {
 			asserts: diagtest.Asserts{
 				{
 					diagtest.IsError,
-					diagtest.DetailContains("The length", ">= 1"),
+					diagtest.SummaryContains("Attribute must be non-empty"),
 				},
 			},
 		},
@@ -129,7 +135,7 @@ func TestValidation(t *testing.T) {
 			asserts: diagtest.Asserts{
 				{
 					diagtest.IsError,
-					diagtest.DetailContains("The length", ">= 1"),
+					diagtest.SummaryContains("Attribute must be non-empty"),
 				},
 			},
 		},
@@ -146,7 +152,7 @@ func TestValidation(t *testing.T) {
 			asserts: diagtest.Asserts{
 				{
 					diagtest.IsError,
-					diagtest.SummaryContains("Argument value length is not in range"),
+					diagtest.SummaryContains("Attribute length is not in range"),
 					diagtest.DetailContains(">=", "10"),
 				},
 			},
@@ -177,7 +183,7 @@ func TestValidation(t *testing.T) {
 			asserts: diagtest.Asserts{
 				{
 					diagtest.IsError,
-					diagtest.SummaryContains("Argument value length is not in range"),
+					diagtest.SummaryContains("Attribute length is not in range"),
 					diagtest.DetailContains("<=", "2"),
 				},
 			},
@@ -196,7 +202,7 @@ func TestValidation(t *testing.T) {
 			asserts: diagtest.Asserts{
 				{
 					diagtest.IsError,
-					diagtest.SummaryContains("Argument value length is not in range"),
+					diagtest.SummaryContains("Attribute length is not in range"),
 					diagtest.DetailContains("1", "3"),
 				},
 			},
@@ -228,7 +234,7 @@ func TestValidation(t *testing.T) {
 			asserts: diagtest.Asserts{
 				{
 					diagtest.IsError,
-					diagtest.SummaryContains("Argument value length is not in range"),
+					diagtest.SummaryContains("Attribute length is not in range"),
 					diagtest.DetailContains("exactly", "5"),
 				},
 			},
@@ -340,7 +346,7 @@ func TestValidation(t *testing.T) {
 			inputVal: cty.NumberIntVal(0),
 			asserts: diagtest.Asserts{{
 				diagtest.IsError,
-				diagtest.SummaryContains("Argument value is not in range"),
+				diagtest.SummaryContains("Attribute is not in range"),
 				diagtest.DetailContains(`>=`),
 			}},
 		},
@@ -368,7 +374,7 @@ func TestValidation(t *testing.T) {
 			inputVal: cty.NumberFloatVal(2.7),
 			asserts: diagtest.Asserts{{
 				diagtest.IsError,
-				diagtest.SummaryContains("Argument value is not in range"),
+				diagtest.SummaryContains("Attribute is not in range"),
 			}},
 		},
 		{
@@ -397,7 +403,7 @@ func TestValidation(t *testing.T) {
 			inputVal: cty.NumberFloatVal(4.2),
 			asserts: diagtest.Asserts{{
 				diagtest.IsError,
-				diagtest.SummaryContains("Argument value is not in range"),
+				diagtest.SummaryContains("Attribute is not in range"),
 			}},
 		},
 		{
@@ -512,7 +518,7 @@ func TestValidation(t *testing.T) {
 			inputVal: cty.NumberFloatVal(4.2),
 			asserts: diagtest.Asserts{{
 				diagtest.IsError,
-				diagtest.SummaryContains("Argument value is not in range"),
+				diagtest.SummaryContains("Attribute is not in range"),
 			}, {
 				diagtest.IsWarning,
 				diagtest.SummaryContains("Deprecated"),
@@ -610,7 +616,7 @@ func TestValidation(t *testing.T) {
 				DefaultVal: cty.NumberIntVal(2),
 			},
 			inputVal:    cty.NullVal(cty.Number),
-			expectedVal: cty.NumberIntVal(2),
+			expectedVal: cty.NullVal(cty.Number),
 		},
 		{
 			name: "integer_on_nonnumber_constraint",
@@ -690,19 +696,25 @@ func TestValidation(t *testing.T) {
 	} {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			spec := dataspec.ObjectSpec{tc.obj}
+			// t.Parallel()
+			spec := dataspec.BlockSpec{
+				Attrs: []*dataspec.AttrSpec{
+					tc.obj,
+				},
+			}
 			diags := spec.ValidateSpec()
 			if diags.HasErrors() {
 				tc.asserts.AssertMatch(t, diags, nil)
 				return
 			}
-
-			body := &hclsyntax.Body{
-				Attributes: hclsyntax.Attributes{},
+			block := &hclsyntax.Block{
+				Type: "anyname",
+				Body: &hclsyntax.Body{
+					Attributes: hclsyntax.Attributes{},
+				},
 			}
 			if tc.inputVal != cty.NilVal {
-				body.Attributes[tc.obj.Name] = &hclsyntax.Attribute{
+				block.Body.Attributes[tc.obj.Name] = &hclsyntax.Attribute{
 					Name: tc.obj.Name,
 					Expr: &hclsyntax.LiteralValueExpr{
 						Val: tc.inputVal,
@@ -710,12 +722,13 @@ func TestValidation(t *testing.T) {
 				}
 			}
 
-			objVal, diag := dataspec.Decode(body, spec, fabctx.GetEvalContext(context.Background()))
+			objVal, diag := dataspec.DecodeBlock(block, &spec, fabctx.GetEvalContext(context.Background()))
 			diags.Extend(diag)
 			tc.asserts.AssertMatch(t, diags, nil)
 			if diags.HasErrors() {
 				return
 			}
+
 			val := objVal.GetAttr(tc.obj.Name)
 			if !val.RawEquals(tc.expectedVal) {
 				t.Fatalf("Values not equal. Expected: %s; Got: %s", tc.expectedVal.GoString(), val.GoString())

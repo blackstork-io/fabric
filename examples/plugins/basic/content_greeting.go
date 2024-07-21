@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
@@ -18,14 +17,14 @@ func makeGreetingContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		// Config is optional, in this case we don't need it
 		// We only define the schema for the arguments
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{{
 				Name:        "name",
 				Constraints: constraint.RequiredMeaningful,
 				Doc:         `Name of the user`,
 				ExampleVal:  cty.StringVal("John"),
 				Type:        cty.String,
-			},
+			}},
 		},
 		// Optional: We can also define the schema for the config
 		ContentFunc: renderGreetingMessage,
@@ -33,17 +32,12 @@ func makeGreetingContentProvider() *plugin.ContentProvider {
 }
 
 func renderGreetingMessage(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	name := params.Config.GetAttr("name")
-	if name.IsNull() || name.AsString() == "" {
-		return nil, diagnostics.Diag{{
-			Severity: hcl.DiagError,
-			Summary:  "Failed to parse arguments",
-			Detail:   "name is required",
-		}}
-	}
+	// We specified that the "name" attribute is RequiredMeaningful, so we can safely assume
+	// that it exists, non-null and non-empty, with whitespace trimmed
+	name := params.Args.GetAttr("name").AsString()
 	return &plugin.ContentResult{
 		Content: &plugin.ContentElement{
-			Markdown: fmt.Sprintf("Hello, %s!", name.AsString()),
+			Markdown: fmt.Sprintf("Hello, %s!", name),
 		},
 	}, nil
 }

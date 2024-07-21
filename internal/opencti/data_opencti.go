@@ -14,23 +14,27 @@ import (
 
 func makeOpenCTIDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "graphql_url",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Name:   "auth_token",
-				Type:   cty.String,
-				Secret: true,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "graphql_url",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
+				{
+					Name:   "auth_token",
+					Type:   cty.String,
+					Secret: true,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "graphql_query",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "graphql_query",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
 			},
 		},
 		DataFunc: fetchOpenCTIData,

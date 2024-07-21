@@ -11,6 +11,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func TestSqliteDataSchema(t *testing.T) {
@@ -27,17 +28,17 @@ func TestSqliteDataCall(t *testing.T) {
 	}
 	tt := []struct {
 		name     string
-		cfg      cty.Value
-		args     cty.Value
+		cfg      map[string]cty.Value
+		args     map[string]cty.Value
 		before   func(tb testing.TB, fs testFS) string
 		expected result
 		canceled bool
 	}{
 		{
 			name: "empty_database_uri",
-			cfg: cty.ObjectVal(map[string]cty.Value{
+			cfg: map[string]cty.Value{
 				"database_uri": cty.StringVal(""),
-			}),
+			},
 			expected: result{
 				diags: diagnostics.Diag{
 					{
@@ -50,9 +51,9 @@ func TestSqliteDataCall(t *testing.T) {
 		},
 		{
 			name: "nil_database_uri",
-			cfg: cty.ObjectVal(map[string]cty.Value{
+			cfg: map[string]cty.Value{
 				"database_uri": cty.NullVal(cty.String),
-			}),
+			},
 			expected: result{
 				diags: diagnostics.Diag{
 					{
@@ -65,10 +66,10 @@ func TestSqliteDataCall(t *testing.T) {
 		},
 		{
 			name: "empty_sql_query",
-			cfg: cty.ObjectVal(map[string]cty.Value{
+			cfg: map[string]cty.Value{
 				"database_uri": cty.StringVal("file:./file.db"),
-			}),
-			args: cty.ObjectVal(map[string]cty.Value{
+			},
+			args: (map[string]cty.Value{
 				"sql_query": cty.StringVal(""),
 			}),
 			expected: result{
@@ -83,10 +84,10 @@ func TestSqliteDataCall(t *testing.T) {
 		},
 		{
 			name: "nil_sql_query",
-			cfg: cty.ObjectVal(map[string]cty.Value{
+			cfg: (map[string]cty.Value{
 				"database_uri": cty.StringVal("file:./file.db"),
 			}),
-			args: cty.ObjectVal(map[string]cty.Value{
+			args: (map[string]cty.Value{
 				"sql_query": cty.NullVal(cty.String),
 			}),
 			expected: result{
@@ -101,7 +102,7 @@ func TestSqliteDataCall(t *testing.T) {
 		},
 		{
 			name: "empty_table",
-			args: cty.ObjectVal(map[string]cty.Value{
+			args: (map[string]cty.Value{
 				"sql_query": cty.StringVal("SELECT * FROM testdata"),
 				"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 			}),
@@ -120,7 +121,7 @@ func TestSqliteDataCall(t *testing.T) {
 		},
 		{
 			name: "non_empty_table",
-			args: cty.ObjectVal(map[string]cty.Value{
+			args: (map[string]cty.Value{
 				"sql_query": cty.StringVal("SELECT * FROM testdata"),
 				"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 			}),
@@ -165,7 +166,7 @@ func TestSqliteDataCall(t *testing.T) {
 		},
 		{
 			name: "with_sql_args",
-			args: cty.ObjectVal(map[string]cty.Value{
+			args: (map[string]cty.Value{
 				"sql_query": cty.StringVal("SELECT * FROM testdata WHERE text_val = $1 AND num_val = $2 AND bool_val = $3 AND null_val IS $4;"),
 				"sql_args": cty.TupleVal([]cty.Value{
 					cty.StringVal("text_2"),
@@ -210,7 +211,7 @@ func TestSqliteDataCall(t *testing.T) {
 		},
 		{
 			name: "missing_sql_args",
-			args: cty.ObjectVal(map[string]cty.Value{
+			args: (map[string]cty.Value{
 				"sql_query": cty.StringVal("SELECT * FROM testdata WHERE bool_val = $1;"),
 				"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 			}),
@@ -248,7 +249,7 @@ func TestSqliteDataCall(t *testing.T) {
 		},
 		{
 			name: "table_not_found",
-			args: cty.ObjectVal(map[string]cty.Value{
+			args: (map[string]cty.Value{
 				"sql_query": cty.StringVal("SELECT * FROM testdata"),
 				"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 			}),
@@ -273,10 +274,10 @@ func TestSqliteDataCall(t *testing.T) {
 		},
 		{
 			name: "canceled",
-			cfg: cty.ObjectVal(map[string]cty.Value{
+			cfg: (map[string]cty.Value{
 				"database_uri": cty.StringVal("file:./file.db"),
 			}),
-			args: cty.ObjectVal(map[string]cty.Value{
+			args: (map[string]cty.Value{
 				"sql_query": cty.StringVal("SELECT * FROM testdata"),
 				"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 			}),
@@ -317,13 +318,13 @@ func TestSqliteDataCall(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			p := Plugin("1.2.3")
 			params := plugin.RetrieveDataParams{
-				Config: tc.cfg,
-				Args:   tc.args,
+				Config: dataspec.NewBlock([]string{"config"}, tc.cfg),
+				Args:   dataspec.NewBlock([]string{"args"}, tc.args),
 			}
 			if tc.before != nil {
 				fs := makeTestFS(t)
 				dsn := tc.before(t, fs)
-				params.Config = cty.ObjectVal(map[string]cty.Value{
+				params.Config = dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 					"database_uri": cty.StringVal(dsn),
 				})
 			}

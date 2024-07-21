@@ -11,6 +11,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func Test_makeLocalFilePublisher(t *testing.T) {
@@ -35,7 +36,7 @@ func Test_publishLocalFileMD(t *testing.T) {
 	}
 	params := &plugin.PublishParams{
 		Format: plugin.OutputFormatMD,
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"local_file"}, map[string]cty.Value{
 			"path": cty.StringVal(filepath.Join(dir, "{{.document.meta.name}}.{{.format}}")),
 		}),
 		DataContext: plugin.MapData{
@@ -77,7 +78,7 @@ func Test_publishLocalFileHTML(t *testing.T) {
 	}
 	params := &plugin.PublishParams{
 		Format: plugin.OutputFormatHTML,
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"local_file"}, map[string]cty.Value{
 			"path": cty.StringVal(filepath.Join(dir, "{{.document.meta.name}}.{{.format}}")),
 		}),
 		DataContext: plugin.MapData{
@@ -115,7 +116,7 @@ func Test_publishLocalFile_invalidPath(t *testing.T) {
 	schema := makeLocalFilePublisher(nil, nil)
 	params := &plugin.PublishParams{
 		Format: plugin.OutputFormatMD,
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"local_file"}, map[string]cty.Value{
 			"path": cty.StringVal(""),
 		}),
 		DataContext: plugin.MapData{

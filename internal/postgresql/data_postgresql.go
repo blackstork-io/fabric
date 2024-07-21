@@ -19,23 +19,27 @@ import (
 
 func makePostgreSQLDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "database_url",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				Secret:      true,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "database_url",
+					Type:        cty.String,
+					Constraints: constraint.RequiredMeaningful,
+					Secret:      true,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "sql_query",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Name: "sql_args",
-				Type: cty.List(cty.DynamicPseudoType),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "sql_query",
+					Type:        cty.String,
+					Constraints: constraint.RequiredMeaningful,
+				},
+				{
+					Name: "sql_args",
+					Type: cty.List(cty.DynamicPseudoType),
+				},
 			},
 		},
 		DataFunc: fetchSqliteData,
@@ -50,7 +54,7 @@ func parseSqliteConfig(cfg cty.Value) (string, error) {
 	return dbURL.AsString(), nil
 }
 
-func parseSqliteArgs(args cty.Value) (string, []any, error) {
+func parseSqliteArgs(args *dataspec.Block) (string, []any, error) {
 	sqlQuery := args.GetAttr("sql_query")
 	if sqlQuery.IsNull() || sqlQuery.AsString() == "" {
 		return "", nil, fmt.Errorf("sql_query is required")
@@ -80,14 +84,7 @@ func parseSqliteArgs(args cty.Value) (string, []any, error) {
 }
 
 func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	dbURL, err := parseSqliteConfig(params.Config)
-	if err != nil {
-		return nil, diagnostics.Diag{{
-			Severity: hcl.DiagError,
-			Summary:  "Invalid configuration",
-			Detail:   err.Error(),
-		}}
-	}
+	dbURL := params.Config.GetAttr("database_url").AsString()
 	sqlQuery, sqlArgs, err := parseSqliteArgs(params.Args)
 	if err != nil {
 		return nil, diagnostics.Diag{{

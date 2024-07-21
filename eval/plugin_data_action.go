@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 type PluginDataAction struct {
@@ -40,13 +40,13 @@ func LoadDataAction(ctx context.Context, sources DataSources, node *definitions.
 			Detail:   fmt.Sprintf("'%s' not found in any plugin", node.PluginName),
 		}}
 	}
-	var cfg cty.Value
-	if ds.Config != nil && !ds.Config.IsEmpty() {
-		cfg, diags = node.Config.ParseConfig(ctx, ds.Config)
+	var cfgBlock *dataspec.Block
+	if ds.Config != nil && ds.Config != nil {
+		cfgBlock, diags = node.Config.ParseConfig(ctx, ds.Config)
 		if diags.HasErrors() {
 			return nil, diags
 		}
-	} else if (ds.Config == nil || ds.Config.IsEmpty()) && node.Config.Exists() {
+	} else if ds.Config == nil && node.Config.Exists() {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
 			Summary:  "DataSource doesn't support configuration",
@@ -56,7 +56,6 @@ func LoadDataAction(ctx context.Context, sources DataSources, node *definitions.
 			Context: node.Invocation.Range().Ptr(),
 		})
 	}
-	var args cty.Value
 	args, diag := node.Invocation.ParseInvocation(ctx, ds.Args)
 	if diags.Extend(diag) {
 		return nil, diags
@@ -66,7 +65,7 @@ func LoadDataAction(ctx context.Context, sources DataSources, node *definitions.
 			PluginName: node.PluginName,
 			BlockName:  node.BlockName,
 			Meta:       node.Meta,
-			Config:     cfg,
+			Config:     cfgBlock,
 			Args:       args,
 		},
 		Source: ds,

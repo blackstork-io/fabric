@@ -59,11 +59,11 @@ func (srv *grpcServer) RetrieveData(ctx context.Context, req *RetrieveDataReques
 		}
 	}()
 	source := req.GetSource()
-	cfg, err := decodeCtyValue(req.GetConfig())
+	cfg, err := decodeBlock(req.GetConfig())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to decode config: %v", err)
 	}
-	args, err := decodeCtyValue(req.GetArgs())
+	args, err := decodeBlock(req.GetArgs())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to decode args: %v", err)
 	}
@@ -88,11 +88,11 @@ func (srv *grpcServer) ProvideContent(ctx context.Context, req *ProvideContentRe
 		}
 	}()
 	provider := req.GetProvider()
-	cfg, err := decodeCtyValue(req.GetConfig())
+	cfg, err := decodeBlock(req.GetConfig())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to decode config: %v", err)
 	}
-	args, err := decodeCtyValue(req.GetArgs())
+	args, err := decodeBlock(req.GetArgs())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to decode args: %v", err)
 	}
@@ -120,11 +120,11 @@ func (srv *grpcServer) Publish(ctx context.Context, req *PublishRequest) (*Publi
 		}
 	}()
 	publisher := req.GetPublisher()
-	cfg, err := decodeCtyValue(req.GetConfig())
+	cfg, err := decodeBlock(req.GetConfig())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to decode config: %v", err)
 	}
-	args, err := decodeCtyValue(req.GetArgs())
+	args, err := decodeBlock(req.GetArgs())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to decode args: %v", err)
 	}

@@ -5,7 +5,6 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
-	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -13,7 +12,7 @@ import (
 
 // To act as a plugin configuration struct must implement this interface.
 type Configuration interface {
-	ParseConfig(ctx context.Context, spec dataspec.RootSpec) (cty.Value, diagnostics.Diag)
+	ParseConfig(ctx context.Context, spec *dataspec.RootSpec) (*dataspec.Block, diagnostics.Diag)
 	Range() hcl.Range
 	Exists() bool
 }
@@ -23,7 +22,7 @@ type Configuration interface {
 type Invocation interface {
 	GetBody() *hclsyntax.Body
 	SetBody(body *hclsyntax.Body)
-	ParseInvocation(ctx context.Context, spec dataspec.RootSpec) (cty.Value, diagnostics.Diag)
+	ParseInvocation(ctx context.Context, spec *dataspec.RootSpec) (*dataspec.Block, diagnostics.Diag)
 	Range() hcl.Range
 	DefRange() hcl.Range
 	MissingItemRange() hcl.Range

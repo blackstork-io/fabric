@@ -19,18 +19,20 @@ import (
 func makeJSONDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchJSONData,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:       "glob",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("path/to/file*.json"),
-				Doc:        `A glob pattern to select JSON files to read`,
-			},
-			&dataspec.AttrSpec{
-				Name:       "path",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("path/to/file.json"),
-				Doc:        `A file path to a JSON file to read`,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:       "glob",
+					Type:       cty.String,
+					ExampleVal: cty.StringVal("path/to/file*.json"),
+					Doc:        `A glob pattern to select JSON files to read`,
+				},
+				{
+					Name:       "path",
+					Type:       cty.String,
+					ExampleVal: cty.StringVal("path/to/file.json"),
+					Doc:        `A file path to a JSON file to read`,
+				},
 			},
 		},
 		Doc: `

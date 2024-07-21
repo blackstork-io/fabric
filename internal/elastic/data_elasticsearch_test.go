@@ -19,6 +19,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 const (
@@ -31,7 +32,7 @@ type IntegrationTestSuite struct {
 	container *elasticsearch.ElasticsearchContainer
 	client    *es.Client
 	schema    *plugin.DataSource
-	cfg       cty.Value
+	cfg       *dataspec.Block
 	ctx       context.Context
 }
 
@@ -63,14 +64,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	})
 	s.Require().NoError(err, "failed to create elasticsearch client")
 	s.client = client
-	s.cfg = cty.ObjectVal(map[string]cty.Value{
+
+	s.cfg = dataspec.NewBlock([]string{"cfg"}, map[string]cty.Value{
 		"base_url":            cty.StringVal(s.container.Settings.Address),
-		"cloud_id":            cty.NullVal(cty.String),
-		"api_key_str":         cty.NullVal(cty.String),
-		"api_key":             cty.NullVal(cty.List(cty.String)),
 		"basic_auth_username": cty.StringVal("elastic"),
 		"basic_auth_password": cty.StringVal("password123"),
-		"bearer_auth":         cty.NullVal(cty.String),
 		"ca_certs":            cty.StringVal(string(s.container.Settings.CACert)),
 	})
 	s.schema = makeElasticSearchDataSource()
@@ -119,15 +117,8 @@ func (s *IntegrationTestSuite) TearDownTest() {
 }
 
 func (s *IntegrationTestSuite) TestSearchDefaults() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.NullVal(cty.String),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.NullVal(cty.Bool),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
-		"size":         cty.NullVal(cty.Number),
+	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
+		"index": cty.StringVal(testIndex),
 	})
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
@@ -178,15 +169,10 @@ func (s *IntegrationTestSuite) TestSearchDefaults() {
 }
 
 func (s *IntegrationTestSuite) TestSearchFields() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.NullVal(cty.String),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")}),
-		"size":         cty.NullVal(cty.Number),
+	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
+		"index":     cty.StringVal(testIndex),
+		"only_hits": cty.BoolVal(false),
+		"fields":    cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")}),
 	})
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
@@ -235,15 +221,10 @@ func (s *IntegrationTestSuite) TestSearchFields() {
 }
 
 func (s *IntegrationTestSuite) TestSearchQueryString() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.NullVal(cty.String),
+	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
 		"query_string": cty.StringVal("type:foo"),
 		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
-		"size":         cty.NullVal(cty.Number),
 	})
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
@@ -289,17 +270,12 @@ func (s *IntegrationTestSuite) TestSearchQueryString() {
 }
 
 func (s *IntegrationTestSuite) TestSearchQuery() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":    cty.NullVal(cty.String),
+	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 		"index": cty.StringVal(testIndex),
 		"query": cty.MapVal(map[string]cty.Value{
 			"match_all": cty.MapValEmpty(cty.DynamicPseudoType),
 		}),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
-		"size":         cty.NullVal(cty.Number),
+		"only_hits": cty.BoolVal(false),
 	})
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
@@ -357,15 +333,10 @@ func (s *IntegrationTestSuite) TestSearchQuery() {
 }
 
 func (s *IntegrationTestSuite) TestSearchSize() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.NullVal(cty.String),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
-		"size":         cty.NumberIntVal(1),
+	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
+		"index":     cty.StringVal(testIndex),
+		"only_hits": cty.BoolVal(false),
+		"size":      cty.NumberIntVal(1),
 	})
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
@@ -399,14 +370,10 @@ func (s *IntegrationTestSuite) TestSearchSize() {
 }
 
 func (s *IntegrationTestSuite) TestGetByID() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6"),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
+	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
+		"id":        cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6"),
+		"index":     cty.StringVal(testIndex),
+		"only_hits": cty.BoolVal(false),
 	})
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
@@ -434,14 +401,11 @@ func (s *IntegrationTestSuite) TestGetByID() {
 }
 
 func (s *IntegrationTestSuite) TestGetByIDFields() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6"),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")}),
+	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
+		"id":        cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6"),
+		"index":     cty.StringVal(testIndex),
+		"only_hits": cty.BoolVal(false),
+		"fields":    cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")}),
 	})
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
@@ -466,14 +430,10 @@ func (s *IntegrationTestSuite) TestGetByIDFields() {
 }
 
 func (s *IntegrationTestSuite) TestGetByIDNotFound() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.StringVal("00000000-0000-0000-0000-000000000000"),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
+	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
+		"id":        cty.StringVal("00000000-0000-0000-0000-000000000000"),
+		"index":     cty.StringVal(testIndex),
+		"only_hits": cty.BoolVal(false),
 	})
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
@@ -488,15 +448,10 @@ func (s *IntegrationTestSuite) TestGetByIDNotFound() {
 }
 
 func (s *IntegrationTestSuite) TestScrollSearch() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.NullVal(cty.String),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
-		"size":         cty.NumberIntVal(10000 + 1), // to force scroll search
+	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
+		"index":     cty.StringVal(testIndex),
+		"only_hits": cty.BoolVal(false),
+		"size":      cty.NumberIntVal(10000 + 1), // to force scroll search
 	})
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
@@ -511,15 +466,10 @@ func (s *IntegrationTestSuite) TestScrollSearch() {
 }
 
 func (s *IntegrationTestSuite) TestScrollSearchSteps() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.NullVal(cty.String),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
-		"size":         cty.NumberIntVal(5), // does not matter
+	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
+		"index":     cty.StringVal(testIndex),
+		"only_hits": cty.BoolVal(false),
+		"size":      cty.NumberIntVal(5), // does not matter
 	})
 	// There are only 3 results, so with the size 5 and step size 1,
 	// we should hit 4 requests:

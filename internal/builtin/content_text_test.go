@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
@@ -99,9 +100,14 @@ func (s *TextTestSuite) TestCallInvalidTemplate() {
 func (s *TextTestSuite) TestSprigTemplate() {
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value": cty.StringVal("Hello {{.name | upper}}!"),
-		}),
+		Args: &dataspec.Block{
+			Attrs: dataspec.Attributes{
+				"value": &dataspec.Attr{
+					Name:  "value",
+					Value: cty.StringVal("Hello {{.name | upper}}!"),
+				},
+			},
+		},
 		DataContext: plugin.MapData{
 			"name": plugin.StringData("World"),
 		},

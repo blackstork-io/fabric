@@ -4,7 +4,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
@@ -17,10 +16,9 @@ import (
 
 // Configuration block.
 type Config struct {
-	*hcl.Block
-	blockRange hcl.Range
-	once       sync.Once
-	value      cty.Value
+	*hclsyntax.Block
+	once  sync.Once
+	value *dataspec.Block
 }
 
 // Exists implements evaluation.Configuration.
@@ -31,25 +29,20 @@ func (c *Config) Exists() bool {
 var _ evaluation.Configuration = (*Config)(nil)
 
 // ParseConfig implements Configuration.
-func (c *Config) ParseConfig(ctx context.Context, spec dataspec.RootSpec) (val cty.Value, diags diagnostics.Diag) {
+func (c *Config) ParseConfig(ctx context.Context, spec *dataspec.RootSpec) (val *dataspec.Block, diags diagnostics.Diag) {
 	c.once.Do(func() {
 		var diag diagnostics.Diag
-		c.value, diag = dataspec.Decode(c.Body, spec, fabctx.GetEvalContext(ctx))
+		c.value, diag = dataspec.Decode(c.Block, spec, fabctx.GetEvalContext(ctx))
 		if diags.Extend(diag) {
 			// don't let partially-decoded values live
-			c.value = cty.NilVal
+			c.value = nil
 		}
 	})
 	val = c.value
-	if val.IsNull() && diags == nil {
+	if val == nil && diags == nil {
 		diags.Append(diagnostics.RepeatedError)
 	}
 	return
-}
-
-// Range implements Configuration.
-func (c *Config) Range() hcl.Range {
-	return c.blockRange
 }
 
 func (c *Config) GetKey() *Key {
@@ -89,7 +82,7 @@ func (c *Config) ApplicableTo(plugin *Plugin) bool {
 
 var _ FabricBlock = (*Config)(nil)
 
-func (c *Config) GetHCLBlock() *hcl.Block {
+func (c *Config) GetHCLBlock() *hclsyntax.Block {
 	return c.Block
 }
 
@@ -109,8 +102,7 @@ func DefineConfig(block *hclsyntax.Block) (config *Config, diags diagnostics.Dia
 		return
 	}
 	config = &Config{
-		Block:      block.AsHCLBlock(),
-		blockRange: block.Range(),
+		Block: block,
 	}
 	return
 }

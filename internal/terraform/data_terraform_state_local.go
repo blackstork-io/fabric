@@ -16,11 +16,13 @@ import (
 func makeTerraformStateLocalDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		Config: nil,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "path",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "path",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
 			},
 		},
 		DataFunc: fetchTerraformStateLocalData,

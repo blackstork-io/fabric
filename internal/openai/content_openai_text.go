@@ -21,34 +21,38 @@ import (
 
 func makeOpenAITextContentSchema(loader ClientLoadFn) *plugin.ContentProvider {
 	return &plugin.ContentProvider{
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name: "system_prompt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name:        "api_key",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				Secret:      true,
-			},
-			&dataspec.AttrSpec{
-				Name: "organization_id",
-				Type: cty.String,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name: "system_prompt",
+					Type: cty.String,
+				},
+				{
+					Name:        "api_key",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+					Secret:      true,
+				},
+				{
+					Name: "organization_id",
+					Type: cty.String,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "prompt",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				ExampleVal:  cty.StringVal("Summarize the following text: {{.vars.text_to_summarize}}"),
-			},
-			&dataspec.AttrSpec{
-				Name:        "model",
-				Type:        cty.String,
-				Constraints: constraint.Meaningful,
-				DefaultVal:  cty.StringVal(defaultModel),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "prompt",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+					ExampleVal:  cty.StringVal("Summarize the following text: {{.vars.text_to_summarize}}"),
+				},
+				{
+					Name:        "model",
+					Type:        cty.String,
+					Constraints: constraint.Meaningful,
+					DefaultVal:  cty.StringVal(defaultModel),
+				},
 			},
 		},
 		ContentFunc: genOpenAIText(loader),
@@ -81,7 +85,7 @@ func genOpenAIText(loader ClientLoadFn) plugin.ProvideContentFunc {
 	}
 }
 
-func renderText(ctx context.Context, cli client.Client, cfg, args cty.Value, dataCtx plugin.MapData) (string, error) {
+func renderText(ctx context.Context, cli client.Client, cfg, args *dataspec.Block, dataCtx plugin.MapData) (string, error) {
 	params := client.ChatCompletionParams{
 		Model: args.GetAttr("model").AsString(),
 	}

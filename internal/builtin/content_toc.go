@@ -17,46 +17,48 @@ import (
 
 func makeTOCContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:         "start_level",
-				Type:         cty.Number,
-				DefaultVal:   cty.NumberIntVal(0),
-				Doc:          `Largest header size which produces entries in the table of contents`,
-				MinInclusive: cty.NumberIntVal(0),
-				MaxInclusive: cty.NumberIntVal(5),
-				Constraints:  constraint.Integer,
-			},
-			&dataspec.AttrSpec{
-				Name:         "end_level",
-				Type:         cty.Number,
-				DefaultVal:   cty.NumberIntVal(2),
-				Doc:          `Smallest header size which produces entries in the table of contents`,
-				MinInclusive: cty.NumberIntVal(0),
-				MaxInclusive: cty.NumberIntVal(5),
-				Constraints:  constraint.Integer,
-			},
-			&dataspec.AttrSpec{
-				Name:       "ordered",
-				Type:       cty.Bool,
-				DefaultVal: cty.False,
-				Doc:        `Whether to use ordered list for the contents`,
-			},
-			&dataspec.AttrSpec{
-				Name: "scope",
-				Type: cty.String,
-				Doc: `
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:         "start_level",
+					Type:         cty.Number,
+					DefaultVal:   cty.NumberIntVal(0),
+					Doc:          `Largest header size which produces entries in the table of contents`,
+					MinInclusive: cty.NumberIntVal(0),
+					MaxInclusive: cty.NumberIntVal(5),
+					Constraints:  constraint.Integer,
+				},
+				{
+					Name:         "end_level",
+					Type:         cty.Number,
+					DefaultVal:   cty.NumberIntVal(2),
+					Doc:          `Smallest header size which produces entries in the table of contents`,
+					MinInclusive: cty.NumberIntVal(0),
+					MaxInclusive: cty.NumberIntVal(5),
+					Constraints:  constraint.Integer,
+				},
+				{
+					Name:       "ordered",
+					Type:       cty.Bool,
+					DefaultVal: cty.False,
+					Doc:        `Whether to use ordered list for the contents`,
+				},
+				{
+					Name: "scope",
+					Type: cty.String,
+					Doc: `
 				Scope of the headers to evaluate.
 				  "document" – look for headers in the whole document
 				  "section" – look for headers only in the current section
 				  "auto" – behaves as "section" if the "toc" block is inside of a section; else – behaves as "document"
 				`,
-				OneOf: []cty.Value{
-					cty.StringVal("document"),
-					cty.StringVal("section"),
-					cty.StringVal("auto"),
+					OneOf: []cty.Value{
+						cty.StringVal("document"),
+						cty.StringVal("section"),
+						cty.StringVal("auto"),
+					},
+					DefaultVal: cty.StringVal("auto"),
 				},
-				DefaultVal: cty.StringVal("auto"),
 			},
 		},
 		InvocationOrder: plugin.InvocationOrderEnd,
@@ -77,20 +79,16 @@ type tocArgs struct {
 	scope      string
 }
 
-func parseTOCArgs(args cty.Value) (*tocArgs, error) {
-	if args.IsNull() {
-		return nil, fmt.Errorf("arguments are null")
-	}
+func parseTOCArgs(args *dataspec.Block) (*tocArgs, error) {
 	startLevel, _ := args.GetAttr("start_level").AsBigFloat().Int64()
 	endLevel, _ := args.GetAttr("end_level").AsBigFloat().Int64()
-	ordered := args.GetAttr("ordered")
-
+	ordered := args.GetAttr("ordered").True()
 	scope := args.GetAttr("scope").AsString()
 
 	return &tocArgs{
 		startLevel: int(startLevel),
 		endLevel:   int(endLevel),
-		ordered:    ordered.True(),
+		ordered:    ordered,
 		scope:      scope,
 	}, nil
 }

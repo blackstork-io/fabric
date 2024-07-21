@@ -38,13 +38,15 @@ func makeLocalFilePublisher(logger *slog.Logger, tracer trace.Tracer) *plugin.Pu
 	return &plugin.Publisher{
 		Doc:  "Publishes content to local file",
 		Tags: []string{},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "path",
-				Doc:         "Path to the file",
-				Type:        cty.String,
-				ExampleVal:  cty.StringVal("dist/output.md"),
-				Constraints: constraint.Required,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "path",
+					Doc:         "Path to the file",
+					Type:        cty.String,
+					ExampleVal:  cty.StringVal("dist/output.md"),
+					Constraints: constraint.Required,
+				},
 			},
 		},
 		AllowedFormats: []plugin.OutputFormat{plugin.OutputFormatMD, plugin.OutputFormatHTML, plugin.OutputFormatPDF},

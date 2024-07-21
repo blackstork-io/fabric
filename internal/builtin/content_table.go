@@ -22,35 +22,37 @@ type tableCellTmpl = *template.Template
 func makeTableContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genTableContent,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name: "rows",
-				Type: dataquery.DelayedEvalType.CtyType(),
-				Doc: "A list of objects representing rows in the table.\n" +
-					"May be set statically or as a result of one or more queries.",
-			},
-			&dataspec.AttrSpec{
-				Name: "columns",
-				Type: cty.List(cty.Object(map[string]cty.Type{
-					"header": cty.String,
-					"value":  cty.String,
-				})),
-				Doc: `List of header and value go templates for each column`,
-				ExampleVal: cty.ListVal([]cty.Value{
-					cty.ObjectVal(map[string]cty.Value{
-						"header": cty.StringVal("1st column header template"),
-						"value":  cty.StringVal("1st column values template"),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name: "rows",
+					Type: dataquery.DelayedEvalType.CtyType(),
+					Doc: "A list of objects representing rows in the table.\n" +
+						"May be set statically or as a result of one or more queries.",
+				},
+				{
+					Name: "columns",
+					Type: cty.List(cty.Object(map[string]cty.Type{
+						"header": cty.String,
+						"value":  cty.String,
+					})),
+					Doc: `List of header and value go templates for each column`,
+					ExampleVal: cty.ListVal([]cty.Value{
+						cty.ObjectVal(map[string]cty.Value{
+							"header": cty.StringVal("1st column header template"),
+							"value":  cty.StringVal("1st column values template"),
+						}),
+						cty.ObjectVal(map[string]cty.Value{
+							"header": cty.StringVal("2nd column header template"),
+							"value":  cty.StringVal("2nd column values template"),
+						}),
+						cty.ObjectVal(map[string]cty.Value{
+							"header": cty.StringVal("..."),
+							"value":  cty.StringVal("..."),
+						}),
 					}),
-					cty.ObjectVal(map[string]cty.Value{
-						"header": cty.StringVal("2nd column header template"),
-						"value":  cty.StringVal("2nd column values template"),
-					}),
-					cty.ObjectVal(map[string]cty.Value{
-						"header": cty.StringVal("..."),
-						"value":  cty.StringVal("..."),
-					}),
-				}),
-				Constraints: constraint.RequiredMeaningful,
+					Constraints: constraint.RequiredMeaningful,
+				},
 			},
 		},
 		Doc: `

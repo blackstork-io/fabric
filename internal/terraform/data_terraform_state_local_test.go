@@ -10,6 +10,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func Test_terraformStateLocalDataSchema(t *testing.T) {
@@ -81,7 +82,7 @@ func Test_fetchTerraformStateLocalData_Call(t *testing.T) {
 			p := Plugin("1.2.3")
 			var got result
 			got.data, got.diags = p.RetrieveData(context.Background(), "terraform_state_local", &plugin.RetrieveDataParams{
-				Args: cty.ObjectVal(map[string]cty.Value{
+				Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 					"path": cty.StringVal(tc.path),
 				}),
 			})

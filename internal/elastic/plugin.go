@@ -11,11 +11,11 @@ import (
 
 	es "github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
-	"github.com/zclconf/go-cty/cty"
 	ctyjson "github.com/zclconf/go-cty/cty/json"
 
 	"github.com/blackstork-io/fabric/internal/elastic/kbclient"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 const (
@@ -41,11 +41,11 @@ func Plugin(version string, loader KibanaClientLoaderFn) *plugin.Schema {
 	}
 }
 
-func makeSearchClient(pcfg cty.Value) (*es.Client, error) {
+func makeSearchClient(pcfg *dataspec.Block) (*es.Client, error) {
 	cfg := &es.Config{
 		Username: defaultUsername,
 	}
-	if pcfg.IsNull() {
+	if pcfg == nil {
 		return nil, fmt.Errorf("configuration is required")
 	}
 	if baseURL := pcfg.GetAttr("base_url"); !baseURL.IsNull() && baseURL.AsString() != "" {
@@ -84,11 +84,8 @@ func makeSearchClient(pcfg cty.Value) (*es.Client, error) {
 	return es.NewClient(*cfg)
 }
 
-func getByID(fn esapi.Get, args cty.Value) (plugin.Data, error) {
+func getByID(fn esapi.Get, args *dataspec.Block) (plugin.Data, error) {
 	index := args.GetAttr("index")
-	if index.IsNull() {
-		return nil, fmt.Errorf("index is required")
-	}
 	id := args.GetAttr("id")
 	if id.IsNull() {
 		return nil, fmt.Errorf("id is required when id is specified")
@@ -123,11 +120,8 @@ func getByID(fn esapi.Get, args cty.Value) (plugin.Data, error) {
 	return data, nil
 }
 
-func unpackSearchOptions(fn esapi.Search, args cty.Value) ([]func(*esapi.SearchRequest), error) {
+func unpackSearchOptions(fn esapi.Search, args *dataspec.Block) ([]func(*esapi.SearchRequest), error) {
 	index := args.GetAttr("index")
-	if index.IsNull() {
-		return nil, fmt.Errorf("index is required")
-	}
 	opts := []func(*esapi.SearchRequest){
 		fn.WithIndex(index.AsString()),
 	}
@@ -186,11 +180,11 @@ func unpackResponse(response *esapi.Response) (plugin.MapData, error) {
 	return mapData, nil
 }
 
-func searchWithScroll(client *es.Client, args cty.Value, size int) (plugin.Data, error) {
+func searchWithScroll(client *es.Client, args *dataspec.Block, size int) (plugin.Data, error) {
 	return searchWithScrollConfigurable(client, args, size, defaultScrollStepSize)
 }
 
-func searchWithScrollConfigurable(client *es.Client, args cty.Value, size int, stepSize int) (plugin.Data, error) {
+func searchWithScrollConfigurable(client *es.Client, args *dataspec.Block, size int, stepSize int) (plugin.Data, error) {
 	// First scroll request to obtain `_scroll_id`
 	scrollTTL := time.Minute * 2 // 2mins
 	// just in case the size is smaller than the step size
@@ -307,7 +301,7 @@ func searchWithScrollConfigurable(client *es.Client, args cty.Value, size int, s
 	return firstData, nil
 }
 
-func search(fn esapi.Search, args cty.Value, size int) (plugin.Data, error) {
+func search(fn esapi.Search, args *dataspec.Block, size int) (plugin.Data, error) {
 	opts, err := unpackSearchOptions(fn, args)
 	if err != nil {
 		return nil, err

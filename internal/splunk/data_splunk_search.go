@@ -19,47 +19,51 @@ import (
 
 func makeSplunkSearchDataSchema(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "auth_token",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				Secret:      true,
-			},
-			&dataspec.AttrSpec{
-				Name: "host",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "deployment_name",
-				Type: cty.String,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "auth_token",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+					Secret:      true,
+				},
+				{
+					Name: "host",
+					Type: cty.String,
+				},
+				{
+					Name: "deployment_name",
+					Type: cty.String,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "search_query",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Name: "max_count",
-				Type: cty.Number,
-			},
-			&dataspec.AttrSpec{
-				Name: "status_buckets",
-				Type: cty.Number,
-			},
-			&dataspec.AttrSpec{
-				Name: "rf",
-				Type: cty.List(cty.String),
-			},
-			&dataspec.AttrSpec{
-				Name: "earliest_time",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "latest_time",
-				Type: cty.String,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "search_query",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
+				{
+					Name: "max_count",
+					Type: cty.Number,
+				},
+				{
+					Name: "status_buckets",
+					Type: cty.Number,
+				},
+				{
+					Name: "rf",
+					Type: cty.List(cty.String),
+				},
+				{
+					Name: "earliest_time",
+					Type: cty.String,
+				},
+				{
+					Name: "latest_time",
+					Type: cty.String,
+				},
 			},
 		},
 		DataFunc: fetchSplunkSearchData(loader),
@@ -89,7 +93,7 @@ func fetchSplunkSearchData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 	}
 }
 
-func search(cli client.Client, ctx context.Context, args cty.Value) (plugin.Data, error) {
+func search(cli client.Client, ctx context.Context, args *dataspec.Block) (plugin.Data, error) {
 	id, err := randID()
 	if err != nil {
 		return nil, err

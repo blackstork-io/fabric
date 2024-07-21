@@ -21,29 +21,31 @@ import (
 func makeFrontMatterContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genFrontMatterContent,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:       "format",
-				Type:       cty.String,
-				Doc:        `Format of the frontmatter.`,
-				DefaultVal: cty.StringVal("yaml"),
-				OneOf: []cty.Value{
-					cty.StringVal("yaml"),
-					cty.StringVal("toml"),
-					cty.StringVal("json"),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:       "format",
+					Type:       cty.String,
+					Doc:        `Format of the frontmatter.`,
+					DefaultVal: cty.StringVal("yaml"),
+					OneOf: []cty.Value{
+						cty.StringVal("yaml"),
+						cty.StringVal("toml"),
+						cty.StringVal("json"),
+					},
 				},
-			},
-			&dataspec.AttrSpec{
-				Name:        "content",
-				Type:        dataquery.DelayedEvalType.CtyType(),
-				Doc:         `Arbitrary key-value map to be put in the frontmatter.`,
-				Constraints: constraint.RequiredMeaningful,
-				ExampleVal: cty.ObjectVal(map[string]cty.Value{
-					"key": cty.StringVal("arbitrary value"),
-					"key2": cty.MapVal(map[string]cty.Value{
-						"can be nested": cty.NumberIntVal(42),
+				{
+					Name:        "content",
+					Type:        dataquery.DelayedEvalType.CtyType(),
+					Doc:         `Arbitrary key-value map to be put in the frontmatter.`,
+					Constraints: constraint.RequiredMeaningful,
+					ExampleVal: cty.ObjectVal(map[string]cty.Value{
+						"key": cty.StringVal("arbitrary value"),
+						"key2": cty.MapVal(map[string]cty.Value{
+							"can be nested": cty.NumberIntVal(42),
+						}),
 					}),
-				}),
+				},
 			},
 		},
 		Doc: `Produces the frontmatter.`,

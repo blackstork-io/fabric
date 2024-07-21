@@ -86,11 +86,11 @@ func (d *Diag) AddWarn(summary, detail string) {
 }
 
 // Set the subject for diagnostics if it's not already specified.
-func (d *Diag) DefaultSubject(rng *hcl.Range) {
+func (d Diag) DefaultSubject(rng *hcl.Range) {
 	if rng == nil {
 		return
 	}
-	for _, diag := range *d {
+	for _, diag := range d {
 		if diag.Subject == nil {
 			diag.Subject = rng
 		}

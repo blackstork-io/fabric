@@ -17,203 +17,207 @@ import (
 
 func makeHackerOneReportsDataSchema(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "api_username",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Name:        "api_token",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				Secret:      true,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "api_username",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
+				{
+					Name:        "api_token",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+					Secret:      true,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name: "size",
-				Type: cty.Number,
-			},
-			&dataspec.AttrSpec{
-				Name: "page_number",
-				Type: cty.Number,
-			},
-			&dataspec.AttrSpec{
-				Name: "sort",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "program",
-				Type: cty.List(cty.String),
-			},
-			&dataspec.AttrSpec{
-				Name: "inbox_ids",
-				Type: cty.List(cty.Number),
-			},
-			&dataspec.AttrSpec{
-				Name: "reporter",
-				Type: cty.List(cty.String),
-			},
-			&dataspec.AttrSpec{
-				Name: "assignee",
-				Type: cty.List(cty.String),
-			},
-			&dataspec.AttrSpec{
-				Name: "state",
-				Type: cty.List(cty.String),
-			},
-			&dataspec.AttrSpec{
-				Name: "id",
-				Type: cty.List(cty.Number),
-			},
-			&dataspec.AttrSpec{
-				Name: "weakness_id",
-				Type: cty.List(cty.Number),
-			},
-			&dataspec.AttrSpec{
-				Name: "severity",
-				Type: cty.List(cty.String),
-			},
-			&dataspec.AttrSpec{
-				Name: "hacker_published",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "created_at__gt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "created_at__lt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "submitted_at__gt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "submitted_at__lt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "triaged_at__gt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "triaged_at__lt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "triaged_at__null",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "closed_at__gt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "closed_at__lt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "closed_at__null",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "disclosed_at__gt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "disclosed_at__lt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "disclosed_at__null",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "reporter_agreed_on_going_public",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "bounty_awarded_at__gt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "bounty_awarded_at__lt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "bounty_awarded_at__null",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "swag_awarded_at__gt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "swag_awarded_at__lt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "swag_awarded_at__null",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "last_report_activity_at__gt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "last_report_activity_at__lt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "first_program_activity_at__gt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "first_program_activity_at__lt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "first_program_activity_at__null",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "last_program_activity_at__gt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "last_program_activity_at__lt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "last_program_activity_at__null",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "last_activity_at__gt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "last_activity_at__lt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "last_public_activity_at__gt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "last_public_activity_at__lt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "keyword",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "custom_fields",
-				Type: cty.Map(cty.String),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name: "size",
+					Type: cty.Number,
+				},
+				{
+					Name: "page_number",
+					Type: cty.Number,
+				},
+				{
+					Name: "sort",
+					Type: cty.String,
+				},
+				{
+					Name: "program",
+					Type: cty.List(cty.String),
+				},
+				{
+					Name: "inbox_ids",
+					Type: cty.List(cty.Number),
+				},
+				{
+					Name: "reporter",
+					Type: cty.List(cty.String),
+				},
+				{
+					Name: "assignee",
+					Type: cty.List(cty.String),
+				},
+				{
+					Name: "state",
+					Type: cty.List(cty.String),
+				},
+				{
+					Name: "id",
+					Type: cty.List(cty.Number),
+				},
+				{
+					Name: "weakness_id",
+					Type: cty.List(cty.Number),
+				},
+				{
+					Name: "severity",
+					Type: cty.List(cty.String),
+				},
+				{
+					Name: "hacker_published",
+					Type: cty.Bool,
+				},
+				{
+					Name: "created_at__gt",
+					Type: cty.String,
+				},
+				{
+					Name: "created_at__lt",
+					Type: cty.String,
+				},
+				{
+					Name: "submitted_at__gt",
+					Type: cty.String,
+				},
+				{
+					Name: "submitted_at__lt",
+					Type: cty.String,
+				},
+				{
+					Name: "triaged_at__gt",
+					Type: cty.String,
+				},
+				{
+					Name: "triaged_at__lt",
+					Type: cty.String,
+				},
+				{
+					Name: "triaged_at__null",
+					Type: cty.Bool,
+				},
+				{
+					Name: "closed_at__gt",
+					Type: cty.String,
+				},
+				{
+					Name: "closed_at__lt",
+					Type: cty.String,
+				},
+				{
+					Name: "closed_at__null",
+					Type: cty.Bool,
+				},
+				{
+					Name: "disclosed_at__gt",
+					Type: cty.String,
+				},
+				{
+					Name: "disclosed_at__lt",
+					Type: cty.String,
+				},
+				{
+					Name: "disclosed_at__null",
+					Type: cty.Bool,
+				},
+				{
+					Name: "reporter_agreed_on_going_public",
+					Type: cty.Bool,
+				},
+				{
+					Name: "bounty_awarded_at__gt",
+					Type: cty.String,
+				},
+				{
+					Name: "bounty_awarded_at__lt",
+					Type: cty.String,
+				},
+				{
+					Name: "bounty_awarded_at__null",
+					Type: cty.Bool,
+				},
+				{
+					Name: "swag_awarded_at__gt",
+					Type: cty.String,
+				},
+				{
+					Name: "swag_awarded_at__lt",
+					Type: cty.String,
+				},
+				{
+					Name: "swag_awarded_at__null",
+					Type: cty.Bool,
+				},
+				{
+					Name: "last_report_activity_at__gt",
+					Type: cty.String,
+				},
+				{
+					Name: "last_report_activity_at__lt",
+					Type: cty.String,
+				},
+				{
+					Name: "first_program_activity_at__gt",
+					Type: cty.String,
+				},
+				{
+					Name: "first_program_activity_at__lt",
+					Type: cty.String,
+				},
+				{
+					Name: "first_program_activity_at__null",
+					Type: cty.Bool,
+				},
+				{
+					Name: "last_program_activity_at__gt",
+					Type: cty.String,
+				},
+				{
+					Name: "last_program_activity_at__lt",
+					Type: cty.String,
+				},
+				{
+					Name: "last_program_activity_at__null",
+					Type: cty.Bool,
+				},
+				{
+					Name: "last_activity_at__gt",
+					Type: cty.String,
+				},
+				{
+					Name: "last_activity_at__lt",
+					Type: cty.String,
+				},
+				{
+					Name: "last_public_activity_at__gt",
+					Type: cty.String,
+				},
+				{
+					Name: "last_public_activity_at__lt",
+					Type: cty.String,
+				},
+				{
+					Name: "keyword",
+					Type: cty.String,
+				},
+				{
+					Name: "custom_fields",
+					Type: cty.Map(cty.String),
+				},
 			},
 		},
 		DataFunc: fetchHackerOneReports(loader),
@@ -286,8 +290,8 @@ func fetchHackerOneReports(loader ClientLoadFn) plugin.RetrieveDataFunc {
 	}
 }
 
-func parseHackerOneReportsArgs(args cty.Value) (*client.GetAllReportsReq, error) {
-	if args.IsNull() {
+func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, error) {
+	if args == nil {
 		return nil, fmt.Errorf("args are required")
 	}
 	var req client.GetAllReportsReq

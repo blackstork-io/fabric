@@ -3,10 +3,9 @@ package hackerone
 import (
 	"fmt"
 
-	"github.com/zclconf/go-cty/cty"
-
 	"github.com/blackstork-io/fabric/internal/hackerone/client"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 const (
@@ -31,8 +30,8 @@ func Plugin(version string, loader ClientLoadFn) *plugin.Schema {
 	}
 }
 
-func makeClient(loader ClientLoadFn, cfg cty.Value) (client.Client, error) {
-	if cfg.IsNull() {
+func makeClient(loader ClientLoadFn, cfg *dataspec.Block) (client.Client, error) {
+	if cfg == nil {
 		return nil, fmt.Errorf("configuration is required")
 	}
 	user := cfg.GetAttr("api_username")

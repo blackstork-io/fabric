@@ -13,6 +13,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 type GraphQLDataSourceTestSuite struct {
@@ -62,11 +63,11 @@ func (s *GraphQLDataSourceTestSuite) TestBasic() {
 	}))
 	defer srv.Close()
 	data, diags := s.plugin.RetrieveData(s.ctx, "graphql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"url":        cty.StringVal(srv.URL),
 			"auth_token": cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"query": cty.StringVal("query{user{id,name}}"),
 		}),
 	})
@@ -101,11 +102,11 @@ func (s *GraphQLDataSourceTestSuite) TestWithAuth() {
 	}))
 	defer srv.Close()
 	data, diags := s.plugin.RetrieveData(s.ctx, "graphql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"url":        cty.StringVal(srv.URL),
 			"auth_token": cty.StringVal("token-1"),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"query": cty.StringVal("query{user{id,name}}"),
 		}),
 	})
@@ -126,11 +127,11 @@ func (s *GraphQLDataSourceTestSuite) TestFailRequest() {
 	}))
 	defer srv.Close()
 	data, diags := s.plugin.RetrieveData(s.ctx, "graphql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"url":        cty.StringVal(srv.URL),
 			"auth_token": cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"query": cty.StringVal("query{user{id,name}}"),
 		}),
 	})
@@ -141,11 +142,11 @@ func (s *GraphQLDataSourceTestSuite) TestFailRequest() {
 
 func (s *GraphQLDataSourceTestSuite) TestNullURL() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "graphql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"url":        cty.NullVal(cty.String),
 			"auth_token": cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"query": cty.StringVal("query{user{id,name}}"),
 		}),
 	})
@@ -156,11 +157,11 @@ func (s *GraphQLDataSourceTestSuite) TestNullURL() {
 
 func (s *GraphQLDataSourceTestSuite) TestEmptyURL() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "graphql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"url":        cty.StringVal(""),
 			"auth_token": cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"query": cty.StringVal("query{user{id,name}}"),
 		}),
 	})
@@ -171,11 +172,11 @@ func (s *GraphQLDataSourceTestSuite) TestEmptyURL() {
 
 func (s *GraphQLDataSourceTestSuite) TestEmptyQuery() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "graphql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"url":        cty.StringVal("http://localhost"),
 			"auth_token": cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"query": cty.StringVal(""),
 		}),
 	})
@@ -186,11 +187,11 @@ func (s *GraphQLDataSourceTestSuite) TestEmptyQuery() {
 
 func (s *GraphQLDataSourceTestSuite) TestNullQuery() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "graphql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"url":        cty.StringVal("http://localhost"),
 			"auth_token": cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"query": cty.NullVal(cty.String),
 		}),
 	})
@@ -203,11 +204,11 @@ func (s *GraphQLDataSourceTestSuite) TestCancellation() {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	data, diags := s.plugin.RetrieveData(ctx, "graphql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"url":        cty.StringVal("http://localhost"),
 			"auth_token": cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"query": cty.StringVal("query{user{id,name}}"),
 		}),
 	})

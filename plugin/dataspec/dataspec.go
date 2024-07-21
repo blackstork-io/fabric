@@ -5,28 +5,30 @@ import (
 	"bytes"
 	"strings"
 
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
-type rootSpecSigil struct{}
+type (
+	Blocks     []*Block
+	Attributes map[string]*Attr
+)
 
-func (rootSpecSigil) isRootSpec() rootSpecSigil {
-	return rootSpecSigil{}
+// Spec is the interface for all data specification types.
+type Spec interface {
+	WriteDoc(w *hclwrite.Body)
+	ValidateSpec() diagnostics.Diag
 }
 
-// RootSpec represents valid specs in root position (as .Args, .Config values).
-type RootSpec interface {
-	Spec
-	// Must be safe to call on nil receiver
-	IsEmpty() bool
-	isRootSpec() rootSpecSigil
-}
+var (
+	_ Spec = (*AttrSpec)(nil)
+	_ Spec = (*BlockSpec)(nil)
+	_ Spec = (*RootSpec)(nil)
+)
 
 // RenderDoc renders the block documentation for spec.
-func RenderDoc(spec RootSpec, blockName string, labels ...string) string {
+func RenderDoc(spec BlockSpec, blockName string, labels ...string) string {
 	// Special-casing the first line generation:
 	// config "data" "csv" { -> config data csv {
 
@@ -63,26 +65,3 @@ func RenderDoc(spec RootSpec, blockName string, labels ...string) string {
 
 	return sb.String()
 }
-
-// Spec is a documentable wrapper over `hcldec.Spec`s.
-type Spec interface {
-	HcldecSpec() hcldec.Spec
-	WriteDoc(w *hclwrite.Body)
-	getSpec() Spec
-	ValidateSpec() diagnostics.Diag
-}
-
-// Represents types that could be included as children in Object.
-type ObjectSpecChild interface {
-	Spec
-	KeyForObjectSpec() string
-}
-
-var (
-	_ Spec            = (*OpaqueSpec)(nil)
-	_ ObjectSpecChild = (*AttrSpec)(nil)
-	_ ObjectSpecChild = (*BlockSpec)(nil)
-	_ ObjectSpecChild = (*KeyForObjectSpec)(nil)
-	_ RootSpec        = (*ObjDumpSpec)(nil)
-	_ RootSpec        = ObjectSpec{}
-)

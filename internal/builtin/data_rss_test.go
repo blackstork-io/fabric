@@ -18,6 +18,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 func Test_makeRSSDataSchema(t *testing.T) {
@@ -245,23 +246,24 @@ func Test_fetchRSSData(t *testing.T) {
 				},
 			}
 
-			args := make(map[string]cty.Value)
-
-			args["url"] = cty.StringVal(addr + tc.url)
+			blk := dataspec.NewBlock(
+				[]string{"rss"},
+				map[string]cty.Value{
+					"url": cty.StringVal(addr + tc.url),
+				},
+			)
 
 			if tc.auth != nil {
-				args["basic_auth"] = cty.ObjectVal(map[string]cty.Value{
-					"username": cty.StringVal(tc.auth.Username),
-					"password": cty.StringVal(tc.auth.Password),
-				})
-			} else {
-				args["basic_auth"] = cty.NullVal(cty.Object(map[string]cty.Type{
-					"username": cty.String,
-					"password": cty.String,
-				}))
+				blk.Blocks = append(blk.Blocks, dataspec.NewBlock(
+					[]string{"basic_auth"},
+					map[string]cty.Value{
+						"username": cty.StringVal(tc.auth.Username),
+						"password": cty.StringVal(tc.auth.Password),
+					},
+				))
 			}
 
-			params := &plugin.RetrieveDataParams{Args: cty.ObjectVal(args)}
+			params := &plugin.RetrieveDataParams{Args: blk}
 
 			data, diags := p.RetrieveData(context.Background(), "rss", params)
 			assert.Equal(tc.expected, result{data, diags})

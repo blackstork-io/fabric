@@ -22,89 +22,93 @@ const (
 func makeNistNvdCvesDataSource(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchNistNvdCvesData(loader),
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:   "api_key",
-				Type:   cty.String,
-				Secret: true,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:   "api_key",
+					Type:   cty.String,
+					Secret: true,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name: "last_mod_start_date",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "last_mod_end_date",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "pub_start_date",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "pub_end_date",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "cpe_name",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "cve_id",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "cvss_v3_metrics",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "cvss_v3_severity",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "cwe_id",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "keyword_search",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "virtual_match_string",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "source_identifier",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "has_cert_alerts",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "has_kev",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "has_cert_notes",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "is_vulnerable",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "keyword_exact_match",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "no_rejected",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "limit",
-				Type: cty.Number,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name: "last_mod_start_date",
+					Type: cty.String,
+				},
+				{
+					Name: "last_mod_end_date",
+					Type: cty.String,
+				},
+				{
+					Name: "pub_start_date",
+					Type: cty.String,
+				},
+				{
+					Name: "pub_end_date",
+					Type: cty.String,
+				},
+				{
+					Name: "cpe_name",
+					Type: cty.String,
+				},
+				{
+					Name: "cve_id",
+					Type: cty.String,
+				},
+				{
+					Name: "cvss_v3_metrics",
+					Type: cty.String,
+				},
+				{
+					Name: "cvss_v3_severity",
+					Type: cty.String,
+				},
+				{
+					Name: "cwe_id",
+					Type: cty.String,
+				},
+				{
+					Name: "keyword_search",
+					Type: cty.String,
+				},
+				{
+					Name: "virtual_match_string",
+					Type: cty.String,
+				},
+				{
+					Name: "source_identifier",
+					Type: cty.String,
+				},
+				{
+					Name: "has_cert_alerts",
+					Type: cty.Bool,
+				},
+				{
+					Name: "has_kev",
+					Type: cty.Bool,
+				},
+				{
+					Name: "has_cert_notes",
+					Type: cty.Bool,
+				},
+				{
+					Name: "is_vulnerable",
+					Type: cty.Bool,
+				},
+				{
+					Name: "keyword_exact_match",
+					Type: cty.Bool,
+				},
+				{
+					Name: "no_rejected",
+					Type: cty.Bool,
+				},
+				{
+					Name: "limit",
+					Type: cty.Number,
+				},
 			},
 		},
 	}
@@ -166,8 +170,8 @@ func fetchNistNvdCvesData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 	}
 }
 
-func parseConfig(cfg cty.Value, loader ClientLoadFn) (client.Client, error) {
-	if cfg.IsNull() {
+func parseConfig(cfg *dataspec.Block, loader ClientLoadFn) (client.Client, error) {
+	if cfg == nil {
 		return nil, fmt.Errorf("configuration is required")
 	}
 	apiKey := cfg.GetAttr("api_key")
@@ -177,8 +181,8 @@ func parseConfig(cfg cty.Value, loader ClientLoadFn) (client.Client, error) {
 	return loader(client.String(apiKey.AsString())), nil
 }
 
-func parseListCVESRequest(args cty.Value) (*client.ListCVESReq, error) {
-	if args.IsNull() {
+func parseListCVESRequest(args *dataspec.Block) (*client.ListCVESReq, error) {
+	if args == nil {
 		return nil, fmt.Errorf("arguments are required")
 	}
 	req := &client.ListCVESReq{}

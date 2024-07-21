@@ -16,6 +16,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 // IntegrationTestSuite is a test suite to test integration with real postgres instance
@@ -73,42 +74,12 @@ func (s *IntegrationTestSuite) TestSchema() {
 	s.NotNil(source.DataFunc)
 }
 
-func (s *IntegrationTestSuite) TestEmptyDatabaseURL() {
-	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"database_url": cty.StringVal(""),
-		}),
-	})
-	s.Nil(data)
-
-	s.Equal(diags, diagnostics.Diag{{
-		Severity: hcl.DiagError,
-		Summary:  "Invalid configuration",
-		Detail:   "database_url is required",
-	}})
-}
-
-func (s *IntegrationTestSuite) TestNilDatabaseURL() {
-	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"database_url": cty.NullVal(cty.String),
-		}),
-	})
-	s.Nil(data)
-
-	s.Equal(diags, diagnostics.Diag{{
-		Severity: hcl.DiagError,
-		Summary:  "Invalid configuration",
-		Detail:   "database_url is required",
-	}})
-}
-
 func (s *IntegrationTestSuite) TestEmptySQLQuery() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.StringVal(""),
 			"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 		}),
@@ -124,10 +95,10 @@ func (s *IntegrationTestSuite) TestEmptySQLQuery() {
 
 func (s *IntegrationTestSuite) TestNilSQLQuery() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.NullVal(cty.String),
 			"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 		}),
@@ -143,10 +114,10 @@ func (s *IntegrationTestSuite) TestNilSQLQuery() {
 
 func (s *IntegrationTestSuite) TestEmptyTable() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.StringVal("SELECT * FROM testdata_empty"),
 			"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 		}),
@@ -157,10 +128,10 @@ func (s *IntegrationTestSuite) TestEmptyTable() {
 
 func (s *IntegrationTestSuite) TestSelect() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.StringVal("SELECT * FROM testdata"),
 			"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 		}),
@@ -186,10 +157,10 @@ func (s *IntegrationTestSuite) TestSelect() {
 
 func (s *IntegrationTestSuite) TestSelectSomeFields() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.StringVal("SELECT id, text_val AS text FROM testdata"),
 			"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 		}),
@@ -209,10 +180,10 @@ func (s *IntegrationTestSuite) TestSelectSomeFields() {
 
 func (s *IntegrationTestSuite) TestSelectWithArgs() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.StringVal("SELECT * FROM testdata WHERE text_val = $1 AND int_val = $2 AND bool_val = $3;"),
 			"sql_args": cty.TupleVal([]cty.Value{
 				cty.StringVal("text_2"),
@@ -235,10 +206,10 @@ func (s *IntegrationTestSuite) TestSelectWithArgs() {
 
 func (s *IntegrationTestSuite) TestSelectWithMissingArgs() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.StringVal("SELECT * FROM testdata WHERE bool_val = $1;"),
 			"sql_args":  cty.NilVal,
 		}),
@@ -255,10 +226,10 @@ func (s *IntegrationTestSuite) TestCancellation() {
 	ctx, cancel := context.WithCancel(s.ctx)
 	cancel()
 	data, diags := s.plugin.RetrieveData(ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.StringVal("SELECT * FROM testdata"),
 			"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 		}),

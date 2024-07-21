@@ -18,18 +18,20 @@ import (
 func makeTXTDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchTXTData,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:       "glob",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("path/to/file*.txt"),
-				Doc:        `A glob pattern to select TXT files to read`,
-			},
-			&dataspec.AttrSpec{
-				Name:       "path",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("path/to/file.txt"),
-				Doc:        `A file path to a TXT file to read`,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:       "glob",
+					Type:       cty.String,
+					ExampleVal: cty.StringVal("path/to/file*.txt"),
+					Doc:        `A glob pattern to select TXT files to read`,
+				},
+				{
+					Name:       "path",
+					Type:       cty.String,
+					ExampleVal: cty.StringVal("path/to/file.txt"),
+					Doc:        `A file path to a TXT file to read`,
+				},
 			},
 		},
 		Doc: `
@@ -98,7 +100,6 @@ func readTXTFiles(ctx context.Context, pattern string) (plugin.Data, error) {
 }
 
 func fetchTXTData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-
 	glob := params.Args.GetAttr("glob")
 	path := params.Args.GetAttr("path")
 

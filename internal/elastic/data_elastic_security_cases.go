@@ -23,83 +23,93 @@ const (
 func makeElasticSecurityCasesDataSource(loader KibanaClientLoaderFn) *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchElasticSecurityCases(loader),
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "kibana_endpoint_url",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Name:   "api_key_str",
-				Type:   cty.String,
-				Secret: true,
-			},
-			&dataspec.AttrSpec{
-				Name:   "api_key",
-				Type:   cty.List(cty.String),
-				Secret: true,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "kibana_endpoint_url",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
+				{
+					Name:        "api_key_str",
+					Type:        cty.String,
+					Constraints: constraint.NonNull,
+					Secret:      true,
+				},
+				{
+					Name: "api_key",
+					Type: cty.Tuple([]cty.Type{
+						cty.String,
+						cty.String,
+					}),
+					Constraints: constraint.NonNull,
+					Secret:      true,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name: "space_id",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "assignees",
-				Type: cty.List(cty.String),
-			},
-			&dataspec.AttrSpec{
-				Name: "default_search_operator",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "from",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "owner",
-				Type: cty.List(cty.String),
-			},
-			&dataspec.AttrSpec{
-				Name: "reporters",
-				Type: cty.List(cty.String),
-			},
-			&dataspec.AttrSpec{
-				Name: "search",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "search_fields",
-				Type: cty.List(cty.String),
-			},
-			&dataspec.AttrSpec{
-				Name: "severity",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "sort_field",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "sort_order",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "status",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "tags",
-				Type: cty.List(cty.String),
-			},
-			&dataspec.AttrSpec{
-				Name: "to",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "size",
-				Type: cty.Number,
+		Args: &dataspec.RootSpec{
+			Required: true,
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name: "space_id",
+					Type: cty.String,
+				},
+				{
+					Name: "assignees",
+					Type: cty.List(cty.String),
+				},
+				{
+					Name: "default_search_operator",
+					Type: cty.String,
+				},
+				{
+					Name: "from",
+					Type: cty.String,
+				},
+				{
+					Name: "owner",
+					Type: cty.List(cty.String),
+				},
+				{
+					Name: "reporters",
+					Type: cty.List(cty.String),
+				},
+				{
+					Name: "search",
+					Type: cty.String,
+				},
+				{
+					Name: "search_fields",
+					Type: cty.List(cty.String),
+				},
+				{
+					Name: "severity",
+					Type: cty.String,
+				},
+				{
+					Name: "sort_field",
+					Type: cty.String,
+				},
+				{
+					Name: "sort_order",
+					Type: cty.String,
+				},
+				{
+					Name: "status",
+					Type: cty.String,
+				},
+				{
+					Name: "tags",
+					Type: cty.List(cty.String),
+				},
+				{
+					Name: "to",
+					Type: cty.String,
+				},
+				{
+					Name: "size",
+					Type: cty.Number,
+				},
 			},
 		},
 	}
@@ -167,98 +177,75 @@ func fetchElasticSecurityCases(loader KibanaClientLoaderFn) plugin.RetrieveDataF
 	}
 }
 
-func parseSecurityCasesArgs(args cty.Value) (*kbclient.ListSecurityCasesReq, error) {
-	if args.IsNull() {
+func parseSecurityCasesArgs(args *dataspec.Block) (*kbclient.ListSecurityCasesReq, error) {
+	if args == nil || len(args.Attrs) == 0 {
 		return nil, fmt.Errorf("arguments are required")
 	}
 	req := &kbclient.ListSecurityCasesReq{}
-	if attr := args.GetAttr("space_id"); !attr.IsNull() {
-		req.SpaceID = kbclient.String(attr.AsString())
-	}
-	if attr := args.GetAttr("assignees"); !attr.IsNull() {
-		list := []string{}
-		for _, v := range attr.AsValueSlice() {
-			list = append(list, v.AsString())
+	for name, val := range args.Attrs {
+		if val.Value.IsNull() {
+			continue
 		}
-		req.Assignees = list
-	}
-	if attr := args.GetAttr("default_search_operator"); !attr.IsNull() {
-		req.DefaultSearchOperator = kbclient.String(attr.AsString())
-	}
-	if attr := args.GetAttr("from"); !attr.IsNull() {
-		req.From = kbclient.String(attr.AsString())
-	}
-	if attr := args.GetAttr("owner"); !attr.IsNull() {
-		list := []string{}
-		for _, v := range attr.AsValueSlice() {
-			list = append(list, v.AsString())
+		switch name {
+		case "space_id":
+			req.SpaceID = kbclient.String(val.Value.AsString())
+		case "assignees":
+			req.Assignees = toStringSlice(val.Value)
+		case "default_search_operator":
+			req.DefaultSearchOperator = kbclient.String(val.Value.AsString())
+		case "from":
+			req.From = kbclient.String(val.Value.AsString())
+		case "owner":
+			req.Owner = toStringSlice(val.Value)
+		case "reporters":
+			req.Reporters = toStringSlice(val.Value)
+		case "search":
+			req.Search = kbclient.String(val.Value.AsString())
+		case "search_fields":
+			req.SearchFields = toStringSlice(val.Value)
+		case "severity":
+			req.Severity = kbclient.String(val.Value.AsString())
+		case "sort_field":
+			req.SortField = kbclient.String(val.Value.AsString())
+		case "sort_order":
+			req.SortOrder = kbclient.String(val.Value.AsString())
+		case "status":
+			req.Status = kbclient.String(val.Value.AsString())
+		case "tags":
+			req.Tags = toStringSlice(val.Value)
+		case "to":
+			req.To = kbclient.String(val.Value.AsString())
+
 		}
-		req.Owner = list
-	}
-	if attr := args.GetAttr("reporters"); !attr.IsNull() {
-		list := []string{}
-		for _, v := range attr.AsValueSlice() {
-			list = append(list, v.AsString())
-		}
-		req.Reporters = list
-	}
-	if attr := args.GetAttr("search"); !attr.IsNull() {
-		req.Search = kbclient.String(attr.AsString())
-	}
-	if attr := args.GetAttr("search_fields"); !attr.IsNull() {
-		list := []string{}
-		for _, v := range attr.AsValueSlice() {
-			list = append(list, v.AsString())
-		}
-		req.SearchFields = list
-	}
-	if attr := args.GetAttr("severity"); !attr.IsNull() {
-		req.Severity = kbclient.String(attr.AsString())
-	}
-	if attr := args.GetAttr("sort_field"); !attr.IsNull() {
-		req.SortField = kbclient.String(attr.AsString())
-	}
-	if attr := args.GetAttr("sort_order"); !attr.IsNull() {
-		req.SortOrder = kbclient.String(attr.AsString())
-	}
-	if attr := args.GetAttr("status"); !attr.IsNull() {
-		req.Status = kbclient.String(attr.AsString())
-	}
-	if attr := args.GetAttr("tags"); !attr.IsNull() {
-		list := []string{}
-		for _, v := range attr.AsValueSlice() {
-			list = append(list, v.AsString())
-		}
-		req.Tags = list
-	}
-	if attr := args.GetAttr("to"); !attr.IsNull() {
-		req.To = kbclient.String(attr.AsString())
 	}
 	return req, nil
 }
 
-func parseSecurityCasesConfig(loader KibanaClientLoaderFn, cfg cty.Value) (kbclient.Client, error) {
-	if cfg.IsNull() {
-		return nil, fmt.Errorf("configuration is required")
+func toStringSlice(val cty.Value) []string {
+	list := make([]string, 0, val.LengthInt())
+	iter := val.ElementIterator()
+	for iter.Next() {
+		_, v := iter.Element()
+		list = append(list, v.AsString())
 	}
-	var url string
+	return list
+}
+
+func parseSecurityCasesConfig(loader KibanaClientLoaderFn, cfg *dataspec.Block) (kbclient.Client, error) {
 	var apiKey *string
-	if attr := cfg.GetAttr("kibana_endpoint_url"); attr.IsNull() {
-		return nil, fmt.Errorf("kibana_endpoint_url is required")
-	} else {
-		url = attr.AsString()
-	}
+
+	url := cfg.GetAttr("kibana_endpoint_url").AsString()
 	if attr := cfg.GetAttr("api_key_str"); !attr.IsNull() {
 		apiKey = kbclient.String(attr.AsString())
-	} else {
-		if attr := cfg.GetAttr("api_key"); !attr.IsNull() {
-			list := attr.AsValueSlice()
-			if len(list) != 2 {
-				return nil, fmt.Errorf("api_key must be a list of 2 strings")
-			}
-			key := base64.RawURLEncoding.EncodeToString([]byte(list[0].AsString() + ":" + list[1].AsString()))
-			apiKey = kbclient.String(key)
-		}
+	} else if attr := cfg.GetAttr("api_key"); !attr.IsNull() {
+		p1 := attr.Index(cty.NumberIntVal(0)).AsString()
+		p2 := attr.Index(cty.NumberIntVal(1)).AsString()
+		src := make([]byte, 0, len(p1)+len(p2)+1)
+		src = append(src, p1...)
+		src = append(src, ':')
+		src = append(src, p2...)
+
+		apiKey = kbclient.String(base64.RawURLEncoding.EncodeToString(src))
 	}
 	return loader(url, apiKey), nil
 }

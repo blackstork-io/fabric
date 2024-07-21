@@ -18,60 +18,64 @@ func makeMicrosoftSentinelIncidentsDataSource(loader ClientLoadFn) *plugin.DataS
 	return &plugin.DataSource{
 		Doc:      "The `microsoft_sentinel_incidents` data source fetches incidents from Microsoft Sentinel.",
 		DataFunc: fetchMicrosoftSentinelIncidents(loader),
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Doc:         "The Azure client ID",
-				Name:        "client_id",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Doc:         "The Azure client secret",
-				Name:        "client_secret",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				Secret:      true,
-			},
-			&dataspec.AttrSpec{
-				Doc:         "The Azure tenant ID",
-				Name:        "tenant_id",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Doc:         "The Azure subscription ID",
-				Name:        "subscription_id",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Doc:         "The Azure resource group name",
-				Name:        "resource_group_name",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Doc:         "The Azure workspace name",
-				Name:        "workspace_name",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Doc:         "The Azure client ID",
+					Name:        "client_id",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
+				{
+					Doc:         "The Azure client secret",
+					Name:        "client_secret",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+					Secret:      true,
+				},
+				{
+					Doc:         "The Azure tenant ID",
+					Name:        "tenant_id",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
+				{
+					Doc:         "The Azure subscription ID",
+					Name:        "subscription_id",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
+				{
+					Doc:         "The Azure resource group name",
+					Name:        "resource_group_name",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
+				{
+					Doc:         "The Azure workspace name",
+					Name:        "workspace_name",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Doc:  "The filter expression",
-				Name: "filter",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Doc:  "The maximum number of incidents to return",
-				Name: "limit",
-				Type: cty.Number,
-			},
-			&dataspec.AttrSpec{
-				Doc:  "The order by expression",
-				Name: "order_by",
-				Type: cty.String,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Doc:  "The filter expression",
+					Name: "filter",
+					Type: cty.String,
+				},
+				{
+					Doc:  "The maximum number of incidents to return",
+					Name: "limit",
+					Type: cty.Number,
+				},
+				{
+					Doc:  "The order by expression",
+					Name: "order_by",
+					Type: cty.String,
+				},
 			},
 		},
 	}
@@ -120,7 +124,7 @@ func fetchMicrosoftSentinelIncidents(loader ClientLoadFn) plugin.RetrieveDataFun
 	}
 }
 
-func parseMicrosoftSentinelIncidentsArgs(cfg, args cty.Value) (*client.ListIncidentsReq, error) {
+func parseMicrosoftSentinelIncidentsArgs(cfg, args *dataspec.Block) (*client.ListIncidentsReq, error) {
 	var req client.ListIncidentsReq
 
 	req.SubscriptionID = cfg.GetAttr("subscription_id").AsString()

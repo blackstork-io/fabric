@@ -7,6 +7,7 @@ import (
 
 	"github.com/blackstork-io/fabric/internal/splunk/client"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 type ClientLoadFn func(token, host, deployment string) client.Client
@@ -26,8 +27,8 @@ func Plugin(version string, loader ClientLoadFn) *plugin.Schema {
 	}
 }
 
-func makeClient(loader ClientLoadFn, cfg cty.Value) (client.Client, error) {
-	if cfg.IsNull() {
+func makeClient(loader ClientLoadFn, cfg *dataspec.Block) (client.Client, error) {
+	if cfg == nil {
 		return nil, fmt.Errorf("configuration is required")
 	}
 

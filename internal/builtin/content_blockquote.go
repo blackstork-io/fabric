@@ -16,21 +16,21 @@ import (
 func makeBlockQuoteContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genBlockQuoteContent,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{{
 				Name:        "value",
 				Type:        cty.String,
 				ExampleVal:  cty.StringVal("Text to be formatted as a quote"),
 				Constraints: constraint.RequiredNonNull,
-			},
+			}},
 		},
 		Doc: "Formats text as a block quote",
 	}
 }
 
 func genBlockQuoteContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	value := params.Args.GetAttr("value").AsString()
-	text, err := genTextContentText(value, params.DataContext)
+	value := params.Args.GetAttr("value")
+	text, err := genTextContentText(value.AsString(), params.DataContext)
 	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,

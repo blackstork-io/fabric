@@ -10,80 +10,69 @@ import (
 	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 // Desugars `title = "foo"` into appropriate `context` invocation.
 type titleInvocation struct {
-	hcl.Expression
+	*hclsyntax.Block
 }
 
 // GetBody implements evaluation.Invocation.
 func (t *titleInvocation) GetBody() *hclsyntax.Body {
-	rng := t.Expression.Range()
-	return &hclsyntax.Body{
-		SrcRange: rng,
-		EndRange: hcl.Range{
-			Filename: rng.Filename,
-			Start:    rng.End,
-			End:      rng.End,
-		},
-	}
+	return t.Body
 }
 
 // SetBody implements evaluation.Invocation.
-func (*titleInvocation) SetBody(*hclsyntax.Body) {}
+func (t *titleInvocation) SetBody(b *hclsyntax.Body) {
+	t.Body = b
+}
 
 var _ evaluation.Invocation = (*titleInvocation)(nil)
 
-func (t *titleInvocation) DefRange() hcl.Range {
-	return t.Expression.Range()
-}
-
 func (t *titleInvocation) MissingItemRange() hcl.Range {
-	return t.Expression.Range()
+	return t.Body.EndRange
 }
 
-func (t *titleInvocation) ParseInvocation(ctx context.Context, spec dataspec.RootSpec) (val cty.Value, diags diagnostics.Diag) {
+func (t *titleInvocation) ParseInvocation(ctx context.Context, spec *dataspec.RootSpec) (val *dataspec.Block, diags diagnostics.Diag) {
 	// Titles can only be rendered once, so there's no reason to put `sync.Once` like in proper blocks
-	expr, ok := t.Expression.(hclsyntax.Expression)
-	if !ok {
-		diags.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "Incorrect title",
-			Detail:   "Title must be an expression",
-			Subject:  t.DefRange().Ptr(),
-		})
-		return
-	}
-	body := t.GetBody()
-	body.Attributes = hclsyntax.Attributes{
-		"value": &hclsyntax.Attribute{
-			Name: "value",
-			Expr: expr,
-		},
-		"relative_size": &hclsyntax.Attribute{
-			Name: "relative_size",
-			Expr: &hclsyntax.LiteralValueExpr{
-				Val:      cty.NumberIntVal(-1),
-				SrcRange: t.Expression.Range(),
-			},
-		},
-	}
-
-	val, diag := dataspec.Decode(body, spec, fabctx.GetEvalContext(ctx))
-	diags.Extend(diag)
-	return
+	return dataspec.Decode(t.Block, spec, fabctx.GetEvalContext(ctx))
 }
 
 func NewTitle(title *hclsyntax.Attribute, resolver ConfigResolver) *ParsedContent {
-	pluginName := "title"
+	const pluginName = "title"
+
+	value := *title
+	value.Name = "value"
+
+	relativeSize := *title
+	relativeSize.Name = "relative_size"
+	relativeSize.Expr = &hclsyntax.LiteralValueExpr{
+		Val:      cty.NumberIntVal(-1),
+		SrcRange: title.Expr.Range(),
+	}
 	return &ParsedContent{
 		Plugin: &ParsedPlugin{
 			PluginName: pluginName,
 			Config:     resolver(BlockKindContent, pluginName),
 			Invocation: &titleInvocation{
-				Expression: title.Expr,
+				Block: &hclsyntax.Block{
+					Type:        BlockKindContent,
+					TypeRange:   title.NameRange,
+					Labels:      []string{pluginName},
+					LabelRanges: []hcl.Range{title.NameRange},
+					Body: &hclsyntax.Body{
+						Attributes: hclsyntax.Attributes{
+							"value":         &value,
+							"relative_size": &relativeSize,
+						},
+						SrcRange: title.SrcRange,
+						EndRange: utils.RangeEnd(title.Expr.Range()),
+					},
+					OpenBraceRange:  utils.RangeStart(title.NameRange),
+					CloseBraceRange: utils.RangeEnd(title.Expr.Range()),
+				},
 			},
 		},
 	}

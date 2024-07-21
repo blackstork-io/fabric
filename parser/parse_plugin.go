@@ -58,7 +58,7 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 	}
 
 	// Parsing body
-	body := utils.ToHclsyntaxBody(plugin.Block.Body)
+	body := plugin.Block.Body
 
 	configAttr, _ := utils.Pop(body.Attributes, definitions.BlockKindConfig)
 	var configBlock, varsBlock *hclsyntax.Block
@@ -127,10 +127,9 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 	var diag diagnostics.Diag
 	res.Vars, diag = ParseVars(ctx, varsBlock, localVar)
 	diags.Extend(diag)
-
+	plugin.Block.Body = body
 	invocation := &evaluation.BlockInvocation{
-		Body:            body,
-		DefinitionRange: plugin.DefRange(),
+		Block: plugin.Block,
 	}
 
 	// Parsing the ref
@@ -238,7 +237,7 @@ func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAtt
 	case configBlock != nil:
 		// anonymous config block
 		config = &definitions.Config{
-			Block: configBlock.AsHCLBlock(),
+			Block: configBlock,
 		}
 	case plugin.IsRef():
 		// Config wasn't provided: inherit config from the base block
@@ -248,9 +247,7 @@ func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAtt
 			// Apply default configs to non-refs only
 			config = defaultCfg
 		} else {
-			config = &definitions.ConfigEmpty{
-				MissingItemRange: plugin.Block.Body.MissingItemRange(),
-			}
+			config = &definitions.ConfigEmpty{plugin}
 		}
 	}
 	return

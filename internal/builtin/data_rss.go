@@ -19,33 +19,39 @@ func makeRSSDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		Tags:     []string{"rss", "http"},
 		DataFunc: fetchRSSData,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "url",
-				Type:        cty.String,
-				ExampleVal:  cty.StringVal("https://www.elastic.co/security-labs/rss/feed.xml"),
-				Constraints: constraint.RequiredNonNull,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "url",
+					Type:        cty.String,
+					ExampleVal:  cty.StringVal("https://www.elastic.co/security-labs/rss/feed.xml"),
+					Constraints: constraint.RequiredNonNull,
+				},
 			},
-			&dataspec.BlockSpec{
-				Name: "basic_auth",
-				Doc: `
-					Basic authentication credentials to be used in a HTTP request fetching RSS feed.
-				`,
-				Nested: dataspec.ObjectSpec{
-					&dataspec.AttrSpec{
-						Name:        "username",
-						Type:        cty.String,
-						ExampleVal:  cty.StringVal("user@example.com"),
-						Constraints: constraint.RequiredNonNull,
+			Blocks: []*dataspec.BlockSpec{
+				{
+					Header: dataspec.HeadersSpec{
+						dataspec.ExactMatcher{"basic_auth"},
 					},
-					&dataspec.AttrSpec{
-						Name:       "password",
-						Type:       cty.String,
-						ExampleVal: cty.StringVal("passwd"),
-						Doc: `
-							Note: avoid storing credentials in the templates. Use environment variables instead.
-						`,
-						Constraints: constraint.RequiredNonNull,
+					Doc: `
+						Basic authentication credentials to be used in a HTTP request fetching RSS feed.
+					`,
+					Attrs: []*dataspec.AttrSpec{
+						{
+							Name:        "username",
+							Type:        cty.String,
+							ExampleVal:  cty.StringVal("user@example.com"),
+							Constraints: constraint.RequiredNonNull,
+						},
+						{
+							Name:       "password",
+							Type:       cty.String,
+							ExampleVal: cty.StringVal("passwd"),
+							Doc: `
+								Note: avoid storing credentials in the templates. Use environment variables instead.
+							`,
+							Constraints: constraint.RequiredNonNull,
+						},
 					},
 				},
 			},
@@ -62,8 +68,8 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 	fp := gofeed.NewParser()
 	url := params.Args.GetAttr("url").AsString()
 
-	basicAuth := params.Args.GetAttr("basic_auth")
-	if !basicAuth.IsNull() {
+	basicAuth := params.Args.Blocks.GetFirstMatching("basic_auth")
+	if basicAuth != nil {
 		fp.AuthConfig = &gofeed.Auth{
 			Username: basicAuth.GetAttr("username").AsString(),
 			Password: basicAuth.GetAttr("password").AsString(),

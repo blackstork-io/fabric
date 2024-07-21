@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -52,8 +51,8 @@ type ContentProvider struct {
 	Doc             string
 	Tags            []string
 	ContentFunc     ProvideContentFunc
-	Args            dataspec.RootSpec
-	Config          dataspec.RootSpec
+	Args            *dataspec.RootSpec
+	Config          *dataspec.RootSpec
 	InvocationOrder InvocationOrder
 }
 
@@ -91,11 +90,8 @@ func (cg *ContentProvider) Execute(ctx context.Context, params *ProvideContentPa
 		}}
 	}
 
-	var diag diagnostics.Diag
-	params.Config, diag = CustomEvalTransform(ctx, params.DataContext, params.Config)
-	diags.Extend(diag)
-	params.Args, diag = CustomEvalTransform(ctx, params.DataContext, params.Args)
-	diags.Extend(diag)
+	diags.Extend(CustomEvalTransformBlock(ctx, params.DataContext, params.Config))
+	diags.Extend(CustomEvalTransformBlock(ctx, params.DataContext, params.Args))
 	if diags.HasErrors() {
 		return
 	}
@@ -103,8 +99,8 @@ func (cg *ContentProvider) Execute(ctx context.Context, params *ProvideContentPa
 }
 
 type ProvideContentParams struct {
-	Config      cty.Value
-	Args        cty.Value
+	Config      *dataspec.Block
+	Args        *dataspec.Block
 	DataContext MapData
 	ContentID   uint32
 }

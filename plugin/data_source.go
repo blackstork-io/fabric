@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -36,8 +35,8 @@ type DataSource struct {
 	Doc      string
 	Tags     []string
 	DataFunc RetrieveDataFunc
-	Args     dataspec.RootSpec
-	Config   dataspec.RootSpec
+	Args     *dataspec.RootSpec
+	Config   *dataspec.RootSpec
 }
 
 func (ds *DataSource) Validate() diagnostics.Diag {
@@ -67,8 +66,8 @@ func (ds *DataSource) Execute(ctx context.Context, params *RetrieveDataParams) (
 }
 
 type RetrieveDataParams struct {
-	Config cty.Value
-	Args   cty.Value
+	Config *dataspec.Block
+	Args   *dataspec.Block
 }
 
 type RetrieveDataFunc func(ctx context.Context, params *RetrieveDataParams) (Data, diagnostics.Diag)

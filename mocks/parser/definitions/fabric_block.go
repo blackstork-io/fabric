@@ -5,7 +5,7 @@ package definitions_mocks
 import (
 	cty "github.com/zclconf/go-cty/cty"
 
-	hcl "github.com/hashicorp/hcl/v2"
+	hclsyntax "github.com/hashicorp/hcl/v2/hclsyntax"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -69,19 +69,19 @@ func (_c *FabricBlock_CtyType_Call) RunAndReturn(run func() cty.Type) *FabricBlo
 }
 
 // GetHCLBlock provides a mock function with given fields:
-func (_m *FabricBlock) GetHCLBlock() *hcl.Block {
+func (_m *FabricBlock) GetHCLBlock() *hclsyntax.Block {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetHCLBlock")
 	}
 
-	var r0 *hcl.Block
-	if rf, ok := ret.Get(0).(func() *hcl.Block); ok {
+	var r0 *hclsyntax.Block
+	if rf, ok := ret.Get(0).(func() *hclsyntax.Block); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*hcl.Block)
+			r0 = ret.Get(0).(*hclsyntax.Block)
 		}
 	}
 
@@ -105,12 +105,12 @@ func (_c *FabricBlock_GetHCLBlock_Call) Run(run func()) *FabricBlock_GetHCLBlock
 	return _c
 }
 
-func (_c *FabricBlock_GetHCLBlock_Call) Return(_a0 *hcl.Block) *FabricBlock_GetHCLBlock_Call {
+func (_c *FabricBlock_GetHCLBlock_Call) Return(_a0 *hclsyntax.Block) *FabricBlock_GetHCLBlock_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *FabricBlock_GetHCLBlock_Call) RunAndReturn(run func() *hcl.Block) *FabricBlock_GetHCLBlock_Call {
+func (_c *FabricBlock_GetHCLBlock_Call) RunAndReturn(run func() *hclsyntax.Block) *FabricBlock_GetHCLBlock_Call {
 	_c.Call.Return(run)
 	return _c
 }

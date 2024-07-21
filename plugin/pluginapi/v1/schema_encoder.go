@@ -45,11 +45,11 @@ func encodeDataSourceSchema(src *plugin.DataSource) (*DataSourceSchema, error) {
 	if src == nil {
 		return nil, nil
 	}
-	args, err := encodeSpec(src.Args)
+	args, err := encodeBlockSpec(src.Args.BlockSpec())
 	if err != nil {
 		return nil, err
 	}
-	config, err := encodeSpec(src.Config)
+	config, err := encodeBlockSpec(src.Config.BlockSpec())
 	if err != nil {
 		return nil, err
 	}
@@ -77,11 +77,11 @@ func encodeContentProviderSchema(src *plugin.ContentProvider) (*ContentProviderS
 	if src == nil {
 		return nil, nil
 	}
-	args, err := encodeSpec(src.Args)
+	args, err := encodeBlockSpec(src.Args.BlockSpec())
 	if err != nil {
 		return nil, err
 	}
-	config, err := encodeSpec(src.Config)
+	config, err := encodeBlockSpec(src.Config.BlockSpec())
 	if err != nil {
 		return nil, err
 	}
@@ -134,11 +134,11 @@ func encodePublisherShema(src *plugin.Publisher) (*PublisherSchema, error) {
 	if src == nil {
 		return nil, nil
 	}
-	args, err := encodeSpec(src.Args)
+	args, err := encodeBlockSpec(src.Args.BlockSpec())
 	if err != nil {
 		return nil, err
 	}
-	config, err := encodeSpec(src.Config)
+	config, err := encodeBlockSpec(src.Config.BlockSpec())
 	if err != nil {
 		return nil, err
 	}

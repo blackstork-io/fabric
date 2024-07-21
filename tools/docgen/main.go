@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"text/template"
@@ -147,28 +148,23 @@ func generatePublisherDocs(log *slog.Logger, p *plugin.Schema, outputDir string)
 	}
 }
 
-func marshalDataSource(name string, ds *plugin.DataSource) PluginResourceMeta {
-	var configParams []string
-	configSpec, ok := ds.Config.(dataspec.ObjectSpec)
-	if ok && configSpec != nil {
-		for _, s := range configSpec {
-			if itemName := dataspec.ItemName(s); itemName != "" {
-				configParams = append(configParams, itemName)
-			}
-		}
+func dumpAttrNames(spec *dataspec.RootSpec) []string {
+	if spec == nil {
+		return nil
 	}
-	sort.Strings(configParams)
+	return utils.FnMap(spec.Attrs,
+		func(a *dataspec.AttrSpec) string {
+			return a.Name
+		},
+	)
+}
 
-	var arguments []string
-	argsSpec, ok := ds.Args.(dataspec.ObjectSpec)
-	if ok && argsSpec != nil {
-		for _, s := range argsSpec {
-			if itemName := dataspec.ItemName(s); itemName != "" {
-				arguments = append(arguments, itemName)
-			}
-		}
-	}
-	sort.Strings(arguments)
+func marshalDataSource(name string, ds *plugin.DataSource) PluginResourceMeta {
+	configParams := dumpAttrNames(ds.Config)
+	slices.Sort(configParams)
+
+	arguments := dumpAttrNames(ds.Args)
+	slices.Sort(arguments)
 
 	return PluginResourceMeta{
 		Name:         name,
@@ -179,25 +175,11 @@ func marshalDataSource(name string, ds *plugin.DataSource) PluginResourceMeta {
 }
 
 func marshalContentProvider(name string, p *plugin.ContentProvider) PluginResourceMeta {
-	var configParams []string
-	configSpec, ok := p.Config.(dataspec.ObjectSpec)
-	if ok && configSpec != nil {
-		for _, s := range configSpec {
-			if itemName := dataspec.ItemName(s); itemName != "" {
-				configParams = append(configParams, itemName)
-			}
-		}
-	}
-	var arguments []string
-	argsSpec, ok := p.Args.(dataspec.ObjectSpec)
-	if ok && argsSpec != nil {
-		for _, s := range argsSpec {
-			if itemName := dataspec.ItemName(s); itemName != "" {
-				arguments = append(arguments, itemName)
-			}
-		}
-	}
-	sort.Strings(arguments)
+	configParams := dumpAttrNames(p.Config)
+	slices.Sort(configParams)
+
+	arguments := dumpAttrNames(p.Args)
+	slices.Sort(arguments)
 
 	return PluginResourceMeta{
 		Name:         name,
@@ -208,25 +190,11 @@ func marshalContentProvider(name string, p *plugin.ContentProvider) PluginResour
 }
 
 func marshalPublisher(name string, p *plugin.Publisher) PluginResourceMeta {
-	var configParams []string
-	configSpec, ok := p.Config.(dataspec.ObjectSpec)
-	if ok && configSpec != nil {
-		for _, s := range configSpec {
-			if itemName := dataspec.ItemName(s); itemName != "" {
-				configParams = append(configParams, itemName)
-			}
-		}
-	}
-	var arguments []string
-	argsSpec, ok := p.Args.(dataspec.ObjectSpec)
-	if ok && argsSpec != nil {
-		for _, s := range argsSpec {
-			if itemName := dataspec.ItemName(s); itemName != "" {
-				arguments = append(arguments, itemName)
-			}
-		}
-	}
-	sort.Strings(arguments)
+	configParams := dumpAttrNames(p.Config)
+	slices.Sort(configParams)
+
+	arguments := dumpAttrNames(p.Args)
+	slices.Sort(arguments)
 
 	return PluginResourceMeta{
 		Name:         name,

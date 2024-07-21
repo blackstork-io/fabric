@@ -20,28 +20,32 @@ import (
 func makeCSVDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchCSVData,
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:         "delimiter",
-				Type:         cty.String,
-				DefaultVal:   cty.StringVal(","),
-				MinInclusive: cty.NumberIntVal(1),
-				MaxInclusive: cty.NumberIntVal(1),
-				Doc:          `CSV field delimiter`,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:         "delimiter",
+					Type:         cty.String,
+					DefaultVal:   cty.StringVal(","),
+					MinInclusive: cty.NumberIntVal(1),
+					MaxInclusive: cty.NumberIntVal(1),
+					Doc:          `CSV field delimiter`,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:       "glob",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("path/to/file*.csv"),
-				Doc:        `A glob pattern to select CSV files to read`,
-			},
-			&dataspec.AttrSpec{
-				Name:       "path",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("path/to/file.csv"),
-				Doc:        `A file path to a CSV file to read`,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:       "glob",
+					Type:       cty.String,
+					ExampleVal: cty.StringVal("path/to/file*.csv"),
+					Doc:        `A glob pattern to select CSV files to read`,
+				},
+				{
+					Name:       "path",
+					Type:       cty.String,
+					ExampleVal: cty.StringVal("path/to/file.csv"),
+					Doc:        `A file path to a CSV file to read`,
+				},
 			},
 		},
 		Doc: `
@@ -94,8 +98,7 @@ func makeCSVDataSource() *plugin.DataSource {
 	}
 }
 
-func getDelim(config cty.Value) (r rune, diags diagnostics.Diag) {
-	delim := config.GetAttr("delimiter").AsString()
+func getDelim(delim string) (r rune, diags diagnostics.Diag) {
 	delimRune, runeLen := utf8.DecodeRuneInString(delim)
 	if runeLen == 0 || len(delim) != runeLen {
 		diags = diagnostics.Diag{{
@@ -112,7 +115,7 @@ func fetchCSVData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 	glob := params.Args.GetAttr("glob")
 	path := params.Args.GetAttr("path")
 
-	delim, err := getDelim(params.Config)
+	delim, err := getDelim(params.Config.GetAttr("delimiter").AsString())
 	if err != nil {
 		slog.Error("Error while getting a delimiter value", slog.Any("error", err))
 		return nil, err

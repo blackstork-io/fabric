@@ -18,30 +18,34 @@ import (
 func makeVirusTotalAPIUsageDataSchema(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchVirusTotalAPIUsageData(loader),
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "api_key",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				Secret:      true,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "api_key",
+					Type:        cty.String,
+					Constraints: constraint.RequiredMeaningful,
+					Secret:      true,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name: "user_id",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "group_id",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "start_date",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "end_date",
-				Type: cty.String,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name: "user_id",
+					Type: cty.String,
+				},
+				{
+					Name: "group_id",
+					Type: cty.String,
+				},
+				{
+					Name: "start_date",
+					Type: cty.String,
+				},
+				{
+					Name: "end_date",
+					Type: cty.String,
+				},
 			},
 		},
 	}
@@ -49,14 +53,7 @@ func makeVirusTotalAPIUsageDataSchema(loader ClientLoadFn) *plugin.DataSource {
 
 func fetchVirusTotalAPIUsageData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-		cli, err := makeClient(loader, params.Config)
-		if err != nil {
-			return nil, diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to create client",
-				Detail:   err.Error(),
-			}}
-		}
+		cli := loader(params.Config.GetAttr("api_key").AsString())
 		args, err := parseAPIUsageArgs(params.Args)
 		if err != nil {
 			return nil, diagnostics.Diag{{
@@ -126,10 +123,10 @@ type apiUsageArgs struct {
 	EndDate   *time.Time
 }
 
-func parseAPIUsageArgs(args cty.Value) (*apiUsageArgs, error) {
+func parseAPIUsageArgs(args *dataspec.Block) (*apiUsageArgs, error) {
 	dst := apiUsageArgs{}
 
-	if args.IsNull() {
+	if args == nil {
 		return nil, fmt.Errorf("arguments are null")
 	}
 

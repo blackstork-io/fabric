@@ -17,27 +17,32 @@ import (
 func makeRandomNumbersDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		// Config is optional, we can define the schema for the config that is reusable for this data source
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:       "min",
-				Type:       cty.Number,
-				Doc:        `Lower bound (inclusive)`,
-				DefaultVal: cty.NumberIntVal(0),
-			},
-			&dataspec.AttrSpec{
-				Name:       "max",
-				Type:       cty.Number,
-				Doc:        `Upper bound (inclusive)`,
-				DefaultVal: cty.NumberIntVal(100),
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:       "min",
+					Type:       cty.Number,
+					Doc:        `Lower bound (inclusive)`,
+					DefaultVal: cty.NumberIntVal(0),
+				},
+				{
+					Name:       "max",
+					Type:       cty.Number,
+					Doc:        `Upper bound (inclusive)`,
+					DefaultVal: cty.NumberIntVal(100),
+				},
 			},
 		},
 		// We define the schema for the arguments
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "length",
-				Constraints: constraint.Integer | constraint.Required,
-				Type:        cty.Number,
-				ExampleVal:  cty.NumberIntVal(10),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:         "length",
+					Constraints:  constraint.Integer | constraint.RequiredNonNull,
+					Type:         cty.Number,
+					ExampleVal:   cty.NumberIntVal(10),
+					MinInclusive: cty.NumberIntVal(1),
+				},
 			},
 		},
 		// Optional: We can also define the schema for the config
@@ -51,13 +56,6 @@ func fetchRandomNumbers(ctx context.Context, params *plugin.RetrieveDataParams) 
 
 	// validating the arguments
 	length := params.Args.GetAttr("length")
-	if length.IsNull() {
-		return nil, diagnostics.Diag{{
-			Severity: hcl.DiagError,
-			Summary:  "Failed to parse arguments",
-			Detail:   "length is required",
-		}}
-	}
 	if min.GreaterThan(max).True() {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,

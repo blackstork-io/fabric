@@ -13,6 +13,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/github"
 	github_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/github"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 type GithubIssuesDataTestSuite struct {
@@ -70,21 +71,12 @@ func (s *GithubIssuesDataTestSuite) TestBasic() {
 
 	ctx := context.Background()
 	data, diags := s.plugin.RetrieveData(ctx, "github_issues", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"cfg"}, map[string]cty.Value{
 			"github_token": cty.StringVal("testtoken"),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"repository": cty.StringVal("testorg/testrepo"),
-			"limit":      cty.NullVal(cty.Number),
-			"milestone":  cty.NullVal(cty.String),
-			"state":      cty.NullVal(cty.String),
-			"assignee":   cty.NullVal(cty.String),
-			"creator":    cty.NullVal(cty.String),
-			"mentioned":  cty.NullVal(cty.String),
 			"labels":     cty.ListValEmpty(cty.String),
-			"sort":       cty.NullVal(cty.String),
-			"direction":  cty.NullVal(cty.String),
-			"since":      cty.NullVal(cty.String),
 		}),
 	})
 	s.Require().Nil(diags)
@@ -131,10 +123,10 @@ func (s *GithubIssuesDataTestSuite) TestAdvanced() {
 
 	ctx := context.Background()
 	data, diags := s.plugin.RetrieveData(ctx, "github_issues", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"cfg"}, map[string]cty.Value{
 			"github_token": cty.StringVal("testtoken"),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"repository": cty.StringVal("testorg/testrepo"),
 			"limit":      cty.NumberIntVal(2),
 			"milestone":  cty.StringVal("testmilestone"),

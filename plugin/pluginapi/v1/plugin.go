@@ -83,9 +83,9 @@ func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient)
 			diags.Add("Content provider error", "Nil params")
 			return
 		}
-		cfgEncoded, diag := encodeCtyValue(params.Config)
+		cfgEncoded, diag := encodeBlock(params.Config)
 		diags.Extend(diag)
-		argsEncoded, diag := encodeCtyValue(params.Args)
+		argsEncoded, diag := encodeBlock(params.Args)
 		diags.Extend(diag)
 		if diags.HasErrors() {
 			return
@@ -116,9 +116,9 @@ func (p *grpcPlugin) clientDataFunc(name string, client PluginServiceClient) plu
 			diags.Add("Data source error", "Nil params")
 			return
 		}
-		cfgEncoded, diag := encodeCtyValue(params.Config)
+		cfgEncoded, diag := encodeBlock(params.Config)
 		diags.Extend(diag)
-		argsEncoded, diag := encodeCtyValue(params.Args)
+		argsEncoded, diag := encodeBlock(params.Args)
 		diags.Extend(diag)
 
 		res, err := client.RetrieveData(ctx, &RetrieveDataRequest{
@@ -145,9 +145,9 @@ func (p *grpcPlugin) clientPublishFunc(name string, client PluginServiceClient) 
 			diags.Add("Publisher error", "Nil params")
 			return
 		}
-		argsEncoded, diag := encodeCtyValue(params.Args)
+		argsEncoded, diag := encodeBlock(params.Args)
 		diags.Extend(diag)
-		cfgEncoded, diag := encodeCtyValue(params.Config)
+		cfgEncoded, diag := encodeBlock(params.Config)
 		diags.Extend(diag)
 		datactx := encodeMapData(params.DataContext)
 		format := encodeOutputFormat(params.Format)

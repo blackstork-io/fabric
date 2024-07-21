@@ -5,7 +5,6 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
-	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
@@ -13,8 +12,12 @@ import (
 )
 
 type BlockInvocation struct {
-	*hclsyntax.Body
-	DefinitionRange hcl.Range
+	*hclsyntax.Block
+}
+
+// MissingItemRange implements Invocation.
+func (b *BlockInvocation) MissingItemRange() hcl.Range {
+	return b.Body.MissingItemRange()
 }
 
 // GetBody implements Invocation.
@@ -27,19 +30,9 @@ func (b *BlockInvocation) SetBody(body *hclsyntax.Body) {
 	b.Body = body
 }
 
-// DefRange implements Invocation.
-func (b *BlockInvocation) DefRange() hcl.Range {
-	return b.DefinitionRange
-}
-
 // ParseInvocation implements Invocation.
-func (b *BlockInvocation) ParseInvocation(ctx context.Context, spec dataspec.RootSpec) (cty.Value, diagnostics.Diag) {
-	return dataspec.Decode(b.Body, spec, fabctx.GetEvalContext(ctx))
-}
-
-// Range implements Invocation.
-func (b *BlockInvocation) Range() hcl.Range {
-	return b.Body.Range()
+func (b *BlockInvocation) ParseInvocation(ctx context.Context, spec *dataspec.RootSpec) (*dataspec.Block, diagnostics.Diag) {
+	return dataspec.Decode(b.Block, spec, fabctx.GetEvalContext(ctx))
 }
 
 var _ Invocation = (*BlockInvocation)(nil)

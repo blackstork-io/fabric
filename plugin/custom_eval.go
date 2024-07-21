@@ -8,6 +8,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/encapsulator"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 // If encapsulated type implements this interface, it will be evaluated with data context.
@@ -18,6 +19,21 @@ type CustomEval interface {
 }
 
 var CustomEvalType = encapsulator.NewDecoder[CustomEval]()
+
+func CustomEvalTransformBlock(ctx context.Context, dataCtx MapData, block *dataspec.Block) (diags diagnostics.Diag) {
+	if block == nil {
+		return
+	}
+	var diag diagnostics.Diag
+	for _, val := range block.Attrs {
+		val.Value, diag = CustomEvalTransform(ctx, dataCtx, val.Value)
+		diags.Extend(diag)
+	}
+	for _, block := range block.Blocks {
+		diags.Extend(CustomEvalTransformBlock(ctx, dataCtx, block))
+	}
+	return
+}
 
 // Walks the (possibly deeply nested) cty.Value and applies the CustomEval if needed.
 func CustomEvalTransform(ctx context.Context, dataCtx MapData, val cty.Value) (res cty.Value, diags diagnostics.Diag) {

@@ -13,6 +13,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 type PluginPublishAction struct {
@@ -40,13 +41,13 @@ func LoadPluginPublishAction(ctx context.Context, publishers Publishers, node *d
 			Detail:   fmt.Sprintf("'%s' not found in any plugin", node.PluginName),
 		}}
 	}
-	var cfg cty.Value
-	if p.Config != nil && !p.Config.IsEmpty() {
+	var cfg *dataspec.Block
+	if p.Config != nil {
 		cfg, diags = node.Config.ParseConfig(ctx, p.Config)
 		if diags.HasErrors() {
 			return nil, diags
 		}
-	} else if (p.Config == nil || p.Config.IsEmpty()) && node.Config.Exists() {
+	} else if node.Config.Exists() {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
 			Summary:  "Publisher doesn't support configuration",
@@ -98,7 +99,7 @@ func LoadPluginPublishAction(ctx context.Context, publishers Publishers, node *d
 			return
 		}
 	}
-	var args cty.Value
+	var args *dataspec.Block
 	args, diag := node.Invocation.ParseInvocation(ctx, p.Args)
 	if diags.Extend(diag) {
 		return nil, diags

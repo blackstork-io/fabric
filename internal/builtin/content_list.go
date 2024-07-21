@@ -20,35 +20,37 @@ import (
 func makeListContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genListContent,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "item_template",
-				Type:        cty.String,
-				Constraints: constraint.NonNull,
-				DefaultVal:  cty.StringVal("{{.}}"),
-				ExampleVal:  cty.StringVal(`[{{.Title}}]({{.URL}})`),
-				Doc:         "Go template for the item of the list",
-			},
-			&dataspec.AttrSpec{
-				Name:       "format",
-				Type:       cty.String,
-				DefaultVal: cty.StringVal("unordered"),
-				OneOf: []cty.Value{
-					cty.StringVal("unordered"),
-					cty.StringVal("ordered"),
-					cty.StringVal("tasklist"),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "item_template",
+					Type:        cty.String,
+					Constraints: constraint.NonNull,
+					DefaultVal:  cty.StringVal("{{.}}"),
+					ExampleVal:  cty.StringVal(`[{{.Title}}]({{.URL}})`),
+					Doc:         "Go template for the item of the list",
 				},
-			},
-			&dataspec.AttrSpec{
-				Name:        "items",
-				Type:        dataquery.DelayedEvalType.CtyType(),
-				Constraints: constraint.RequiredMeaningful,
-				ExampleVal: cty.ListVal([]cty.Value{
-					cty.StringVal("First item"),
-					cty.StringVal("Second item"),
-					cty.StringVal("Third item"),
-				}),
-				Doc: "List of items to render.",
+				{
+					Name:       "format",
+					Type:       cty.String,
+					DefaultVal: cty.StringVal("unordered"),
+					OneOf: []cty.Value{
+						cty.StringVal("unordered"),
+						cty.StringVal("ordered"),
+						cty.StringVal("tasklist"),
+					},
+				},
+				{
+					Name:        "items",
+					Type:        dataquery.DelayedEvalType.CtyType(),
+					Constraints: constraint.RequiredMeaningful,
+					ExampleVal: cty.ListVal([]cty.Value{
+						cty.StringVal("First item"),
+						cty.StringVal("Second item"),
+						cty.StringVal("Third item"),
+					}),
+					Doc: "List of items to render.",
+				},
 			},
 		},
 		Doc: "Produces a list of items",

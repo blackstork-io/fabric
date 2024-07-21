@@ -61,8 +61,8 @@ func (p *Plugin) GetKey() *Key {
 
 var _ FabricBlock = (*Plugin)(nil)
 
-func (p *Plugin) GetHCLBlock() *hcl.Block {
-	return p.Block.AsHCLBlock()
+func (p *Plugin) GetHCLBlock() *hclsyntax.Block {
+	return p.Block
 }
 
 var ctyPluginType = encapsulator.NewEncoder[Plugin]("plugin", nil)

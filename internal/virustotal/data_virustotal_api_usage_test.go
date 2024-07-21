@@ -13,6 +13,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/virustotal/client"
 	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/virustotal/client"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 type APIUsageTestSuite struct {
@@ -69,10 +70,10 @@ func (s *APIUsageTestSuite) TestUser() {
 		},
 	}, nil)
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"api_key": cty.StringVal("test_token"),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"user_id":    cty.StringVal("test_user"),
 			"group_id":   cty.NullVal(cty.String),
 			"start_date": cty.StringVal("20240101"),
@@ -108,10 +109,10 @@ func (s *APIUsageTestSuite) TestGroup() {
 		},
 	}, nil)
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"api_key": cty.StringVal("test_token"),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"user_id":    cty.NullVal(cty.String),
 			"group_id":   cty.StringVal("test_group"),
 			"start_date": cty.StringVal("20240101"),
@@ -128,21 +129,12 @@ func (s *APIUsageTestSuite) TestGroup() {
 	}, data)
 }
 
-func (s *APIUsageTestSuite) TestMissingConfig() {
-	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.NullVal(cty.DynamicPseudoType),
-		Args:   cty.ObjectVal(map[string]cty.Value{}),
-	})
-	s.Require().Len(diags, 1)
-	s.Nil(data)
-}
-
 func (s *APIUsageTestSuite) TestMissingAPIKey() {
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"api_key": cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{}),
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{}),
 	})
 	s.Require().Len(diags, 1)
 	s.Nil(data)
@@ -150,10 +142,10 @@ func (s *APIUsageTestSuite) TestMissingAPIKey() {
 
 func (s *APIUsageTestSuite) TestMissingUserIDAndGroupID() {
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"api_key": cty.StringVal("test_token"),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"user_id":    cty.NullVal(cty.String),
 			"group_id":   cty.NullVal(cty.String),
 			"start_date": cty.StringVal("20240101"),
@@ -170,10 +162,10 @@ func (s *APIUsageTestSuite) TestError() {
 		User: "test_user",
 	}).Return(nil, err)
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"api_key": cty.StringVal("test_token"),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"user_id":    cty.StringVal("test_user"),
 			"group_id":   cty.NullVal(cty.String),
 			"start_date": cty.NullVal(cty.String),

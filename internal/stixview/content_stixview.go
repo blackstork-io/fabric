@@ -38,54 +38,56 @@ func init() {
 
 func makeStixViewContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name: "gist_id",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "stix_url",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "caption",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "show_footer",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "show_sidebar",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "show_tlp_as_tags",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "show_marking_nodes",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "show_labels",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "show_idrefs",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "width",
-				Type: cty.Number,
-			},
-			&dataspec.AttrSpec{
-				Name: "height",
-				Type: cty.Number,
-			},
-			&dataspec.AttrSpec{
-				Name: "objects",
-				Type: dataquery.DelayedEvalType.CtyType(),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name: "gist_id",
+					Type: cty.String,
+				},
+				{
+					Name: "stix_url",
+					Type: cty.String,
+				},
+				{
+					Name: "caption",
+					Type: cty.String,
+				},
+				{
+					Name: "show_footer",
+					Type: cty.Bool,
+				},
+				{
+					Name: "show_sidebar",
+					Type: cty.Bool,
+				},
+				{
+					Name: "show_tlp_as_tags",
+					Type: cty.Bool,
+				},
+				{
+					Name: "show_marking_nodes",
+					Type: cty.Bool,
+				},
+				{
+					Name: "show_labels",
+					Type: cty.Bool,
+				},
+				{
+					Name: "show_idrefs",
+					Type: cty.Bool,
+				},
+				{
+					Name: "width",
+					Type: cty.Number,
+				},
+				{
+					Name: "height",
+					Type: cty.Number,
+				},
+				{
+					Name: "objects",
+					Type: dataquery.DelayedEvalType.CtyType(),
+				},
 			},
 		},
 		ContentFunc: renderStixView,
@@ -194,8 +196,8 @@ func intPtr(i int) *int {
 	return &i
 }
 
-func parseStixViewArgs(args cty.Value) (*stixViewArgs, error) {
-	if args.IsNull() {
+func parseStixViewArgs(args *dataspec.Block) (*stixViewArgs, error) {
+	if args == nil {
 		return nil, fmt.Errorf("arguments are null")
 	}
 	var dst stixViewArgs
