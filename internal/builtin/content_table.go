@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -26,7 +26,7 @@ func makeTableContentProvider() *plugin.ContentProvider {
 			Attrs: []*dataspec.AttrSpec{
 				{
 					Name: "rows",
-					Type: dataquery.DelayedEvalType.CtyType(),
+					Type: cty.List(plugin.EncapsulatedData.CtyType()),
 					Doc: "A list of objects representing rows in the table.\n" +
 						"May be set statically or as a result of one or more queries.",
 				},
@@ -73,21 +73,24 @@ func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (
 	var rows plugin.ListData
 	rowsVal := params.Args.GetAttrVal("rows")
 	if !rowsVal.IsNull() {
-		res, err := dataquery.DelayedEvalType.FromCty(rowsVal)
-		if err != nil {
-			return nil, diagnostics.FromErr(err, "failed to get rows")
-		}
-		data := res.Result()
-		var ok bool
-		if data != nil {
-			rows, ok = data.(plugin.ListData)
-			if !ok {
-				return nil, diagnostics.Diag{{
-					Severity: hcl.DiagError,
-					Summary:  "Failed to parse arguments",
-					Detail:   fmt.Sprintf("rows must be a list, not %T", data),
-				}}
+		var err error
+		rows, err = utils.FnMapErr(rowsVal.AsValueSlice(), func(v cty.Value) (plugin.Data, error) {
+			data, err := plugin.EncapsulatedData.FromCty(v)
+			if err != nil {
+				return nil, err
 			}
+			if data == nil {
+				return nil, nil
+			}
+			return *data, nil
+		})
+		if err != nil {
+			return nil, diagnostics.Diag{{
+				Severity: hcl.DiagError,
+				Summary:  "Failed to parse arguments",
+				Detail:   err.Error(),
+				Subject:  &params.Args.Attrs["rows"].ValueRange,
+			}}
 		}
 	}
 

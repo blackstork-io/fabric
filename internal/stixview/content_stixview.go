@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -86,7 +85,7 @@ func makeStixViewContentProvider() *plugin.ContentProvider {
 				},
 				{
 					Name: "objects",
-					Type: dataquery.DelayedEvalType.CtyType(),
+					Type: plugin.EncapsulatedData.CtyType(),
 				},
 			},
 		},
@@ -119,10 +118,10 @@ func renderStixView(ctx context.Context, params *plugin.ProvideContentParams) (*
 
 	objectCty := params.Args.GetAttrVal("objects")
 	if !objectCty.IsNull() {
-		objects := dataquery.DelayedEvalType.MustFromCty(objectCty).Result()
-		if objects != nil {
+		objects := plugin.EncapsulatedData.MustFromCty(objectCty)
+		if objects != nil && *objects != nil {
 			var ok bool
-			rctx.Objects, ok = objects.(plugin.ListData)
+			rctx.Objects, ok = (*objects).(plugin.ListData)
 			if !ok {
 				return nil, diagnostics.Diag{{
 					Severity: hcl.DiagError,

@@ -45,7 +45,7 @@ config data elastic_security_cases {
   # Default value:
   api_key_str = null
 
-  # Optional list of string.
+  # Optional [string, string].
   # Default value:
   api_key = null
 }

@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -42,7 +42,7 @@ func makeListContentProvider() *plugin.ContentProvider {
 				},
 				{
 					Name:        "items",
-					Type:        dataquery.DelayedEvalType.CtyType(),
+					Type:        cty.List(plugin.EncapsulatedData.CtyType()),
 					Constraints: constraint.RequiredMeaningful,
 					ExampleVal: cty.ListVal([]cty.Value{
 						cty.StringVal("First item"),
@@ -68,25 +68,26 @@ func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 			Detail:   err.Error(),
 		}}
 	}
-
-	items := dataquery.DelayedEvalType.MustFromCty(params.Args.GetAttrVal("items")).Result()
-	if items == nil {
+	items, err := utils.FnMapErr(params.Args.GetAttrVal("items").AsValueSlice(), func(v cty.Value) (plugin.Data, error) {
+		data, err := plugin.EncapsulatedData.FromCty(v)
+		if err != nil {
+			return nil, err
+		}
+		if data == nil {
+			return nil, nil
+		}
+		return *data, nil
+	})
+	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
-			Detail:   "Data is nil",
-		}}
-	}
-	itemsList, ok := items.(plugin.ListData)
-	if !ok {
-		return nil, diagnostics.Diag{{
-			Severity: hcl.DiagError,
-			Summary:  "Failed to parse arguments",
-			Detail:   "Data must be a list",
+			Detail:   err.Error(),
+			Subject:  &params.Args.Attrs["items"].ValueRange,
 		}}
 	}
 
-	result, err := renderListContent(format, tmpl, itemsList)
+	result, err := renderListContent(format, tmpl, items)
 	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,

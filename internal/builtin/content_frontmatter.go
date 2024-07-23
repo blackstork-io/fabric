@@ -11,7 +11,6 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"gopkg.in/yaml.v3"
 
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -36,7 +35,7 @@ func makeFrontMatterContentProvider() *plugin.ContentProvider {
 				},
 				{
 					Name:        "content",
-					Type:        dataquery.DelayedEvalType.CtyType(),
+					Type:        plugin.EncapsulatedData.CtyType(),
 					Doc:         `Arbitrary key-value map to be put in the frontmatter.`,
 					Constraints: constraint.RequiredMeaningful,
 					ExampleVal: cty.ObjectVal(map[string]cty.Value{
@@ -62,16 +61,23 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 	}
 
 	format := params.Args.GetAttrVal("format").AsString()
-	data := dataquery.DelayedEvalType.MustFromCty(params.Args.GetAttrVal("content")).Result()
 
-	if data == nil {
+	data, err := plugin.EncapsulatedData.FromCty(params.Args.GetAttrVal("content"))
+	if err != nil {
+		return nil, diagnostics.Diag{{
+			Severity: hcl.DiagError,
+			Summary:  "Failed to parse arguments",
+			Detail:   err.Error(),
+		}}
+	}
+	if data == nil || *data == nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
 			Detail:   "Content is nil",
 		}}
 	}
-	m, ok := data.(plugin.MapData)
+	m, ok := (*data).(plugin.MapData)
 	if !ok {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -80,7 +86,6 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 		}}
 	}
 	var result string
-	var err error
 	switch format {
 	case "yaml":
 		result, err = renderYAMLFrontMatter(m)

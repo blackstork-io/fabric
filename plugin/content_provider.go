@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 
+	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
@@ -89,9 +90,8 @@ func (cg *ContentProvider) Execute(ctx context.Context, params *ProvideContentPa
 			Detail:   "content provider function not loaded",
 		}}
 	}
-
-	diags.Extend(CustomEvalTransformBlock(ctx, params.DataContext, params.Config))
-	diags.Extend(CustomEvalTransformBlock(ctx, params.DataContext, params.Args))
+	diags.Extend(dataquery.EvaluateDeferredBlock(ctx, params.DataContext, params.Config))
+	diags.Extend(dataquery.EvaluateDeferredBlock(ctx, params.DataContext, params.Args))
 	if diags.HasErrors() {
 		return
 	}

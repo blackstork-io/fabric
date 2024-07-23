@@ -43,7 +43,7 @@ config data snyk_issues {
   # The Snyk API key
   #
   # Required string.
-  # Must have a length of at least 1
+  # Must be non-empty
   # For example:
   api_key = "some string"
 }
@@ -130,8 +130,8 @@ data snyk_issues {
   # The limit of issues to fetch
   #
   # Optional number.
-  # Must be >= 1
+  # Must be >= 0
   # Default value:
-  limit = null
+  limit = 0
 }
 ```

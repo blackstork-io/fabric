@@ -42,7 +42,6 @@
         "name": "http",
         "type": "data-source",
         "arguments": [
-          "basic_auth",
           "body",
           "headers",
           "insecure",
@@ -87,7 +86,6 @@
         "name": "rss",
         "type": "data-source",
         "arguments": [
-          "basic_auth",
           "url"
         ]
       },
@@ -398,9 +396,9 @@
         "name": "openai_text",
         "type": "content-provider",
         "config_params": [
-          "system_prompt",
           "api_key",
-          "organization_id"
+          "organization_id",
+          "system_prompt"
         ],
         "arguments": [
           "model",

@@ -63,7 +63,7 @@ func DecodeAndAssert(t *testing.T, spec *dataspec.RootSpec, body string, dataCtx
 	if diags.Extend(dgs) {
 		return
 	}
-	dgs = plugin.CustomEvalTransformBlock(context.Background(), dataCtx, val)
+	dgs = plugin.EvaluateDeferredBlock(context.Background(), dataCtx, val)
 	if diags.Extend(dgs) {
 		return
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/itchyny/gojq"
 	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/convert"
 	"github.com/zclconf/go-cty/cty/function"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
@@ -15,14 +16,6 @@ import (
 )
 
 type JqQuery struct {
-	*JqQueryDefinition
-	Evaluated bool
-	Result    plugin.Data
-}
-
-var _ plugin.CustomEval = (*JqQuery)(nil)
-
-type JqQueryDefinition struct {
 	query     string
 	srcRange  *hcl.Range
 	parseOnce func() (*gojq.Code, diagnostics.Diag)
@@ -34,10 +27,10 @@ var JqQueryType = encapsulator.NewCodec("jq query", &encapsulator.CapsuleOps[JqQ
 		if diags.Extend(diag) {
 			return
 		}
-		if queryVal.IsNull() || !queryVal.Type().Equals(cty.String) {
+		if queryVal.IsNull() || !queryVal.IsKnown() || !queryVal.Type().Equals(cty.String) {
 			diags.Append(&hcl.Diagnostic{
 				Severity:    hcl.DiagError,
-				Summary:     "Invalid argument type",
+				Summary:     "Invalid argument",
 				Detail:      "A string is required",
 				Subject:     expr.Range().Ptr(),
 				Expression:  expr,
@@ -47,24 +40,11 @@ var JqQueryType = encapsulator.NewCodec("jq query", &encapsulator.CapsuleOps[JqQ
 		}
 
 		val = &JqQuery{
-			JqQueryDefinition: &JqQueryDefinition{
-				query:    queryVal.AsString(),
-				srcRange: expr.Range().Ptr(),
-			},
+			query:    queryVal.AsString(),
+			srcRange: expr.Range().Ptr(),
 		}
 		val.parseOnce = utils.OnceVal(val.parse)
 		return
-	},
-	ConversionFrom: func(src cty.Type) func(*JqQuery, cty.Path) (cty.Value, error) {
-		if src.Equals(plugin.EncapsulatedData.CtyType()) {
-			return func(jq *JqQuery, p cty.Path) (cty.Value, error) {
-				if !jq.Evaluated {
-					return cty.NilVal, p.NewErrorf("Attempted to encode non-evaluated JqQuery")
-				}
-				return plugin.EncapsulatedData.ValToCty(jq.Result), nil
-			}
-		}
-		return nil
 	},
 })
 
@@ -87,17 +67,16 @@ func JqEvalContext(base *hcl.EvalContext) (evalCtx *hcl.EvalContext) {
 					Type:        JqQueryType.CtyType(),
 				},
 			},
-			Type: function.StaticReturnType(JqQueryType.CtyType()),
+			Type: function.StaticReturnType(DeferredEvalType.CtyType()),
 			Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
-				// The parsing is done by the customdecode on JqType
-				return args[0], nil
+				return convert.Convert(args[0], retType)
 			},
 		}),
 	}
 	return
 }
 
-func (q *JqQueryDefinition) parse() (code *gojq.Code, diags diagnostics.Diag) {
+func (q *JqQuery) parse() (code *gojq.Code, diags diagnostics.Diag) {
 	if q == nil {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
@@ -137,17 +116,17 @@ func (q *JqQueryDefinition) parse() (code *gojq.Code, diags diagnostics.Diag) {
 	return
 }
 
-func (q *JqQueryDefinition) CustomEval(ctx context.Context, dataCtx plugin.MapData) (result cty.Value, diags diagnostics.Diag) {
-	var newQ *JqQuery
-	newQ, diags = q.Eval(ctx, dataCtx)
+func (q *JqQuery) DeferredEval(ctx context.Context, dataCtx plugin.MapData) (result cty.Value, diags diagnostics.Diag) {
+	var data plugin.Data
+	data, diags = q.Eval(ctx, dataCtx)
 	if diags.HasErrors() {
 		return
 	}
-	result = JqQueryType.ToCty(newQ)
+	result = plugin.EncapsulatedData.ToCty(&data)
 	return
 }
 
-func (q *JqQueryDefinition) Eval(ctx context.Context, dataCtx plugin.MapData) (result *JqQuery, diags diagnostics.Diag) {
+func (q *JqQuery) Eval(ctx context.Context, dataCtx plugin.MapData) (result plugin.Data, diags diagnostics.Diag) {
 	if q == nil {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
@@ -179,7 +158,7 @@ func (q *JqQueryDefinition) Eval(ctx context.Context, dataCtx plugin.MapData) (r
 	if !hasResult {
 		res = nil
 	}
-	data, err := plugin.ParseDataAny(res)
+	result, err = plugin.ParseDataAny(res)
 	if err != nil {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
@@ -188,11 +167,6 @@ func (q *JqQueryDefinition) Eval(ctx context.Context, dataCtx plugin.MapData) (r
 			Subject:  q.srcRange,
 		})
 		return
-	}
-	result = &JqQuery{
-		JqQueryDefinition: q,
-		Result:            data,
-		Evaluated:         true,
 	}
 	return
 }

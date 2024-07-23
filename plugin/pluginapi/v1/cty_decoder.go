@@ -253,14 +253,14 @@ func decodeCty(val *Cty, decodeType bool) (retVal cty.Value, retTy cty.Type) {
 			return
 		case *Cty_Capsule_DelayedEval:
 			if decodeType {
-				retTy = dataquery.DelayedEvalType.CtyType()
+				retTy = plugin.DelayedEvalType.CtyType()
 			} else {
 				pluginData := decodeData(val.DelayedEval)
 				ctyCapsule := plugin.EncapsulatedData.ToCty(&pluginData)
 				var err error
 				retVal, err = convert.Convert(ctyCapsule, dataquery.DelayedEvalType.CtyType())
 				if err != nil {
-					panic(fmt.Errorf("failed to convert plugin data to delayed eval: %w", err))
+					panic(fmt.Errorf("failed to convert plugin.data to delayed eval: %w", err))
 				}
 			}
 			return
