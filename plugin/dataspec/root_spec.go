@@ -1,13 +1,14 @@
 package dataspec
 
 import (
-	"github.com/hashicorp/hcl/v2/hclwrite"
-
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
 func RootSpecFromBlock(b *BlockSpec) *RootSpec {
+	if b == nil {
+		return nil
+	}
 	return &RootSpec{
 		Doc:                        b.Doc,
 		Blocks:                     b.Blocks,
@@ -40,6 +41,9 @@ func (r *RootSpec) IsRequired() bool {
 }
 
 func (r *RootSpec) BlockSpec() *BlockSpec {
+	if r == nil {
+		return nil
+	}
 	if r.blockSpec == nil {
 		r.makeBlockSpec()
 	}
@@ -73,10 +77,6 @@ func (r *RootSpec) makeBlockSpec() {
 		AllowUnspecifiedBlocks:     r.AllowUnspecifiedBlocks,
 		AllowUnspecifiedAttributes: r.AllowUnspecifiedAttributes,
 	}
-}
-
-func (r *RootSpec) WriteDoc(w *hclwrite.Body) {
-	r.BlockSpec().WriteDoc(w)
 }
 
 func (r *RootSpec) ValidateSpec() (errs diagnostics.Diag) {

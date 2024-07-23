@@ -41,9 +41,9 @@ func (srv *grpcServer) GetSchema(ctx context.Context, req *GetSchemaRequest) (*G
 			slog.DebugContext(ctx, "GetSchema done")
 		}
 	}()
-	schema, err := encodeSchema(srv.schema)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to encode schema: %v", err)
+	schema, diags := encodeSchema(srv.schema)
+	if diags.HasErrors() {
+		return nil, status.Errorf(codes.Internal, "failed to encode schema: %v", diags)
 	}
 	return &GetSchemaResponse{Schema: schema}, nil
 }

@@ -1,97 +1,67 @@
 package pluginapiv1
 
-import "github.com/blackstork-io/fabric/plugin"
+import (
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
+	"github.com/blackstork-io/fabric/plugin"
+)
 
-func encodeSchema(src *plugin.Schema) (*Schema, error) {
+func encodeSchema(src *plugin.Schema) (*Schema, diagnostics.Diag) {
 	if src == nil {
 		return nil, nil
 	}
-	dataSources, err := encodeDataSourceSchemaMap(src.DataSources)
-	if err != nil {
-		return nil, err
-	}
-	contentProviders, err := encodeContentProviderSchemaMap(src.ContentProviders)
-	if err != nil {
-		return nil, err
-	}
-	publishers, err := encodePublisherSchemaMap(src.Publishers)
-	if err != nil {
-		return nil, err
-	}
+	var diags diagnostics.Diag
+
 	return &Schema{
 		Name:             src.Name,
 		Version:          src.Version,
-		DataSources:      dataSources,
-		ContentProviders: contentProviders,
-		Publishers:       publishers,
+		DataSources:      utils.MapMapDiags(&diags, src.DataSources, encodeDataSourceSchema),
+		ContentProviders: utils.MapMapDiags(&diags, src.ContentProviders, encodeContentProviderSchema),
+		Publishers:       utils.MapMapDiags(&diags, src.Publishers, encodePublisherShema),
 		Doc:              src.Doc,
 		Tags:             src.Tags,
-	}, nil
+	}, diags
 }
 
-func encodeDataSourceSchemaMap(src plugin.DataSources) (map[string]*DataSourceSchema, error) {
-	dst := make(map[string]*DataSourceSchema, len(src))
-	var err error
-	for k, v := range src {
-		dst[k], err = encodeDataSourceSchema(v)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return dst, nil
-}
-
-func encodeDataSourceSchema(src *plugin.DataSource) (*DataSourceSchema, error) {
+func encodeDataSourceSchema(src *plugin.DataSource) (_ *DataSourceSchema, diags diagnostics.Diag) {
 	if src == nil {
 		return nil, nil
 	}
-	args, err := encodeBlockSpec(src.Args.BlockSpec())
-	if err != nil {
-		return nil, err
+	schema := &DataSourceSchema{
+		Doc:  src.Doc,
+		Tags: src.Tags,
 	}
-	config, err := encodeBlockSpec(src.Config.BlockSpec())
-	if err != nil {
-		return nil, err
+	var diag diagnostics.Diag
+	if src.Args != nil {
+		schema.Args, diag = encodeRootSpec(src.Args)
+		diags.Extend(diag)
 	}
-	return &DataSourceSchema{
-		Args:   args,
-		Config: config,
-		Doc:    src.Doc,
-		Tags:   src.Tags,
-	}, nil
+	if src.Config != nil {
+		schema.Config, diag = encodeRootSpec(src.Config)
+		diags.Extend(diag)
+	}
+	return schema, diags
 }
 
-func encodeContentProviderSchemaMap(src plugin.ContentProviders) (map[string]*ContentProviderSchema, error) {
-	dst := make(map[string]*ContentProviderSchema, len(src))
-	var err error
-	for k, v := range src {
-		dst[k], err = encodeContentProviderSchema(v)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return dst, nil
-}
-
-func encodeContentProviderSchema(src *plugin.ContentProvider) (*ContentProviderSchema, error) {
+func encodeContentProviderSchema(src *plugin.ContentProvider) (_ *ContentProviderSchema, diags diagnostics.Diag) {
 	if src == nil {
 		return nil, nil
 	}
-	args, err := encodeBlockSpec(src.Args.BlockSpec())
-	if err != nil {
-		return nil, err
-	}
-	config, err := encodeBlockSpec(src.Config.BlockSpec())
-	if err != nil {
-		return nil, err
-	}
-	return &ContentProviderSchema{
-		Args:            args,
-		Config:          config,
+	schema := &ContentProviderSchema{
 		InvocationOrder: encodeInvocationOrder(src.InvocationOrder),
 		Doc:             src.Doc,
 		Tags:            src.Tags,
-	}, nil
+	}
+	var diag diagnostics.Diag
+	if src.Args != nil {
+		schema.Args, diag = encodeRootSpec(src.Args)
+		diags.Extend(diag)
+	}
+	if src.Config != nil {
+		schema.Config, diag = encodeRootSpec(src.Config)
+		diags.Extend(diag)
+	}
+	return schema, diags
 }
 
 func encodeInvocationOrder(src plugin.InvocationOrder) InvocationOrder {
@@ -118,39 +88,24 @@ func encodeOutputFormat(src plugin.OutputFormat) OutputFormat {
 	}
 }
 
-func encodePublisherSchemaMap(src plugin.Publishers) (map[string]*PublisherSchema, error) {
-	dst := make(map[string]*PublisherSchema, len(src))
-	var err error
-	for k, v := range src {
-		dst[k], err = encodePublisherShema(v)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return dst, nil
-}
-
-func encodePublisherShema(src *plugin.Publisher) (*PublisherSchema, error) {
+func encodePublisherShema(src *plugin.Publisher) (_ *PublisherSchema, diags diagnostics.Diag) {
 	if src == nil {
 		return nil, nil
 	}
-	args, err := encodeBlockSpec(src.Args.BlockSpec())
-	if err != nil {
-		return nil, err
-	}
-	config, err := encodeBlockSpec(src.Config.BlockSpec())
-	if err != nil {
-		return nil, err
-	}
-	formats := make([]OutputFormat, len(src.AllowedFormats))
-	for i, f := range src.AllowedFormats {
-		formats[i] = encodeOutputFormat(f)
-	}
-	return &PublisherSchema{
-		Args:           args,
-		Config:         config,
+	schema := &PublisherSchema{
 		Doc:            src.Doc,
 		Tags:           src.Tags,
-		AllowedFormats: formats,
-	}, nil
+		AllowedFormats: utils.FnMap(src.AllowedFormats, encodeOutputFormat),
+	}
+
+	var diag diagnostics.Diag
+	if src.Args != nil {
+		schema.Args, diag = encodeRootSpec(src.Args)
+		diags.Extend(diag)
+	}
+	if src.Config != nil {
+		schema.Config, diag = encodeRootSpec(src.Config)
+		diags.Extend(diag)
+	}
+	return schema, diags
 }

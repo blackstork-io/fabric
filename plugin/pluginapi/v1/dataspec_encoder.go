@@ -33,6 +33,13 @@ func encodeAttrSpec(src *dataspec.AttrSpec) (*AttrSpec, diagnostics.Diag) {
 	}, diags
 }
 
+func encodeRootSpec(src *dataspec.RootSpec) (*BlockSpec, diagnostics.Diag) {
+	if src == nil {
+		return nil, nil
+	}
+	return encodeBlockSpec(src.BlockSpec())
+}
+
 func encodeBlockSpec(src *dataspec.BlockSpec) (*BlockSpec, diagnostics.Diag) {
 	var diags diagnostics.Diag
 	matchers := make([]*BlockSpec_NameMatcher, len(src.Header))
