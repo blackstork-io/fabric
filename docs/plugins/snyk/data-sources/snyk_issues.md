@@ -4,7 +4,7 @@ plugin:
   name: blackstork/snyk
   description: "The `snyk_issues` data source fetches issues from Snyk"
   tags: []
-  version: "v0.4.1"
+  version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/snyk/"
 resource:
   type: data-source
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/snyk" "snyk" "v0.4.1" "snyk_issues" "data source" >}}
+{{< plugin-resource-header "blackstork/snyk" "snyk" "v0.4.2" "snyk_issues" "data source" >}}
 
 ## Description
 The `snyk_issues` data source fetches issues from Snyk.
@@ -27,7 +27,7 @@ To install the plugin, add the full plugin name to the `plugin_versions` map in 
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/snyk" = ">= v0.4.1"
+    "blackstork/snyk" = ">= v0.4.2"
   }
 }
 ```

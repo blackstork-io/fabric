@@ -4,7 +4,7 @@ plugin:
   name: blackstork/nist_nvd
   description: ""
   tags: []
-  version: "v0.4.1"
+  version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/nistnvd/"
 resource:
   type: data-source
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/nist_nvd" "nist_nvd" "v0.4.1" "nist_nvd_cves" "data source" >}}
+{{< plugin-resource-header "blackstork/nist_nvd" "nist_nvd" "v0.4.2" "nist_nvd_cves" "data source" >}}
 
 ## Installation
 
@@ -24,7 +24,7 @@ To install the plugin, add the full plugin name to the `plugin_versions` map in 
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/nist_nvd" = ">= v0.4.1"
+    "blackstork/nist_nvd" = ">= v0.4.2"
   }
 }
 ```

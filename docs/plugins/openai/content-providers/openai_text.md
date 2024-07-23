@@ -4,7 +4,7 @@ plugin:
   name: blackstork/openai
   description: ""
   tags: []
-  version: "v0.4.1"
+  version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/openai/"
 resource:
   type: content-provider
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/openai" "openai" "v0.4.1" "openai_text" "content provider" >}}
+{{< plugin-resource-header "blackstork/openai" "openai" "v0.4.2" "openai_text" "content provider" >}}
 
 ## Installation
 
@@ -24,7 +24,7 @@ To install the plugin, add the full plugin name to the `plugin_versions` map in 
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/openai" = ">= v0.4.1"
+    "blackstork/openai" = ">= v0.4.2"
   }
 }
 ```

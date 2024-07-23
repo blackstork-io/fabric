@@ -4,7 +4,7 @@ plugin:
   name: blackstork/elastic
   description: ""
   tags: []
-  version: "v0.4.1"
+  version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/elastic/"
 resource:
   type: data-source
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/elastic" "elastic" "v0.4.1" "elasticsearch" "data source" >}}
+{{< plugin-resource-header "blackstork/elastic" "elastic" "v0.4.2" "elasticsearch" "data source" >}}
 
 ## Installation
 
@@ -24,7 +24,7 @@ To install the plugin, add the full plugin name to the `plugin_versions` map in 
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/elastic" = ">= v0.4.1"
+    "blackstork/elastic" = ">= v0.4.2"
   }
 }
 ```
@@ -93,7 +93,7 @@ data elasticsearch {
   # Default value:
   query = null
 
-  # Optional map of any single type.
+  # Optional any type.
   # Default value:
   aggs = null
 

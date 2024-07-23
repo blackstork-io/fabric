@@ -5,13 +5,13 @@ plugin:
   name: blackstork/microsoft
   description: "The `microsoft` plugin for Microsoft services."
   tags: []
-  version: "v0.4.1"
+  version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/microsoft/"
 type: docs
 hideInMenu: true
 ---
 
-{{< plugin-header "blackstork/microsoft" "microsoft" "v0.4.1" >}}
+{{< plugin-header "blackstork/microsoft" "microsoft" "v0.4.2" >}}
 
 ## Description
 The `microsoft` plugin for Microsoft services.
@@ -23,7 +23,7 @@ To install the plugin, add it to `plugin_versions` map in the Fabric global conf
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/microsoft" = ">= v0.4.1"
+    "blackstork/microsoft" = ">= v0.4.2"
   }
 }
 ```

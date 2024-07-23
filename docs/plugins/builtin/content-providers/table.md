@@ -4,7 +4,7 @@ plugin:
   name: blackstork/builtin
   description: "Produces a table"
   tags: []
-  version: "v0.4.1"
+  version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
 resource:
   type: content-provider
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "table" "content provider" >}}
+{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "table" "content provider" >}}
 
 ## Description
 Produces a table.
