@@ -216,11 +216,11 @@ func fetchHTTPDataWrapper(version string) plugin.RetrieveDataFunc {
 }
 
 func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, version string) (plugin.Data, diagnostics.Diag) {
-	url := params.Args.GetAttr("url").AsString()
-	method := params.Args.GetAttr("method").AsString()
-	insecure := params.Args.GetAttr("insecure").True()
+	url := params.Args.GetAttrVal("url").AsString()
+	method := params.Args.GetAttrVal("method").AsString()
+	insecure := params.Args.GetAttrVal("insecure").True()
 
-	timeout, err := time.ParseDuration(params.Args.GetAttr("timeout").AsString())
+	timeout, err := time.ParseDuration(params.Args.GetAttrVal("timeout").AsString())
 	if err != nil {
 		return nil, diagnostics.Diag{
 			{
@@ -242,18 +242,18 @@ func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, versi
 
 	basicAuth := params.Args.Blocks.GetFirstMatching("basic_auth")
 	if basicAuth != nil {
-		req.BasicAuthUsername = StringPtr(basicAuth.GetAttr("username").AsString())
-		req.BasicAuthPassword = StringPtr(basicAuth.GetAttr("password").AsString())
+		req.BasicAuthUsername = StringPtr(basicAuth.GetAttrVal("username").AsString())
+		req.BasicAuthPassword = StringPtr(basicAuth.GetAttrVal("password").AsString())
 	}
 
-	headers := params.Args.GetAttr("headers")
+	headers := params.Args.GetAttrVal("headers")
 	if !headers.IsNull() {
 		for k, v := range headers.AsValueMap() {
 			req.Headers[k] = v.AsString()
 		}
 	}
 
-	body := params.Args.GetAttr("body")
+	body := params.Args.GetAttrVal("body")
 	if !body.IsNull() && body.AsString() != "" {
 		req.Body = StringPtr(body.AsString())
 	}

@@ -63,8 +63,7 @@ func (b *Block) HasAttr(name string) bool {
 }
 
 // Attempts to get attribute value, returns cty.NilVal if it's missing
-// TODO: GetAttrVal
-func (b *Block) GetAttr(name string) cty.Value {
+func (b *Block) GetAttrVal(name string) cty.Value {
 	if b == nil || b.Attrs == nil {
 		return cty.NilVal
 	}

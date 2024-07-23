@@ -112,9 +112,9 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 		}}
 	}
 	var diags diagnostics.Diag
-	if (params.Args.GetAttr("only_hits").IsNull() || params.Args.GetAttr("only_hits").True()) &&
-		!params.Args.GetAttr("aggs").IsNull() {
-		if params.Args.GetAttr("query").IsNull() && params.Args.GetAttr("query_string").IsNull() {
+	if (params.Args.GetAttrVal("only_hits").IsNull() || params.Args.GetAttrVal("only_hits").True()) &&
+		!params.Args.GetAttrVal("aggs").IsNull() {
+		if params.Args.GetAttrVal("query").IsNull() && params.Args.GetAttrVal("query_string").IsNull() {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Invalid arguments",
@@ -128,7 +128,7 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 		})
 	}
 
-	index := params.Args.GetAttr("index")
+	index := params.Args.GetAttrVal("index")
 	if index.IsNull() {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -141,7 +141,7 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 	if params.Args.HasAttr("id") {
 		data, err = getByID(client.Get, params.Args)
 	} else {
-		size64, _ := params.Args.GetAttr("size").AsBigFloat().Int64()
+		size64, _ := params.Args.GetAttrVal("size").AsBigFloat().Int64()
 		size := int(size64)
 		if size <= maxSimpleSearchResultsSize {
 			slog.DebugContext(ctx, "Sending normal search request", "size", size)

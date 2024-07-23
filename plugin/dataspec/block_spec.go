@@ -83,9 +83,9 @@ func (b *BlockSpec) WriteDoc(w *hclwrite.Body) {
 	block := w.AppendNewBlock(b.Header.AsDocLabels())
 	if len(b.Blocks) != 0 {
 		b.Blocks[0].WriteDoc(block.Body())
-		for _, sub_b := range b.Blocks[1:] {
+		for _, subBlock := range b.Blocks[1:] {
 			w.AppendNewline()
-			sub_b.WriteDoc(block.Body())
+			subBlock.WriteDoc(block.Body())
 		}
 	}
 	if len(b.Attrs) != 0 {
@@ -94,9 +94,9 @@ func (b *BlockSpec) WriteDoc(w *hclwrite.Body) {
 			w.AppendNewline()
 		}
 		b.Attrs[0].WriteDoc(w)
-		for _, sub_a := range b.Attrs[1:] {
+		for _, subAttr := range b.Attrs[1:] {
 			w.AppendNewline()
-			sub_a.WriteDoc(block.Body())
+			subAttr.WriteDoc(block.Body())
 		}
 	}
 }

@@ -295,7 +295,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		return nil, fmt.Errorf("args are required")
 	}
 	var req client.GetAllReportsReq
-	size := args.GetAttr("size")
+	size := args.GetAttrVal("size")
 	if !size.IsNull() {
 		n, _ := size.AsBigFloat().Int64()
 		if n <= 0 {
@@ -303,7 +303,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.PageSize = client.Int(int(n))
 	}
-	pageNumber := args.GetAttr("page_number")
+	pageNumber := args.GetAttrVal("page_number")
 	if !pageNumber.IsNull() {
 		n, _ := pageNumber.AsBigFloat().Int64()
 		if n <= 0 {
@@ -311,18 +311,18 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.PageNumber = client.Int(int(n))
 	}
-	sort := args.GetAttr("sort")
+	sort := args.GetAttrVal("sort")
 	if !sort.IsNull() && sort.AsString() != "" {
 		req.Sort = client.String(sort.AsString())
 	}
-	program := args.GetAttr("program")
+	program := args.GetAttrVal("program")
 	if !program.IsNull() {
 		programs := program.AsValueSlice()
 		for _, p := range programs {
 			req.FilterProgram = append(req.FilterProgram, p.AsString())
 		}
 	}
-	inboxIDs := args.GetAttr("inbox_ids")
+	inboxIDs := args.GetAttrVal("inbox_ids")
 	if !inboxIDs.IsNull() {
 		ids := inboxIDs.AsValueSlice()
 		for _, id := range ids {
@@ -333,28 +333,28 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 	if len(req.FilterProgram)+len(req.FilterInboxIDs) == 0 {
 		return nil, fmt.Errorf("at least one of program or inbox_ids must be provided")
 	}
-	reporter := args.GetAttr("reporter")
+	reporter := args.GetAttrVal("reporter")
 	if !reporter.IsNull() {
 		reporters := reporter.AsValueSlice()
 		for _, r := range reporters {
 			req.FilterReporter = append(req.FilterReporter, r.AsString())
 		}
 	}
-	assignee := args.GetAttr("assignee")
+	assignee := args.GetAttrVal("assignee")
 	if !assignee.IsNull() {
 		assignees := assignee.AsValueSlice()
 		for _, a := range assignees {
 			req.FilterAssignee = append(req.FilterAssignee, a.AsString())
 		}
 	}
-	state := args.GetAttr("state")
+	state := args.GetAttrVal("state")
 	if !state.IsNull() {
 		states := state.AsValueSlice()
 		for _, s := range states {
 			req.FilterState = append(req.FilterState, s.AsString())
 		}
 	}
-	id := args.GetAttr("id")
+	id := args.GetAttrVal("id")
 	if !id.IsNull() {
 		ids := id.AsValueSlice()
 		for _, i := range ids {
@@ -362,7 +362,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 			req.FilterID = append(req.FilterID, int(n))
 		}
 	}
-	weaknessID := args.GetAttr("weakness_id")
+	weaknessID := args.GetAttrVal("weakness_id")
 	if !weaknessID.IsNull() {
 		ids := weaknessID.AsValueSlice()
 		for _, i := range ids {
@@ -370,18 +370,18 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 			req.FilterWeaknessID = append(req.FilterWeaknessID, int(n))
 		}
 	}
-	severity := args.GetAttr("severity")
+	severity := args.GetAttrVal("severity")
 	if !severity.IsNull() {
 		severities := severity.AsValueSlice()
 		for _, s := range severities {
 			req.FilterSeverity = append(req.FilterSeverity, s.AsString())
 		}
 	}
-	hackerPublished := args.GetAttr("hacker_published")
+	hackerPublished := args.GetAttrVal("hacker_published")
 	if !hackerPublished.IsNull() {
 		req.FilterHackerPublished = client.Bool(hackerPublished.True())
 	}
-	createdAtGT := args.GetAttr("created_at__gt")
+	createdAtGT := args.GetAttrVal("created_at__gt")
 	if !createdAtGT.IsNull() {
 		t, err := time.Parse(time.RFC3339, createdAtGT.AsString())
 		if err != nil {
@@ -389,7 +389,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterCreatedAtGT = &t
 	}
-	createdAtLT := args.GetAttr("created_at__lt")
+	createdAtLT := args.GetAttrVal("created_at__lt")
 	if !createdAtLT.IsNull() {
 		t, err := time.Parse(time.RFC3339, createdAtLT.AsString())
 		if err != nil {
@@ -397,7 +397,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterCreatedAtLT = &t
 	}
-	submittedAtGT := args.GetAttr("submitted_at__gt")
+	submittedAtGT := args.GetAttrVal("submitted_at__gt")
 	if !submittedAtGT.IsNull() {
 		t, err := time.Parse(time.RFC3339, submittedAtGT.AsString())
 		if err != nil {
@@ -405,7 +405,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterSubmittedAtGT = &t
 	}
-	submittedAtLT := args.GetAttr("submitted_at__lt")
+	submittedAtLT := args.GetAttrVal("submitted_at__lt")
 	if !submittedAtLT.IsNull() {
 		t, err := time.Parse(time.RFC3339, submittedAtLT.AsString())
 		if err != nil {
@@ -413,7 +413,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterSubmittedAtLT = &t
 	}
-	triagedAtGT := args.GetAttr("triaged_at__gt")
+	triagedAtGT := args.GetAttrVal("triaged_at__gt")
 	if !triagedAtGT.IsNull() {
 		t, err := time.Parse(time.RFC3339, triagedAtGT.AsString())
 		if err != nil {
@@ -421,7 +421,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterTriagedAtGT = &t
 	}
-	triagedAtLT := args.GetAttr("triaged_at__lt")
+	triagedAtLT := args.GetAttrVal("triaged_at__lt")
 	if !triagedAtLT.IsNull() {
 		t, err := time.Parse(time.RFC3339, triagedAtLT.AsString())
 		if err != nil {
@@ -429,11 +429,11 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterTriagedAtLT = &t
 	}
-	triagedAtNull := args.GetAttr("triaged_at__null")
+	triagedAtNull := args.GetAttrVal("triaged_at__null")
 	if !triagedAtNull.IsNull() {
 		req.FilterTriagedAtNull = client.Bool(triagedAtNull.True())
 	}
-	closedAtGT := args.GetAttr("closed_at__gt")
+	closedAtGT := args.GetAttrVal("closed_at__gt")
 	if !closedAtGT.IsNull() {
 		t, err := time.Parse(time.RFC3339, closedAtGT.AsString())
 		if err != nil {
@@ -441,7 +441,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterClosedAtGT = &t
 	}
-	closedAtLT := args.GetAttr("closed_at__lt")
+	closedAtLT := args.GetAttrVal("closed_at__lt")
 	if !closedAtLT.IsNull() {
 		t, err := time.Parse(time.RFC3339, closedAtLT.AsString())
 		if err != nil {
@@ -449,11 +449,11 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterClosedAtLT = &t
 	}
-	closedAtNull := args.GetAttr("closed_at__null")
+	closedAtNull := args.GetAttrVal("closed_at__null")
 	if !closedAtNull.IsNull() {
 		req.FilterClosedAtNull = client.Bool(closedAtNull.True())
 	}
-	disclosedAtGT := args.GetAttr("disclosed_at__gt")
+	disclosedAtGT := args.GetAttrVal("disclosed_at__gt")
 	if !disclosedAtGT.IsNull() {
 		t, err := time.Parse(time.RFC3339, disclosedAtGT.AsString())
 		if err != nil {
@@ -461,7 +461,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterDisclosedAtGT = &t
 	}
-	disclosedAtLT := args.GetAttr("disclosed_at__lt")
+	disclosedAtLT := args.GetAttrVal("disclosed_at__lt")
 	if !disclosedAtLT.IsNull() {
 		t, err := time.Parse(time.RFC3339, disclosedAtLT.AsString())
 		if err != nil {
@@ -469,15 +469,15 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterDisclosedAtLT = &t
 	}
-	disclosedAtNull := args.GetAttr("disclosed_at__null")
+	disclosedAtNull := args.GetAttrVal("disclosed_at__null")
 	if !disclosedAtNull.IsNull() {
 		req.FilterDisclosedAtNull = client.Bool(disclosedAtNull.True())
 	}
-	reporterAgreedOnGoingPublic := args.GetAttr("reporter_agreed_on_going_public")
+	reporterAgreedOnGoingPublic := args.GetAttrVal("reporter_agreed_on_going_public")
 	if !reporterAgreedOnGoingPublic.IsNull() {
 		req.FilterReporterAgreedOnGoingPublic = client.Bool(reporterAgreedOnGoingPublic.True())
 	}
-	bountyAwardedAtGT := args.GetAttr("bounty_awarded_at__gt")
+	bountyAwardedAtGT := args.GetAttrVal("bounty_awarded_at__gt")
 	if !bountyAwardedAtGT.IsNull() {
 		t, err := time.Parse(time.RFC3339, bountyAwardedAtGT.AsString())
 		if err != nil {
@@ -485,7 +485,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterBountyAwardedAtGT = &t
 	}
-	bountyAwardedAtLT := args.GetAttr("bounty_awarded_at__lt")
+	bountyAwardedAtLT := args.GetAttrVal("bounty_awarded_at__lt")
 	if !bountyAwardedAtLT.IsNull() {
 		t, err := time.Parse(time.RFC3339, bountyAwardedAtLT.AsString())
 		if err != nil {
@@ -493,11 +493,11 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterBountyAwardedAtLT = &t
 	}
-	bountyAwardedAtNull := args.GetAttr("bounty_awarded_at__null")
+	bountyAwardedAtNull := args.GetAttrVal("bounty_awarded_at__null")
 	if !bountyAwardedAtNull.IsNull() {
 		req.FilterBountyAwardedAtNull = client.Bool(bountyAwardedAtNull.True())
 	}
-	swagAwardedAtGT := args.GetAttr("swag_awarded_at__gt")
+	swagAwardedAtGT := args.GetAttrVal("swag_awarded_at__gt")
 	if !swagAwardedAtGT.IsNull() {
 		t, err := time.Parse(time.RFC3339, swagAwardedAtGT.AsString())
 		if err != nil {
@@ -505,7 +505,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterSwagAwardedAtGT = &t
 	}
-	swagAwardedAtLT := args.GetAttr("swag_awarded_at__lt")
+	swagAwardedAtLT := args.GetAttrVal("swag_awarded_at__lt")
 	if !swagAwardedAtLT.IsNull() {
 		t, err := time.Parse(time.RFC3339, swagAwardedAtLT.AsString())
 		if err != nil {
@@ -513,11 +513,11 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterSwagAwardedAtLT = &t
 	}
-	swagAwardedAtNull := args.GetAttr("swag_awarded_at__null")
+	swagAwardedAtNull := args.GetAttrVal("swag_awarded_at__null")
 	if !swagAwardedAtNull.IsNull() {
 		req.FilterSwagAwardedAtNull = client.Bool(swagAwardedAtNull.True())
 	}
-	lastReportActivityAtGT := args.GetAttr("last_report_activity_at__gt")
+	lastReportActivityAtGT := args.GetAttrVal("last_report_activity_at__gt")
 	if !lastReportActivityAtGT.IsNull() {
 		t, err := time.Parse(time.RFC3339, lastReportActivityAtGT.AsString())
 		if err != nil {
@@ -525,7 +525,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterLastReportActivityAtGT = &t
 	}
-	lastReportActivityAtLT := args.GetAttr("last_report_activity_at__lt")
+	lastReportActivityAtLT := args.GetAttrVal("last_report_activity_at__lt")
 	if !lastReportActivityAtLT.IsNull() {
 		t, err := time.Parse(time.RFC3339, lastReportActivityAtLT.AsString())
 		if err != nil {
@@ -533,7 +533,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterLastReportActivityAtLT = &t
 	}
-	firstProgramActivityAtGT := args.GetAttr("first_program_activity_at__gt")
+	firstProgramActivityAtGT := args.GetAttrVal("first_program_activity_at__gt")
 	if !firstProgramActivityAtGT.IsNull() {
 		t, err := time.Parse(time.RFC3339, firstProgramActivityAtGT.AsString())
 		if err != nil {
@@ -541,7 +541,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterFirstProgramActivityAtGT = &t
 	}
-	firstProgramActivityAtLT := args.GetAttr("first_program_activity_at__lt")
+	firstProgramActivityAtLT := args.GetAttrVal("first_program_activity_at__lt")
 	if !firstProgramActivityAtLT.IsNull() {
 		t, err := time.Parse(time.RFC3339, firstProgramActivityAtLT.AsString())
 		if err != nil {
@@ -549,11 +549,11 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterFirstProgramActivityAtLT = &t
 	}
-	firstProgramActivityAtNull := args.GetAttr("first_program_activity_at__null")
+	firstProgramActivityAtNull := args.GetAttrVal("first_program_activity_at__null")
 	if !firstProgramActivityAtNull.IsNull() {
 		req.FilterFirstProgramActivityAtNull = client.Bool(firstProgramActivityAtNull.True())
 	}
-	lastProgramActivityAtGT := args.GetAttr("last_program_activity_at__gt")
+	lastProgramActivityAtGT := args.GetAttrVal("last_program_activity_at__gt")
 	if !lastProgramActivityAtGT.IsNull() {
 		t, err := time.Parse(time.RFC3339, lastProgramActivityAtGT.AsString())
 		if err != nil {
@@ -561,7 +561,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterLastProgramActivityAtGT = &t
 	}
-	lastProgramActivityAtLT := args.GetAttr("last_program_activity_at__lt")
+	lastProgramActivityAtLT := args.GetAttrVal("last_program_activity_at__lt")
 	if !lastProgramActivityAtLT.IsNull() {
 		t, err := time.Parse(time.RFC3339, lastProgramActivityAtLT.AsString())
 		if err != nil {
@@ -569,11 +569,11 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterLastProgramActivityAtLT = &t
 	}
-	lastProgramActivityAtNull := args.GetAttr("last_program_activity_at__null")
+	lastProgramActivityAtNull := args.GetAttrVal("last_program_activity_at__null")
 	if !lastProgramActivityAtNull.IsNull() {
 		req.FilterLastProgramActivityAtNull = client.Bool(lastProgramActivityAtNull.True())
 	}
-	lastActivityAtGT := args.GetAttr("last_activity_at__gt")
+	lastActivityAtGT := args.GetAttrVal("last_activity_at__gt")
 	if !lastActivityAtGT.IsNull() {
 		t, err := time.Parse(time.RFC3339, lastActivityAtGT.AsString())
 		if err != nil {
@@ -581,7 +581,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterLastActivityAtGT = &t
 	}
-	lastActivityAtLT := args.GetAttr("last_activity_at__lt")
+	lastActivityAtLT := args.GetAttrVal("last_activity_at__lt")
 	if !lastActivityAtLT.IsNull() {
 		t, err := time.Parse(time.RFC3339, lastActivityAtLT.AsString())
 		if err != nil {
@@ -589,7 +589,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterLastActivityAtLT = &t
 	}
-	lastPublicActivityAtGT := args.GetAttr("last_public_activity_at__gt")
+	lastPublicActivityAtGT := args.GetAttrVal("last_public_activity_at__gt")
 	if !lastPublicActivityAtGT.IsNull() {
 		t, err := time.Parse(time.RFC3339, lastPublicActivityAtGT.AsString())
 		if err != nil {
@@ -597,7 +597,7 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterLastPublicActivityAtGT = &t
 	}
-	lastPublicActivityAtLT := args.GetAttr("last_public_activity_at__lt")
+	lastPublicActivityAtLT := args.GetAttrVal("last_public_activity_at__lt")
 	if !lastPublicActivityAtLT.IsNull() {
 		t, err := time.Parse(time.RFC3339, lastPublicActivityAtLT.AsString())
 		if err != nil {
@@ -605,11 +605,11 @@ func parseHackerOneReportsArgs(args *dataspec.Block) (*client.GetAllReportsReq, 
 		}
 		req.FilterLastPublicActivityAtLT = &t
 	}
-	keyword := args.GetAttr("keyword")
+	keyword := args.GetAttrVal("keyword")
 	if !keyword.IsNull() {
 		req.FilterKeyword = client.String(keyword.AsString())
 	}
-	customFields := args.GetAttr("custom_fields")
+	customFields := args.GetAttrVal("custom_fields")
 	if !customFields.IsNull() {
 		fields := customFields.AsValueMap()
 		req.FilterCustomFields = make(map[string]string, len(fields))

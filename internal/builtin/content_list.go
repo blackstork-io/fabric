@@ -58,9 +58,9 @@ func makeListContentProvider() *plugin.ContentProvider {
 }
 
 func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	format := params.Args.GetAttr("format").AsString()
+	format := params.Args.GetAttrVal("format").AsString()
 
-	tmpl, err := template.New("item").Funcs(sprig.FuncMap()).Parse(params.Args.GetAttr("item_template").AsString())
+	tmpl, err := template.New("item").Funcs(sprig.FuncMap()).Parse(params.Args.GetAttrVal("item_template").AsString())
 	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -69,7 +69,7 @@ func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 		}}
 	}
 
-	items := dataquery.DelayedEvalType.MustFromCty(params.Args.GetAttr("items")).Result()
+	items := dataquery.DelayedEvalType.MustFromCty(params.Args.GetAttrVal("items")).Result()
 	if items == nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,

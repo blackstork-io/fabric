@@ -87,16 +87,16 @@ func genOpenAIText(loader ClientLoadFn) plugin.ProvideContentFunc {
 
 func renderText(ctx context.Context, cli client.Client, cfg, args *dataspec.Block, dataCtx plugin.MapData) (string, error) {
 	params := client.ChatCompletionParams{
-		Model: args.GetAttr("model").AsString(),
+		Model: args.GetAttrVal("model").AsString(),
 	}
-	systemPrompt := cfg.GetAttr("system_prompt")
+	systemPrompt := cfg.GetAttrVal("system_prompt")
 	if !systemPrompt.IsNull() && systemPrompt.AsString() != "" {
 		params.Messages = append(params.Messages, client.ChatCompletionMessage{
 			Role:    "system",
 			Content: systemPrompt.AsString(),
 		})
 	}
-	content, err := templateText(args.GetAttr("prompt").AsString(), dataCtx)
+	content, err := templateText(args.GetAttrVal("prompt").AsString(), dataCtx)
 	if err != nil {
 		return "", err
 	}

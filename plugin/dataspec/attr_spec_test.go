@@ -729,7 +729,7 @@ func TestValidation(t *testing.T) {
 				return
 			}
 
-			val := objVal.GetAttr(tc.obj.Name)
+			val := objVal.GetAttrVal(tc.obj.Name)
 			if !val.RawEquals(tc.expectedVal) {
 				t.Fatalf("Values not equal. Expected: %s; Got: %s", tc.expectedVal.GoString(), val.GoString())
 			}

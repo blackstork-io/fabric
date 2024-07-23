@@ -61,8 +61,8 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 		}}
 	}
 
-	format := params.Args.GetAttr("format").AsString()
-	data := dataquery.DelayedEvalType.MustFromCty(params.Args.GetAttr("content")).Result()
+	format := params.Args.GetAttrVal("format").AsString()
+	data := dataquery.DelayedEvalType.MustFromCty(params.Args.GetAttrVal("content")).Result()
 
 	if data == nil {
 		return nil, diagnostics.Diag{{

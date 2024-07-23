@@ -148,7 +148,7 @@ func makeGithubIssuesDataSchema(loader ClientLoaderFn) *plugin.DataSource {
 
 func fetchGithubIssuesData(loader ClientLoaderFn) plugin.RetrieveDataFunc {
 	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-		tkn := params.Config.GetAttr("github_token").AsString()
+		tkn := params.Config.GetAttrVal("github_token").AsString()
 		opts, diags := parseIssuesArgs(params.Args)
 		if diags.HasErrors() {
 			return nil, diags
@@ -200,16 +200,16 @@ type parsedIssuesArgs struct {
 func parseIssuesArgs(args *dataspec.Block) (*parsedIssuesArgs, diagnostics.Diag) {
 	parsed := &parsedIssuesArgs{
 		opts: &gh.IssueListByRepoOptions{
-			Milestone: args.GetAttr("milestone").AsString(),
-			State:     args.GetAttr("state").AsString(),
-			Assignee:  args.GetAttr("assignee").AsString(),
-			Creator:   args.GetAttr("creator").AsString(),
-			Mentioned: args.GetAttr("mentioned").AsString(),
-			Sort:      args.GetAttr("sort").AsString(),
-			Direction: args.GetAttr("direction").AsString(),
+			Milestone: args.GetAttrVal("milestone").AsString(),
+			State:     args.GetAttrVal("state").AsString(),
+			Assignee:  args.GetAttrVal("assignee").AsString(),
+			Creator:   args.GetAttrVal("creator").AsString(),
+			Mentioned: args.GetAttrVal("mentioned").AsString(),
+			Sort:      args.GetAttrVal("sort").AsString(),
+			Direction: args.GetAttrVal("direction").AsString(),
 		},
 	}
-	parsed.limit, _ = args.GetAttr("limit").AsBigFloat().Int64()
+	parsed.limit, _ = args.GetAttrVal("limit").AsBigFloat().Int64()
 
 	repo := args.Attrs["repository"]
 	repositoryParts := strings.Split(repo.Value.AsString(), "/")
@@ -223,7 +223,7 @@ func parseIssuesArgs(args *dataspec.Block) (*parsedIssuesArgs, diagnostics.Diag)
 	}
 	parsed.owner = repositoryParts[0]
 	parsed.name = repositoryParts[1]
-	if labels := args.GetAttr("labels"); !labels.IsNull() {
+	if labels := args.GetAttrVal("labels"); !labels.IsNull() {
 		parsed.opts.Labels = make([]string, labels.LengthInt())
 		for i, label := range labels.AsValueSlice() {
 			parsed.opts.Labels[i] = label.AsString()

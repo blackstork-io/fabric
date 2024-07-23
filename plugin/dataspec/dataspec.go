@@ -28,7 +28,7 @@ var (
 )
 
 // RenderDoc renders the block documentation for spec.
-func RenderDoc(spec BlockSpec, blockName string, labels ...string) string {
+func RenderDoc(spec *BlockSpec, blockName string, labels ...string) string {
 	// Special-casing the first line generation:
 	// config "data" "csv" { -> config data csv {
 

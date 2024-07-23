@@ -102,29 +102,29 @@ func search(cli client.Client, ctx context.Context, args *dataspec.Block) (plugi
 		ID:       id,
 		ExecMode: "blocking",
 	}
-	if attr := args.GetAttr("search_query"); attr.IsNull() || attr.AsString() == "" {
+	if attr := args.GetAttrVal("search_query"); attr.IsNull() || attr.AsString() == "" {
 		return nil, fmt.Errorf("search_query is required")
 	} else {
 		req.Search = attr.AsString()
 	}
-	if attr := args.GetAttr("max_count"); !attr.IsNull() {
+	if attr := args.GetAttrVal("max_count"); !attr.IsNull() {
 		n, _ := attr.AsBigFloat().Int64()
 		req.MaxCount = client.Int(int(n))
 	}
-	if attr := args.GetAttr("status_buckets"); !attr.IsNull() {
+	if attr := args.GetAttrVal("status_buckets"); !attr.IsNull() {
 		n, _ := attr.AsBigFloat().Int64()
 		req.StatusBuckets = client.Int(int(n))
 	}
-	if attr := args.GetAttr("rf"); !attr.IsNull() {
+	if attr := args.GetAttrVal("rf"); !attr.IsNull() {
 		req.RF = make([]string, attr.LengthInt())
 		for i, v := range attr.AsValueSlice() {
 			req.RF[i] = v.AsString()
 		}
 	}
-	if attr := args.GetAttr("earliest_time"); !attr.IsNull() {
+	if attr := args.GetAttrVal("earliest_time"); !attr.IsNull() {
 		req.EarliestTime = client.String(attr.AsString())
 	}
-	if attr := args.GetAttr("latest_time"); !attr.IsNull() {
+	if attr := args.GetAttrVal("latest_time"); !attr.IsNull() {
 		req.LatestTime = client.String(attr.AsString())
 	}
 	res, err := cli.CreateSearchJob(ctx, req)

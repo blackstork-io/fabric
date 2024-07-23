@@ -117,7 +117,7 @@ func renderStixView(ctx context.Context, params *plugin.ProvideContentParams) (*
 		UID:  base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(uid[:]),
 	}
 
-	objectCty := params.Args.GetAttr("objects")
+	objectCty := params.Args.GetAttrVal("objects")
 	if !objectCty.IsNull() {
 		objects := dataquery.DelayedEvalType.MustFromCty(objectCty).Result()
 		if objects != nil {
@@ -201,48 +201,48 @@ func parseStixViewArgs(args *dataspec.Block) (*stixViewArgs, error) {
 		return nil, fmt.Errorf("arguments are null")
 	}
 	var dst stixViewArgs
-	gistID := args.GetAttr("gist_id")
+	gistID := args.GetAttrVal("gist_id")
 	if !gistID.IsNull() && gistID.AsString() != "" {
 		dst.GistID = stringPtr(gistID.AsString())
 	}
-	stixURL := args.GetAttr("stix_url")
+	stixURL := args.GetAttrVal("stix_url")
 	if !stixURL.IsNull() && stixURL.AsString() != "" {
 		dst.StixURL = stringPtr(stixURL.AsString())
 	}
-	caption := args.GetAttr("caption")
+	caption := args.GetAttrVal("caption")
 	if !caption.IsNull() && caption.AsString() != "" {
 		dst.Caption = stringPtr(caption.AsString())
 	}
-	showFooter := args.GetAttr("show_footer")
+	showFooter := args.GetAttrVal("show_footer")
 	if !showFooter.IsNull() {
 		dst.ShowFooter = boolPtr(showFooter.True())
 	}
-	showSidebar := args.GetAttr("show_sidebar")
+	showSidebar := args.GetAttrVal("show_sidebar")
 	if !showSidebar.IsNull() {
 		dst.ShowSidebar = boolPtr(showSidebar.True())
 	}
-	showTLPAsTags := args.GetAttr("show_tlp_as_tags")
+	showTLPAsTags := args.GetAttrVal("show_tlp_as_tags")
 	if !showTLPAsTags.IsNull() {
 		dst.ShowTLPAsTags = boolPtr(showTLPAsTags.True())
 	}
-	showMarkingNodes := args.GetAttr("show_marking_nodes")
+	showMarkingNodes := args.GetAttrVal("show_marking_nodes")
 	if !showMarkingNodes.IsNull() {
 		dst.ShowMarkingNodes = boolPtr(showMarkingNodes.True())
 	}
-	showLabels := args.GetAttr("show_labels")
+	showLabels := args.GetAttrVal("show_labels")
 	if !showLabels.IsNull() {
 		dst.ShowLabels = boolPtr(showLabels.True())
 	}
-	showIDRefs := args.GetAttr("show_idrefs")
+	showIDRefs := args.GetAttrVal("show_idrefs")
 	if !showIDRefs.IsNull() {
 		dst.ShowIDRefs = boolPtr(showIDRefs.True())
 	}
-	width := args.GetAttr("width")
+	width := args.GetAttrVal("width")
 	if !width.IsNull() {
 		n, _ := width.AsBigFloat().Int64()
 		dst.Width = intPtr(int(n))
 	}
-	height := args.GetAttr("height")
+	height := args.GetAttrVal("height")
 	if !height.IsNull() {
 		n, _ := height.AsBigFloat().Int64()
 		dst.Height = intPtr(int(n))

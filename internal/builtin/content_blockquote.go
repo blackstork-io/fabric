@@ -29,7 +29,7 @@ func makeBlockQuoteContentProvider() *plugin.ContentProvider {
 }
 
 func genBlockQuoteContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	value := params.Args.GetAttr("value")
+	value := params.Args.GetAttrVal("value")
 	text, err := genTextContentText(value.AsString(), params.DataContext)
 	if err != nil {
 		return nil, diagnostics.Diag{{

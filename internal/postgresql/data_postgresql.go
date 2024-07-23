@@ -55,11 +55,11 @@ func parseSqliteConfig(cfg cty.Value) (string, error) {
 }
 
 func parseSqliteArgs(args *dataspec.Block) (string, []any, error) {
-	sqlQuery := args.GetAttr("sql_query")
+	sqlQuery := args.GetAttrVal("sql_query")
 	if sqlQuery.IsNull() || sqlQuery.AsString() == "" {
 		return "", nil, fmt.Errorf("sql_query is required")
 	}
-	sqlArgs := args.GetAttr("sql_args")
+	sqlArgs := args.GetAttrVal("sql_args")
 	if sqlArgs.IsNull() || sqlArgs.LengthInt() == 0 {
 		return sqlQuery.AsString(), nil, nil
 	}
@@ -84,7 +84,7 @@ func parseSqliteArgs(args *dataspec.Block) (string, []any, error) {
 }
 
 func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	dbURL := params.Config.GetAttr("database_url").AsString()
+	dbURL := params.Config.GetAttrVal("database_url").AsString()
 	sqlQuery, sqlArgs, err := parseSqliteArgs(params.Args)
 	if err != nil {
 		return nil, diagnostics.Diag{{

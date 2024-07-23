@@ -84,7 +84,7 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 		}
 		printer = print.WithLogging(printer, logger, slog.String("format", params.Format.String()))
 		printer = print.WithTracing(printer, tracer, attribute.String("format", params.Format.String()))
-		pathAttr := params.Args.GetAttr("path")
+		pathAttr := params.Args.GetAttrVal("path")
 		if pathAttr.IsNull() || pathAttr.AsString() == "" {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,

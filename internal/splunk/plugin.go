@@ -32,15 +32,15 @@ func makeClient(loader ClientLoadFn, cfg *dataspec.Block) (client.Client, error)
 		return nil, fmt.Errorf("configuration is required")
 	}
 
-	token := cfg.GetAttr("auth_token")
+	token := cfg.GetAttrVal("auth_token")
 	if token.IsNull() || token.AsString() == "" {
 		return nil, fmt.Errorf("auth_token is required in configuration")
 	}
-	host := cfg.GetAttr("host")
+	host := cfg.GetAttrVal("host")
 	if host.IsNull() {
 		host = cty.StringVal("")
 	}
-	deployment := cfg.GetAttr("deployment_name")
+	deployment := cfg.GetAttrVal("deployment_name")
 	if deployment.IsNull() {
 		deployment = cty.StringVal("")
 	}

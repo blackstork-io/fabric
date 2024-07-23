@@ -81,7 +81,7 @@ func formatHeader(name string, labels []string) string {
 	var sb strings.Builder
 	sb.WriteString(name)
 	unquoted := 1
-	if strings.ToLower(name) == "config" {
+	if strings.EqualFold(name, "config") {
 		unquoted = 2
 	}
 	for i, l := range labels {

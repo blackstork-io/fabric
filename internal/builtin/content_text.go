@@ -36,7 +36,7 @@ func makeTextContentProvider() *plugin.ContentProvider {
 }
 
 func genTextContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	value := params.Args.GetAttr("value")
+	value := params.Args.GetAttrVal("value")
 	if value.IsNull() {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,

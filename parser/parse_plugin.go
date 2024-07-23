@@ -247,7 +247,9 @@ func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAtt
 			// Apply default configs to non-refs only
 			config = defaultCfg
 		} else {
-			config = &definitions.ConfigEmpty{plugin}
+			config = &definitions.ConfigEmpty{
+				Plugin: plugin,
+			}
 		}
 	}
 	return

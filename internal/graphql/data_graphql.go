@@ -45,7 +45,7 @@ func makeGraphQLDataSource() *plugin.DataSource {
 }
 
 func fetchGraphQLData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	url := params.Config.GetAttr("url")
+	url := params.Config.GetAttrVal("url")
 	if url.IsNull() || url.AsString() == "" {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -53,11 +53,11 @@ func fetchGraphQLData(ctx context.Context, params *plugin.RetrieveDataParams) (p
 			Detail:   "url is required",
 		}}
 	}
-	authToken := params.Config.GetAttr("auth_token")
+	authToken := params.Config.GetAttrVal("auth_token")
 	if authToken.IsNull() {
 		authToken = cty.StringVal("")
 	}
-	query := params.Args.GetAttr("query")
+	query := params.Args.GetAttrVal("query")
 	if query.IsNull() || query.AsString() == "" {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,

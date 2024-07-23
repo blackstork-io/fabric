@@ -30,7 +30,7 @@ func makeTerraformStateLocalDataSource() *plugin.DataSource {
 }
 
 func fetchTerraformStateLocalData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	path := params.Args.GetAttr("path")
+	path := params.Args.GetAttrVal("path")
 	if path.IsNull() || path.AsString() == "" {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,

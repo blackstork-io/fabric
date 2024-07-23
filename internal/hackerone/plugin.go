@@ -34,11 +34,11 @@ func makeClient(loader ClientLoadFn, cfg *dataspec.Block) (client.Client, error)
 	if cfg == nil {
 		return nil, fmt.Errorf("configuration is required")
 	}
-	user := cfg.GetAttr("api_username")
+	user := cfg.GetAttrVal("api_username")
 	if user.IsNull() || user.AsString() == "" {
 		return nil, fmt.Errorf("api_username is required in configuration")
 	}
-	token := cfg.GetAttr("api_token")
+	token := cfg.GetAttrVal("api_token")
 	if token.IsNull() || token.AsString() == "" {
 		return nil, fmt.Errorf("api_token is required in configuration")
 	}

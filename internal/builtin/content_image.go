@@ -41,8 +41,8 @@ func makeImageContentProvider() *plugin.ContentProvider {
 }
 
 func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	src := params.Args.GetAttr("src").AsString()
-	alt := params.Args.GetAttr("alt")
+	src := params.Args.GetAttrVal("src").AsString()
+	alt := params.Args.GetAttrVal("alt")
 	if alt.IsNull() {
 		alt = cty.StringVal("")
 	}

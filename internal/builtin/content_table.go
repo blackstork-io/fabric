@@ -71,7 +71,7 @@ func makeTableContentProvider() *plugin.ContentProvider {
 
 func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
 	var rows plugin.ListData
-	rowsVal := params.Args.GetAttr("rows")
+	rowsVal := params.Args.GetAttrVal("rows")
 	if !rowsVal.IsNull() {
 		res, err := dataquery.DelayedEvalType.FromCty(rowsVal)
 		if err != nil {
@@ -115,7 +115,7 @@ func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (
 }
 
 func parseTableContentArgs(params *plugin.ProvideContentParams) (headers, values []tableCellTmpl, err error) {
-	arr := params.Args.GetAttr("columns")
+	arr := params.Args.GetAttrVal("columns")
 	for _, val := range arr.AsValueSlice() {
 		obj := val.AsValueMap()
 		header := obj["header"]

@@ -38,8 +38,8 @@ func makeCodeContentProvider() *plugin.ContentProvider {
 }
 
 func genCodeContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	value := params.Args.GetAttr("value")
-	lang := params.Args.GetAttr("language")
+	value := params.Args.GetAttrVal("value")
+	lang := params.Args.GetAttrVal("language")
 	text, err := genTextContentText(value.AsString(), params.DataContext)
 	if err != nil {
 		return nil, diagnostics.Diag{{

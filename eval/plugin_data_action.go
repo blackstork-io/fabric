@@ -41,12 +41,12 @@ func LoadDataAction(ctx context.Context, sources DataSources, node *definitions.
 		}}
 	}
 	var cfgBlock *dataspec.Block
-	if ds.Config != nil && ds.Config != nil {
+	if ds.Config != nil {
 		cfgBlock, diags = node.Config.ParseConfig(ctx, ds.Config)
 		if diags.HasErrors() {
 			return nil, diags
 		}
-	} else if ds.Config == nil && node.Config.Exists() {
+	} else if node.Config.Exists() {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
 			Summary:  "DataSource doesn't support configuration",

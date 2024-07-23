@@ -48,19 +48,19 @@ func makeSearchClient(pcfg *dataspec.Block) (*es.Client, error) {
 	if pcfg == nil {
 		return nil, fmt.Errorf("configuration is required")
 	}
-	if baseURL := pcfg.GetAttr("base_url"); !baseURL.IsNull() && baseURL.AsString() != "" {
+	if baseURL := pcfg.GetAttrVal("base_url"); !baseURL.IsNull() && baseURL.AsString() != "" {
 		cfg.Addresses = []string{baseURL.AsString()}
 	}
-	if cloudID := pcfg.GetAttr("cloud_id"); !cloudID.IsNull() {
+	if cloudID := pcfg.GetAttrVal("cloud_id"); !cloudID.IsNull() {
 		cfg.CloudID = cloudID.AsString()
 	}
 	if len(cfg.Addresses) == 0 && cfg.CloudID == "" {
 		return nil, fmt.Errorf("either one of base_url or cloud_id is required")
 	}
-	if apiKeyStr := pcfg.GetAttr("api_key_str"); !apiKeyStr.IsNull() {
+	if apiKeyStr := pcfg.GetAttrVal("api_key_str"); !apiKeyStr.IsNull() {
 		cfg.APIKey = apiKeyStr.AsString()
 	}
-	if apiKey := pcfg.GetAttr("api_key"); !apiKey.IsNull() {
+	if apiKey := pcfg.GetAttrVal("api_key"); !apiKey.IsNull() {
 		list := apiKey.AsValueSlice()
 		if len(list) != 2 {
 			return nil, fmt.Errorf("api_key must be a list of 2 strings")
@@ -69,29 +69,29 @@ func makeSearchClient(pcfg *dataspec.Block) (*es.Client, error) {
 			fmt.Sprintf("%s:%s", list[0].AsString(), list[1].AsString())),
 		)
 	}
-	if basicAuthUsername := pcfg.GetAttr("basic_auth_username"); !basicAuthUsername.IsNull() {
+	if basicAuthUsername := pcfg.GetAttrVal("basic_auth_username"); !basicAuthUsername.IsNull() {
 		cfg.Username = basicAuthUsername.AsString()
 	}
-	if basicAuthPassword := pcfg.GetAttr("basic_auth_password"); !basicAuthPassword.IsNull() {
+	if basicAuthPassword := pcfg.GetAttrVal("basic_auth_password"); !basicAuthPassword.IsNull() {
 		cfg.Password = basicAuthPassword.AsString()
 	}
-	if bearerAuth := pcfg.GetAttr("bearer_auth"); !bearerAuth.IsNull() {
+	if bearerAuth := pcfg.GetAttrVal("bearer_auth"); !bearerAuth.IsNull() {
 		cfg.ServiceToken = bearerAuth.AsString()
 	}
-	if caCerts := pcfg.GetAttr("ca_certs"); !caCerts.IsNull() {
+	if caCerts := pcfg.GetAttrVal("ca_certs"); !caCerts.IsNull() {
 		cfg.CACert = []byte(caCerts.AsString())
 	}
 	return es.NewClient(*cfg)
 }
 
 func getByID(fn esapi.Get, args *dataspec.Block) (plugin.Data, error) {
-	index := args.GetAttr("index")
-	id := args.GetAttr("id")
+	index := args.GetAttrVal("index")
+	id := args.GetAttrVal("id")
 	if id.IsNull() {
 		return nil, fmt.Errorf("id is required when id is specified")
 	}
 	opts := []func(*esapi.GetRequest){}
-	if fields := args.GetAttr("fields"); !fields.IsNull() {
+	if fields := args.GetAttrVal("fields"); !fields.IsNull() {
 		fieldSlice := fields.AsValueSlice()
 		fieldStrings := make([]string, len(fieldSlice))
 		for i, v := range fieldSlice {
@@ -114,22 +114,22 @@ func getByID(fn esapi.Get, args *dataspec.Block) (plugin.Data, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal search result: %s", err)
 	}
-	if onlyHits := args.GetAttr("only_hits"); onlyHits.IsNull() || onlyHits.True() {
+	if onlyHits := args.GetAttrVal("only_hits"); onlyHits.IsNull() || onlyHits.True() {
 		return extractHits(data)
 	}
 	return data, nil
 }
 
 func unpackSearchOptions(fn esapi.Search, args *dataspec.Block) ([]func(*esapi.SearchRequest), error) {
-	index := args.GetAttr("index")
+	index := args.GetAttrVal("index")
 	opts := []func(*esapi.SearchRequest){
 		fn.WithIndex(index.AsString()),
 	}
-	if queryString := args.GetAttr("query_string"); !queryString.IsNull() {
+	if queryString := args.GetAttrVal("query_string"); !queryString.IsNull() {
 		opts = append(opts, fn.WithQuery(queryString.AsString()))
 	}
 	body := map[string]any{}
-	if query := args.GetAttr("query"); !query.IsNull() {
+	if query := args.GetAttrVal("query"); !query.IsNull() {
 		raw, err := ctyjson.Marshal(query, query.Type())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal query: %s", err)
@@ -137,7 +137,7 @@ func unpackSearchOptions(fn esapi.Search, args *dataspec.Block) ([]func(*esapi.S
 		body["query"] = json.RawMessage(raw)
 
 	}
-	if aggs := args.GetAttr("aggs"); !aggs.IsNull() {
+	if aggs := args.GetAttrVal("aggs"); !aggs.IsNull() {
 		raw, err := ctyjson.Marshal(aggs, aggs.Type())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal aggs: %s", err)
@@ -151,7 +151,7 @@ func unpackSearchOptions(fn esapi.Search, args *dataspec.Block) ([]func(*esapi.S
 		}
 		opts = append(opts, fn.WithBody(bytes.NewReader(rawBody)))
 	}
-	if fields := args.GetAttr("fields"); !fields.IsNull() {
+	if fields := args.GetAttrVal("fields"); !fields.IsNull() {
 		fieldSlice := fields.AsValueSlice()
 		fieldStrings := make([]string, len(fieldSlice))
 		for i, v := range fieldSlice {
@@ -293,7 +293,7 @@ func searchWithScrollConfigurable(client *es.Client, args *dataspec.Block, size,
 		"hits_count", len(allHits),
 		"requests_count", requestsCounter,
 	)
-	if onlyHits := args.GetAttr("only_hits"); onlyHits.IsNull() || onlyHits.True() {
+	if onlyHits := args.GetAttrVal("only_hits"); onlyHits.IsNull() || onlyHits.True() {
 		return allHits, nil
 	}
 	// Update and return the first returned data to keep the aggregations
@@ -322,7 +322,7 @@ func search(fn esapi.Search, args *dataspec.Block, size int) (plugin.Data, error
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal search result: %s", err)
 	}
-	if onlyHits := args.GetAttr("only_hits"); onlyHits.IsNull() || onlyHits.True() {
+	if onlyHits := args.GetAttrVal("only_hits"); onlyHits.IsNull() || onlyHits.True() {
 		return extractHits(data)
 	}
 	return data, nil

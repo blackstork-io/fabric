@@ -89,6 +89,7 @@ func (td *TestDecoder) SetHeaders(typeName string, labels ...string) *TestDecode
 
 // NewTestDecoder creates a new TestDecoder.
 func NewTestDecoder(t *testing.T, spec *dataspec.RootSpec) *TestDecoder {
+	t.Helper()
 	return &TestDecoder{
 		block:   NewTestBlock("test_block"),
 		t:       t,

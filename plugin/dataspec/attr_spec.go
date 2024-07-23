@@ -49,10 +49,6 @@ func (a *AttrSpec) KeyForObjectSpec() string {
 	return a.Name
 }
 
-func (a *AttrSpec) getSpec() Spec {
-	return a
-}
-
 func (a *AttrSpec) DocComment() hclwrite.Tokens {
 	tokens := comment(nil, a.Doc)
 	if len(tokens) != 0 {

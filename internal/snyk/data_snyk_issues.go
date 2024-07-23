@@ -106,7 +106,7 @@ func makeSnykIssuesDataSource(loader ClientLoadFn) *plugin.DataSource {
 
 func fetchSnykIssues(loader ClientLoadFn) plugin.RetrieveDataFunc {
 	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-		client := loader(params.Config.GetAttr("api_key").AsString())
+		client := loader(params.Config.GetAttrVal("api_key").AsString())
 		limit, diags := params.Args.Attrs["limit"].GetInt()
 		if diags.HasErrors() {
 			return nil, diags
@@ -164,8 +164,8 @@ func makeRequest(args *dataspec.Block) (*client.ListIssuesReq, error) {
 	req := &client.ListIssuesReq{
 		Limit: pageSize,
 	}
-	groupID := args.GetAttr("group_id")
-	orgID := args.GetAttr("org_id")
+	groupID := args.GetAttrVal("group_id")
+	orgID := args.GetAttrVal("org_id")
 	if groupID.IsNull() && orgID.IsNull() {
 		return nil, fmt.Errorf("either group_id or org_id must be set")
 	}
@@ -178,42 +178,42 @@ func makeRequest(args *dataspec.Block) (*client.ListIssuesReq, error) {
 	if !orgID.IsNull() {
 		req.OrgID = client.String(orgID.AsString())
 	}
-	if arg := args.GetAttr("scan_item_id"); !arg.IsNull() {
+	if arg := args.GetAttrVal("scan_item_id"); !arg.IsNull() {
 		req.ScanItemID = client.String(arg.AsString())
 	}
-	if arg := args.GetAttr("scan_item_type"); !arg.IsNull() {
+	if arg := args.GetAttrVal("scan_item_type"); !arg.IsNull() {
 		req.ScanItemType = client.String(arg.AsString())
 	}
-	if arg := args.GetAttr("type"); !arg.IsNull() {
+	if arg := args.GetAttrVal("type"); !arg.IsNull() {
 		req.Type = client.String(arg.AsString())
 	}
-	if arg := args.GetAttr("updated_before"); !arg.IsNull() {
+	if arg := args.GetAttrVal("updated_before"); !arg.IsNull() {
 		req.UpdatedBefore = client.String(arg.AsString())
 	}
-	if arg := args.GetAttr("updated_after"); !arg.IsNull() {
+	if arg := args.GetAttrVal("updated_after"); !arg.IsNull() {
 		req.UpdatedAfter = client.String(arg.AsString())
 	}
-	if arg := args.GetAttr("created_before"); !arg.IsNull() {
+	if arg := args.GetAttrVal("created_before"); !arg.IsNull() {
 		req.CreatedBefore = client.String(arg.AsString())
 	}
-	if arg := args.GetAttr("created_after"); !arg.IsNull() {
+	if arg := args.GetAttrVal("created_after"); !arg.IsNull() {
 		req.CreatedAfter = client.String(arg.AsString())
 	}
-	if arg := args.GetAttr("effective_severity_level"); !arg.IsNull() {
+	if arg := args.GetAttrVal("effective_severity_level"); !arg.IsNull() {
 		list := []string{}
 		for _, v := range arg.AsValueSlice() {
 			list = append(list, v.AsString())
 		}
 		req.EffectiveSeverityLevel = client.StringList(list)
 	}
-	if arg := args.GetAttr("status"); !arg.IsNull() {
+	if arg := args.GetAttrVal("status"); !arg.IsNull() {
 		list := []string{}
 		for _, v := range arg.AsValueSlice() {
 			list = append(list, v.AsString())
 		}
 		req.Status = client.StringList(list)
 	}
-	if arg := args.GetAttr("ignored"); !arg.IsNull() {
+	if arg := args.GetAttrVal("ignored"); !arg.IsNull() {
 		req.Ignored = client.Bool(arg.True())
 	}
 

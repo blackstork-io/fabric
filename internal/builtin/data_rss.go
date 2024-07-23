@@ -66,13 +66,13 @@ func makeRSSDataSource() *plugin.DataSource {
 
 func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
 	fp := gofeed.NewParser()
-	url := params.Args.GetAttr("url").AsString()
+	url := params.Args.GetAttrVal("url").AsString()
 
 	basicAuth := params.Args.Blocks.GetFirstMatching("basic_auth")
 	if basicAuth != nil {
 		fp.AuthConfig = &gofeed.Auth{
-			Username: basicAuth.GetAttr("username").AsString(),
-			Password: basicAuth.GetAttr("password").AsString(),
+			Username: basicAuth.GetAttrVal("username").AsString(),
+			Password: basicAuth.GetAttrVal("password").AsString(),
 		}
 	}
 

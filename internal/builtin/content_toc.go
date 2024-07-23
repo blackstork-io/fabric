@@ -80,10 +80,10 @@ type tocArgs struct {
 }
 
 func parseTOCArgs(args *dataspec.Block) (*tocArgs, error) {
-	startLevel, _ := args.GetAttr("start_level").AsBigFloat().Int64()
-	endLevel, _ := args.GetAttr("end_level").AsBigFloat().Int64()
-	ordered := args.GetAttr("ordered").True()
-	scope := args.GetAttr("scope").AsString()
+	startLevel, _ := args.GetAttrVal("start_level").AsBigFloat().Int64()
+	endLevel, _ := args.GetAttrVal("end_level").AsBigFloat().Int64()
+	ordered := args.GetAttrVal("ordered").True()
+	scope := args.GetAttrVal("scope").AsString()
 
 	return &tocArgs{
 		startLevel: int(startLevel),

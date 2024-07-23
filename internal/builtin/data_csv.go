@@ -112,10 +112,10 @@ func getDelim(delim string) (r rune, diags diagnostics.Diag) {
 }
 
 func fetchCSVData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	glob := params.Args.GetAttr("glob")
-	path := params.Args.GetAttr("path")
+	glob := params.Args.GetAttrVal("glob")
+	path := params.Args.GetAttrVal("path")
 
-	delim, err := getDelim(params.Config.GetAttr("delimiter").AsString())
+	delim, err := getDelim(params.Config.GetAttrVal("delimiter").AsString())
 	if err != nil {
 		slog.Error("Error while getting a delimiter value", slog.Any("error", err))
 		return nil, err

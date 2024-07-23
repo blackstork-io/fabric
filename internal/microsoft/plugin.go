@@ -51,9 +51,9 @@ func makeClient(ctx context.Context, loader ClientLoadFn, cfg *dataspec.Block) (
 	}
 	cli := loader()
 	res, err := cli.GetClientCredentialsToken(ctx, &client.GetClientCredentialsTokenReq{
-		TenantID:     cfg.GetAttr("tenant_id").AsString(),
-		ClientID:     cfg.GetAttr("client_id").AsString(),
-		ClientSecret: cfg.GetAttr("client_secret").AsString(),
+		TenantID:     cfg.GetAttrVal("tenant_id").AsString(),
+		ClientID:     cfg.GetAttrVal("client_id").AsString(),
+		ClientSecret: cfg.GetAttrVal("client_secret").AsString(),
 	})
 	if err != nil {
 		return nil, err

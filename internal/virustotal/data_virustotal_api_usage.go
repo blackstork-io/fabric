@@ -53,7 +53,7 @@ func makeVirusTotalAPIUsageDataSchema(loader ClientLoadFn) *plugin.DataSource {
 
 func fetchVirusTotalAPIUsageData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-		cli := loader(params.Config.GetAttr("api_key").AsString())
+		cli := loader(params.Config.GetAttrVal("api_key").AsString())
 		args, err := parseAPIUsageArgs(params.Args)
 		if err != nil {
 			return nil, diagnostics.Diag{{
@@ -130,18 +130,18 @@ func parseAPIUsageArgs(args *dataspec.Block) (*apiUsageArgs, error) {
 		return nil, fmt.Errorf("arguments are null")
 	}
 
-	if userID := args.GetAttr("user_id"); !userID.IsNull() {
+	if userID := args.GetAttrVal("user_id"); !userID.IsNull() {
 		userIDStr := userID.AsString()
 		dst.User = &userIDStr
 	}
-	if groupID := args.GetAttr("group_id"); !groupID.IsNull() {
+	if groupID := args.GetAttrVal("group_id"); !groupID.IsNull() {
 		groupIDStr := groupID.AsString()
 		dst.Group = &groupIDStr
 	}
 	if dst.User == nil && dst.Group == nil {
 		return nil, fmt.Errorf("either user_id or group_id must be set")
 	}
-	if startDate := args.GetAttr("start_date"); !startDate.IsNull() {
+	if startDate := args.GetAttrVal("start_date"); !startDate.IsNull() {
 		startDateStr := startDate.AsString()
 		startDate, err := time.Parse("20060102", startDateStr)
 		if err != nil {
@@ -149,7 +149,7 @@ func parseAPIUsageArgs(args *dataspec.Block) (*apiUsageArgs, error) {
 		}
 		dst.StartDate = &startDate
 	}
-	if endDate := args.GetAttr("end_date"); !endDate.IsNull() {
+	if endDate := args.GetAttrVal("end_date"); !endDate.IsNull() {
 		endDateStr := endDate.AsString()
 		endDate, err := time.Parse("20060102", endDateStr)
 		if err != nil {

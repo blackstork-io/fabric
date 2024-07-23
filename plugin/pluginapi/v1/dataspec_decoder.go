@@ -60,7 +60,7 @@ func decodeBlockSpec(src *BlockSpec) (*dataspec.BlockSpec, error) {
 	matchers := src.GetHeadersSpec()
 	header := make(dataspec.HeadersSpec, 0, len(matchers))
 	for _, m := range matchers {
-		switch matcher := m.Matcher.(type) {
+		switch matcher := m.GetMatcher().(type) {
 		case *BlockSpec_NameMatcher_Exact_:
 			header = append(header, dataspec.ExactMatcher(matcher.Exact.Matches))
 		default:

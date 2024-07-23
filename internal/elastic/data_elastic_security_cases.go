@@ -134,7 +134,7 @@ func fetchElasticSecurityCases(loader KibanaClientLoaderFn) plugin.RetrieveDataF
 			}}
 		}
 		size := defaultCasesSize
-		if attr := params.Args.GetAttr("size"); !attr.IsNull() {
+		if attr := params.Args.GetAttrVal("size"); !attr.IsNull() {
 			num, _ := attr.AsBigFloat().Int64()
 			size = int(num)
 			if size < minCasesSize {
@@ -234,10 +234,10 @@ func toStringSlice(val cty.Value) []string {
 func parseSecurityCasesConfig(loader KibanaClientLoaderFn, cfg *dataspec.Block) (kbclient.Client, error) {
 	var apiKey *string
 
-	url := cfg.GetAttr("kibana_endpoint_url").AsString()
-	if attr := cfg.GetAttr("api_key_str"); !attr.IsNull() {
+	url := cfg.GetAttrVal("kibana_endpoint_url").AsString()
+	if attr := cfg.GetAttrVal("api_key_str"); !attr.IsNull() {
 		apiKey = kbclient.String(attr.AsString())
-	} else if attr := cfg.GetAttr("api_key"); !attr.IsNull() {
+	} else if attr := cfg.GetAttrVal("api_key"); !attr.IsNull() {
 		p1 := attr.Index(cty.NumberIntVal(0)).AsString()
 		p2 := attr.Index(cty.NumberIntVal(1)).AsString()
 		src := make([]byte, 0, len(p1)+len(p2)+1)

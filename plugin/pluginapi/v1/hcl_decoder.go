@@ -15,11 +15,11 @@ func decodeDiagnostic(src *Diagnostic) *hcl.Diagnostic {
 		return nil
 	}
 	return &hcl.Diagnostic{
-		Severity: hcl.DiagnosticSeverity(src.Severity),
-		Summary:  src.Summary,
-		Detail:   src.Detail,
-		Subject:  decodeRange(src.Subject).Ptr(),
-		Context:  decodeRange(src.Context).Ptr(),
+		Severity: hcl.DiagnosticSeverity(src.GetSeverity()),
+		Summary:  src.GetSummary(),
+		Detail:   src.GetDetail(),
+		Subject:  decodeRange(src.GetSubject()).Ptr(),
+		Context:  decodeRange(src.GetContext()).Ptr(),
 	}
 }
 

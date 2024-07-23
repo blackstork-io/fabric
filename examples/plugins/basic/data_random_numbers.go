@@ -51,11 +51,11 @@ func makeRandomNumbersDataSource() *plugin.DataSource {
 }
 
 func fetchRandomNumbers(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	min := params.Config.GetAttr("min")
-	max := params.Config.GetAttr("max")
+	min := params.Config.GetAttrVal("min")
+	max := params.Config.GetAttrVal("max")
 
 	// validating the arguments
-	length := params.Args.GetAttr("length")
+	length := params.Args.GetAttrVal("length")
 	if min.GreaterThan(max).True() {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,

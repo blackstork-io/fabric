@@ -65,8 +65,8 @@ func makeJSONDataSource() *plugin.DataSource {
 }
 
 func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	glob := params.Args.GetAttr("glob")
-	path := params.Args.GetAttr("path")
+	glob := params.Args.GetAttrVal("glob")
+	path := params.Args.GetAttrVal("path")
 
 	if !path.IsNull() && path.AsString() != "" {
 		slog.Debug("Reading a file from a path", "path", path.AsString())

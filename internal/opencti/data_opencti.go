@@ -42,7 +42,7 @@ func makeOpenCTIDataSource() *plugin.DataSource {
 }
 
 func fetchOpenCTIData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	url := params.Config.GetAttr("graphql_url")
+	url := params.Config.GetAttrVal("graphql_url")
 	if url.IsNull() || url.AsString() == "" {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -50,11 +50,11 @@ func fetchOpenCTIData(ctx context.Context, params *plugin.RetrieveDataParams) (p
 			Detail:   "graphql_url is required",
 		}}
 	}
-	authToken := params.Config.GetAttr("auth_token")
+	authToken := params.Config.GetAttrVal("auth_token")
 	if authToken.IsNull() {
 		authToken = cty.StringVal("")
 	}
-	query := params.Args.GetAttr("graphql_query")
+	query := params.Args.GetAttrVal("graphql_query")
 	if query.IsNull() || query.AsString() == "" {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,

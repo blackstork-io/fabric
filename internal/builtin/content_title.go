@@ -64,7 +64,7 @@ func makeTitleContentProvider() *plugin.ContentProvider {
 }
 
 func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	value := params.Args.GetAttr("value")
+	value := params.Args.GetAttrVal("value")
 	if value.IsNull() {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -72,11 +72,11 @@ func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (
 			Detail:   "value is required",
 		}}
 	}
-	absoluteSize := params.Args.GetAttr("absolute_size")
+	absoluteSize := params.Args.GetAttrVal("absolute_size")
 	if absoluteSize.IsNull() {
 		absoluteSize = cty.NumberIntVal(findDefaultTitleSize(params.DataContext) + 1)
 	}
-	relativeSize := params.Args.GetAttr("relative_size")
+	relativeSize := params.Args.GetAttrVal("relative_size")
 
 	titleSize, _ := absoluteSize.AsBigFloat().Int64()
 	relationSize, _ := relativeSize.AsBigFloat().Int64()

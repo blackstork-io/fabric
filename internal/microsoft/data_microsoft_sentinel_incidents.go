@@ -127,21 +127,21 @@ func fetchMicrosoftSentinelIncidents(loader ClientLoadFn) plugin.RetrieveDataFun
 func parseMicrosoftSentinelIncidentsArgs(cfg, args *dataspec.Block) (*client.ListIncidentsReq, error) {
 	var req client.ListIncidentsReq
 
-	req.SubscriptionID = cfg.GetAttr("subscription_id").AsString()
-	req.ResourceGroupName = cfg.GetAttr("resource_group_name").AsString()
-	req.WorkspaceName = cfg.GetAttr("workspace_name").AsString()
+	req.SubscriptionID = cfg.GetAttrVal("subscription_id").AsString()
+	req.ResourceGroupName = cfg.GetAttrVal("resource_group_name").AsString()
+	req.WorkspaceName = cfg.GetAttrVal("workspace_name").AsString()
 
-	if param := args.GetAttr("filter"); !param.IsNull() {
+	if param := args.GetAttrVal("filter"); !param.IsNull() {
 		req.Filter = client.String(param.AsString())
 	}
-	if param := args.GetAttr("limit"); !param.IsNull() {
+	if param := args.GetAttrVal("limit"); !param.IsNull() {
 		n, _ := param.AsBigFloat().Int64()
 		if n <= 0 {
 			return nil, fmt.Errorf("limit must be a positive number")
 		}
 		req.Top = client.Int(int(n))
 	}
-	if param := args.GetAttr("order_by"); !param.IsNull() {
+	if param := args.GetAttrVal("order_by"); !param.IsNull() {
 		req.OrderBy = client.String(param.AsString())
 	}
 	return &req, nil
