@@ -4,8 +4,6 @@
 <br/>
 <br/>
 
-Codifying and automating mission-critical communications with standardized and reusable templates.
-
 [Releases](https://github.com/blackstork-io/fabric/releases) | [Docs](https://blackstork.io/fabric/docs/) | [Slack](https://fabric-community.slack.com/)
 
 ![GitHub Repository stars](https://img.shields.io/github/stars/blackstork-io/fabric?style=social)
@@ -14,30 +12,31 @@ Codifying and automating mission-critical communications with standardized and r
 
 </div>
 
-**Fabric** is an open-source Command-Line Interface (CLI) tool with a configuration language designed to encode and automate content generation for cyber security and compliance.
+**Fabric** is an open-source Command-Line Interface (CLI) tool with a configuration language designed to encode and automate content generation for cybersecurity and compliance.
 
 <div align="center">
     <img src=".github/diagram.png" alt="The diagram illustrates a Fabric template and the corresponding rendered document" width="700px"/>
 </div>
 
-Fabric generates documents based on modular templates written in [Fabric Configuration Language](https://blackstork.io/fabric/docs/language/) (FCL). Template authors can delineate data requirements and content structures within the template, significantly reducing the manual effort associated with data consolidation and improving re-usability.
+Fabric generates documents from templates written in [Fabric Configuration Language](https://blackstork.io/fabric/docs/language/) (FCL). The templates are modular and reusable. By including data requirements and content structure definitions in the templates, the template authors can significantly reduce the manual effort of data consolidation and document build-up.
 
-The plugin ecosystem expands Fabric's capabilities by offering integrations with various platforms, data stores, and security solutions, including [JSON/CSV files](https://blackstork.io/fabric/docs/plugins/builtin/), [Elastic](https://blackstork.io/fabric/docs/plugins/elastic/), [OpenCTI](https://blackstork.io/fabric/docs/plugins/opencti/), [Splunk Cloud](https://blackstork.io/fabric/docs/plugins/splunk/), [GitHub](https://blackstork.io/fabric/docs/plugins/github/), and more. A comprehensive list of supported plugins is available in [the documentation](https://blackstork.io/fabric/docs/plugins/).
+See [Tutorial](https://blackstork.io/fabric/docs/tutorial/) for an introduction to FCL and Fabric.
 
-To facilitate flexible content generation, Fabric content providers leverage powerful [Go templates](https://pkg.go.dev/text/template) and incorporate capabilities such as generative AI/LLMs (OpenAI API, Azure OpenAI, etc).
-
-Refer to [the documentation](https://blackstork.io/fabric/docs/) for in-depth details about Fabric.
+Fabric templates can include static content, dynamic templates (powered by Go templates) or rely on
+GenAI for content generation (with [`openai`](https://blackstork.io/fabric/docs/plugins/openai/) plugin, for example).
 
 > [!NOTE]  
 > Fabric is currently in the early stages of development, and there may be some issues. If you have any suggestions, ideas, or bug reports, please share them in [Fabric Community slack](https://fabric-community.slack.com/).
 
-# Templates
+## Plugins
 
-You can find free Fabric templates in [Fabric Templates](https://github.com/blackstork-io/fabric-templates) repository.
+Fabric supports plugins that offer integrations with various platforms, data stores, and security solutions, including [JSON/CSV files](https://blackstork.io/fabric/docs/plugins/builtin/), [Elastic](https://blackstork.io/fabric/docs/plugins/elastic/), [OpenCTI](https://blackstork.io/fabric/docs/plugins/opencti/), [Splunk Cloud](https://blackstork.io/fabric/docs/plugins/splunk/), [GitHub](https://blackstork.io/fabric/docs/plugins/github/), and more.
 
-# Installation
+You can find the full list of supported plugins in [the documentation](https://blackstork.io/fabric/docs/plugins/).
 
-# Usage
+## Templates
+
+You can find open-source templates for CTI, pentesting and SecOps use cases in [Fabric Templates](https://github.com/blackstork-io/fabric-templates) repository.
 
 ## Installing Fabric
 
@@ -53,14 +52,13 @@ brew install blackstork-io/tools/fabric
 fabric --version
 ```
 
-It's recommended to use `blackstork-io/tools` tap when installing Fabric with Homebrew. The tap is
-updated automatically with every release.
+The tap is updated automatically with every release.
 
 ### Docker
 
 The Docker images for Fabric are hosted in [Docker Hub](https://hub.docker.com/r/blackstorkio/fabric/tags).
 
-To run Fabric as a Docker image use a full name `blackstorkio/fabric`:
+To run Fabric as a Docker image use a name `blackstorkio/fabric`:
 
 ```bash
 docker run blackstorkio/fabric
@@ -91,15 +89,17 @@ tar -xvzf ./fabric_darwin_arm64.tar.gz -C ./fabric-bin
 ./fabric-bin/fabric --help
 ```
 
-The command line interface to Fabric is `fabric` CLI tool.
+## Usage
 
-The core sub-commands are:
+The core `fabric` commands are:
 
-- `install` — installs all required plugins.
-- `data` — executes the data block and prints out prettified JSON to standard output.
-- `render` — renders the specified target (a document template) and prints out the result to standard output or a file.
+- `install` — install all plugins listed as required in the configuration (see
+  [Configuration](https://blackstork.io/fabric/docs/language/configs/)).
+- `data` — executes the data block and prints out prettified JSON to standard output (see [Data
+  blocks](https://blackstork.io/fabric/docs/language/data-blocks/)).
+- `render` — renders a document template and prints out the result to standard output or a file.
 
-To get more details, run `fabric --help`:
+For more details, run `fabric --help`:
 
 ```text
 $ ./fabric --help
@@ -125,11 +125,11 @@ Flags:
 Use "fabric [command] --help" for more information about a command.
 ```
 
-# Documentation
+## Documentation
 
 Visit [https://blackstork.io/fabric/docs/](https://blackstork.io/fabric/docs/) to see full documentation for Fabric.
 
-# Security
+## Security
 
 If you suspect any vulnerabilities within Fabric, please report them using GitHub's [security
 advisory reporting](https://github.com/blackstork-io/fabric/security/advisories/new). We treat every
@@ -139,6 +139,6 @@ We kindly request that you task with us before making any public disclosures. Th
 step ensures that no excessive information is shared prematurely, allowing us to prepare a patch.
 It also gives users enough time to upgrade.
 
-# License
+## License
 
 Fabric is licensed under Apache-2.0 license. See the [LICENSE](LICENSE) file for the details.
