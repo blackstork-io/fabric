@@ -4,7 +4,7 @@ plugin:
   name: blackstork/builtin
   description: "Returns an image tag"
   tags: []
-  version: "v0.4.1"
+  version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
 resource:
   type: content-provider
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "image" "content provider" >}}
+{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "image" "content provider" >}}
 
 ## Description
 Returns an image tag

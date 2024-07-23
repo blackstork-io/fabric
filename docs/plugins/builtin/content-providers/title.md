@@ -4,7 +4,7 @@ plugin:
   name: blackstork/builtin
   description: "Produces a title"
   tags: []
-  version: "v0.4.1"
+  version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
 resource:
   type: content-provider
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "title" "content provider" >}}
+{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "title" "content provider" >}}
 
 ## Description
 Produces a title.

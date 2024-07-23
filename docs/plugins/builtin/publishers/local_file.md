@@ -4,7 +4,7 @@ plugin:
   name: blackstork/builtin
   description: "Publishes content to local file"
   tags: []
-  version: "v0.4.1"
+  version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
 resource:
   type: publisher
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "local_file" "publisher" >}}
+{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "local_file" "publisher" >}}
 
 The publisher is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 

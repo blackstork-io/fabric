@@ -4,7 +4,7 @@ plugin:
   name: blackstork/builtin
   description: "Loads data from a URL"
   tags: []
-  version: "v0.4.1"
+  version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
 resource:
   type: data-source
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "http" "data source" >}}
+{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "http" "data source" >}}
 
 ## Description
 Loads data from a URL.

@@ -4,7 +4,7 @@ plugin:
   name: blackstork/builtin
   description: "Loads TXT files with the names that match a provided `glob` pattern or a single file from a provided path"
   tags: []
-  version: "v0.4.1"
+  version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
 resource:
   type: data-source
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.1" "txt" "data source" >}}
+{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "txt" "data source" >}}
 
 ## Description
 Loads TXT files with the names that match a provided `glob` pattern or a single file from a provided path.

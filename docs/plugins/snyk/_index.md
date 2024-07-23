@@ -5,13 +5,13 @@ plugin:
   name: blackstork/snyk
   description: ""
   tags: []
-  version: "v0.4.1"
+  version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/snyk/"
 type: docs
 hideInMenu: true
 ---
 
-{{< plugin-header "blackstork/snyk" "snyk" "v0.4.1" >}}
+{{< plugin-header "blackstork/snyk" "snyk" "v0.4.2" >}}
 
 ## Installation
 
@@ -20,7 +20,7 @@ To install the plugin, add it to `plugin_versions` map in the Fabric global conf
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/snyk" = ">= v0.4.1"
+    "blackstork/snyk" = ">= v0.4.2"
   }
 }
 ```

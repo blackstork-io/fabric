@@ -1,7 +1,7 @@
 [
   {
     "name": "blackstork/builtin",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "builtin",
     "resources": [
       {
@@ -137,7 +137,7 @@
   },
   {
     "name": "blackstork/elastic",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "elastic",
     "resources": [
       {
@@ -194,7 +194,7 @@
   },
   {
     "name": "blackstork/github",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "github",
     "resources": [
       {
@@ -221,7 +221,7 @@
   },
   {
     "name": "blackstork/graphql",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "graphql",
     "resources": [
       {
@@ -239,7 +239,7 @@
   },
   {
     "name": "blackstork/hackerone",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "hackerone",
     "resources": [
       {
@@ -302,7 +302,7 @@
   },
   {
     "name": "blackstork/microsoft",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "microsoft",
     "resources": [
       {
@@ -326,7 +326,7 @@
   },
   {
     "name": "blackstork/nist_nvd",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "nist_nvd",
     "resources": [
       {
@@ -361,7 +361,7 @@
   },
   {
     "name": "blackstork/openai",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "openai",
     "resources": [
       {
@@ -381,7 +381,7 @@
   },
   {
     "name": "blackstork/opencti",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "opencti",
     "resources": [
       {
@@ -399,7 +399,7 @@
   },
   {
     "name": "blackstork/postgresql",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "postgresql",
     "resources": [
       {
@@ -417,7 +417,7 @@
   },
   {
     "name": "blackstork/snyk",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "snyk",
     "resources": [
       {
@@ -446,7 +446,7 @@
   },
   {
     "name": "blackstork/splunk",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "splunk",
     "resources": [
       {
@@ -470,7 +470,7 @@
   },
   {
     "name": "blackstork/sqlite",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "sqlite",
     "resources": [
       {
@@ -488,7 +488,7 @@
   },
   {
     "name": "blackstork/stixview",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "stixview",
     "resources": [
       {
@@ -513,7 +513,7 @@
   },
   {
     "name": "blackstork/terraform",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "terraform",
     "resources": [
       {
@@ -527,7 +527,7 @@
   },
   {
     "name": "blackstork/virustotal",
-    "version": "v0.4.1",
+    "version": "v0.4.2",
     "shortname": "virustotal",
     "resources": [
       {

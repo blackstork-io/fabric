@@ -4,7 +4,7 @@ plugin:
   name: blackstork/virustotal
   description: ""
   tags: []
-  version: "v0.4.1"
+  version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/virustotal/"
 resource:
   type: data-source
@@ -13,7 +13,7 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/virustotal" "virustotal" "v0.4.1" "virustotal_api_usage" "data source" >}}
+{{< plugin-resource-header "blackstork/virustotal" "virustotal" "v0.4.2" "virustotal_api_usage" "data source" >}}
 
 ## Installation
 
@@ -24,7 +24,7 @@ To install the plugin, add the full plugin name to the `plugin_versions` map in 
 ```hcl
 fabric {
   plugin_versions = {
-    "blackstork/virustotal" = ">= v0.4.1"
+    "blackstork/virustotal" = ">= v0.4.2"
   }
 }
 ```
