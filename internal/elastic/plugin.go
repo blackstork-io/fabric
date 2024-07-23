@@ -184,7 +184,7 @@ func searchWithScroll(client *es.Client, args *dataspec.Block, size int) (plugin
 	return searchWithScrollConfigurable(client, args, size, defaultScrollStepSize)
 }
 
-func searchWithScrollConfigurable(client *es.Client, args *dataspec.Block, size int, stepSize int) (plugin.Data, error) {
+func searchWithScrollConfigurable(client *es.Client, args *dataspec.Block, size, stepSize int) (plugin.Data, error) {
 	// First scroll request to obtain `_scroll_id`
 	scrollTTL := time.Minute * 2 // 2mins
 	// just in case the size is smaller than the step size

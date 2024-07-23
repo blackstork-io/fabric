@@ -116,7 +116,6 @@ func Test_fetchTXTData(t *testing.T) {
 			}
 			assert.Equal(t, tc.expectedData, data)
 			tc.expectedDiags.AssertMatch(t, diags, nil)
-
 		})
 	}
 }

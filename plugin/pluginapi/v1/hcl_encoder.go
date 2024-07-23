@@ -38,6 +38,7 @@ func encodeRange(src *hcl.Range) *Range {
 		End:      encodePos(src.End),
 	}
 }
+
 func encodeRangeVal(src hcl.Range) *Range {
 	return encodeRange(&src)
 }
