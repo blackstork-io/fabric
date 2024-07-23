@@ -136,12 +136,7 @@ func (s *OpenAITextContentTestSuite) TestMissingPrompt() {
 	plugintest.DecodeAndAssert(s.T(), s.schema.Args, "", plugin.MapData{}, diagtest.Asserts{
 		{
 			diagtest.IsError,
-			diagtest.SummaryEquals("Missing required argument"),
-			diagtest.DetailContains("prompt"),
-		},
-		{
-			diagtest.IsError,
-			diagtest.SummaryEquals("Argument value must be non-null"),
+			diagtest.SummaryEquals("Missing required attribute"),
 			diagtest.DetailContains("prompt"),
 		},
 	})
@@ -155,12 +150,7 @@ func (s *OpenAITextContentTestSuite) TestMissingAPIKey() {
 	`, plugin.MapData{}, diagtest.Asserts{
 		{
 			diagtest.IsError,
-			diagtest.SummaryEquals("Missing required argument"),
-			diagtest.DetailContains("api_key"),
-		},
-		{
-			diagtest.IsError,
-			diagtest.SummaryEquals("Argument value must be non-null"),
+			diagtest.SummaryEquals("Missing required attribute"),
 			diagtest.DetailContains("api_key"),
 		},
 	})

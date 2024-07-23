@@ -14,6 +14,7 @@ import (
 	github_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/github"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 type GithubIssuesDataTestSuite struct {
@@ -54,7 +55,10 @@ func int64ptr(i int64) *int64 { return &i }
 
 func (s *GithubIssuesDataTestSuite) TestBasic() {
 	s.cli.On("Issues").Return(s.issuesCli)
-	s.issuesCli.On("ListByRepo", mock.Anything, "testorg", "testrepo", &gh.IssueListByRepoOptions{
+	s.cli.On("ListByRepo", mock.Anything, "testorg", "testrepo", &gh.IssueListByRepoOptions{
+		State:     "open",
+		Sort:      "created",
+		Direction: "desc",
 		ListOptions: gh.ListOptions{
 			PerPage: 30,
 			Page:    1,
@@ -71,13 +75,14 @@ func (s *GithubIssuesDataTestSuite) TestBasic() {
 
 	ctx := context.Background()
 	data, diags := s.plugin.RetrieveData(ctx, "github_issues", &plugin.RetrieveDataParams{
-		Config: dataspec.NewBlock([]string{"cfg"}, map[string]cty.Value{
-			"github_token": cty.StringVal("testtoken"),
-		}),
-		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
-			"repository": cty.StringVal("testorg/testrepo"),
-			"labels":     cty.ListValEmpty(cty.String),
-		}),
+		Config: plugintest.NewTestDecoder(s.T(), s.plugin.DataSources["github_issues"].Config).
+			SetHeaders("config").
+			SetAttr("github_token", cty.StringVal("testtoken")).
+			Decode(),
+		Args: plugintest.NewTestDecoder(s.T(), s.plugin.DataSources["github_issues"].Args).
+			SetHeaders("data", "github_issues", `"test"`).
+			SetAttr("repository", cty.StringVal("testorg/testrepo")).
+			Decode(),
 	})
 	s.Require().Nil(diags)
 	s.Equal(plugin.ListData{

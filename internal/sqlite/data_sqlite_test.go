@@ -5,13 +5,13 @@ import (
 	"path"
 	"testing"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
-	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 func TestSqliteDataSchema(t *testing.T) {
@@ -24,7 +24,7 @@ func TestSqliteDataSchema(t *testing.T) {
 func TestSqliteDataCall(t *testing.T) {
 	type result struct {
 		data  plugin.Data
-		diags diagnostics.Diag
+		diags diagtest.Asserts
 	}
 	tt := []struct {
 		name     string
@@ -39,12 +39,15 @@ func TestSqliteDataCall(t *testing.T) {
 			cfg: map[string]cty.Value{
 				"database_uri": cty.StringVal(""),
 			},
+			args: map[string]cty.Value{
+				"sql_query": cty.StringVal("SELECT * FROM testdata"),
+			},
 			expected: result{
-				diags: diagnostics.Diag{
+				diags: diagtest.Asserts{
 					{
-						Severity: hcl.DiagError,
-						Summary:  "Invalid configuration",
-						Detail:   "database_uri is required",
+						diagtest.IsError,
+						diagtest.SummaryContains("non-empty"),
+						diagtest.DetailContains("database_uri"),
 					},
 				},
 			},
@@ -55,11 +58,14 @@ func TestSqliteDataCall(t *testing.T) {
 				"database_uri": cty.NullVal(cty.String),
 			},
 			expected: result{
-				diags: diagnostics.Diag{
+				diags: diagtest.Asserts{
 					{
-						Severity: hcl.DiagError,
-						Summary:  "Invalid configuration",
-						Detail:   "database_uri is required",
+						diagtest.IsError,
+						diagtest.DetailContains("sql_query", "required"),
+					},
+					{
+						diagtest.IsError,
+						diagtest.DetailContains("database_uri", "null"),
 					},
 				},
 			},
@@ -73,11 +79,11 @@ func TestSqliteDataCall(t *testing.T) {
 				"sql_query": cty.StringVal(""),
 			}),
 			expected: result{
-				diags: diagnostics.Diag{
+				diags: diagtest.Asserts{
 					{
-						Severity: hcl.DiagError,
-						Summary:  "Invalid arguments",
-						Detail:   "sql_query is required",
+						diagtest.IsError,
+						diagtest.SummaryEquals("Invalid arguments"),
+						diagtest.DetailEquals("sql_query is required"),
 					},
 				},
 			},
@@ -91,11 +97,11 @@ func TestSqliteDataCall(t *testing.T) {
 				"sql_query": cty.NullVal(cty.String),
 			}),
 			expected: result{
-				diags: diagnostics.Diag{
+				diags: diagtest.Asserts{
 					{
-						Severity: hcl.DiagError,
-						Summary:  "Invalid arguments",
-						Detail:   "sql_query is required",
+						diagtest.IsError,
+						diagtest.SummaryContains("non-null"),
+						diagtest.DetailContains("sql_query"),
 					},
 				},
 			},
@@ -238,11 +244,11 @@ func TestSqliteDataCall(t *testing.T) {
 				return dsn
 			},
 			expected: result{
-				diags: diagnostics.Diag{
+				diags: diagtest.Asserts{
 					{
-						Severity: hcl.DiagError,
-						Summary:  "Failed to query database",
-						Detail:   "not enough args to execute query: want 1 got 0",
+						diagtest.IsError,
+						diagtest.SummaryEquals("Failed to query database"),
+						diagtest.DetailEquals("not enough args to execute query: want 1 got 0"),
 					},
 				},
 			},
@@ -263,11 +269,11 @@ func TestSqliteDataCall(t *testing.T) {
 				return dsn
 			},
 			expected: result{
-				diags: diagnostics.Diag{
+				diags: diagtest.Asserts{
 					{
-						Severity: hcl.DiagError,
-						Summary:  "Failed to query database",
-						Detail:   "no such table: testdata",
+						diagtest.IsError,
+						diagtest.SummaryEquals("Failed to query database"),
+						diagtest.DetailEquals("no such table: testdata"),
 					},
 				},
 			},
@@ -304,10 +310,10 @@ func TestSqliteDataCall(t *testing.T) {
 				return dsn
 			},
 			expected: result{
-				diags: diagnostics.Diag{{
-					Severity: hcl.DiagError,
-					Summary:  "Failed to query database",
-					Detail:   "context canceled",
+				diags: diagtest.Asserts{{
+					diagtest.IsError,
+					diagtest.SummaryEquals("Failed to query database"),
+					diagtest.DetailEquals("context canceled"),
 				}},
 			},
 			canceled: true,
@@ -317,25 +323,44 @@ func TestSqliteDataCall(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			p := Plugin("1.2.3")
-			params := plugin.RetrieveDataParams{
-				Config: dataspec.NewBlock([]string{"config"}, tc.cfg),
-				Args:   dataspec.NewBlock([]string{"args"}, tc.args),
+			config := plugintest.NewTestDecoder(t, p.DataSources["sqlite"].Config).
+				SetHeaders("config", "data", "sqlite")
+			args := plugintest.NewTestDecoder(t, p.DataSources["sqlite"].Args).
+				SetHeaders("data", "sqlite", `"test"`)
+
+			for k, v := range tc.args {
+				args.SetAttr(k, v)
 			}
+			for k, v := range tc.cfg {
+				config.SetAttr(k, v)
+			}
+
 			if tc.before != nil {
 				fs := makeTestFS(t)
 				dsn := tc.before(t, fs)
-				params.Config = dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
-					"database_uri": cty.StringVal(dsn),
-				})
+				config.SetAttr("database_uri", cty.StringVal(dsn))
 			}
-			ctx := context.Background()
-			if tc.canceled {
-				nextCtx, cancel := context.WithCancel(ctx)
-				cancel()
-				ctx = nextCtx
+			params := plugin.RetrieveDataParams{}
+
+			var diags, diag diagnostics.Diag
+			params.Args, diag = args.DecodeDiag()
+			diags.Extend(diag)
+			params.Config, diag = config.DecodeDiag()
+			diags.Extend(diag)
+			var data plugin.Data
+
+			if !diags.HasErrors() {
+				ctx := context.Background()
+				if tc.canceled {
+					nextCtx, cancel := context.WithCancel(ctx)
+					cancel()
+					ctx = nextCtx
+				}
+				data, diag = p.RetrieveData(ctx, "sqlite", &params)
+				diags.Extend(diag)
 			}
-			data, diags := p.RetrieveData(ctx, "sqlite", &params)
-			assert.Equal(t, tc.expected, result{data, diags}, "unexpected result")
+			tc.expected.diags.AssertMatch(t, diags, nil)
+			assert.Equal(t, tc.expected.data, data, "unexpected result")
 		})
 	}
 }

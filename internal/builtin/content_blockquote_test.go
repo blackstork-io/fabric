@@ -34,11 +34,7 @@ func (s *BlockQuoteTestSuite) TestMissingText() {
 	plugintest.DecodeAndAssert(s.T(), s.schema.Args, ``, nil, diagtest.Asserts{
 		{
 			diagtest.IsError,
-			diagtest.DetailContains(`The argument "value" is required`),
-		},
-		{
-			diagtest.IsError,
-			diagtest.SummaryContains(`Argument value must be non-null`),
+			diagtest.DetailContains(`The attribute "value" is required`),
 		},
 	})
 }
@@ -47,7 +43,7 @@ func (s *BlockQuoteTestSuite) TestNullText() {
 	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `value = null`, nil, diagtest.Asserts{
 		{
 			diagtest.IsError,
-			diagtest.SummaryContains(`Argument value must be non-null`),
+			diagtest.SummaryContains(`Attribute must be non-null`),
 		},
 	})
 }

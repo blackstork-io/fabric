@@ -153,7 +153,6 @@ func (s *ListGeneratorTestSuite) TestAdvanced() {
 			}
 		]
 		item_template = "foo {{.bar}} {{.baz | upper}}"
-		format = null
 	`, dataCtx, diagtest.Asserts{})
 
 	ctx := context.Background()
@@ -170,7 +169,6 @@ func (s *ListGeneratorTestSuite) TestEmptyQueryResult() {
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = []
 		item_template = "foo {{.}}"
-		format = null
 	`, dataCtx, diagtest.Asserts{})
 
 	ctx := context.Background()
@@ -186,7 +184,6 @@ func (s *ListGeneratorTestSuite) TestMissingItemTemplate() {
 	dataCtx := plugin.MapData{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = ["bar", "baz"]
-		format = null
 	`, dataCtx, diagtest.Asserts{})
 
 	ctx := context.Background()

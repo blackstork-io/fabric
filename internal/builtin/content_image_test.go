@@ -39,7 +39,7 @@ func (s *ImageGeneratorTestSuite) TestMissingImageSource() {
 		`,
 		nil, diagtest.Asserts{{
 			diagtest.IsError,
-			diagtest.SummaryContains("Argument value must be non-null"),
+			diagtest.SummaryContains("Attribute must be non-null"),
 		}})
 }
 
@@ -50,7 +50,7 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceEmpty() {
 		`,
 		nil, diagtest.Asserts{{
 			diagtest.IsError,
-			diagtest.DetailContains(`The length`, `"src"`, `>= 1`),
+			diagtest.DetailContains(`"src"`, `can't be empty`),
 		}})
 }
 

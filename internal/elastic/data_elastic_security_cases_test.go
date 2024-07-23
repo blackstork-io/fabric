@@ -55,6 +55,7 @@ func (s *ReportsDataSourceTestSuite) TestAuth() {
 	s.cli.On("ListSecurityCases", mock.Anything, &kbclient.ListSecurityCasesReq{
 		Page:    1,
 		PerPage: 10,
+		Search:  kbclient.String("search"),
 	}).Return(&kbclient.ListSecurityCasesRes{
 		Page:    1,
 		PerPage: 10,
@@ -70,7 +71,9 @@ func (s *ReportsDataSourceTestSuite) TestAuth() {
 			"kibana_endpoint_url": cty.StringVal("test_kibana_endpoint_url"),
 			"api_key_str":         cty.StringVal("test_api_key_str"),
 		}),
-		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{}),
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
+			"search": cty.StringVal("search"),
+		}),
 	})
 	s.Equal("test_kibana_endpoint_url", s.storedUrl)
 	s.Equal(kbclient.String("test_api_key_str"), s.storedApiKey)

@@ -12,8 +12,10 @@ import (
 
 	"github.com/blackstork-io/fabric/internal/virustotal/client"
 	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/virustotal/client"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 type APIUsageTestSuite struct {
@@ -130,14 +132,9 @@ func (s *APIUsageTestSuite) TestGroup() {
 }
 
 func (s *APIUsageTestSuite) TestMissingAPIKey() {
-	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
-			"api_key": cty.NullVal(cty.String),
-		}),
-		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{}),
+	plugintest.NewTestDecoder(s.T(), s.schema.Config).Decode([]diagtest.Assert{
+		diagtest.IsError,
 	})
-	s.Require().Len(diags, 1)
-	s.Nil(data)
 }
 
 func (s *APIUsageTestSuite) TestMissingUserIDAndGroupID() {

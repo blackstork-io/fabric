@@ -42,15 +42,13 @@ func (s *TitleTestSuite) TestMissingValue() {
 	})
 	plugintest.ReencodeCTY(s.T(), s.schema.Args, val, diagtest.Asserts{{
 		diagtest.IsError,
-		diagtest.SummaryContains("Argument value must be non-null"),
+		diagtest.SummaryContains("Attribute must be non-null"),
 	}})
 }
 
 func (s *TitleTestSuite) TestTDefault() {
 	val := cty.ObjectVal(map[string]cty.Value{
-		"value":         cty.StringVal("Hello {{.name}}!"),
-		"absolute_size": cty.NullVal(cty.Number),
-		"relative_size": cty.NullVal(cty.Number),
+		"value": cty.StringVal("Hello {{.name}}!"),
 	})
 	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
@@ -66,9 +64,7 @@ func (s *TitleTestSuite) TestTDefault() {
 
 func (s *TitleTestSuite) TestWithTextMultiline() {
 	val := cty.ObjectVal(map[string]cty.Value{
-		"value":         cty.StringVal("Hello\n{{.name}}\nfor you!"),
-		"absolute_size": cty.NullVal(cty.Number),
-		"relative_size": cty.NullVal(cty.Number),
+		"value": cty.StringVal("Hello\n{{.name}}\nfor you!"),
 	})
 	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
@@ -86,7 +82,6 @@ func (s *TitleTestSuite) TestWithSize() {
 	val := cty.ObjectVal(map[string]cty.Value{
 		"value":         cty.StringVal("Hello {{.name}}!"),
 		"absolute_size": cty.NumberIntVal(2),
-		"relative_size": cty.NullVal(cty.Number),
 	})
 	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
@@ -104,7 +99,6 @@ func (s *TitleTestSuite) TestWithSizeTooBig() {
 	val := cty.ObjectVal(map[string]cty.Value{
 		"value":         cty.StringVal("Hello {{.name}}!"),
 		"absolute_size": cty.NumberIntVal(7),
-		"relative_size": cty.NullVal(cty.Number),
 	})
 	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()

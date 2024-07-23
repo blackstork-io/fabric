@@ -38,7 +38,7 @@ func TestValidation(t *testing.T) {
 				Type: cty.String,
 			},
 			inputVal:    cty.NilVal,
-			expectedVal: cty.NullVal(cty.String),
+			expectedVal: cty.NilVal,
 		},
 		{
 			name: "requiredAttributeMissing",
@@ -50,7 +50,7 @@ func TestValidation(t *testing.T) {
 			},
 			asserts: diagtest.Asserts{{
 				diagtest.IsError,
-				diagtest.SummaryContains("Missing required argument"),
+				diagtest.SummaryContains("Missing required attribute"),
 			}},
 		},
 		{
@@ -64,7 +64,7 @@ func TestValidation(t *testing.T) {
 			asserts: diagtest.Asserts{
 				{
 					diagtest.IsError,
-					diagtest.SummaryContains("Missing required argument"),
+					diagtest.SummaryContains("Missing required attribute"),
 				},
 			},
 		},

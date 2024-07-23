@@ -232,7 +232,7 @@ func (s *TableGeneratorTestSuite) TestNilColumns() {
 	})
 	plugintest.ReencodeCTY(s.T(), s.schema.Args, val, diagtest.Asserts{{
 		diagtest.IsError,
-		diagtest.SummaryContains("Argument value must be non-null"),
+		diagtest.SummaryContains("Attribute must be non-null"),
 	}})
 }
 
@@ -249,7 +249,7 @@ func (s *TableGeneratorTestSuite) TestEmptyColumns() {
 	}
 	plugintest.DecodeAndAssert(s.T(), s.schema.Args, val, dataCtx, diagtest.Asserts{{
 		diagtest.IsError,
-		diagtest.DetailContains("length", `"columns"`, ">= 1"),
+		diagtest.DetailContains(`"columns"`, "can't be empty"),
 	}})
 }
 

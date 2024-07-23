@@ -18,7 +18,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
-	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 func Test_makeRSSDataSchema(t *testing.T) {
@@ -246,24 +246,19 @@ func Test_fetchRSSData(t *testing.T) {
 				},
 			}
 
-			blk := dataspec.NewBlock(
-				[]string{"rss"},
-				map[string]cty.Value{
-					"url": cty.StringVal(addr + tc.url),
-				},
-			)
+			dec := plugintest.NewTestDecoder(t, p.DataSources["rss"].Args).
+				SetAttr("url", cty.StringVal(addr+tc.url))
 
 			if tc.auth != nil {
-				blk.Blocks = append(blk.Blocks, dataspec.NewBlock(
-					[]string{"basic_auth"},
-					map[string]cty.Value{
-						"username": cty.StringVal(tc.auth.Username),
-						"password": cty.StringVal(tc.auth.Password),
-					},
-				))
+				dec.AppendBody(fmt.Sprintf(`
+					basic_auth {
+						username = "%s"
+						password = "%s"
+					}
+					`, tc.auth.Username, tc.auth.Password))
 			}
 
-			params := &plugin.RetrieveDataParams{Args: blk}
+			params := &plugin.RetrieveDataParams{Args: dec.Decode()}
 
 			data, diags := p.RetrieveData(context.Background(), "rss", params)
 			assert.Equal(tc.expected, result{data, diags})

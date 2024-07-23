@@ -34,12 +34,7 @@ func (s *TOCContentTestSuite) TestSchema() {
 }
 
 func (s *TOCContentTestSuite) TestSimple() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"start_level": cty.NullVal(cty.Number),
-		"end_level":   cty.NullVal(cty.Number),
-		"ordered":     cty.NullVal(cty.Bool),
-		"scope":       cty.NullVal(cty.String),
-	})
+	val := cty.ObjectVal(map[string]cty.Value{})
 	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	titleMeta := plugin.MapData{

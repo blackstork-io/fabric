@@ -97,22 +97,23 @@ func (s *FrontMatterGeneratorTestSuite) TestSchema() {
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestInvalidFormat() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"format": cty.StringVal("invalid_type"),
-		"content": cty.ObjectVal(map[string]cty.Value{
-			"foo": cty.StringVal("bar"),
-		}),
-	})
-	plugintest.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, diagtest.Asserts{{
-		diagtest.IsError,
-		diagtest.SummaryContains("Argument", "not one of"),
-	}})
+	plugintest.NewTestDecoder(s.T(), s.schema.ContentProviders["frontmatter"].Args).
+		SetHeaders("content", "frontmatter").
+		AppendBody(`
+			format = "invalid_type"
+			content = {
+				foo = "bar"
+			}
+		`).
+		Decode([]diagtest.Assert{
+			diagtest.IsError,
+			diagtest.SummaryContains("Attribute", "not one of"),
+		})
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestContentAndQueryResultMissing() {
 	val := cty.ObjectVal(map[string]cty.Value{
 		"content": cty.NullVal(cty.DynamicPseudoType),
-		"format":  cty.NullVal(cty.String),
 	})
 	args := plugintest.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
 
@@ -136,7 +137,6 @@ func (s *FrontMatterGeneratorTestSuite) TestContentAndQueryResultMissing() {
 
 func (s *FrontMatterGeneratorTestSuite) TestInvalidQueryResult() {
 	val := `
-		format = null
 		content = "invalid_type"
 	`
 	document := plugin.ContentSection{}
@@ -162,28 +162,11 @@ func (s *FrontMatterGeneratorTestSuite) TestInvalidQueryResult() {
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestContentAndDataContextNil() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"content": cty.NullVal(cty.DynamicPseudoType),
-		"format":  cty.NullVal(cty.String),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
-
-	ctx := context.Background()
-	document := plugin.ContentSection{}
-	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugin.MapData{
-			"document": plugin.MapData{
-				"content": document.AsData(),
-			},
-		},
-	})
-	s.Nil(content)
-	s.Equal(diagnostics.Diag{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "Content is nil",
-	}}, diags)
+	val := cty.ObjectVal(map[string]cty.Value{})
+	plugintest.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, diagtest.Asserts{{
+		diagtest.IsError,
+		diagtest.DetailContains(`content`, `is required`),
+	}})
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestWithContent() {

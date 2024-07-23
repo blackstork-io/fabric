@@ -14,6 +14,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 type ReportsDataSourceTestSuite struct {
@@ -138,13 +139,18 @@ func (s *ReportsDataSourceTestSuite) TestInboxIDs() {
 		Data: []any{},
 	}, nil)
 	res, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
-			"api_username": cty.StringVal("test_user"),
-			"api_token":    cty.StringVal("test_token"),
-		}),
-		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
-			"inbox_ids": cty.ListVal([]cty.Value{cty.NumberIntVal(1), cty.NumberIntVal(2), cty.NumberIntVal(3)}),
-		}),
+		Config: plugintest.NewTestDecoder(s.T(), s.schema.Config).
+			SetHeaders("config").
+			SetAttr("api_username", cty.StringVal("test_user")).
+			SetAttr("api_token", cty.StringVal("test_token")).
+			Decode(),
+
+		Args: plugintest.NewTestDecoder(s.T(), s.schema.Args).
+			SetHeaders("config").
+			SetAttr("inbox_ids", cty.ListVal([]cty.Value{
+				cty.NumberIntVal(1), cty.NumberIntVal(2), cty.NumberIntVal(3),
+			})).
+			Decode(),
 	})
 	s.Equal("test_user", s.storedUsr)
 	s.Equal("test_token", s.storedTkn)
@@ -162,7 +168,9 @@ func (s *ReportsDataSourceTestSuite) TestInvalid() {
 			"api_username": cty.StringVal("test_user"),
 			"api_token":    cty.StringVal("test_token"),
 		}),
-		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{}),
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
+			"size": cty.NumberIntVal(10),
+		}),
 	})
 	s.Nil(res)
 	s.Equal(diagnostics.Diag{{
