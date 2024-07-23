@@ -49,6 +49,23 @@ func (a *AttrSpec) KeyForObjectSpec() string {
 	return a.Name
 }
 
+func formatType(buf *strings.Builder, t cty.Type) {
+	if t.IsTupleType() {
+		buf.WriteString("[")
+		types := t.TupleElementTypes()
+		if len(types) > 0 {
+			formatType(buf, types[0])
+			for _, ty := range types[1:] {
+				buf.WriteString(", ")
+				formatType(buf, ty)
+			}
+		}
+		buf.WriteString("]")
+	} else {
+		buf.WriteString(t.FriendlyNameForConstraint())
+	}
+}
+
 func (a *AttrSpec) DocComment() hclwrite.Tokens {
 	tokens := comment(nil, a.Doc)
 	if len(tokens) != 0 {
@@ -64,7 +81,7 @@ func (a *AttrSpec) DocComment() hclwrite.Tokens {
 	if a.Constraints.Is(constraint.Integer) {
 		buf.WriteString("integer")
 	} else {
-		buf.WriteString(a.Type.FriendlyNameForConstraint())
+		formatType(&buf, a.Type)
 	}
 	buf.WriteString(".\n")
 

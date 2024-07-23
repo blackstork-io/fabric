@@ -77,22 +77,22 @@ func appendCommentNewLine(tokens hclwrite.Tokens) hclwrite.Tokens {
 	})
 }
 
-func formatHeader(name string, labels []string) string {
-	var sb strings.Builder
-	sb.WriteString(name)
+func formatHeader(name string, labels []string) (buf []byte) {
+	buf = append(buf, name...)
+	buf = append(buf, " "...)
 	unquoted := 1
 	if strings.EqualFold(name, "config") {
 		unquoted = 2
 	}
 	for i, l := range labels {
-		sb.WriteByte(' ')
-		if i >= unquoted {
-			sb.WriteByte('"')
-			sb.WriteString(l)
-			sb.WriteByte('"')
+		if i >= unquoted || strings.Contains(l, " ") {
+			buf = append(buf, `"`...)
+			buf = append(buf, l...)
+			buf = append(buf, `"`...)
 		} else {
-			sb.WriteString(l)
+			buf = append(buf, l...)
 		}
+		buf = append(buf, " "...)
 	}
-	return sb.String()
+	return
 }

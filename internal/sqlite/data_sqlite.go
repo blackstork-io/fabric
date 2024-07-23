@@ -45,7 +45,7 @@ func makeSqliteDataSource() *plugin.DataSource {
 						cty.NumberIntVal(2),
 						cty.BoolVal(false),
 					}),
-					Doc: `A tuple or list of items `,
+					Doc: `A tuple (or list) of strings, numbers, or booleans to be used as arguments in the SQL query`,
 				},
 			},
 		},

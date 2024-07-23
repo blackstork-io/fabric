@@ -63,7 +63,7 @@ type BlockSpec struct {
 	AllowUnspecifiedAttributes bool
 }
 
-func (b *BlockSpec) WriteDoc(w *hclwrite.Body) {
+func (b *BlockSpec) WriteBlockDoc(w *hclwrite.Body) {
 	tokens := comment(nil, b.Doc)
 	if len(tokens) != 0 {
 		tokens = appendCommentNewLine(tokens)
@@ -81,11 +81,15 @@ func (b *BlockSpec) WriteDoc(w *hclwrite.Body) {
 
 	w.AppendUnstructuredTokens(tokens)
 	block := w.AppendNewBlock(b.Header.AsDocLabels())
+	b.WriteBodyDoc(block.Body())
+}
+
+func (b *BlockSpec) WriteBodyDoc(w *hclwrite.Body) {
 	if len(b.Blocks) != 0 {
-		b.Blocks[0].WriteDoc(block.Body())
+		b.Blocks[0].WriteBlockDoc(w)
 		for _, subBlock := range b.Blocks[1:] {
 			w.AppendNewline()
-			subBlock.WriteDoc(block.Body())
+			subBlock.WriteBlockDoc(w)
 		}
 	}
 	if len(b.Attrs) != 0 {
@@ -96,7 +100,7 @@ func (b *BlockSpec) WriteDoc(w *hclwrite.Body) {
 		b.Attrs[0].WriteDoc(w)
 		for _, subAttr := range b.Attrs[1:] {
 			w.AppendNewline()
-			subAttr.WriteDoc(block.Body())
+			subAttr.WriteDoc(w)
 		}
 	}
 }
