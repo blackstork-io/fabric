@@ -35,10 +35,17 @@ func makeSqliteDataSource() *plugin.DataSource {
 					Name:        "sql_query",
 					Type:        cty.String,
 					Constraints: constraint.RequiredNonNull,
+					Doc:         `SQL query to execute`,
 				},
 				{
 					Name: "sql_args",
-					Type: cty.List(cty.DynamicPseudoType),
+					Type: cty.DynamicPseudoType,
+					ExampleVal: cty.TupleVal([]cty.Value{
+						cty.StringVal("example argument"),
+						cty.NumberIntVal(2),
+						cty.BoolVal(false),
+					}),
+					Doc: `A tuple or list of items `,
 				},
 			},
 		},
@@ -52,9 +59,17 @@ func parseSqliteArgs(args *dataspec.Block) (string, []any, error) {
 		return "", nil, fmt.Errorf("sql_query is required")
 	}
 	sqlArgs := args.GetAttrVal("sql_args")
-	if sqlArgs.IsNull() || sqlArgs.LengthInt() == 0 {
+	if sqlArgs.IsNull() {
 		return sqlQuery.AsString(), nil, nil
 	}
+	argsTy := sqlArgs.Type()
+	if !argsTy.IsTupleType() && !argsTy.IsListType() {
+		return "", nil, fmt.Errorf("sql_args must be a tuple (or a list) of strings, numbers, or booleans, got %s", argsTy.FriendlyName())
+	}
+	if sqlArgs.LengthInt() == 0 {
+		return sqlQuery.AsString(), nil, nil
+	}
+
 	argsList := sqlArgs.AsValueSlice()
 	argsResult := make([]any, len(argsList))
 	for i, arg := range argsList {
@@ -69,7 +84,7 @@ func parseSqliteArgs(args *dataspec.Block) (string, []any, error) {
 		case arg.Type() == cty.Bool:
 			argsResult[i] = arg.True()
 		default:
-			return "", nil, fmt.Errorf("sql_args must be a list of strings, numbers, or booleans")
+			return "", nil, fmt.Errorf("sql_args must be a tuple of strings, numbers, or booleans")
 		}
 	}
 	return sqlQuery.AsString(), argsResult, nil
