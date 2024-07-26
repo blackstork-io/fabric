@@ -13,6 +13,8 @@ packages:
     config:
     interfaces:
       Client:
+      IssuesClient:
+      GistClient:
   github.com/blackstork-io/fabric/internal/openai/client:
     config:
     interfaces:

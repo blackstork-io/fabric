@@ -102,7 +102,7 @@ func fetchGithubIssuesData(loader ClientLoaderFn) plugin.RetrieveDataFunc {
 		for page := minPage; ; page++ {
 			opts.opts.Page = page
 			opts.opts.PerPage = pageSize
-			issuesPage, resp, err := client.ListByRepo(context.Background(), opts.owner, opts.name, opts.opts)
+			issuesPage, resp, err := client.Issues().ListByRepo(context.Background(), opts.owner, opts.name, opts.opts)
 			if err != nil {
 				return nil, diagnostics.Diag{{
 					Severity: hcl.DiagError,
