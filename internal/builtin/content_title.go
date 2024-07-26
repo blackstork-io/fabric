@@ -12,6 +12,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 const (
@@ -110,7 +111,7 @@ func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (
 	}, nil
 }
 
-func findDefaultTitleSize(datactx plugin.MapData) int64 {
+func findDefaultTitleSize(datactx plugindata.Map) int64 {
 	document, section := parseScope(datactx)
 	if section == nil {
 		return defaultAbsoluteTitleSize

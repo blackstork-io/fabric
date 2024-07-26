@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
@@ -23,7 +24,7 @@ func TestSqliteDataSchema(t *testing.T) {
 
 func TestSqliteDataCall(t *testing.T) {
 	type result struct {
-		data  plugin.Data
+		data  plugindata.Data
 		diags diagtest.Asserts
 	}
 	tt := []struct {
@@ -122,7 +123,7 @@ func TestSqliteDataCall(t *testing.T) {
 				return dsn
 			},
 			expected: result{
-				data: plugin.ListData{},
+				data: plugindata.List{},
 			},
 		},
 		{
@@ -154,18 +155,18 @@ func TestSqliteDataCall(t *testing.T) {
 				return dsn
 			},
 			expected: result{
-				data: plugin.ListData{
-					plugin.MapData{
-						"id":       plugin.NumberData(1),
-						"text_val": plugin.StringData("text_1"),
-						"num_val":  plugin.NumberData(1),
-						"bool_val": plugin.BoolData(true),
+				data: plugindata.List{
+					plugindata.Map{
+						"id":       plugindata.Number(1),
+						"text_val": plugindata.String("text_1"),
+						"num_val":  plugindata.Number(1),
+						"bool_val": plugindata.Bool(true),
 					},
-					plugin.MapData{
-						"id":       plugin.NumberData(2),
-						"text_val": plugin.StringData("text_2"),
-						"num_val":  plugin.NumberData(2),
-						"bool_val": plugin.BoolData(false),
+					plugindata.Map{
+						"id":       plugindata.Number(2),
+						"text_val": plugindata.String("text_2"),
+						"num_val":  plugindata.Number(2),
+						"bool_val": plugindata.Bool(false),
 					},
 				},
 			},
@@ -204,12 +205,12 @@ func TestSqliteDataCall(t *testing.T) {
 				return dsn
 			},
 			expected: result{
-				data: plugin.ListData{
-					plugin.MapData{
-						"id":       plugin.NumberData(2),
-						"text_val": plugin.StringData("text_2"),
-						"num_val":  plugin.NumberData(2),
-						"bool_val": plugin.BoolData(false),
+				data: plugindata.List{
+					plugindata.Map{
+						"id":       plugindata.Number(2),
+						"text_val": plugindata.String("text_2"),
+						"num_val":  plugindata.Number(2),
+						"bool_val": plugindata.Bool(false),
 						"null_val": nil,
 					},
 				},
@@ -347,7 +348,7 @@ func TestSqliteDataCall(t *testing.T) {
 			diags.Extend(diag)
 			params.Config, diag = config.DecodeDiag()
 			diags.Extend(diag)
-			var data plugin.Data
+			var data plugindata.Data
 
 			if !diags.HasErrors() {
 				ctx := context.Background()

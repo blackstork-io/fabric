@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type Section struct {
@@ -19,10 +20,10 @@ type Section struct {
 	vars     *definitions.ParsedVars
 }
 
-func (block *Section) RenderContent(ctx context.Context, dataCtx plugin.MapData, doc, parent *plugin.ContentSection, contentID uint32) (_ *plugin.ContentResult, diags diagnostics.Diag) {
-	sectionData := plugin.MapData{}
+func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (_ *plugin.ContentResult, diags diagnostics.Diag) {
+	sectionData := plugindata.Map{}
 	if block.meta != nil {
-		sectionData[definitions.BlockKindMeta] = block.meta.AsJQData()
+		sectionData[definitions.BlockKindMeta] = block.meta.AsPluginData()
 	}
 	section := new(plugin.ContentSection)
 	if parent != nil {

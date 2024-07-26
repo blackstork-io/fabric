@@ -15,6 +15,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type tableCellTmpl = *template.Template
@@ -26,7 +27,7 @@ func makeTableContentProvider() *plugin.ContentProvider {
 			Attrs: []*dataspec.AttrSpec{
 				{
 					Name: "rows",
-					Type: cty.List(plugin.EncapsulatedData.CtyType()),
+					Type: cty.List(plugindata.EncapsulatedData.CtyType()),
 					Doc: "A list of objects representing rows in the table.\n" +
 						"May be set statically or as a result of one or more queries.",
 				},
@@ -70,12 +71,12 @@ func makeTableContentProvider() *plugin.ContentProvider {
 }
 
 func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	var rows plugin.ListData
+	var rows plugindata.List
 	rowsVal := params.Args.GetAttrVal("rows")
 	if !rowsVal.IsNull() {
 		var err error
-		rows, err = utils.FnMapErr(rowsVal.AsValueSlice(), func(v cty.Value) (plugin.Data, error) {
-			data, err := plugin.EncapsulatedData.FromCty(v)
+		rows, err = utils.FnMapErr(rowsVal.AsValueSlice(), func(v cty.Value) (plugindata.Data, error) {
+			data, err := plugindata.EncapsulatedData.FromCty(v)
 			if err != nil {
 				return nil, err
 			}
@@ -144,7 +145,7 @@ func parseTableContentArgs(params *plugin.ProvideContentParams) (headers, values
 	return
 }
 
-func renderTableContent(headers, values []tableCellTmpl, dataCtx plugin.MapData, rowsList plugin.ListData) (string, error) {
+func renderTableContent(headers, values []tableCellTmpl, dataCtx plugindata.Map, rowsList plugindata.List) (string, error) {
 	var buf bytes.Buffer
 
 	data := dataCtx.Any().(map[string]any)

@@ -13,6 +13,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeRSSDataSource() *plugin.DataSource {
@@ -64,7 +65,7 @@ func makeRSSDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 	fp := gofeed.NewParser()
 	url := params.Args.GetAttrVal("url").AsString()
 
@@ -87,27 +88,27 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 			Detail:   err.Error(),
 		}}
 	}
-	data := plugin.MapData{
-		"title":       plugin.StringData(feed.Title),
-		"description": plugin.StringData(feed.Description),
-		"link":        plugin.StringData(feed.Link),
-		"pub_date":    plugin.StringData(feed.Published),
-		"items": plugin.ListData(utils.FnMap(feed.Items, func(item *gofeed.Item) plugin.Data {
-			data := plugin.MapData{
-				"guid":        plugin.StringData(item.GUID),
-				"pub_date":    plugin.StringData(item.Published),
-				"title":       plugin.StringData(item.Title),
-				"description": plugin.StringData(item.Description),
-				"link":        plugin.StringData(item.Link),
+	data := plugindata.Map{
+		"title":       plugindata.String(feed.Title),
+		"description": plugindata.String(feed.Description),
+		"link":        plugindata.String(feed.Link),
+		"pub_date":    plugindata.String(feed.Published),
+		"items": plugindata.List(utils.FnMap(feed.Items, func(item *gofeed.Item) plugindata.Data {
+			data := plugindata.Map{
+				"guid":        plugindata.String(item.GUID),
+				"pub_date":    plugindata.String(item.Published),
+				"title":       plugindata.String(item.Title),
+				"description": plugindata.String(item.Description),
+				"link":        plugindata.String(item.Link),
 			}
 			if item.PublishedParsed != nil {
-				data["pub_timestamp"] = plugin.NumberData(item.PublishedParsed.Unix())
+				data["pub_timestamp"] = plugindata.Number(item.PublishedParsed.Unix())
 			}
 			return data
 		})),
 	}
 	if feed.PublishedParsed != nil {
-		data["pub_timestamp"] = plugin.NumberData(feed.PublishedParsed.Unix())
+		data["pub_timestamp"] = plugindata.Number(feed.PublishedParsed.Unix())
 	}
 
 	return data, nil

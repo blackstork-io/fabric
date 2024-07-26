@@ -14,6 +14,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type OpenCTIDataSourceTestSuite struct {
@@ -67,10 +68,10 @@ func (s *OpenCTIDataSourceTestSuite) TestBasicValid() {
 		}),
 	})
 	s.Nil(diags)
-	s.Equal(plugin.MapData{
-		"data": plugin.MapData{
-			"stixCoreRelationships": plugin.MapData{
-				"edges": plugin.ListData{},
+	s.Equal(plugindata.Map{
+		"data": plugindata.Map{
+			"stixCoreRelationships": plugindata.Map{
+				"edges": plugindata.List{},
 			},
 		},
 	}, data)
@@ -167,10 +168,10 @@ func (s *OpenCTIDataSourceTestSuite) TestWithAuth() {
 		}),
 	})
 	s.Nil(diags)
-	s.Equal(plugin.MapData{
-		"data": plugin.MapData{
-			"stixCoreRelationships": plugin.MapData{
-				"edges": plugin.ListData{},
+	s.Equal(plugindata.Map{
+		"data": plugindata.Map{
+			"stixCoreRelationships": plugindata.Map{
+				"edges": plugindata.List{},
 			},
 		},
 	}, data)

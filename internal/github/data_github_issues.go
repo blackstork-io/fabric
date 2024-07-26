@@ -15,6 +15,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeGithubIssuesDataSchema(loader ClientLoaderFn) *plugin.DataSource {
@@ -147,7 +148,7 @@ func makeGithubIssuesDataSchema(loader ClientLoaderFn) *plugin.DataSource {
 }
 
 func fetchGithubIssuesData(loader ClientLoaderFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 		tkn := params.Config.GetAttrVal("github_token").AsString()
 		opts, diags := parseIssuesArgs(params.Args)
 		if diags.HasErrors() {
@@ -155,7 +156,7 @@ func fetchGithubIssuesData(loader ClientLoaderFn) plugin.RetrieveDataFunc {
 		}
 		client := loader(tkn)
 		// iterate over pages until we get all issues or reach the limit if specified
-		var issues plugin.ListData
+		var issues plugindata.List
 		for page := minPage; ; page++ {
 			opts.opts.Page = page
 			opts.opts.PerPage = pageSize
@@ -246,10 +247,10 @@ func parseIssuesArgs(args *dataspec.Block) (*parsedIssuesArgs, diagnostics.Diag)
 	return parsed, nil
 }
 
-func encodeGithubIssue(issue *gh.Issue) (plugin.Data, error) {
+func encodeGithubIssue(issue *gh.Issue) (plugindata.Data, error) {
 	raw, err := json.Marshal(issue)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode issue: %w", err)
 	}
-	return plugin.UnmarshalJSONData(raw)
+	return plugindata.UnmarshalJSON(raw)
 }

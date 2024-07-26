@@ -8,6 +8,7 @@ import (
 	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type ContentProviders map[string]*ContentProvider
@@ -101,7 +102,7 @@ func (cg *ContentProvider) Execute(ctx context.Context, params *ProvideContentPa
 type ProvideContentParams struct {
 	Config      *dataspec.Block
 	Args        *dataspec.Block
-	DataContext MapData
+	DataContext plugindata.Map
 	ContentID   uint32
 }
 

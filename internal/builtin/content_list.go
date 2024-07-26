@@ -15,6 +15,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeListContentProvider() *plugin.ContentProvider {
@@ -42,7 +43,7 @@ func makeListContentProvider() *plugin.ContentProvider {
 				},
 				{
 					Name:        "items",
-					Type:        cty.List(plugin.EncapsulatedData.CtyType()),
+					Type:        cty.List(plugindata.EncapsulatedData.CtyType()),
 					Constraints: constraint.RequiredMeaningful,
 					ExampleVal: cty.ListVal([]cty.Value{
 						cty.StringVal("First item"),
@@ -68,8 +69,8 @@ func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 			Detail:   err.Error(),
 		}}
 	}
-	items, err := utils.FnMapErr(params.Args.GetAttrVal("items").AsValueSlice(), func(v cty.Value) (plugin.Data, error) {
-		data, err := plugin.EncapsulatedData.FromCty(v)
+	items, err := utils.FnMapErr(params.Args.GetAttrVal("items").AsValueSlice(), func(v cty.Value) (plugindata.Data, error) {
+		data, err := plugindata.EncapsulatedData.FromCty(v)
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +103,7 @@ func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 	}, nil
 }
 
-func renderListContent(format string, tmpl *template.Template, items plugin.ListData) (string, error) {
+func renderListContent(format string, tmpl *template.Template, items plugindata.List) (string, error) {
 	var buf bytes.Buffer
 	var tmpBuf bytes.Buffer
 	for i, item := range items {

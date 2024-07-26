@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func roundTrip(t *testing.T, val cty.Value) (decVal cty.Value, decTy cty.Type) {
@@ -207,24 +207,24 @@ func TestCtyCodecCapsule(t *testing.T) {
 	var err error
 	t.Logf("Testing Capsule roundtrip")
 
-	data := plugin.Data(plugin.MapData{
-		"foo": plugin.StringData("bar"),
-		"bar": plugin.NumberData(42),
-		"baz": plugin.BoolData(true),
-		"qux": plugin.ListData{
-			plugin.StringData("foo"),
-			plugin.StringData("bar"),
+	data := plugindata.Data(plugindata.Map{
+		"foo": plugindata.String("bar"),
+		"bar": plugindata.Number(42),
+		"baz": plugindata.Bool(true),
+		"qux": plugindata.List{
+			plugindata.String("foo"),
+			plugindata.String("bar"),
 		},
 	})
 
-	ctyVal := plugin.EncapsulatedData.ToCty(&data)
+	ctyVal := plugindata.EncapsulatedData.ToCty(&data)
 	encVal, diag := encodeCtyValue(ctyVal)
 	require.False(diag.HasErrors(), "Failed to encode value", diag)
 
 	decVal, err := decodeCtyValue(encVal)
 	require.NoError(err, "Failed to decode value")
 
-	decData := plugin.EncapsulatedData.MustFromCty(decVal)
+	decData := plugindata.EncapsulatedData.MustFromCty(decVal)
 	require.Equal(&data, decData)
-	roundTripType(t, plugin.EncapsulatedData.CtyType())
+	roundTripType(t, plugindata.EncapsulatedData.CtyType())
 }

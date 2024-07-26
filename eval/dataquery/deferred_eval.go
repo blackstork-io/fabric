@@ -9,12 +9,12 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/encapsulator"
-	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type DeferredEvaluatable interface {
-	DeferredEval(ctx context.Context, dataCtx plugin.MapData) (result cty.Value, diags diagnostics.Diag)
+	DeferredEval(ctx context.Context, dataCtx plugindata.Map) (result cty.Value, diags diagnostics.Diag)
 }
 
 var deferredEvalReflectType = reflect.TypeFor[DeferredEvaluatable]()
@@ -60,7 +60,7 @@ type deferredEval struct {
 	status int
 }
 
-func (d *deferredEval) EvalWrappedVal(ctx context.Context, dataCtx plugin.MapData) (result cty.Value, diags diagnostics.Diag) {
+func (d *deferredEval) EvalWrappedVal(ctx context.Context, dataCtx plugindata.Map) (result cty.Value, diags diagnostics.Diag) {
 	res := d
 	switch {
 	case d.status > 0:
@@ -80,7 +80,7 @@ func (d *deferredEval) EvalWrappedVal(ctx context.Context, dataCtx plugin.MapDat
 }
 
 // Walks the (possibly deeply nested) cty.Value and applies the CustomEval if needed.
-func EvaluateDeferred(ctx context.Context, dataCtx plugin.MapData, val cty.Value) (res cty.Value, diags diagnostics.Diag) {
+func EvaluateDeferred(ctx context.Context, dataCtx plugindata.Map, val cty.Value) (res cty.Value, diags diagnostics.Diag) {
 	res, _ = cty.Transform(val, func(p cty.Path, v cty.Value) (cty.Value, error) {
 		if v.IsNull() || !v.IsKnown() || !DeferredEvalType.ValCtyTypeEqual(v) {
 			return v, nil
@@ -96,7 +96,7 @@ func EvaluateDeferred(ctx context.Context, dataCtx plugin.MapData, val cty.Value
 	return
 }
 
-func EvaluateDeferredBlock(ctx context.Context, dataCtx plugin.MapData, block *dataspec.Block) (diags diagnostics.Diag) {
+func EvaluateDeferredBlock(ctx context.Context, dataCtx plugindata.Map, block *dataspec.Block) (diags diagnostics.Diag) {
 	if block == nil {
 		return
 	}

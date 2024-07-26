@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func Test_terraformStateLocalDataSchema(t *testing.T) {
@@ -22,7 +23,7 @@ func Test_terraformStateLocalDataSchema(t *testing.T) {
 
 func Test_fetchTerraformStateLocalData_Call(t *testing.T) {
 	type result struct {
-		data  plugin.Data
+		data  plugindata.Data
 		diags diagnostics.Diag
 	}
 	tt := []struct {
@@ -60,16 +61,16 @@ func Test_fetchTerraformStateLocalData_Call(t *testing.T) {
 			name: "valid",
 			path: "testdata/terraform.tfstate",
 			expected: result{
-				data: plugin.MapData{
-					"version": plugin.NumberData(1),
-					"serial":  plugin.NumberData(0),
-					"modules": plugin.ListData{
-						plugin.MapData{
-							"path": plugin.ListData{
-								plugin.StringData("root"),
+				data: plugindata.Map{
+					"version": plugindata.Number(1),
+					"serial":  plugindata.Number(0),
+					"modules": plugindata.List{
+						plugindata.Map{
+							"path": plugindata.List{
+								plugindata.String("root"),
 							},
-							"outputs":   plugin.MapData{},
-							"resources": plugin.MapData{},
+							"outputs":   plugindata.Map{},
+							"resources": plugindata.Map{},
 						},
 					},
 				},

@@ -13,6 +13,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeHackerOneReportsDataSchema(loader ClientLoadFn) *plugin.DataSource {
@@ -225,7 +226,7 @@ func makeHackerOneReportsDataSchema(loader ClientLoadFn) *plugin.DataSource {
 }
 
 func fetchHackerOneReports(loader ClientLoadFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 		cli, err := makeClient(loader, params.Config)
 		if err != nil {
 			return nil, diagnostics.Diag{{
@@ -278,7 +279,7 @@ func fetchHackerOneReports(loader ClientLoadFn) plugin.RetrieveDataFunc {
 				}
 			}
 		}
-		dst, err := plugin.ParseDataAny(data)
+		dst, err := plugindata.ParseAny(data)
 		if err != nil {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,

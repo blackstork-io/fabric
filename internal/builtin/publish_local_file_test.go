@@ -12,6 +12,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func Test_makeLocalFilePublisher(t *testing.T) {
@@ -30,31 +31,31 @@ func Test_makeLocalFilePublisher(t *testing.T) {
 func Test_publishLocalFileMD(t *testing.T) {
 	schema := makeLocalFilePublisher(nil, nil)
 	dir := t.TempDir()
-	titleMeta := plugin.MapData{
-		"provider": plugin.StringData("title"),
-		"plugin":   plugin.StringData("blackstork/builtin"),
+	titleMeta := plugindata.Map{
+		"provider": plugindata.String("title"),
+		"plugin":   plugindata.String("blackstork/builtin"),
 	}
 	params := &plugin.PublishParams{
 		Format: plugin.OutputFormatMD,
 		Args: dataspec.NewBlock([]string{"local_file"}, map[string]cty.Value{
 			"path": cty.StringVal(filepath.Join(dir, "{{.document.meta.name}}.{{.format}}")),
 		}),
-		DataContext: plugin.MapData{
-			"document": plugin.MapData{
-				"meta": plugin.MapData{
-					"name": plugin.StringData("test_document"),
+		DataContext: plugindata.Map{
+			"document": plugindata.Map{
+				"meta": plugindata.Map{
+					"name": plugindata.String("test_document"),
 				},
-				"content": plugin.MapData{
-					"type": plugin.StringData("section"),
-					"children": plugin.ListData{
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("# Header 1"),
+				"content": plugindata.Map{
+					"type": plugindata.String("section"),
+					"children": plugindata.List{
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("# Header 1"),
 							"meta":     titleMeta,
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
 						},
 					},
 				},
@@ -72,31 +73,31 @@ func Test_publishLocalFileMD(t *testing.T) {
 func Test_publishLocalFileHTML(t *testing.T) {
 	schema := makeLocalFilePublisher(nil, nil)
 	dir := t.TempDir()
-	titleMeta := plugin.MapData{
-		"provider": plugin.StringData("title"),
-		"plugin":   plugin.StringData("blackstork/builtin"),
+	titleMeta := plugindata.Map{
+		"provider": plugindata.String("title"),
+		"plugin":   plugindata.String("blackstork/builtin"),
 	}
 	params := &plugin.PublishParams{
 		Format: plugin.OutputFormatHTML,
 		Args: dataspec.NewBlock([]string{"local_file"}, map[string]cty.Value{
 			"path": cty.StringVal(filepath.Join(dir, "{{.document.meta.name}}.{{.format}}")),
 		}),
-		DataContext: plugin.MapData{
-			"document": plugin.MapData{
-				"meta": plugin.MapData{
-					"name": plugin.StringData("test_document"),
+		DataContext: plugindata.Map{
+			"document": plugindata.Map{
+				"meta": plugindata.Map{
+					"name": plugindata.String("test_document"),
 				},
-				"content": plugin.MapData{
-					"type": plugin.StringData("section"),
-					"children": plugin.ListData{
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("# Header 1"),
+				"content": plugindata.Map{
+					"type": plugindata.String("section"),
+					"children": plugindata.List{
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("# Header 1"),
 							"meta":     titleMeta,
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
 						},
 					},
 				},
@@ -119,14 +120,14 @@ func Test_publishLocalFile_invalidPath(t *testing.T) {
 		Args: dataspec.NewBlock([]string{"local_file"}, map[string]cty.Value{
 			"path": cty.StringVal(""),
 		}),
-		DataContext: plugin.MapData{
-			"document": plugin.MapData{
-				"content": plugin.MapData{
-					"type": plugin.StringData("section"),
-					"children": plugin.ListData{
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("# Header 1"),
+		DataContext: plugindata.Map{
+			"document": plugindata.Map{
+				"content": plugindata.Map{
+					"type": plugindata.String("section"),
+					"children": plugindata.List{
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("# Header 1"),
 						},
 					},
 				},

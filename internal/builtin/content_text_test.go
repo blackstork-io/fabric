@@ -12,6 +12,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
@@ -54,8 +55,8 @@ func (s *TextTestSuite) TestBasic() {
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)
@@ -85,8 +86,8 @@ func (s *TextTestSuite) TestCallInvalidTemplate() {
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Nil(result)
@@ -108,8 +109,8 @@ func (s *TextTestSuite) TestSprigTemplate() {
 				},
 			},
 		},
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)

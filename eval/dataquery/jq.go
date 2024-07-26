@@ -12,7 +12,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/encapsulator"
 	"github.com/blackstork-io/fabric/pkg/utils"
-	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type JqQuery struct {
@@ -116,17 +116,17 @@ func (q *JqQuery) parse() (code *gojq.Code, diags diagnostics.Diag) {
 	return
 }
 
-func (q *JqQuery) DeferredEval(ctx context.Context, dataCtx plugin.MapData) (result cty.Value, diags diagnostics.Diag) {
-	var data plugin.Data
+func (q *JqQuery) DeferredEval(ctx context.Context, dataCtx plugindata.Map) (result cty.Value, diags diagnostics.Diag) {
+	var data plugindata.Data
 	data, diags = q.Eval(ctx, dataCtx)
 	if diags.HasErrors() {
 		return
 	}
-	result = plugin.EncapsulatedData.ToCty(&data)
+	result = plugindata.EncapsulatedData.ToCty(&data)
 	return
 }
 
-func (q *JqQuery) Eval(ctx context.Context, dataCtx plugin.MapData) (result plugin.Data, diags diagnostics.Diag) {
+func (q *JqQuery) Eval(ctx context.Context, dataCtx plugindata.Map) (result plugindata.Data, diags diagnostics.Diag) {
 	if q == nil {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
@@ -158,7 +158,7 @@ func (q *JqQuery) Eval(ctx context.Context, dataCtx plugin.MapData) (result plug
 	if !hasResult {
 		res = nil
 	}
-	result, err = plugin.ParseDataAny(res)
+	result, err = plugindata.ParseAny(res)
 	if err != nil {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,

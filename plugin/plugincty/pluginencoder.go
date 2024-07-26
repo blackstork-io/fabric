@@ -9,39 +9,39 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/ctyencoder"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type nullEncoder struct{}
 
 // Add implements CollectionEncoder.
-func (n nullEncoder) Add(k cty.Value, v plugin.Data) diagnostics.Diag {
+func (n nullEncoder) Add(k cty.Value, v plugindata.Data) diagnostics.Diag {
 	return nil
 }
 
 // Encode implements CollectionEncoder.
-func (n nullEncoder) Encode() (plugin.Data, diagnostics.Diag) {
+func (n nullEncoder) Encode() (plugindata.Data, diagnostics.Diag) {
 	return nil, nil
 }
 
-var _ ctyencoder.CollectionEncoder[plugin.Data] = nullEncoder{}
+var _ ctyencoder.CollectionEncoder[plugindata.Data] = nullEncoder{}
 
-type mapEncoder plugin.MapData
+type mapEncoder plugindata.Map
 
-func newMapEncoder(val cty.Value) (ctyencoder.CollectionEncoder[plugin.Data], diagnostics.Diag) {
+func newMapEncoder(val cty.Value) (ctyencoder.CollectionEncoder[plugindata.Data], diagnostics.Diag) {
 	if val.IsNull() || !val.IsKnown() {
 		return nullEncoder{}, nil
 	}
-	return mapEncoder(make(plugin.MapData, val.LengthInt())), nil
+	return mapEncoder(make(plugindata.Map, val.LengthInt())), nil
 }
 
-var _ ctyencoder.CollectionEncoder[plugin.Data] = mapEncoder{}
+var _ ctyencoder.CollectionEncoder[plugindata.Data] = mapEncoder{}
 
-func (m mapEncoder) Encode() (plugin.Data, diagnostics.Diag) {
-	return plugin.MapData(m), nil
+func (m mapEncoder) Encode() (plugindata.Data, diagnostics.Diag) {
+	return plugindata.Map(m), nil
 }
 
-func (m mapEncoder) Add(k cty.Value, v plugin.Data) diagnostics.Diag {
+func (m mapEncoder) Add(k cty.Value, v plugindata.Data) diagnostics.Diag {
 	if k.IsNull() || !k.Type().Equals(cty.String) {
 		return diagnostics.Diag{&hcl.Diagnostic{
 			Severity: hcl.DiagError,
@@ -53,29 +53,29 @@ func (m mapEncoder) Add(k cty.Value, v plugin.Data) diagnostics.Diag {
 	return nil
 }
 
-type listEncoder plugin.ListData
+type listEncoder plugindata.List
 
-func newListEncoder(val cty.Value) (ctyencoder.CollectionEncoder[plugin.Data], diagnostics.Diag) {
+func newListEncoder(val cty.Value) (ctyencoder.CollectionEncoder[plugindata.Data], diagnostics.Diag) {
 	if val.IsNull() || !val.IsKnown() {
 		return nullEncoder{}, nil
 	}
-	l := listEncoder(make(plugin.ListData, 0, val.LengthInt()))
+	l := listEncoder(make(plugindata.List, 0, val.LengthInt()))
 	return &l, nil
 }
 
-var _ ctyencoder.CollectionEncoder[plugin.Data] = mapEncoder{}
+var _ ctyencoder.CollectionEncoder[plugindata.Data] = mapEncoder{}
 
-func (l *listEncoder) Encode() (plugin.Data, diagnostics.Diag) {
-	return plugin.ListData(*l), nil
+func (l *listEncoder) Encode() (plugindata.Data, diagnostics.Diag) {
+	return plugindata.List(*l), nil
 }
 
-func (l *listEncoder) Add(k cty.Value, v plugin.Data) diagnostics.Diag {
+func (l *listEncoder) Add(k cty.Value, v plugindata.Data) diagnostics.Diag {
 	*l = append(*l, v)
 	return nil
 }
 
-var pluginDataEncoder = ctyencoder.Encoder[plugin.Data]{
-	EncodeVal: func(val cty.Value) (result plugin.Data, diags diagnostics.Diag) {
+var pluginDataEncoder = ctyencoder.Encoder[plugindata.Data]{
+	EncodeVal: func(val cty.Value) (result plugindata.Data, diags diagnostics.Diag) {
 		if val.IsNull() || !val.IsKnown() {
 			return nil, nil
 		}
@@ -83,31 +83,31 @@ var pluginDataEncoder = ctyencoder.Encoder[plugin.Data]{
 		if ty.IsPrimitiveType() {
 			switch ty {
 			case cty.String:
-				result = plugin.StringData(val.AsString())
+				result = plugindata.String(val.AsString())
 				return
 			case cty.Number:
 				n, _ := val.AsBigFloat().Float64()
-				result = plugin.NumberData(n)
+				result = plugindata.Number(n)
 				return
 			case cty.Bool:
-				result = plugin.BoolData(val.True())
+				result = plugindata.Bool(val.True())
 				return
 			}
 		}
-		if plugin.EncapsulatedData.ValCtyTypeEqual(val) {
-			result = *plugin.EncapsulatedData.MustFromCty(val)
+		if plugindata.EncapsulatedData.ValCtyTypeEqual(val) {
+			result = *plugindata.EncapsulatedData.MustFromCty(val)
 			return
 		} else {
-			res, err := convert.Convert(val, plugin.EncapsulatedData.CtyType())
+			res, err := convert.Convert(val, plugindata.EncapsulatedData.CtyType())
 			if diags.AppendErr(err, "Failed to encode data") {
 				slog.Error("Failed to encode", "in", val.GoString())
 				return
 			}
-			result = *plugin.EncapsulatedData.MustFromCty(res)
+			result = *plugindata.EncapsulatedData.MustFromCty(res)
 			return
 		}
 	},
-	EncodePluginData: func(val plugin.Data) (result plugin.Data, diags diagnostics.Diag) {
+	EncodePluginData: func(val plugindata.Data) (result plugindata.Data, diags diagnostics.Diag) {
 		return val, nil
 	},
 	MapEncoder:    newMapEncoder,
@@ -117,6 +117,6 @@ var pluginDataEncoder = ctyencoder.Encoder[plugin.Data]{
 	SetEncoder:    newListEncoder,
 }
 
-func Encode(val cty.Value) (plugin.Data, diagnostics.Diag) {
+func Encode(val cty.Value) (plugindata.Data, diagnostics.Diag) {
 	return pluginDataEncoder.Encode(nil, val)
 }

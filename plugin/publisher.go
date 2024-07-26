@@ -7,6 +7,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type OutputFormat int
@@ -41,7 +42,7 @@ type PublishParams struct {
 	DocumentName string
 	Config      *dataspec.Block
 	Args        *dataspec.Block
-	DataContext MapData
+	DataContext plugindata.Map
 	Format      OutputFormat
 }
 

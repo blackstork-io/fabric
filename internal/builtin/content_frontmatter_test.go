@@ -18,6 +18,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
@@ -121,8 +122,8 @@ func (s *FrontMatterGeneratorTestSuite) TestContentAndQueryResultMissing() {
 	document := plugin.ContentSection{}
 	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"document": plugin.MapData{
+		DataContext: plugindata.Map{
+			"document": plugindata.Map{
 				"content": document.AsData(),
 			},
 		},
@@ -140,8 +141,8 @@ func (s *FrontMatterGeneratorTestSuite) TestInvalidQueryResult() {
 		content = "invalid_type"
 	`
 	document := plugin.ContentSection{}
-	dataCtx := plugin.MapData{
-		"document": plugin.MapData{
+	dataCtx := plugindata.Map{
+		"document": plugindata.Map{
 			"content": document.AsData(),
 		},
 	}
@@ -175,8 +176,8 @@ func (s *FrontMatterGeneratorTestSuite) TestWithContent() {
 	body := string(f.Bytes())
 
 	document := plugin.ContentSection{}
-	dataCtx := plugin.MapData{
-		"document": plugin.MapData{
+	dataCtx := plugindata.Map{
+		"document": plugindata.Map{
 			"content": document.AsData(),
 		},
 	}
@@ -189,8 +190,8 @@ func (s *FrontMatterGeneratorTestSuite) TestWithContent() {
 	ctx := context.Background()
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"document": plugin.MapData{
+		DataContext: plugindata.Map{
+			"document": plugindata.Map{
 				"content": document.AsData(),
 			},
 		},
@@ -208,8 +209,8 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatYaml() {
 	body := string(f.Bytes())
 
 	document := plugin.ContentSection{}
-	dataCtx := plugin.MapData{
-		"document": plugin.MapData{
+	dataCtx := plugindata.Map{
+		"document": plugindata.Map{
 			"content": document.AsData(),
 		},
 	}
@@ -222,8 +223,8 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatYaml() {
 	ctx := context.Background()
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"document": plugin.MapData{
+		DataContext: plugindata.Map{
+			"document": plugindata.Map{
 				"content": document.AsData(),
 			},
 		},
@@ -241,8 +242,8 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatTOML() {
 	body := string(f.Bytes())
 
 	document := plugin.ContentSection{}
-	dataCtx := plugin.MapData{
-		"document": plugin.MapData{
+	dataCtx := plugindata.Map{
+		"document": plugindata.Map{
 			"content": document.AsData(),
 		},
 	}
@@ -255,8 +256,8 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatTOML() {
 	ctx := context.Background()
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"document": plugin.MapData{
+		DataContext: plugindata.Map{
+			"document": plugindata.Map{
 				"content": document.AsData(),
 			},
 		},
@@ -274,8 +275,8 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatJSON() {
 	body := string(f.Bytes())
 
 	document := plugin.ContentSection{}
-	dataCtx := plugin.MapData{
-		"document": plugin.MapData{
+	dataCtx := plugindata.Map{
+		"document": plugindata.Map{
 			"content": document.AsData(),
 		},
 	}
@@ -288,8 +289,8 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatJSON() {
 	ctx := context.Background()
 	result, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"document": plugin.MapData{
+		DataContext: plugindata.Map{
+			"document": plugindata.Map{
 				"content": document.AsData(),
 			},
 		},

@@ -13,6 +13,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeVirusTotalAPIUsageDataSchema(loader ClientLoadFn) *plugin.DataSource {
@@ -52,7 +53,7 @@ func makeVirusTotalAPIUsageDataSchema(loader ClientLoadFn) *plugin.DataSource {
 }
 
 func fetchVirusTotalAPIUsageData(loader ClientLoadFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 		cli := loader(params.Config.GetAttrVal("api_key").AsString())
 		args, err := parseAPIUsageArgs(params.Args)
 		if err != nil {
@@ -104,7 +105,7 @@ func fetchVirusTotalAPIUsageData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 			}
 			data = res.Data
 		}
-		result, err := plugin.ParseDataMapAny(data)
+		result, err := plugindata.ParseMapAny(data)
 		if err != nil {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,

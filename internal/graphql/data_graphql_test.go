@@ -14,6 +14,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type GraphQLDataSourceTestSuite struct {
@@ -72,11 +73,11 @@ func (s *GraphQLDataSourceTestSuite) TestBasic() {
 		}),
 	})
 	s.Nil(diags)
-	s.Equal(plugin.MapData{
-		"data": plugin.MapData{
-			"user": plugin.MapData{
-				"id":   plugin.StringData("id-1"),
-				"name": plugin.StringData("joe"),
+	s.Equal(plugindata.Map{
+		"data": plugindata.Map{
+			"user": plugindata.Map{
+				"id":   plugindata.String("id-1"),
+				"name": plugindata.String("joe"),
 			},
 		},
 	}, data)
@@ -111,11 +112,11 @@ func (s *GraphQLDataSourceTestSuite) TestWithAuth() {
 		}),
 	})
 	s.Nil(diags)
-	s.Equal(plugin.MapData{
-		"data": plugin.MapData{
-			"user": plugin.MapData{
-				"id":   plugin.StringData("id-1"),
-				"name": plugin.StringData("joe"),
+	s.Equal(plugindata.Map{
+		"data": plugindata.Map{
+			"user": plugindata.Map{
+				"id":   plugindata.String("id-1"),
+				"name": plugindata.String("joe"),
 			},
 		},
 	}, data)

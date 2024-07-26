@@ -13,6 +13,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 const (
@@ -116,7 +117,7 @@ func makeElasticSecurityCasesDataSource(loader KibanaClientLoaderFn) *plugin.Dat
 }
 
 func fetchElasticSecurityCases(loader KibanaClientLoaderFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 		client, err := parseSecurityCasesConfig(loader, params.Config)
 		if err != nil {
 			return nil, diagnostics.Diag{{
@@ -147,7 +148,7 @@ func fetchElasticSecurityCases(loader KibanaClientLoaderFn) plugin.RetrieveDataF
 		}
 		req.PerPage = size
 		req.Page = 1
-		cases := plugin.ListData{}
+		cases := plugindata.List{}
 		for {
 			res, err := client.ListSecurityCases(ctx, req)
 			if err != nil {
@@ -158,7 +159,7 @@ func fetchElasticSecurityCases(loader KibanaClientLoaderFn) plugin.RetrieveDataF
 				}}
 			}
 			for _, c := range res.Cases {
-				data, err := plugin.ParseDataAny(c)
+				data, err := plugindata.ParseAny(c)
 				if err != nil {
 					return nil, diagnostics.Diag{{
 						Severity: hcl.DiagError,

@@ -7,9 +7,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/plugin"
 )
 
 type panicErr struct {
@@ -287,39 +285,39 @@ func encodeCty(val cty.Value, ty cty.Type) *Cty {
 			panic(fmt.Errorf("unxpected type (not a list, set or tuple: %q", ty.FriendlyName()))
 		}
 	case ty.IsCapsuleType():
-		if !(plugin.EncapsulatedData.CtyTypeEqual(ty) || dataquery.DelayedEvalType.CtyTypeEqual(ty)) {
-			panic(fmt.Errorf("unsupported capsule type: %q", ty.FriendlyName()))
-		}
-		plugin.EncapsulatedData.CtyTypeEqual(ty)
+		// if !(plugindata.EncapsulatedData.CtyTypeEqual(ty) || dataquery.DelayedEvalType.CtyTypeEqual(ty)) {
+		// 	panic(fmt.Errorf("unsupported capsule type: %q", ty.FriendlyName()))
+		// }
+		// plugindata.EncapsulatedData.CtyTypeEqual(ty)
 
-		var data plugin.Data
-		if hasVal {
-			dataPtr, err := plugin.EncapsulatedData.FromCty(val)
-			if err != nil {
-				panic(fmt.Errorf("failed to decode capsule type: %w", err))
-			}
-			data = *dataPtr
-		}
-		var capsule isCty_Capsule_Data
-		switch {
-		case dataquery.DelayedEvalType.CtyTypeEqual(ty):
-			capsule = &Cty_Capsule_DelayedEval{
-				DelayedEval: encodeData(data),
-			}
-		case plugin.EncapsulatedData.CtyTypeEqual(ty):
-			capsule = &Cty_Capsule_PluginData{
-				PluginData: encodeData(data),
-			}
-		default:
-			panic(fmt.Errorf("unexpected capsule type: %q", ty.FriendlyName()))
-		}
-		return &Cty{
-			Data: &Cty_Caps{
-				Caps: &Cty_Capsule{
-					Data: capsule,
-				},
-			},
-		}
+		// var data plugindata.Data
+		// if hasVal {
+		// 	dataPtr, err := plugindata.EncapsulatedData.FromCty(val)
+		// 	if err != nil {
+		// 		panic(fmt.Errorf("failed to decode capsule type: %w", err))
+		// 	}
+		// 	data = *dataPtr
+		// }
+		// var capsule isCty_Capsule_Data
+		// switch {
+		// case datablock.DelayedEvalType.CtyTypeEqual(ty):
+		// 	capsule = &Cty_Capsule_DelayedEval{
+		// 		DelayedEval: encodeData(data),
+		// 	}
+		// case plugindata.EncapsulatedData.CtyTypeEqual(ty):
+		// 	capsule = &Cty_Capsule_PluginData{
+		// 		PluginData: encodeData(data),
+		// 	}
+		// default:
+		// 	panic(fmt.Errorf("unexpected capsule type: %q", ty.FriendlyName()))
+		// }
+		// return &Cty{
+		// 	Data: &Cty_Caps{
+		// 		Caps: &Cty_Capsule{
+		// 			Data: capsule,
+		// 		},
+		// 	},
+		// }
 	}
 	panic(fmt.Errorf("unsupported type: %q", ty.FriendlyName()))
 }

@@ -5,11 +5,8 @@ import (
 	"math/big"
 
 	"github.com/zclconf/go-cty/cty"
-	"github.com/zclconf/go-cty/cty/convert"
 
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/plugin"
 )
 
 func panicToErr(r any) error {
@@ -243,27 +240,27 @@ func decodeCty(val *Cty, decodeType bool) (retVal cty.Value, retTy cty.Type) {
 		return
 	case *Cty_Caps:
 		switch val := data.Caps.GetData().(type) {
-		case *Cty_Capsule_PluginData:
-			if decodeType {
-				retTy = plugin.EncapsulatedData.CtyType()
-			} else {
-				pluginData := decodeData(val.PluginData)
-				retVal = plugin.EncapsulatedData.ToCty(&pluginData)
-			}
-			return
-		case *Cty_Capsule_DelayedEval:
-			if decodeType {
-				retTy = plugin.DelayedEvalType.CtyType()
-			} else {
-				pluginData := decodeData(val.DelayedEval)
-				ctyCapsule := plugin.EncapsulatedData.ToCty(&pluginData)
-				var err error
-				retVal, err = convert.Convert(ctyCapsule, dataquery.DelayedEvalType.CtyType())
-				if err != nil {
-					panic(fmt.Errorf("failed to convert plugin.data to delayed eval: %w", err))
-				}
-			}
-			return
+		// case *Cty_Capsule_PluginData:
+		// 	if decodeType {
+		// 		retTy = plugindata.EncapsulatedData.CtyType()
+		// 	} else {
+		// 		pluginData := decodeData(val.PluginData)
+		// 		retVal = plugindata.EncapsulatedData.ToCty(&pluginData)
+		// 	}
+		// 	return
+		// case *Cty_Capsule_DelayedEval:
+		// 	if decodeType {
+		// 		retTy = plugin.DelayedEvalType.CtyType()
+		// 	} else {
+		// 		pluginData := decodeData(val.DelayedEval)
+		// 		ctyCapsule := plugindata.EncapsulatedData.ToCty(&pluginData)
+		// 		var err error
+		// 		retVal, err = convert.Convert(ctyCapsule, dataquery.DelayedEvalType.CtyType())
+		// 		if err != nil {
+		// 			panic(fmt.Errorf("failed to convert plugin.data to delayed eval: %w", err))
+		// 		}
+		// 	}
+		// 	return
 		default:
 			panic(fmt.Errorf("unsupported encapsulated value %T", val))
 		}

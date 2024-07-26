@@ -10,6 +10,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeOpenCTIDataSource() *plugin.DataSource {
@@ -41,7 +42,7 @@ func makeOpenCTIDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchOpenCTIData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+func fetchOpenCTIData(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 	url := params.Config.GetAttrVal("graphql_url")
 	if url.IsNull() || url.AsString() == "" {
 		return nil, diagnostics.Diag{{

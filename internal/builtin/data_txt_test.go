@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
@@ -26,22 +27,22 @@ func Test_fetchTXTData(t *testing.T) {
 		name          string
 		path          string
 		glob          string
-		expectedData  plugin.Data
+		expectedData  plugindata.Data
 		expectedDiags diagtest.Asserts
 	}{
 		{
 			name:         "valid_path",
 			path:         "testdata/txt/data.txt",
-			expectedData: plugin.StringData("data_content"),
+			expectedData: plugindata.String("data_content"),
 		},
 		{
 			name: "with_glob_matches",
 			glob: "testdata/txt/dat*.txt",
-			expectedData: plugin.ListData{
-				plugin.MapData{
-					"file_name": plugin.StringData("data.txt"),
-					"file_path": plugin.StringData("testdata/txt/data.txt"),
-					"content":   plugin.StringData("data_content"),
+			expectedData: plugindata.List{
+				plugindata.Map{
+					"file_name": plugindata.String("data.txt"),
+					"file_path": plugindata.String("testdata/txt/data.txt"),
+					"content":   plugindata.String("data_content"),
 				},
 			},
 		},
@@ -56,7 +57,7 @@ func Test_fetchTXTData(t *testing.T) {
 		{
 			name:         "no_glob_matches",
 			glob:         "testdata/txt/does-not-exist*.txt",
-			expectedData: plugin.ListData{},
+			expectedData: plugindata.List{},
 		},
 		{
 			name: "invalid_path",
@@ -70,16 +71,16 @@ func Test_fetchTXTData(t *testing.T) {
 		{
 			name:         "empty_file_with_path",
 			path:         "testdata/txt/empty.txt",
-			expectedData: plugin.StringData(""),
+			expectedData: plugindata.String(""),
 		},
 		{
 			name: "empty_file_with_glob",
 			glob: "testdata/txt/empt*.txt",
-			expectedData: plugin.ListData{
-				plugin.MapData{
-					"file_name": plugin.StringData("empty.txt"),
-					"file_path": plugin.StringData("testdata/txt/empty.txt"),
-					"content":   plugin.StringData(""),
+			expectedData: plugindata.List{
+				plugindata.Map{
+					"file_name": plugindata.String("empty.txt"),
+					"file_path": plugindata.String("testdata/txt/empty.txt"),
+					"content":   plugindata.String(""),
 				},
 			},
 		},
@@ -107,7 +108,7 @@ func Test_fetchTXTData(t *testing.T) {
 			argVal, diag := plugintest.Decode(t, p.DataSources["txt"].Args, argsBody)
 			diags.Extend(diag)
 
-			var data plugin.Data
+			var data plugindata.Data
 			if !diags.HasErrors() {
 				ctx := context.Background()
 				var dgs diagnostics.Diag

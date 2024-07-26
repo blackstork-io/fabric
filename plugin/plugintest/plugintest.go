@@ -10,10 +10,11 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/cmd/fabctx"
+	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
-	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 // We have a massive amount of tests that break as soon as we add
@@ -41,7 +42,7 @@ const filename = "<test-data>"
 
 // Decodes a string (representing content of a config/data/content block)
 // into cty.Value according to given spec (i.e. respecting default values)
-func DecodeAndAssert(t *testing.T, spec *dataspec.RootSpec, body string, dataCtx plugin.MapData, asserts diagtest.Asserts) (val *dataspec.Block) {
+func DecodeAndAssert(t *testing.T, spec *dataspec.RootSpec, body string, dataCtx plugindata.Map, asserts diagtest.Asserts) (val *dataspec.Block) {
 	t.Helper()
 	var diags diagnostics.Diag
 	var fm map[string]*hcl.File
@@ -63,7 +64,7 @@ func DecodeAndAssert(t *testing.T, spec *dataspec.RootSpec, body string, dataCtx
 	if diags.Extend(dgs) {
 		return
 	}
-	dgs = plugin.EvaluateDeferredBlock(context.Background(), dataCtx, val)
+	dgs = dataquery.EvaluateDeferredBlock(context.Background(), dataCtx, val)
 	if diags.Extend(dgs) {
 		return
 	}

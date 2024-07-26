@@ -4,38 +4,38 @@ import (
 	"fmt"
 
 	"github.com/blackstork-io/fabric/pkg/utils"
-	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-func encodeData(d plugin.Data) *Data {
+func encodeData(d plugindata.Data) *Data {
 	switch v := d.(type) {
 	case nil:
 		return nil
-	case plugin.NumberData:
+	case plugindata.Number:
 		return &Data{
 			Data: &Data_NumberVal{
 				NumberVal: float64(v),
 			},
 		}
-	case plugin.StringData:
+	case plugindata.String:
 		return &Data{
 			Data: &Data_StringVal{
 				StringVal: string(v),
 			},
 		}
-	case plugin.BoolData:
+	case plugindata.Bool:
 		return &Data{
 			Data: &Data_BoolVal{
 				BoolVal: bool(v),
 			},
 		}
-	case plugin.MapData:
+	case plugindata.Map:
 		return &Data{
 			Data: &Data_MapVal{
 				encodeMapData(v),
 			},
 		}
-	case plugin.ListData:
+	case plugindata.List:
 		return &Data{
 			Data: &Data_ListVal{
 				ListVal: &ListData{
@@ -44,14 +44,14 @@ func encodeData(d plugin.Data) *Data {
 			},
 		}
 	default:
-		if cd, ok := d.(plugin.ConvertibleData); ok {
-			return encodeData(cd.AsJQData())
+		if cd, ok := d.(plugindata.Convertible); ok {
+			return encodeData(cd.AsPluginData())
 		}
 	}
 	panic(fmt.Errorf("unexpected plugin data type: %T", d))
 }
 
-func encodeMapData(m plugin.MapData) *MapData {
+func encodeMapData(m plugindata.Map) *MapData {
 	return &MapData{
 		Value: utils.MapMap(m, encodeData),
 	}

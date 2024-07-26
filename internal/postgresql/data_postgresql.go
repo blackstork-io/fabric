@@ -15,6 +15,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makePostgreSQLDataSource() *plugin.DataSource {
@@ -83,7 +84,7 @@ func parseSqliteArgs(args *dataspec.Block) (string, []any, error) {
 	return sqlQuery.AsString(), argsResult, nil
 }
 
-func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 	dbURL := params.Config.GetAttrVal("database_url").AsString()
 	sqlQuery, sqlArgs, err := parseSqliteArgs(params.Args)
 	if err != nil {
@@ -120,7 +121,7 @@ func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 			Detail:   err.Error(),
 		}}
 	}
-	result := make(plugin.ListData, 0)
+	result := make(plugindata.List, 0)
 
 	// read rows
 	for rows.Next() {
@@ -138,7 +139,7 @@ func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 				Detail:   err.Error(),
 			}}
 		}
-		row := make(plugin.MapData)
+		row := make(plugindata.Map)
 		for i, column := range columns {
 			if columnValArr[i].valid {
 				row[column] = columnValArr[i].data
@@ -159,7 +160,7 @@ func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 }
 
 type nullData struct {
-	data  plugin.Data
+	data  plugindata.Data
 	valid bool
 }
 
@@ -170,17 +171,17 @@ func (n *nullData) Scan(value any) error {
 	}
 	switch v := value.(type) {
 	case []byte:
-		n.data = plugin.StringData(base64.StdEncoding.EncodeToString(v))
+		n.data = plugindata.String(base64.StdEncoding.EncodeToString(v))
 	case string:
-		n.data = plugin.StringData(v)
+		n.data = plugindata.String(v)
 	case int64:
-		n.data = plugin.NumberData(v)
+		n.data = plugindata.Number(v)
 	case float64:
-		n.data = plugin.NumberData(v)
+		n.data = plugindata.Number(v)
 	case bool:
-		n.data = plugin.BoolData(v)
+		n.data = plugindata.Bool(v)
 	case time.Time:
-		n.data = plugin.StringData(v.Format(time.RFC3339))
+		n.data = plugindata.String(v.Format(time.RFC3339))
 	default:
 		return fmt.Errorf("unsupported type: %T", value)
 	}

@@ -12,6 +12,7 @@ import (
 	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/nistnvd/client"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type CVESDataSourceTestSuite struct {
@@ -73,9 +74,9 @@ func (s *CVESDataSourceTestSuite) TestLimit() {
 	})
 	s.Equal("test_key", *s.storedApiKey)
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.StringData("1"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.String("1"),
 		},
 	}, res)
 }
@@ -171,12 +172,12 @@ func (s *CVESDataSourceTestSuite) TestFull() {
 	})
 	s.Equal("test_key", *s.storedApiKey)
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.StringData("1"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.String("1"),
 		},
-		plugin.MapData{
-			"id": plugin.StringData("2"),
+		plugindata.Map{
+			"id": plugindata.String("2"),
 		},
 	}, res)
 }

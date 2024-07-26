@@ -12,7 +12,7 @@ import (
 	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
-	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
@@ -57,7 +57,7 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 	})
 }
 
-func fetchDataTest(t *testing.T, testName string, files []string, target string, expectedResult plugin.MapData, diagAsserts diagtest.Asserts) {
+func fetchDataTest(t *testing.T, testName string, files []string, target string, expectedResult plugindata.Map, diagAsserts diagtest.Asserts) {
 	t.Helper()
 	t.Run(testName, func(t *testing.T) {
 		t.Helper()
@@ -72,7 +72,7 @@ func fetchDataTest(t *testing.T, testName string, files []string, target string,
 		defer func() {
 			eng.Cleanup()
 		}()
-		var res plugin.Data
+		var res plugindata.Data
 		ctx := context.Background()
 		diags := eng.ParseDir(ctx, sourceDir)
 		if !diags.HasErrors() {

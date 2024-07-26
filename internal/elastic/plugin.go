@@ -16,6 +16,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/elastic/kbclient"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 const (
@@ -84,7 +85,7 @@ func makeSearchClient(pcfg *dataspec.Block) (*es.Client, error) {
 	return es.NewClient(*cfg)
 }
 
-func getByID(fn esapi.Get, args *dataspec.Block) (plugin.Data, error) {
+func getByID(fn esapi.Get, args *dataspec.Block) (plugindata.Data, error) {
 	index := args.GetAttrVal("index")
 	id := args.GetAttrVal("id")
 	if id.IsNull() {
@@ -110,7 +111,7 @@ func getByID(fn esapi.Get, args *dataspec.Block) (plugin.Data, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read search result: %s", err)
 	}
-	data, err := plugin.UnmarshalJSONData(raw)
+	data, err := plugindata.UnmarshalJSON(raw)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal search result: %s", err)
 	}
@@ -162,29 +163,29 @@ func unpackSearchOptions(fn esapi.Search, args *dataspec.Block) ([]func(*esapi.S
 	return opts, nil
 }
 
-func unpackResponse(response *esapi.Response) (plugin.MapData, error) {
+func unpackResponse(response *esapi.Response) (plugindata.Map, error) {
 	// Read the response
 	raw, err := io.ReadAll(response.Body)
 	defer response.Body.Close()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read the search response: %s", err)
 	}
-	data, err := plugin.UnmarshalJSONData(raw)
+	data, err := plugindata.UnmarshalJSON(raw)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal the search response: %s", err)
 	}
-	mapData, ok := data.(plugin.MapData)
+	mapData, ok := data.(plugindata.Map)
 	if !ok {
 		return nil, fmt.Errorf("unexpected search result type: %T", data)
 	}
 	return mapData, nil
 }
 
-func searchWithScroll(client *es.Client, args *dataspec.Block, size int) (plugin.Data, error) {
+func searchWithScroll(client *es.Client, args *dataspec.Block, size int) (plugindata.Data, error) {
 	return searchWithScrollConfigurable(client, args, size, defaultScrollStepSize)
 }
 
-func searchWithScrollConfigurable(client *es.Client, args *dataspec.Block, size, stepSize int) (plugin.Data, error) {
+func searchWithScrollConfigurable(client *es.Client, args *dataspec.Block, size, stepSize int) (plugindata.Data, error) {
 	// First scroll request to obtain `_scroll_id`
 	scrollTTL := time.Minute * 2 // 2mins
 	// just in case the size is smaller than the step size
@@ -220,17 +221,17 @@ func searchWithScrollConfigurable(client *es.Client, args *dataspec.Block, size,
 	if !ok {
 		return nil, fmt.Errorf("error while getting scroll id value: %s", firstData)
 	}
-	scrollID := scrollIDRaw.(plugin.StringData)
+	scrollID := scrollIDRaw.(plugindata.String)
 
-	hitsEnvelope, ok := firstData["hits"].(plugin.MapData)
+	hitsEnvelope, ok := firstData["hits"].(plugindata.Map)
 	if !ok {
 		return nil, fmt.Errorf("unexpected hits envelope value type: %T", firstData)
 	}
-	hits, ok := hitsEnvelope["hits"].(plugin.ListData)
+	hits, ok := hitsEnvelope["hits"].(plugindata.List)
 	if !ok {
 		return nil, fmt.Errorf("unexpected hits value type: %T", firstData)
 	}
-	allHits := make(plugin.ListData, 0, len(hits))
+	allHits := make(plugindata.List, 0, len(hits))
 	allHits = append(allHits, hits...)
 
 	for {
@@ -271,13 +272,13 @@ func searchWithScrollConfigurable(client *es.Client, args *dataspec.Block, size,
 		if !ok {
 			return nil, fmt.Errorf("error while getting scroll id value: %s", scrollData)
 		}
-		scrollID = scrollIDRaw.(plugin.StringData)
+		scrollID = scrollIDRaw.(plugindata.String)
 
-		hitsEnvelope, ok := scrollData["hits"].(plugin.MapData)
+		hitsEnvelope, ok := scrollData["hits"].(plugindata.Map)
 		if !ok {
 			return nil, fmt.Errorf("unexpected hits envelope value type: %T", firstData)
 		}
-		hits, ok := hitsEnvelope["hits"].(plugin.ListData)
+		hits, ok := hitsEnvelope["hits"].(plugindata.List)
 		if !ok {
 			return nil, fmt.Errorf("unexpected hits value type: %T", scrollData)
 		}
@@ -301,7 +302,7 @@ func searchWithScrollConfigurable(client *es.Client, args *dataspec.Block, size,
 	return firstData, nil
 }
 
-func search(fn esapi.Search, args *dataspec.Block, size int) (plugin.Data, error) {
+func search(fn esapi.Search, args *dataspec.Block, size int) (plugindata.Data, error) {
 	opts, err := unpackSearchOptions(fn, args)
 	if err != nil {
 		return nil, err
@@ -318,7 +319,7 @@ func search(fn esapi.Search, args *dataspec.Block, size int) (plugin.Data, error
 	if err != nil {
 		return nil, fmt.Errorf("failed to read search result: %s", err)
 	}
-	data, err := plugin.UnmarshalJSONData(raw)
+	data, err := plugindata.UnmarshalJSON(raw)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal search result: %s", err)
 	}
@@ -328,9 +329,9 @@ func search(fn esapi.Search, args *dataspec.Block, size int) (plugin.Data, error
 	return data, nil
 }
 
-func extractHits(data plugin.Data) (plugin.ListData, error) {
+func extractHits(data plugindata.Data) (plugindata.List, error) {
 	// Unpack the result as a map
-	m, ok := data.(plugin.MapData)
+	m, ok := data.(plugindata.Map)
 	if !ok {
 		return nil, fmt.Errorf("unexpected search result type: %T", data)
 	}
@@ -339,9 +340,9 @@ func extractHits(data plugin.Data) (plugin.ListData, error) {
 		return nil, fmt.Errorf("unexpected search result type: %T", data)
 	}
 	// Unpack "hits" value as a map
-	m, ok = data.(plugin.MapData)
+	m, ok = data.(plugindata.Map)
 	if !ok {
 		return nil, fmt.Errorf("unexpected search result type: %T", data)
 	}
-	return m["hits"].(plugin.ListData), nil
+	return m["hits"].(plugindata.List), nil
 }

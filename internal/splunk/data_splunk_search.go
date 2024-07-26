@@ -15,6 +15,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeSplunkSearchDataSchema(loader ClientLoadFn) *plugin.DataSource {
@@ -71,7 +72,7 @@ func makeSplunkSearchDataSchema(loader ClientLoadFn) *plugin.DataSource {
 }
 
 func fetchSplunkSearchData(loader ClientLoadFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 		cli, err := makeClient(loader, params.Config)
 		if err != nil {
 			return nil, diagnostics.Diag{{
@@ -93,7 +94,7 @@ func fetchSplunkSearchData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 	}
 }
 
-func search(cli client.Client, ctx context.Context, args *dataspec.Block) (plugin.Data, error) {
+func search(cli client.Client, ctx context.Context, args *dataspec.Block) (plugindata.Data, error) {
 	id, err := randID()
 	if err != nil {
 		return nil, err
@@ -154,7 +155,7 @@ func search(cli client.Client, ctx context.Context, args *dataspec.Block) (plugi
 				if err != nil {
 					return nil, err
 				}
-				result, err := plugin.ParseDataAny(res.Results)
+				result, err := plugindata.ParseAny(res.Results)
 				if err != nil {
 					return nil, err
 				}

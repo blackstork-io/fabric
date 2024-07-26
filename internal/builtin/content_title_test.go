@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
@@ -54,8 +55,8 @@ func (s *TitleTestSuite) TestTDefault() {
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)
@@ -70,8 +71,8 @@ func (s *TitleTestSuite) TestWithTextMultiline() {
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)
@@ -87,8 +88,8 @@ func (s *TitleTestSuite) TestWithSize() {
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)
@@ -104,8 +105,8 @@ func (s *TitleTestSuite) TestWithSizeTooBig() {
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Equal(diagnostics.Diag{{

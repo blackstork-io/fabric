@@ -16,6 +16,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 //go:embed stixview.gohtml
@@ -85,7 +86,7 @@ func makeStixViewContentProvider() *plugin.ContentProvider {
 				},
 				{
 					Name: "objects",
-					Type: plugin.EncapsulatedData.CtyType(),
+					Type: plugindata.EncapsulatedData.CtyType(),
 				},
 			},
 		},
@@ -118,10 +119,10 @@ func renderStixView(ctx context.Context, params *plugin.ProvideContentParams) (*
 
 	objectCty := params.Args.GetAttrVal("objects")
 	if !objectCty.IsNull() {
-		objects := plugin.EncapsulatedData.MustFromCty(objectCty)
+		objects := plugindata.EncapsulatedData.MustFromCty(objectCty)
 		if objects != nil && *objects != nil {
 			var ok bool
-			rctx.Objects, ok = (*objects).(plugin.ListData)
+			rctx.Objects, ok = (*objects).(plugindata.List)
 			if !ok {
 				return nil, diagnostics.Diag{{
 					Severity: hcl.DiagError,
@@ -166,7 +167,7 @@ func renderStixView(ctx context.Context, params *plugin.ProvideContentParams) (*
 type renderContext struct {
 	Args    *stixViewArgs
 	UID     string
-	Objects plugin.ListData
+	Objects plugindata.List
 }
 
 type stixViewArgs struct {

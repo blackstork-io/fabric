@@ -15,6 +15,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeFrontMatterContentProvider() *plugin.ContentProvider {
@@ -35,7 +36,7 @@ func makeFrontMatterContentProvider() *plugin.ContentProvider {
 				},
 				{
 					Name:        "content",
-					Type:        plugin.EncapsulatedData.CtyType(),
+					Type:        plugindata.EncapsulatedData.CtyType(),
 					Doc:         `Arbitrary key-value map to be put in the frontmatter.`,
 					Constraints: constraint.RequiredMeaningful,
 					ExampleVal: cty.ObjectVal(map[string]cty.Value{
@@ -62,7 +63,7 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 
 	format := params.Args.GetAttrVal("format").AsString()
 
-	data, err := plugin.EncapsulatedData.FromCty(params.Args.GetAttrVal("content"))
+	data, err := plugindata.EncapsulatedData.FromCty(params.Args.GetAttrVal("content"))
 	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -77,7 +78,7 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 			Detail:   "Content is nil",
 		}}
 	}
-	m, ok := (*data).(plugin.MapData)
+	m, ok := (*data).(plugindata.Map)
 	if !ok {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -114,7 +115,7 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 	}, nil
 }
 
-func validateFrontMatterContentTree(dataCtx plugin.MapData, contentID uint32) error {
+func validateFrontMatterContentTree(dataCtx plugindata.Map, contentID uint32) error {
 	if dataCtx == nil {
 		return fmt.Errorf("DataContext is empty")
 	}
@@ -131,7 +132,7 @@ func validateFrontMatterContentTree(dataCtx plugin.MapData, contentID uint32) er
 	return nil
 }
 
-func renderYAMLFrontMatter(m plugin.MapData) (string, error) {
+func renderYAMLFrontMatter(m plugindata.Map) (string, error) {
 	var buf strings.Builder
 	buf.WriteString("---\n")
 	err := yaml.NewEncoder(&buf).Encode(m)
@@ -142,7 +143,7 @@ func renderYAMLFrontMatter(m plugin.MapData) (string, error) {
 	return buf.String(), nil
 }
 
-func renderTOMLFrontMatter(m plugin.MapData) (string, error) {
+func renderTOMLFrontMatter(m plugindata.Map) (string, error) {
 	var buf strings.Builder
 	buf.WriteString("+++\n")
 	err := toml.NewEncoder(&buf).Encode(m)
@@ -153,7 +154,7 @@ func renderTOMLFrontMatter(m plugin.MapData) (string, error) {
 	return buf.String(), nil
 }
 
-func renderJSONFrontMatter(m plugin.MapData) (string, error) {
+func renderJSONFrontMatter(m plugindata.Map) (string, error) {
 	var buf strings.Builder
 	enc := json.NewEncoder(&buf)
 	enc.SetIndent("", "  ")

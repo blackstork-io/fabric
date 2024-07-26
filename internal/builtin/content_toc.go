@@ -13,6 +13,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeTOCContentProvider() *plugin.ContentProvider {
@@ -181,7 +182,7 @@ func extractTitles(section *plugin.ContentSection) []string {
 	return titles
 }
 
-func parseContentTitles(data plugin.MapData, startLvl, endLvl int, scope string) (tocNodeList, error) {
+func parseContentTitles(data plugindata.Map, startLvl, endLvl int, scope string) (tocNodeList, error) {
 	document, section := parseScope(data)
 	var list []string
 	if scope == "auto" {

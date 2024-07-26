@@ -12,6 +12,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeMicrosoftSentinelIncidentsDataSource(loader ClientLoadFn) *plugin.DataSource {
@@ -82,7 +83,7 @@ func makeMicrosoftSentinelIncidentsDataSource(loader ClientLoadFn) *plugin.DataS
 }
 
 func fetchMicrosoftSentinelIncidents(loader ClientLoadFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 		client, err := makeClient(ctx, loader, params.Config)
 		if err != nil {
 			return nil, diagnostics.Diag{{
@@ -108,9 +109,9 @@ func fetchMicrosoftSentinelIncidents(loader ClientLoadFn) plugin.RetrieveDataFun
 			}}
 		}
 
-		var data plugin.ListData
+		var data plugindata.List
 		for _, incident := range res.Value {
-			item, err := plugin.ParseDataAny(incident)
+			item, err := plugindata.ParseAny(incident)
 			if err != nil {
 				return nil, diagnostics.Diag{{
 					Severity: hcl.DiagError,

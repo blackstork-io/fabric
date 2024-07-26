@@ -18,6 +18,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 // HTTPClientTestSuite is a test suite for contract testing http data source
@@ -247,10 +248,10 @@ func (s *HTTPClientTestSuite) TestFetchHTTPDataCSV() {
 	s.Nil(diags, "Error while fetching data: %s", diags)
 
 	s.Equal(
-		plugin.ListData{
-			plugin.MapData{
-				"foo": plugin.NumberData(1),
-				"bar": plugin.StringData("xyz"),
+		plugindata.List{
+			plugindata.Map{
+				"foo": plugindata.Number(1),
+				"bar": plugindata.String("xyz"),
 			},
 		},
 		data)
@@ -309,5 +310,5 @@ func (s *HTTPClientTestSuite) TestFetchHTTPDataUnknownType() {
 	data, diags := fetchHTTPData(ctx, &params, version)
 
 	s.Nil(diags, "Error while fetching data: %s", diags)
-	s.Equal(plugin.StringData(unknownData), data)
+	s.Equal(plugindata.String(unknownData), data)
 }

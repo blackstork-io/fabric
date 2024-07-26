@@ -13,6 +13,7 @@ import (
 	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/microsoft/client"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type SentinelIncidentsDataSourceTestSuite struct {
@@ -87,9 +88,9 @@ func (s *SentinelIncidentsDataSourceTestSuite) Testlimit() {
 	})
 	s.Equal("test_token", s.storedTkn)
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"any": plugin.StringData("data"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"any": plugindata.String("data"),
 		},
 	}, res)
 }
@@ -136,9 +137,9 @@ func (s *SentinelIncidentsDataSourceTestSuite) TestFull() {
 	})
 	s.Equal("test_token", s.storedTkn)
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"any": plugin.StringData("data"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"any": plugindata.String("data"),
 		},
 	}, res)
 }

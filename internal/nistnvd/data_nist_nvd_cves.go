@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 const (
@@ -115,7 +116,7 @@ func makeNistNvdCvesDataSource(loader ClientLoadFn) *plugin.DataSource {
 }
 
 func fetchNistNvdCvesData(loader ClientLoadFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 		cli, err := parseConfig(params.Config, loader)
 		if err != nil {
 			return nil, diagnostics.Diag{{
@@ -142,7 +143,7 @@ func fetchNistNvdCvesData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 		}
 		req.ResultsPerPage = limit
 		req.StartIndex = 0
-		var vulnerabilities plugin.ListData
+		var vulnerabilities plugindata.List
 		for {
 			res, err := cli.ListCVES(ctx, req)
 			if err != nil {
@@ -152,7 +153,7 @@ func fetchNistNvdCvesData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 				}}
 			}
 			for _, v := range res.Vulnerabilities {
-				data, err := plugin.ParseDataAny(v)
+				data, err := plugindata.ParseAny(v)
 				if err != nil {
 					return nil, diagnostics.Diag{{
 						Severity: hcl.DiagError,

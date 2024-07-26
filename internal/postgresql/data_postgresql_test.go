@@ -17,6 +17,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 // IntegrationTestSuite is a test suite to test integration with real postgres instance
@@ -123,7 +124,7 @@ func (s *IntegrationTestSuite) TestEmptyTable() {
 		}),
 	})
 	s.Nil(diags)
-	s.Equal(data, plugin.ListData{})
+	s.Equal(data, plugindata.List{})
 }
 
 func (s *IntegrationTestSuite) TestSelect() {
@@ -137,20 +138,20 @@ func (s *IntegrationTestSuite) TestSelect() {
 		}),
 	})
 	s.Nil(diags)
-	s.Equal(data, plugin.ListData{
-		plugin.MapData{
-			"id":       plugin.NumberData(1),
-			"text_val": plugin.StringData("text_1"),
-			"int_val":  plugin.NumberData(1),
-			"bool_val": plugin.BoolData(true),
+	s.Equal(data, plugindata.List{
+		plugindata.Map{
+			"id":       plugindata.Number(1),
+			"text_val": plugindata.String("text_1"),
+			"int_val":  plugindata.Number(1),
+			"bool_val": plugindata.Bool(true),
 			"null_val": nil,
 		},
-		plugin.MapData{
-			"id":       plugin.NumberData(2),
-			"text_val": plugin.StringData("text_2"),
-			"int_val":  plugin.NumberData(2),
-			"bool_val": plugin.BoolData(false),
-			"null_val": plugin.StringData("null_val_2"),
+		plugindata.Map{
+			"id":       plugindata.Number(2),
+			"text_val": plugindata.String("text_2"),
+			"int_val":  plugindata.Number(2),
+			"bool_val": plugindata.Bool(false),
+			"null_val": plugindata.String("null_val_2"),
 		},
 	})
 }
@@ -166,14 +167,14 @@ func (s *IntegrationTestSuite) TestSelectSomeFields() {
 		}),
 	})
 	s.Nil(diags)
-	s.Equal(data, plugin.ListData{
-		plugin.MapData{
-			"id":   plugin.NumberData(1),
-			"text": plugin.StringData("text_1"),
+	s.Equal(data, plugindata.List{
+		plugindata.Map{
+			"id":   plugindata.Number(1),
+			"text": plugindata.String("text_1"),
 		},
-		plugin.MapData{
-			"id":   plugin.NumberData(2),
-			"text": plugin.StringData("text_2"),
+		plugindata.Map{
+			"id":   plugindata.Number(2),
+			"text": plugindata.String("text_2"),
 		},
 	})
 }
@@ -193,13 +194,13 @@ func (s *IntegrationTestSuite) TestSelectWithArgs() {
 		}),
 	})
 	s.Nil(diags)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id":       plugin.NumberData(2),
-			"text_val": plugin.StringData("text_2"),
-			"int_val":  plugin.NumberData(2),
-			"bool_val": plugin.BoolData(false),
-			"null_val": plugin.StringData("null_val_2"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id":       plugindata.Number(2),
+			"text_val": plugindata.String("text_2"),
+			"int_val":  plugindata.Number(2),
+			"bool_val": plugindata.Bool(false),
+			"null_val": plugindata.String("null_val_2"),
 		},
 	}, data)
 }

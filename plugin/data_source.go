@@ -7,6 +7,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type DataSources map[string]*DataSource
@@ -51,7 +52,7 @@ func (ds *DataSource) Validate() diagnostics.Diag {
 	return diags
 }
 
-func (ds *DataSource) Execute(ctx context.Context, params *RetrieveDataParams) (_ Data, diags diagnostics.Diag) {
+func (ds *DataSource) Execute(ctx context.Context, params *RetrieveDataParams) (_ plugindata.Data, diags diagnostics.Diag) {
 	if ds == nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -70,4 +71,4 @@ type RetrieveDataParams struct {
 	Args   *dataspec.Block
 }
 
-type RetrieveDataFunc func(ctx context.Context, params *RetrieveDataParams) (Data, diagnostics.Diag)
+type RetrieveDataFunc func(ctx context.Context, params *RetrieveDataParams) (plugindata.Data, diagnostics.Diag)

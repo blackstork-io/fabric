@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 const maxSimpleSearchResultsSize = 10000
@@ -102,7 +103,7 @@ func makeElasticSearchDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 	client, err := makeSearchClient(params.Config)
 	if err != nil {
 		return nil, diagnostics.Diag{{
@@ -137,7 +138,7 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 		}}
 	}
 
-	var data plugin.Data
+	var data plugindata.Data
 	if params.Args.HasAttr("id") {
 		data, err = getByID(client.Get, params.Args)
 	} else {

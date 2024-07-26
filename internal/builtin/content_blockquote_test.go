@@ -8,6 +8,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
@@ -55,8 +56,8 @@ func (s *BlockQuoteTestSuite) TestCallBlockquote() {
 	`, nil, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)
@@ -74,8 +75,8 @@ func (s *BlockQuoteTestSuite) TestCallBlockquoteMultiline() {
 	`, nil, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)
@@ -93,8 +94,8 @@ func (s *BlockQuoteTestSuite) TestCallBlockquoteMultilineDoubleNewline() {
 	`, nil, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)

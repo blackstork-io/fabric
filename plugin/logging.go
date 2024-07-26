@@ -10,6 +10,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 // WithLogging wraps the plugin with logging instrumentation.
@@ -79,7 +80,7 @@ func makeContentProviderLogging(plugin, name string, provider ContentProvider, l
 
 func makeDataSourceLogging(plugin, name string, source DataSource, logger *slog.Logger) RetrieveDataFunc {
 	next := source.DataFunc
-	return func(ctx context.Context, params *RetrieveDataParams) (Data, diagnostics.Diag) {
+	return func(ctx context.Context, params *RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 		logger.DebugContext(ctx, "Executing datasource", "params", slog.GroupValue(
 			slog.String("plugin", plugin),
 			slog.String("datasource", name),

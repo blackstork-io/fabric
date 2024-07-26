@@ -10,6 +10,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type PluginDataAction struct {
@@ -18,7 +19,7 @@ type PluginDataAction struct {
 	SrcRange hcl.Range
 }
 
-func (action *PluginDataAction) FetchData(ctx context.Context) (plugin.Data, diagnostics.Diag) {
+func (action *PluginDataAction) FetchData(ctx context.Context) (plugindata.Data, diagnostics.Diag) {
 	res, diags := action.Source.Execute(ctx, &plugin.RetrieveDataParams{
 		Config: action.Config,
 		Args:   action.Args,

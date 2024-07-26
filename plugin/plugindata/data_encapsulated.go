@@ -1,4 +1,4 @@
-package plugin
+package plugindata
 
 import (
 	"fmt"
@@ -55,14 +55,14 @@ func ctyToPluginData(v cty.Value) (_ Data, err error) {
 	ty := v.Type()
 	switch {
 	case ty.Equals(cty.Bool):
-		return BoolData(v.True()), nil
+		return Bool(v.True()), nil
 	case ty.Equals(cty.Number):
 		f, _ := v.AsBigFloat().Float64()
-		return NumberData(f), nil
+		return Number(f), nil
 	case ty.Equals(cty.String):
-		return StringData(v.AsString()), nil
+		return String(v.AsString()), nil
 	case ty.IsTupleType() || ty.IsListType() || ty.IsSetType():
-		list := make(ListData, v.LengthInt())
+		list := make(List, v.LengthInt())
 		i := 0
 		for it := v.ElementIterator(); it.Next(); i++ {
 			idx, val := it.Element()
@@ -76,7 +76,7 @@ func ctyToPluginData(v cty.Value) (_ Data, err error) {
 		}
 		return list, nil
 	case ty.IsObjectType() || ty.IsMapType():
-		m := make(MapData, v.LengthInt())
+		m := make(Map, v.LengthInt())
 		for it := v.ElementIterator(); it.Next(); {
 			key, val := it.Element()
 			keyStr := key.AsString()
@@ -102,19 +102,19 @@ func pluginDataToCty(v Data) cty.Value {
 	if v == nil {
 		return cty.NullVal(cty.DynamicPseudoType)
 	}
-	v = v.AsJQData()
+	v = v.AsPluginData()
 	switch val := v.(type) {
 	case nil:
 		return cty.NullVal(cty.DynamicPseudoType)
-	case BoolData:
+	case Bool:
 		return cty.BoolVal(bool(val))
-	case NumberData:
+	case Number:
 		return cty.NumberFloatVal(float64(val))
-	case StringData:
+	case String:
 		return cty.StringVal(string(val))
-	case ListData:
+	case List:
 		return cty.TupleVal(utils.FnMap(val, pluginDataToCty))
-	case MapData:
+	case Map:
 		return cty.ObjectVal(utils.MapMap(val, pluginDataToCty))
 	default:
 		panic(fmt.Sprintf("unsupported Data type: %T", v))

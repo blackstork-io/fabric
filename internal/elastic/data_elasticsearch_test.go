@@ -20,6 +20,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 const (
@@ -125,7 +126,7 @@ func (s *IntegrationTestSuite) TestSearchDefaults() {
 		Args:   args,
 	})
 	s.Require().Nil(diags)
-	m := data.(plugin.ListData)
+	m := data.(plugindata.List)
 	raw, err := json.MarshalIndent(m, "", "  ")
 	s.Require().NoError(err, "failed to marshal data: %v", err)
 	s.JSONEq(`[
@@ -179,7 +180,7 @@ func (s *IntegrationTestSuite) TestSearchFields() {
 		Args:   args,
 	})
 	s.Require().Nil(diags)
-	m := data.(plugin.MapData)
+	m := data.(plugindata.Map)
 	raw, err := json.MarshalIndent(m["hits"], "", "  ")
 	s.Require().NoError(err, "failed to marshal data: %v", err)
 	s.JSONEq(`{
@@ -231,7 +232,7 @@ func (s *IntegrationTestSuite) TestSearchQueryString() {
 		Args:   args,
 	})
 	s.Require().Nil(diags)
-	m := data.(plugin.MapData)
+	m := data.(plugindata.Map)
 	raw, err := json.MarshalIndent(m["hits"], "", "  ")
 	s.Require().NoError(err, "failed to marshal data: %v", err)
 	s.JSONEq(`{
@@ -282,7 +283,7 @@ func (s *IntegrationTestSuite) TestSearchQuery() {
 		Args:   args,
 	})
 	s.Require().Nil(diags)
-	m := data.(plugin.MapData)
+	m := data.(plugindata.Map)
 	raw, err := json.MarshalIndent(m["hits"], "", "  ")
 	s.Require().NoError(err, "failed to marshal data: %v", err)
 	s.JSONEq(`{
@@ -343,7 +344,7 @@ func (s *IntegrationTestSuite) TestSearchSize() {
 		Args:   args,
 	})
 	s.Require().Nil(diags)
-	m := data.(plugin.MapData)
+	m := data.(plugindata.Map)
 	raw, err := json.MarshalIndent(m["hits"], "", "  ")
 	s.Require().NoError(err, "failed to marshal data: %v", err)
 	s.JSONEq(`{
@@ -380,7 +381,7 @@ func (s *IntegrationTestSuite) TestGetByID() {
 		Args:   args,
 	})
 	s.Require().Nil(diags)
-	m := data.(plugin.MapData)
+	m := data.(plugindata.Map)
 	raw, err := json.MarshalIndent(m, "", "  ")
 	s.Require().NoError(err, "failed to marshal data: %v", err)
 	s.JSONEq(`{
@@ -412,7 +413,7 @@ func (s *IntegrationTestSuite) TestGetByIDFields() {
 		Args:   args,
 	})
 	s.Require().Nil(diags)
-	m := data.(plugin.MapData)
+	m := data.(plugindata.Map)
 	raw, err := json.MarshalIndent(m, "", "  ")
 	s.Require().NoError(err, "failed to marshal data: %v", err)
 	s.JSONEq(`{
@@ -458,9 +459,9 @@ func (s *IntegrationTestSuite) TestScrollSearch() {
 		Args:   args,
 	})
 	s.Require().Nil(diags, fmt.Sprintf("Received diagnostics: %s", diags))
-	dataMap := data.(plugin.MapData)
-	hitsEnvelope := dataMap["hits"].(plugin.MapData)
-	hits := hitsEnvelope["hits"].(plugin.ListData)
+	dataMap := data.(plugindata.Map)
+	hitsEnvelope := dataMap["hits"].(plugindata.Map)
+	hits := hitsEnvelope["hits"].(plugindata.List)
 
 	s.Equal(3, len(hits), fmt.Sprintf("Hits received: %s", hits))
 }
@@ -478,9 +479,9 @@ func (s *IntegrationTestSuite) TestScrollSearchSteps() {
 	data, err := searchWithScrollConfigurable(s.client, args, 5, 1)
 
 	s.Require().Nil(err, fmt.Sprintf("Received diagnostics: %s", err))
-	dataMap := data.(plugin.MapData)
-	hitsEnvelope := dataMap["hits"].(plugin.MapData)
-	hits := hitsEnvelope["hits"].(plugin.ListData)
+	dataMap := data.(plugindata.Map)
+	hitsEnvelope := dataMap["hits"].(plugindata.Map)
+	hits := hitsEnvelope["hits"].(plugindata.List)
 
 	s.Equal(3, len(hits), fmt.Sprintf("Hits received: %s", hits))
 

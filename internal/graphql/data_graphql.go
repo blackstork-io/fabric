@@ -15,6 +15,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeGraphQLDataSource() *plugin.DataSource {
@@ -44,7 +45,7 @@ func makeGraphQLDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchGraphQLData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+func fetchGraphQLData(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 	url := params.Config.GetAttrVal("url")
 	if url.IsNull() || url.AsString() == "" {
 		return nil, diagnostics.Diag{{
@@ -82,7 +83,7 @@ type requestData struct {
 	Query string `json:"query"`
 }
 
-func queryGraphQL(ctx context.Context, url, query, authToken string) (plugin.Data, error) {
+func queryGraphQL(ctx context.Context, url, query, authToken string) (plugindata.Data, error) {
 	data, err := json.Marshal(requestData{Query: query})
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -111,7 +112,7 @@ func queryGraphQL(ctx context.Context, url, query, authToken string) (plugin.Dat
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response: %w", err)
 	}
-	dst, err := plugin.UnmarshalJSONData(raw)
+	dst, err := plugindata.UnmarshalJSON(raw)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}

@@ -23,6 +23,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeHTTPDataSource(version string) *plugin.DataSource {
@@ -210,12 +211,12 @@ func SendRequest(ctx context.Context, r *Request) (*Response, error) {
 }
 
 func fetchHTTPDataWrapper(version string) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 		return fetchHTTPData(ctx, params, version)
 	}
 }
 
-func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, version string) (plugin.Data, diagnostics.Diag) {
+func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, version string) (plugindata.Data, diagnostics.Diag) {
 	url := params.Args.GetAttrVal("url").AsString()
 	method := params.Args.GetAttrVal("method").AsString()
 	insecure := params.Args.GetAttrVal("insecure").True()
@@ -272,7 +273,7 @@ func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, versi
 	}
 	slog.Debug("Response received", "mime_type", response.MimeType, "body_bytes_count", len(response.Body))
 
-	var result plugin.Data
+	var result plugindata.Data
 
 	if response.MimeType == "text/csv" {
 		reader := csv.NewReader(bytes.NewBuffer(response.Body))
@@ -293,7 +294,7 @@ func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, versi
 
 		slog.Debug("Parsing fetched data as JSON", "mime-type", response.MimeType)
 
-		result, err = plugin.UnmarshalJSONData(response.Body)
+		result, err = plugindata.UnmarshalJSON(response.Body)
 		if err != nil {
 			return nil, diagnostics.Diag{
 				{
@@ -305,7 +306,7 @@ func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, versi
 		}
 	} else {
 		slog.Debug("Returning fetched data as text", "mime-type", response.MimeType)
-		result = plugin.StringData(response.Body)
+		result = plugindata.String(response.Body)
 	}
 	return result, nil
 }

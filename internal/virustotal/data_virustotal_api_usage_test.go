@@ -15,6 +15,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
@@ -83,11 +84,11 @@ func (s *APIUsageTestSuite) TestUser() {
 		}),
 	})
 	s.Require().Len(diags, 0)
-	s.Equal(plugin.MapData{
-		"daily": plugin.MapData{
-			"2024-01-01": plugin.MapData{},
-			"2024-01-02": plugin.MapData{},
-			"2024-01-03": plugin.MapData{},
+	s.Equal(plugindata.Map{
+		"daily": plugindata.Map{
+			"2024-01-01": plugindata.Map{},
+			"2024-01-02": plugindata.Map{},
+			"2024-01-03": plugindata.Map{},
 		},
 	}, data)
 }
@@ -122,11 +123,11 @@ func (s *APIUsageTestSuite) TestGroup() {
 		}),
 	})
 	s.Require().Len(diags, 0)
-	s.Equal(plugin.MapData{
-		"daily": plugin.MapData{
-			"2024-01-01": plugin.MapData{},
-			"2024-01-02": plugin.MapData{},
-			"2024-01-03": plugin.MapData{},
+	s.Equal(plugindata.Map{
+		"daily": plugindata.Map{
+			"2024-01-01": plugindata.Map{},
+			"2024-01-02": plugindata.Map{},
+			"2024-01-03": plugindata.Map{},
 		},
 	}, data)
 }

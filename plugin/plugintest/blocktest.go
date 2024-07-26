@@ -13,8 +13,8 @@ import (
 	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
-	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 // TestDecoder is a helper for testing block decoding.
@@ -26,7 +26,7 @@ type TestDecoder struct {
 
 	ctx     context.Context
 	evalCtx *hcl.EvalContext
-	dataCtx plugin.MapData
+	dataCtx plugindata.Map
 }
 
 type TestBlock struct {
@@ -95,7 +95,7 @@ func NewTestDecoder(t *testing.T, spec *dataspec.RootSpec) *TestDecoder {
 		block:   NewTestBlock("test_block"),
 		t:       t,
 		spec:    spec,
-		dataCtx: plugin.MapData{},
+		dataCtx: plugindata.Map{},
 		ctx:     context.Background(),
 	}
 }
@@ -107,7 +107,7 @@ func (td *TestDecoder) WithEvalCtx(evalCtx *hcl.EvalContext) *TestDecoder {
 }
 
 // WithDataCtx sets the data context.
-func (td *TestDecoder) WithDataCtx(dataCtx plugin.MapData) *TestDecoder {
+func (td *TestDecoder) WithDataCtx(dataCtx plugindata.Map) *TestDecoder {
 	td.dataCtx = dataCtx
 	return td
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeSnykIssuesDataSource(loader ClientLoadFn) *plugin.DataSource {
@@ -105,7 +106,7 @@ func makeSnykIssuesDataSource(loader ClientLoadFn) *plugin.DataSource {
 }
 
 func fetchSnykIssues(loader ClientLoadFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 		client := loader(params.Config.GetAttrVal("api_key").AsString())
 		limit, diags := params.Args.Attrs["limit"].GetInt()
 		if diags.HasErrors() {
@@ -121,7 +122,7 @@ func fetchSnykIssues(loader ClientLoadFn) plugin.RetrieveDataFunc {
 				},
 			}
 		}
-		var data plugin.ListData
+		var data plugindata.List
 		for {
 			res, err := client.ListIssues(ctx, req)
 			if err != nil {
@@ -134,7 +135,7 @@ func fetchSnykIssues(loader ClientLoadFn) plugin.RetrieveDataFunc {
 				}
 			}
 			for _, v := range res.Data {
-				item, err := plugin.ParseDataAny(v)
+				item, err := plugindata.ParseAny(v)
 				if err != nil {
 					return nil, diagnostics.Diag{
 						{

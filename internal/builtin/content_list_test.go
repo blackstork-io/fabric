@@ -10,6 +10,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
@@ -35,7 +36,7 @@ func (s *ListGeneratorTestSuite) TestSchema() {
 }
 
 func (s *ListGeneratorTestSuite) TestNilQueryResult() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = null
 	`, dataCtx, diagtest.Asserts{})
@@ -54,7 +55,7 @@ func (s *ListGeneratorTestSuite) TestNilQueryResult() {
 }
 
 func (s *ListGeneratorTestSuite) TestNonArrayQueryResult() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = "not_an_array"
 	`, dataCtx, diagtest.Asserts{})
@@ -73,7 +74,7 @@ func (s *ListGeneratorTestSuite) TestNonArrayQueryResult() {
 }
 
 func (s *ListGeneratorTestSuite) TestUnordered() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = ["bar", "baz"]
 		item_template = "foo {{.}}"
@@ -90,7 +91,7 @@ func (s *ListGeneratorTestSuite) TestUnordered() {
 }
 
 func (s *ListGeneratorTestSuite) TestOrdered() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = ["bar", "baz"]
 		item_template = "foo {{.}}"
@@ -107,7 +108,7 @@ func (s *ListGeneratorTestSuite) TestOrdered() {
 }
 
 func (s *ListGeneratorTestSuite) TestTaskList() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = ["bar", "baz"]
 		item_template = "foo {{.}}"
@@ -124,7 +125,7 @@ func (s *ListGeneratorTestSuite) TestTaskList() {
 }
 
 func (s *ListGeneratorTestSuite) TestBasic() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = ["bar", "baz"]
 		item_template = "foo {{.}}"
@@ -140,7 +141,7 @@ func (s *ListGeneratorTestSuite) TestBasic() {
 }
 
 func (s *ListGeneratorTestSuite) TestAdvanced() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = [
 			{
@@ -165,7 +166,7 @@ func (s *ListGeneratorTestSuite) TestAdvanced() {
 }
 
 func (s *ListGeneratorTestSuite) TestEmptyQueryResult() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = []
 		item_template = "foo {{.}}"
@@ -181,7 +182,7 @@ func (s *ListGeneratorTestSuite) TestEmptyQueryResult() {
 }
 
 func (s *ListGeneratorTestSuite) TestMissingItemTemplate() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = ["bar", "baz"]
 	`, dataCtx, diagtest.Asserts{})

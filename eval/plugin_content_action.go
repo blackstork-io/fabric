@@ -10,6 +10,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type PluginContentAction struct {
@@ -18,13 +19,13 @@ type PluginContentAction struct {
 	Vars     *definitions.ParsedVars
 }
 
-func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugin.MapData, doc, parent *plugin.ContentSection, contentID uint32) (res *plugin.ContentResult, diags diagnostics.Diag) {
-	contentMap := plugin.MapData{}
+func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (res *plugin.ContentResult, diags diagnostics.Diag) {
+	contentMap := plugindata.Map{}
 	if action.PluginAction.Meta != nil {
-		contentMap[definitions.BlockKindMeta] = action.PluginAction.Meta.AsJQData()
+		contentMap[definitions.BlockKindMeta] = action.PluginAction.Meta.AsPluginData()
 	}
 	docData := dataCtx[definitions.BlockKindDocument]
-	docData.(plugin.MapData)[definitions.BlockKindContent] = doc.AsData()
+	docData.(plugindata.Map)[definitions.BlockKindContent] = doc.AsData()
 	dataCtx[definitions.BlockKindDocument] = docData
 	dataCtx[definitions.BlockKindContent] = contentMap
 	diag := ApplyVars(ctx, action.Vars, dataCtx)

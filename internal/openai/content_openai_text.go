@@ -17,6 +17,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeOpenAITextContentSchema(loader ClientLoadFn) *plugin.ContentProvider {
@@ -85,7 +86,7 @@ func genOpenAIText(loader ClientLoadFn) plugin.ProvideContentFunc {
 	}
 }
 
-func renderText(ctx context.Context, cli client.Client, cfg, args *dataspec.Block, dataCtx plugin.MapData) (string, error) {
+func renderText(ctx context.Context, cli client.Client, cfg, args *dataspec.Block, dataCtx plugindata.Map) (string, error) {
 	params := client.ChatCompletionParams{
 		Model: args.GetAttrVal("model").AsString(),
 	}
@@ -114,7 +115,7 @@ func renderText(ctx context.Context, cli client.Client, cfg, args *dataspec.Bloc
 	return result.Choices[0].Message.Content, nil
 }
 
-func templateText(text string, dataCtx plugin.MapData) (string, error) {
+func templateText(text string, dataCtx plugindata.Map) (string, error) {
 	tmpl, err := template.New("text").Funcs(sprig.FuncMap()).Parse(text)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse template: %w", err)

@@ -15,6 +15,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeImageContentProvider() *plugin.ContentProvider {
@@ -75,7 +76,7 @@ func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (
 	}, nil
 }
 
-func renderAsTemplate(name, value string, datactx plugin.MapData) (string, error) {
+func renderAsTemplate(name, value string, datactx plugindata.Map) (string, error) {
 	if value == "" {
 		return "", nil
 	}

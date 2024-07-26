@@ -12,6 +12,7 @@ import (
 	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/snyk/client"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
@@ -83,9 +84,9 @@ func (s *IssuesDataSourceTestSuite) TestPaging() {
 	})
 	s.Equal("test_api_key", s.storedAPIKey)
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.StringData("1"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.String("1"),
 		},
 	}, res)
 }
@@ -145,12 +146,12 @@ func (s *IssuesDataSourceTestSuite) TestFull() {
 	})
 	s.Equal("test_api_key", s.storedAPIKey)
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.StringData("1"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.String("1"),
 		},
-		plugin.MapData{
-			"id": plugin.StringData("2"),
+		plugindata.Map{
+			"id": plugindata.String("2"),
 		},
 	}, res)
 }

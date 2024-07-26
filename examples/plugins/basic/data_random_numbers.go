@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 // makeRandomNumbersDataSource creates a new data source for generating random numbers
@@ -50,7 +51,7 @@ func makeRandomNumbersDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchRandomNumbers(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+func fetchRandomNumbers(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 	min := params.Config.GetAttrVal("min")
 	max := params.Config.GetAttrVal("max")
 
@@ -68,10 +69,10 @@ func fetchRandomNumbers(ctx context.Context, params *plugin.RetrieveDataParams) 
 	minInt, _ := min.AsBigFloat().Int64()
 	maxInt, _ := max.AsBigFloat().Int64()
 
-	data := make(plugin.ListData, lengthInt)
+	data := make(plugindata.List, lengthInt)
 	for i := int64(0); i < lengthInt; i++ {
 		n := rand.Int63() % (maxInt - minInt + 1) //nolint:G404 // weak rng is ok here
-		data[i] = plugin.NumberData(n + minInt)
+		data[i] = plugindata.Number(n + minInt)
 	}
 	return data, nil
 }

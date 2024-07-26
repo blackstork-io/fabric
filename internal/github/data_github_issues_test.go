@@ -14,6 +14,7 @@ import (
 	github_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/github"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
@@ -85,12 +86,12 @@ func (s *GithubIssuesDataTestSuite) TestBasic() {
 			Decode(),
 	})
 	s.Require().Nil(diags)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.NumberData(123),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.Number(123),
 		},
-		plugin.MapData{
-			"id": plugin.NumberData(124),
+		plugindata.Map{
+			"id": plugindata.Number(124),
 		},
 	}, data)
 }
@@ -149,12 +150,12 @@ func (s *GithubIssuesDataTestSuite) TestAdvanced() {
 		}),
 	})
 	s.Require().Nil(diags)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.NumberData(123),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.Number(123),
 		},
-		plugin.MapData{
-			"id": plugin.NumberData(124),
+		plugindata.Map{
+			"id": plugindata.Number(124),
 		},
 	}, data)
 }

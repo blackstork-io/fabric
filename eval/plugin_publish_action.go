@@ -14,6 +14,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type PluginPublishAction struct {
@@ -22,7 +23,7 @@ type PluginPublishAction struct {
 	Format    plugin.OutputFormat
 }
 
-func (block *PluginPublishAction) Publish(ctx context.Context, dataCtx plugin.MapData, documentName string) diagnostics.Diag {
+func (block *PluginPublishAction) Publish(ctx context.Context, dataCtx plugindata.Map, documentName string) diagnostics.Diag {
 	return block.Publisher.Execute(ctx, &plugin.PublishParams{
 		Config:       block.Config,
 		Args:         block.Args,

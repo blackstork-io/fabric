@@ -4,7 +4,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 // Encoder is a generic interface for encoding cty values into a specific type.
@@ -12,7 +12,7 @@ type Encoder[T any] struct {
 	// Most general encoder, used when no other encoder is applicable.
 	// This includes primitives, unknown types and nulls.
 	EncodeVal        func(val cty.Value) (T, diagnostics.Diag)
-	EncodePluginData func(val plugin.Data) (T, diagnostics.Diag)
+	EncodePluginData func(val plugindata.Data) (T, diagnostics.Diag)
 	MapEncoder       func(val cty.Value) (CollectionEncoder[T], diagnostics.Diag)
 	ObjectEncoder    func(val cty.Value) (CollectionEncoder[T], diagnostics.Diag)
 	ListEncoder      func(val cty.Value) (CollectionEncoder[T], diagnostics.Diag)
@@ -67,8 +67,8 @@ func (e *Encoder[T]) Encode(path cty.Path, val cty.Value) (result T, diags diagn
 			path = path[:len(path)-1]
 		}
 		result, diag = enc.Encode()
-	} else if plugin.EncapsulatedData.ValDecodable(val) {
-		data := *plugin.EncapsulatedData.MustFromCty(val)
+	} else if plugindata.EncapsulatedData.ValDecodable(val) {
+		data := *plugindata.EncapsulatedData.MustFromCty(val)
 		result, diag = e.EncodePluginData(data)
 	} else {
 		result, diag = e.EncodeVal(val)

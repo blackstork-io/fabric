@@ -12,6 +12,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 var defaultMsgSize = 1024 * 1024 * 20
@@ -107,7 +108,7 @@ func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient)
 }
 
 func (p *grpcPlugin) clientDataFunc(name string, client PluginServiceClient) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (data plugin.Data, diags diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (data plugindata.Data, diags diagnostics.Diag) {
 		p.logger.DebugContext(ctx, "Calling data source", "name", name)
 		defer func(start time.Time) {
 			p.logger.DebugContext(ctx, "Called data source", "name", name, "took", time.Since(start))

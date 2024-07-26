@@ -1,6 +1,6 @@
 package definitions
 
-import "github.com/blackstork-io/fabric/plugin"
+import "github.com/blackstork-io/fabric/plugin/plugindata"
 
 type MetaBlock struct {
 	Name        string   `hcl:"name,optional"`
@@ -15,19 +15,19 @@ type MetaBlock struct {
 	// TODO: ?store def range defRange hcl.Range
 }
 
-func (m *MetaBlock) AsJQData() plugin.Data {
-	tags := make(plugin.ListData, len(m.Tags))
-	authors := make(plugin.ListData, len(m.Authors))
+func (m *MetaBlock) AsPluginData() plugindata.Data {
+	tags := make(plugindata.List, len(m.Tags))
+	authors := make(plugindata.List, len(m.Authors))
 	for i, tag := range m.Tags {
-		tags[i] = plugin.StringData(tag)
+		tags[i] = plugindata.String(tag)
 	}
 	for i, author := range m.Authors {
-		authors[i] = plugin.StringData(author)
+		authors[i] = plugindata.String(author)
 	}
-	return plugin.MapData{
+	return plugindata.Map{
 		"authors": authors,
-		"name":    plugin.StringData(m.Name),
+		"name":    plugindata.String(m.Name),
 		"tags":    tags,
-		"version": plugin.StringData(m.Version),
+		"version": plugindata.String(m.Version),
 	}
 }

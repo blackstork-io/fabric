@@ -14,6 +14,7 @@ import (
 	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/splunk/client"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type SearchDataSourceTestSuite struct {
@@ -105,9 +106,9 @@ func (s *SearchDataSourceTestSuite) TestSearch() {
 		}),
 	})
 	s.Require().Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"key": plugin.StringData("value"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"key": plugindata.String("value"),
 		},
 	}, data)
 

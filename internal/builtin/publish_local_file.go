@@ -22,6 +22,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/print"
 	"github.com/blackstork-io/fabric/print/htmlprint"
 	"github.com/blackstork-io/fabric/print/mdprint"
@@ -65,7 +66,7 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 			}}
 		}
 		datactx := params.DataContext
-		datactx["format"] = plugin.StringData(params.Format.String())
+		datactx["format"] = plugindata.String(params.Format.String())
 
 		var printer print.Printer
 		switch params.Format {
@@ -131,7 +132,7 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 	}
 }
 
-func templatePath(pattern string, datactx plugin.MapData) (string, error) {
+func templatePath(pattern string, datactx plugindata.Map) (string, error) {
 	tmpl, err := template.New("pattern").Funcs(sprig.FuncMap()).Parse(pattern)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse a text template: %w", err)

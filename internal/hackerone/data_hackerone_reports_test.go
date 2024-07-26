@@ -14,6 +14,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
@@ -78,9 +79,9 @@ func (s *ReportsDataSourceTestSuite) TestPageNumber() {
 	s.Equal("test_user", s.storedUsr)
 	s.Equal("test_token", s.storedTkn)
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.StringData("1"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.String("1"),
 		},
 	}, res)
 }
@@ -114,9 +115,9 @@ func (s *ReportsDataSourceTestSuite) TestProgram() {
 	s.Equal("test_user", s.storedUsr)
 	s.Equal("test_token", s.storedTkn)
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.StringData("1"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.String("1"),
 		},
 	}, res)
 }
@@ -155,9 +156,9 @@ func (s *ReportsDataSourceTestSuite) TestInboxIDs() {
 	s.Equal("test_user", s.storedUsr)
 	s.Equal("test_token", s.storedTkn)
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.StringData("1"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.String("1"),
 		},
 	}, res)
 }

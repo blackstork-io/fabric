@@ -12,6 +12,7 @@ import (
 	kbclient_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/elastic/kbclient"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type ReportsDataSourceTestSuite struct {
@@ -78,9 +79,9 @@ func (s *ReportsDataSourceTestSuite) TestAuth() {
 	s.Equal("test_kibana_endpoint_url", s.storedUrl)
 	s.Equal(kbclient.String("test_api_key_str"), s.storedApiKey)
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.StringData("1"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.String("1"),
 		},
 	}, res)
 }
@@ -134,9 +135,9 @@ func (s *ReportsDataSourceTestSuite) TestFull() {
 		}),
 	})
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.StringData("1"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.String("1"),
 		},
 	}, res)
 }
