@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 	"go.opentelemetry.io/otel/attribute"
+	nooptrace "go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
@@ -18,7 +19,6 @@ import (
 	"github.com/blackstork-io/fabric/print"
 	"github.com/blackstork-io/fabric/print/htmlprint"
 	"github.com/blackstork-io/fabric/print/mdprint"
-	nooptrace "go.opentelemetry.io/otel/trace/noop"
 )
 
 func makeGithubGistPublisher(loader ClientLoaderFn) *plugin.Publisher {
