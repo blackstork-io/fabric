@@ -73,6 +73,24 @@ func parseContent(data plugin.MapData) (document *plugin.ContentSection) {
 	return
 }
 
+func parseName(data plugin.MapData) (name string) {
+	documentMap, ok := data["document"]
+	if !ok {
+		return
+	}
+	metaMap, ok := documentMap.(plugin.MapData)["meta"]
+	if !ok {
+		return
+	}
+	documentName := metaMap.(plugin.MapData)["name"]
+	docName, ok := documentName.(plugin.StringData)
+	if !ok {
+		return
+	}
+	name = string(docName)
+	return
+}
+
 func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 	// TODO: confirm if to be passed from the caller
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
@@ -88,7 +106,6 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 		}
 		datactx := params.DataContext
 		datactx["format"] = plugin.StringData(params.Format.String())
-
 		var printer print.Printer
 		switch params.Format {
 		case plugin.OutputFormatMD:
@@ -117,17 +134,17 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 
 		client := loader(params.Config.GetAttr("github_token").AsString())
 
-		// TODO: use document name
-		fileName := "document" + params.Format.String()
+		fileName := parseName(params.DataContext) + "." + params.Format.String()
 		filenameAttr := params.Args.GetAttr("filename")
-		if !filenameAttr.IsNull() || filenameAttr.AsString() != "" {
+		if !filenameAttr.IsNull() && filenameAttr.AsString() != "" {
 			fileName = filenameAttr.AsString()
 		}
 		payload := &gh.Gist{
 			Public: gh.Bool(false),
 			Files: map[gh.GistFilename]gh.GistFile{
 				gh.GistFilename(fileName): {
-					Content: gh.String(buff.String()),
+					Content:  gh.String(buff.String()),
+					Filename: gh.String(fileName),
 				},
 			},
 		}
@@ -140,10 +157,10 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 		if !makePublicAttr.IsNull() {
 			payload.Public = gh.Bool(makePublicAttr.True())
 		}
-		logger.InfoContext(ctx, "Publish to github gist", "filename", fileName)
+		slog.InfoContext(ctx, "Publish to github gist", "filename", fileName)
 		gistId := params.Args.GetAttr("gist_id")
 		if gistId.IsNull() || gistId.AsString() == "" {
-			_, _, err = client.Gists().Create(ctx, payload)
+			gist, _, err := client.Gists().Create(ctx, payload)
 			if err != nil {
 				return diagnostics.Diag{{
 					Severity: hcl.DiagError,
@@ -151,8 +168,9 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 					Detail:   err.Error(),
 				}}
 			}
+			slog.InfoContext(ctx, "created gist", "url", *gist.HTMLURL)
 		} else {
-			_, _, err = client.Gists().Edit(ctx, gistId.AsString(), payload)
+			gist, _, err := client.Gists().Edit(ctx, gistId.AsString(), payload)
 			if err != nil {
 				return diagnostics.Diag{{
 					Severity: hcl.DiagError,
@@ -160,6 +178,7 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 					Detail:   err.Error(),
 				}}
 			}
+			slog.InfoContext(ctx, "updated gist", "url", *gist.HTMLURL)
 		}
 		return nil
 	}

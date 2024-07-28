@@ -55,10 +55,11 @@ func (s *GithubPublishGistTestSuite) TestBasic() {
 		Public:      gh.Bool(false),
 		Files: map[gh.GistFilename]gh.GistFile{
 			"filename.md": {
-				Content: gh.String("# Header 1\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit."),
+				Content:  gh.String("# Header 1\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit."),
+				Filename: gh.String("filename.md"),
 			},
 		},
-	}).Return(&gh.Gist{}, &gh.Response{}, nil)
+	}).Return(&gh.Gist{HTMLURL: gh.String("http://gist.github.com/mock")}, &gh.Response{}, nil)
 	ctx := context.Background()
 	titleMeta := plugin.MapData{
 		"provider": plugin.StringData("title"),
@@ -71,6 +72,59 @@ func (s *GithubPublishGistTestSuite) TestBasic() {
 		Args: cty.ObjectVal(map[string]cty.Value{
 			"description": cty.StringVal("test description"),
 			"filename":    cty.StringVal("filename.md"),
+			"make_public": cty.NullVal(cty.Bool),
+			"gist_id":     cty.NullVal(cty.String),
+		}),
+		Format: plugin.OutputFormatMD,
+		DataContext: plugin.MapData{
+			"document": plugin.MapData{
+				"meta": plugin.MapData{
+					"name": plugin.StringData("test_document"),
+				},
+				"content": plugin.MapData{
+					"type": plugin.StringData("section"),
+					"children": plugin.ListData{
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("# Header 1"),
+							"meta":     titleMeta,
+						},
+						plugin.MapData{
+							"type":     plugin.StringData("element"),
+							"markdown": plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
+						},
+					},
+				},
+			},
+		},
+	})
+	s.Require().Nil(diags)
+}
+
+func (s *GithubPublishGistTestSuite) TestFilenameOptional() {
+	s.cli.On("Gists").Return(s.gistCli)
+	s.gistCli.On("Create", mock.Anything, &gh.Gist{
+		Description: gh.String("test description"),
+		Public:      gh.Bool(false),
+		Files: map[gh.GistFilename]gh.GistFile{
+			"test_document.md": {
+				Content:  gh.String("# Header 1\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit."),
+				Filename: gh.String("test_document.md"),
+			},
+		},
+	}).Return(&gh.Gist{HTMLURL: gh.String("http://gist.github.com/mock")}, &gh.Response{}, nil)
+	ctx := context.Background()
+	titleMeta := plugin.MapData{
+		"provider": plugin.StringData("title"),
+		"plugin":   plugin.StringData("blackstork/builtin"),
+	}
+	diags := s.plugin.Publish(ctx, "github_gist", &plugin.PublishParams{
+		Config: cty.ObjectVal(map[string]cty.Value{
+			"github_token": cty.StringVal("testtoken"),
+		}),
+		Args: cty.ObjectVal(map[string]cty.Value{
+			"description": cty.StringVal("test description"),
+			"filename":    cty.StringVal(""),
 			"make_public": cty.NullVal(cty.Bool),
 			"gist_id":     cty.NullVal(cty.String),
 		}),
