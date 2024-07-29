@@ -63,7 +63,8 @@ func (p *PathExtra) improveDiagnostic(diag *hcl.Diagnostic) {
 	diag.Detail = fmt.Sprintf("%s\nHappened while evaluating value at:\n%s", diag.Detail, p)
 }
 
-// Add path, prepending if any already exist
+// Stores path in hcl.Diagnostic.Extra, or via Diag.Refine.
+// Add path, prepending if any already exist.
 func AddPath(p cty.Path) *PathExtra {
 	return &PathExtra{
 		path:    p.Copy(),

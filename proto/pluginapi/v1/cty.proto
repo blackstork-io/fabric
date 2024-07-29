@@ -37,7 +37,6 @@ message Cty {
     message Capsule {
         oneof data {
             Data pluginData = 1;
-            Data delayedEval = 2;
         }
     }
     message Dynamic {}

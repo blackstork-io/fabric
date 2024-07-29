@@ -3,6 +3,7 @@ package dataspec
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"maps"
 
 	"github.com/hashicorp/hcl/v2"
@@ -37,18 +38,33 @@ func (t *transformer) transform(val cty.Value) (_ cty.Value, diags diagnostics.D
 	var marks cty.ValueMarks
 	val, marks = val.Unmark()
 	switch {
-	case deferred.Type.CtyTypeEqual(ty):
-		// TODO: warn in these cases
+	case ty.IsCapsuleType():
 		switch {
-		case val.IsNull():
-			val = cty.NullVal(cty.DynamicPseudoType)
-		case !val.IsKnown():
-			val = cty.UnknownVal(cty.DynamicPseudoType)
+		case deferred.Type.CtyTypeEqual(ty):
+			// TODO: warn in these cases
+			switch {
+			case val.IsNull():
+				slog.Debug("Null dererred value", "path", t.path.NewErrorf("path"))
+				val = cty.NullVal(cty.DynamicPseudoType)
+			case !val.IsKnown():
+				slog.Debug("Unknown dererred value", "path", t.path.NewErrorf("path"))
+				val = cty.UnknownVal(cty.DynamicPseudoType)
+			default:
+				eval := deferred.Type.MustFromCty(val)
+				val, diags = eval.Eval(t.ctx, t.dataCtx)
+				diags.Refine(diagnostics.AddPath(t.path))
+			}
+		case plugindata.Encapsulated.CtyTypeEqual(ty):
+			// nothing to do
 		default:
-			eval := deferred.Type.MustFromCty(val)
-			val, diags = eval.Eval(t.ctx, t.dataCtx)
-			diags.Refine(diagnostics.AddPath(t.path))
+			diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Unexpected capsule value",
+				Detail:   fmt.Sprintf("Capsule value %s is unexpected here", ty.FriendlyName()),
+				Extra:    diagnostics.AddPath(t.path),
+			})
 		}
+
 	case val.IsNull() || !val.IsKnown():
 		// do nothing
 	case ty.IsListType() || ty.IsSetType() || ty.IsTupleType():
@@ -131,6 +147,13 @@ func (t *transformer) transform(val cty.Value) (_ cty.Value, diags diagnostics.D
 		}
 		t.path = t.path[:len(t.path)-1]
 		val = cty.ObjectVal(elems)
+	default:
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Unexpected value",
+			Detail:   fmt.Sprintf("Value %s is unexpected here", ty.FriendlyName()),
+			Extra:    diagnostics.AddPath(t.path),
+		})
 	}
 	if diags.HasErrors() {
 		val = cty.DynamicVal
