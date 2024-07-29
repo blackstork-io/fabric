@@ -160,6 +160,74 @@ func (_c *GistClient_Edit_Call) RunAndReturn(run func(context.Context, string, *
 	return _c
 }
 
+// Get provides a mock function with given fields: ctx, id
+func (_m *GistClient) Get(ctx context.Context, id string) (*github.Gist, *github.Response, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Get")
+	}
+
+	var r0 *github.Gist
+	var r1 *github.Response
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*github.Gist, *github.Response, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *github.Gist); ok {
+		r0 = rf(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*github.Gist)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) *github.Response); ok {
+		r1 = rf(ctx, id)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*github.Response)
+		}
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, string) error); ok {
+		r2 = rf(ctx, id)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// GistClient_Get_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Get'
+type GistClient_Get_Call struct {
+	*mock.Call
+}
+
+// Get is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id string
+func (_e *GistClient_Expecter) Get(ctx interface{}, id interface{}) *GistClient_Get_Call {
+	return &GistClient_Get_Call{Call: _e.mock.On("Get", ctx, id)}
+}
+
+func (_c *GistClient_Get_Call) Run(run func(ctx context.Context, id string)) *GistClient_Get_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *GistClient_Get_Call) Return(_a0 *github.Gist, _a1 *github.Response, _a2 error) *GistClient_Get_Call {
+	_c.Call.Return(_a0, _a1, _a2)
+	return _c
+}
+
+func (_c *GistClient_Get_Call) RunAndReturn(run func(context.Context, string) (*github.Gist, *github.Response, error)) *GistClient_Get_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewGistClient creates a new instance of GistClient. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewGistClient(t interface {

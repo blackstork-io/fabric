@@ -170,7 +170,24 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 			}
 			slog.InfoContext(ctx, "created gist", "url", *gist.HTMLURL)
 		} else {
-			gist, _, err := client.Gists().Edit(ctx, gistId.AsString(), payload)
+
+			gist, _, err := client.Gists().Get(ctx, gistId.AsString())
+			if err != nil {
+				return diagnostics.Diag{{
+					Severity: hcl.DiagError,
+					Summary:  "Failed to retreive gist",
+					Detail:   err.Error(),
+				}}
+			}
+			// changing filename or output format will create a new file instead of updating the existing one.
+			// following logic will remove the old files and add new files.
+			for _, file := range gist.Files {
+				_, exists := payload.Files[gh.GistFilename(*file.Filename)]
+				if !exists {
+					payload.Files[gh.GistFilename(*file.Filename)] = gh.GistFile{}
+				}
+			}
+			gist, _, err = client.Gists().Edit(ctx, gistId.AsString(), payload)
 			if err != nil {
 				return diagnostics.Diag{{
 					Severity: hcl.DiagError,

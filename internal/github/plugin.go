@@ -42,6 +42,7 @@ type IssuesClient interface {
 
 type GistClient interface {
 	Create(ctx context.Context, gist *gh.Gist) (*gh.Gist, *gh.Response, error)
+	Get(ctx context.Context, id string) (*gh.Gist, *gh.Response, error)
 	Edit(ctx context.Context, id string, gist *gh.Gist) (*gh.Gist, *gh.Response, error)
 }
 
