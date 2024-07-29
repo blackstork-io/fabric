@@ -38,6 +38,8 @@ func (t *transformer) transform(val cty.Value) (_ cty.Value, diags diagnostics.D
 	var marks cty.ValueMarks
 	val, marks = val.Unmark()
 	switch {
+	case ty.IsPrimitiveType():
+		// nothing to do
 	case ty.IsCapsuleType():
 		switch {
 		case deferred.Type.CtyTypeEqual(ty):
