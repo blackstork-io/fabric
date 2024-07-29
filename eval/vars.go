@@ -4,12 +4,12 @@ import (
 	"context"
 	"maps"
 
-	"github.com/hashicorp/hcl/v2"
+	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
 
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
@@ -28,40 +28,32 @@ func ApplyVars(ctx context.Context, variables *definitions.ParsedVars, dataCtx p
 		vars = maps.Clone(varsData.(plugindata.Map))
 	}
 	dataCtx["vars"] = vars
-
+	var diag diagnostics.Diag
 	for _, variable := range variables.Variables {
-		val, diag := dataquery.EvaluateDeferred(ctx, dataCtx, variable.Val)
-		diag.DefaultSubject(&variable.ValRange)
-		if diags.Extend(diag) {
-			vars[variable.Name] = nil
-			continue
-		}
-		v, err := convert.Convert(val, plugindata.EncapsulatedData.CtyType())
-		if err != nil {
-			diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to convert variable value",
-				Detail:   err.Error(),
-				Subject:  &variable.ValRange,
-			})
-			continue
-		}
-		dataVal, err := plugindata.EncapsulatedData.FromCty(v)
-		if err != nil {
-			diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to convert variable value",
-				Detail:   err.Error(),
-				Subject:  &variable.ValRange,
-			})
-			continue
-		}
-		if dataVal == nil {
-			vars[variable.Name] = nil
-		} else {
-			vars[variable.Name] = *dataVal
-		}
+		vars[variable.Name], diag = evalVar(ctx, dataCtx, variable.Val)
+		diags.Extend(diag.Refine(
+			diagnostics.DefaultSubject(variable.ValRange),
+		))
 	}
 
+	return
+}
+
+func evalVar(ctx context.Context, dataCtx plugindata.Map, val cty.Value) (data plugindata.Data, diags diagnostics.Diag) {
+	val, diags = dataspec.EvaluateDeferred(ctx, dataCtx, val)
+	if diags.HasErrors() {
+		return
+	}
+	v, err := convert.Convert(val, plugindata.Encapsulated.CtyType())
+	if diags.AppendErr(err, "Failed to convert variable value") {
+		return
+	}
+	dataVal, err := plugindata.Encapsulated.FromCty(v)
+	if diags.AppendErr(err, "Failed to convert variable value") {
+		return
+	}
+	if dataVal != nil {
+		data = *dataVal
+	}
 	return
 }

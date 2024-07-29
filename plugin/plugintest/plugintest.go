@@ -9,8 +9,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/cmd/fabctx"
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -60,14 +58,11 @@ func DecodeAndAssert(t *testing.T, spec *dataspec.RootSpec, body string, dataCtx
 	fm = map[string]*hcl.File{
 		filename: f,
 	}
-	val, dgs := dataspec.Decode(f.Body.(*hclsyntax.Body).Blocks[0], spec, fabctx.GetEvalContext(context.Background()))
+	val, dgs := dataspec.DecodeBlock(context.Background(), f.Body.(*hclsyntax.Body).Blocks[0], spec)
 	if diags.Extend(dgs) {
 		return
 	}
-	dgs = dataquery.EvaluateDeferredBlock(context.Background(), dataCtx, val)
-	if diags.Extend(dgs) {
-		return
-	}
+	diags.Extend(dataspec.EvalBlock(context.Background(), val, dataCtx))
 	return
 }
 
@@ -81,7 +76,7 @@ func Decode(t *testing.T, spec *dataspec.RootSpec, body string) (v *dataspec.Blo
 		return
 	}
 
-	v, diag := dataspec.Decode(f.Body.(*hclsyntax.Body).Blocks[0], spec, fabctx.GetEvalContext(context.Background()))
+	v, diag := dataspec.DecodeAndEvalBlock(context.Background(), f.Body.(*hclsyntax.Body).Blocks[0], spec)
 	diags.Extend(diag)
 	return
 }

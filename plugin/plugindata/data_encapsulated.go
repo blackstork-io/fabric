@@ -11,10 +11,10 @@ import (
 	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
-var EncapsulatedData *encapsulator.Codec[Data]
+var Encapsulated *encapsulator.Codec[Data]
 
 func init() {
-	EncapsulatedData = encapsulator.NewCodec("jq queriable", &encapsulator.CapsuleOps[Data]{
+	Encapsulated = encapsulator.NewCodec("jq queriable", &encapsulator.CapsuleOps[Data]{
 		GoString: func(v *Data) string {
 			return fmt.Sprintf("%+v", *v)
 		},
@@ -91,8 +91,8 @@ func ctyToPluginData(v cty.Value) (_ Data, err error) {
 			}
 		}
 		return m, nil
-	case EncapsulatedData.CtyTypeEqual(ty):
-		return *EncapsulatedData.MustFromCty(v), nil
+	case Encapsulated.CtyTypeEqual(ty):
+		return *Encapsulated.MustFromCty(v), nil
 	default:
 		return nil, fmt.Errorf("can't convert to jq-queriable: type %s is unsupported", ty.FriendlyName())
 	}

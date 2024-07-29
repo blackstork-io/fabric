@@ -217,14 +217,14 @@ func TestCtyCodecCapsule(t *testing.T) {
 		},
 	})
 
-	ctyVal := plugindata.EncapsulatedData.ToCty(&data)
+	ctyVal := plugindata.Encapsulated.ToCty(&data)
 	encVal, diag := encodeCtyValue(ctyVal)
 	require.False(diag.HasErrors(), "Failed to encode value", diag)
 
 	decVal, err := decodeCtyValue(encVal)
 	require.NoError(err, "Failed to decode value")
 
-	decData := plugindata.EncapsulatedData.MustFromCty(decVal)
+	decData := plugindata.Encapsulated.MustFromCty(decVal)
 	require.Equal(&data, decData)
-	roundTripType(t, plugindata.EncapsulatedData.CtyType())
+	roundTripType(t, plugindata.Encapsulated.CtyType())
 }

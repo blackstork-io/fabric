@@ -86,7 +86,7 @@ func makeStixViewContentProvider() *plugin.ContentProvider {
 				},
 				{
 					Name: "objects",
-					Type: plugindata.EncapsulatedData.CtyType(),
+					Type: plugindata.Encapsulated.CtyType(),
 				},
 			},
 		},
@@ -119,7 +119,7 @@ func renderStixView(ctx context.Context, params *plugin.ProvideContentParams) (*
 
 	objectCty := params.Args.GetAttrVal("objects")
 	if !objectCty.IsNull() {
-		objects := plugindata.EncapsulatedData.MustFromCty(objectCty)
+		objects := plugindata.Encapsulated.MustFromCty(objectCty)
 		if objects != nil && *objects != nil {
 			var ok bool
 			rctx.Objects, ok = (*objects).(plugindata.List)

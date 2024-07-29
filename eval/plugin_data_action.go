@@ -24,13 +24,13 @@ func (action *PluginDataAction) FetchData(ctx context.Context) (plugindata.Data,
 		Config: action.Config,
 		Args:   action.Args,
 	})
-	diags.DefaultSubject(action.SrcRange.Ptr())
+	diags.Refine(diagnostics.DefaultSubject(action.SrcRange))
 	return res, diags
 }
 
 func LoadDataAction(ctx context.Context, sources DataSources, node *definitions.ParsedPlugin) (_ *PluginDataAction, diags diagnostics.Diag) {
 	defer func() {
-		diags.DefaultSubject(node.Invocation.Range().Ptr())
+		diags.Refine(diagnostics.DefaultSubject(node.Invocation.Range()))
 	}()
 
 	ds, ok := sources.DataSource(node.PluginName)
@@ -57,7 +57,7 @@ func LoadDataAction(ctx context.Context, sources DataSources, node *definitions.
 			Context: node.Invocation.Range().Ptr(),
 		})
 	}
-	args, diag := node.Invocation.ParseInvocation(ctx, ds.Args)
+	args, diag := dataspec.DecodeAndEvalBlock(ctx, node.Invocation.Block, ds.Args)
 	if diags.Extend(diag) {
 		return nil, diags
 	}

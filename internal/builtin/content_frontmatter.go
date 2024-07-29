@@ -36,7 +36,7 @@ func makeFrontMatterContentProvider() *plugin.ContentProvider {
 				},
 				{
 					Name:        "content",
-					Type:        plugindata.EncapsulatedData.CtyType(),
+					Type:        plugindata.Encapsulated.CtyType(),
 					Doc:         `Arbitrary key-value map to be put in the frontmatter.`,
 					Constraints: constraint.RequiredMeaningful,
 					ExampleVal: cty.ObjectVal(map[string]cty.Value{
@@ -63,7 +63,7 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 
 	format := params.Args.GetAttrVal("format").AsString()
 
-	data, err := plugindata.EncapsulatedData.FromCty(params.Args.GetAttrVal("content"))
+	data, err := plugindata.Encapsulated.FromCty(params.Args.GetAttrVal("content"))
 	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,

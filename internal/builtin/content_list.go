@@ -43,7 +43,7 @@ func makeListContentProvider() *plugin.ContentProvider {
 				},
 				{
 					Name:        "items",
-					Type:        cty.List(plugindata.EncapsulatedData.CtyType()),
+					Type:        cty.List(plugindata.Encapsulated.CtyType()),
 					Constraints: constraint.RequiredMeaningful,
 					ExampleVal: cty.ListVal([]cty.Value{
 						cty.StringVal("First item"),
@@ -70,7 +70,7 @@ func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 		}}
 	}
 	items, err := utils.FnMapErr(params.Args.GetAttrVal("items").AsValueSlice(), func(v cty.Value) (plugindata.Data, error) {
-		data, err := plugindata.EncapsulatedData.FromCty(v)
+		data, err := plugindata.Encapsulated.FromCty(v)
 		if err != nil {
 			return nil, err
 		}

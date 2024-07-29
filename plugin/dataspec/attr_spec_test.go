@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -697,7 +696,7 @@ func TestValidation(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			// t.Parallel()
-			spec := dataspec.BlockSpec{
+			spec := dataspec.RootSpec{
 				Attrs: []*dataspec.AttrSpec{
 					tc.obj,
 				},
@@ -722,7 +721,7 @@ func TestValidation(t *testing.T) {
 				}
 			}
 
-			objVal, diag := dataspec.DecodeBlock(block, &spec, fabctx.GetEvalContext(context.Background()))
+			objVal, diag := dataspec.DecodeAndEvalBlock(context.Background(), block, &spec)
 			diags.Extend(diag)
 			tc.asserts.AssertMatch(t, diags, nil)
 			if diags.HasErrors() {

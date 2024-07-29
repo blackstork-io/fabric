@@ -8,8 +8,6 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 
-	"github.com/blackstork-io/fabric/cmd/fabctx"
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
@@ -69,8 +67,6 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 	// will never change, all changes are made to the clone of this map
 	docDataCtx[definitions.BlockKindData] = data
 	docDataCtx[definitions.BlockKindDocument] = docData
-
-	ctx = fabctx.WithEvalContext(ctx, dataquery.JqEvalContext(fabctx.GetEvalContext(ctx)))
 
 	diag := ApplyVars(ctx, doc.Vars, docDataCtx)
 

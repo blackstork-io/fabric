@@ -10,6 +10,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/deferred"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
@@ -30,6 +31,11 @@ func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx pl
 	dataCtx[definitions.BlockKindContent] = contentMap
 	diag := ApplyVars(ctx, action.Vars, dataCtx)
 	if diags.Extend(diag) {
+		return
+	}
+	// re-evaluate using this
+	diags.Extend(dataspec.EvalBlock(ctx, action.Args, dataCtx))
+	if diags.HasErrors() {
 		return
 	}
 
@@ -78,8 +84,11 @@ func LoadPluginContentAction(ctx context.Context, providers ContentProviders, no
 		return nil, diags
 	}
 
-	var args *dataspec.Block
-	args, diag := node.Invocation.ParseInvocation(ctx, cp.Args)
+	args, diag := dataspec.DecodeBlock(
+		deferred.WithQueryFuncs(ctx),
+		node.Invocation.Block,
+		cp.Args,
+	)
 	if diags.Extend(diag) {
 		return nil, diags
 	}

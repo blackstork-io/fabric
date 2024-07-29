@@ -54,7 +54,7 @@ func (g *GlobalConfigDefinition) parseEnvVarPattern(evalCtx *hcl.EvalContext, bo
 		if diags.HasErrors() {
 			pat = nil
 		}
-		diags.DefaultSubject(attr.Expr.Range().Ptr())
+		diags.Refine(diagnostics.DefaultSubject(attr.Expr.Range()))
 	}()
 
 	val, rest, diag := hcldec.PartialDecode(

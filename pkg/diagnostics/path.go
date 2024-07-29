@@ -7,21 +7,38 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-type PathExtra cty.Path
+type PathExtra struct {
+	path    cty.Path
+	prepend bool
+}
 
-func (p PathExtra) String() string {
-	if len(p) == 0 {
+// Refine implements DiagnosticRefiner.
+func (p *PathExtra) Refine(diags Diag) {
+	for _, d := range diags {
+		oldPath, found := getExtra[*PathExtra](d.Extra)
+		if found {
+			if p.prepend {
+				oldPath.path = append(p.path.Copy(), oldPath.path...)
+			}
+			continue
+		}
+		addExtraFunc(d, &*p)
+	}
+}
+
+func (p *PathExtra) String() string {
+	if p == nil || len(p.path) == 0 {
 		return ""
 	}
 	var sb []byte
-	for _, step := range p {
+	for _, step := range p.path {
 		switch step := step.(type) {
 		case cty.GetAttrStep:
 			sb = fmt.Appendf(sb, ".%s", step.Name)
 			continue
 		case cty.IndexStep:
 			ty := step.Key.Type()
-			if ty.IsPrimitiveType() {
+			if ty.IsPrimitiveType() && !step.Key.IsNull() && step.Key.IsKnown() {
 				if ty == cty.String {
 					sb = fmt.Appendf(sb, "[%q]", step.Key.AsString())
 					continue
@@ -39,13 +56,24 @@ func (p PathExtra) String() string {
 	return string(sb)
 }
 
-func (p PathExtra) improveDiagnostic(diag *hcl.Diagnostic) {
-	if len(p) == 0 {
+func (p *PathExtra) improveDiagnostic(diag *hcl.Diagnostic) {
+	if p == nil || len(p.path) == 0 {
 		return
 	}
 	diag.Detail = fmt.Sprintf("%s\nHappened while evaluating value at:\n%s", diag.Detail, p)
 }
 
-func NewPathExtra(p cty.Path) PathExtra {
-	return PathExtra(p.Copy())
+// Add path, prepending if any already exist
+func AddPath(p cty.Path) *PathExtra {
+	return &PathExtra{
+		path:    p.Copy(),
+		prepend: true,
+	}
+}
+
+// Adds path to diagnostics that do not have a path already
+func DefaultPath(p cty.Path) *PathExtra {
+	return &PathExtra{
+		path: p.Copy(),
+	}
 }

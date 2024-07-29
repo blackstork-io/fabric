@@ -37,16 +37,16 @@ func PrintDiags(output io.Writer, diags []*hcl.Diagnostic, fileMap map[string]*h
 	diagWriter := hcl.NewDiagnosticTextWriter(bufWr, fileMap, uint(width), colorize)
 
 	for _, diag := range diags {
-		if _, isRepeated := DiagnosticExtra[repeatedError](diag); isRepeated {
+		if _, isRepeated := GetExtra[repeatedError](diag); isRepeated {
 			continue
 		}
-		if gojqErr, ok := DiagnosticExtra[GoJQError](diag); ok {
+		if gojqErr, ok := GetExtra[GoJQError](diag); ok {
 			gojqErr.improveDiagnostic(diag, fileMap)
 		}
-		if traceback, ok := DiagnosticExtra[TracebackExtra](diag); ok {
+		if traceback, ok := GetExtra[TracebackExtra](diag); ok {
 			traceback.improveDiagnostic(diag)
 		}
-		if path, ok := DiagnosticExtra[PathExtra](diag); ok {
+		if path, ok := GetExtra[PathExtra](diag); ok {
 			path.improveDiagnostic(diag)
 		}
 		err := diagWriter.WriteDiagnostic(diag)

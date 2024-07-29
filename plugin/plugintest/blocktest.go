@@ -10,7 +10,6 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/cmd/fabctx"
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -152,12 +151,11 @@ func (td *TestDecoder) decode() (val *dataspec.Block, fm map[string]*hcl.File, d
 	if td.evalCtx == nil {
 		td.evalCtx = fabctx.GetEvalContext(td.ctx)
 	}
-	val, dgs := dataspec.Decode(f.Body.(*hclsyntax.Body).Blocks[0], td.spec, td.evalCtx)
+	val, dgs := dataspec.DecodeBlock(td.ctx, f.Body.(*hclsyntax.Body).Blocks[0], td.spec)
 	if diags.Extend(dgs) {
 		return
 	}
-	dgs = dataquery.EvaluateDeferredBlock(td.ctx, td.dataCtx, val)
-	if diags.Extend(dgs) {
+	if diags.Extend(dataspec.EvalBlock(td.ctx, val, td.dataCtx)) {
 		return
 	}
 	return

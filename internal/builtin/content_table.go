@@ -27,7 +27,7 @@ func makeTableContentProvider() *plugin.ContentProvider {
 			Attrs: []*dataspec.AttrSpec{
 				{
 					Name: "rows",
-					Type: cty.List(plugindata.EncapsulatedData.CtyType()),
+					Type: cty.List(plugindata.Encapsulated.CtyType()),
 					Doc: "A list of objects representing rows in the table.\n" +
 						"May be set statically or as a result of one or more queries.",
 				},
@@ -76,7 +76,7 @@ func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (
 	if !rowsVal.IsNull() {
 		var err error
 		rows, err = utils.FnMapErr(rowsVal.AsValueSlice(), func(v cty.Value) (plugindata.Data, error) {
-			data, err := plugindata.EncapsulatedData.FromCty(v)
+			data, err := plugindata.Encapsulated.FromCty(v)
 			if err != nil {
 				return nil, err
 			}

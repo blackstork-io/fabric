@@ -18,6 +18,9 @@ type Attr struct {
 	Value      cty.Value
 	ValueRange hcl.Range
 	Secret     bool
+	// Spec that was used to decode this attribute.
+	// This is only set if the block was decoded from hcl with a spec present.
+	spec *AttrSpec
 }
 
 func (a *Attr) Range() hcl.Range {

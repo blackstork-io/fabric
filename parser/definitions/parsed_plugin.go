@@ -9,16 +9,8 @@ type ParsedPlugin struct {
 	BlockName  string
 	Meta       *MetaBlock
 	Config     evaluation.Configuration
-	Invocation evaluation.Invocation
+	Invocation *evaluation.BlockInvocation
 	Vars       *ParsedVars
-}
-
-func (pe *ParsedPlugin) GetBlockInvocation() *evaluation.BlockInvocation {
-	res, ok := pe.Invocation.(*evaluation.BlockInvocation)
-	if !ok {
-		panic("This Plugin does not store a BlockInvocation!")
-	}
-	return res
 }
 
 type ParsedContent struct {

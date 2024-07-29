@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 
-	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -50,7 +49,7 @@ func (c *ConfigEmpty) ParseConfig(ctx context.Context, spec *dataspec.RootSpec) 
 	}
 
 	var diag diagnostics.Diag
-	val, diag = dataspec.Decode(&emptyBody, spec, fabctx.GetEvalContext(ctx))
+	val, diag = dataspec.DecodeAndEvalBlock(ctx, &emptyBody, spec)
 	for _, d := range diag {
 		d.Summary = fmt.Sprintf("Missing required configuration: %s", d.Summary)
 	}

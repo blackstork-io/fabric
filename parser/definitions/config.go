@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/encapsulator"
@@ -32,7 +31,7 @@ var _ evaluation.Configuration = (*Config)(nil)
 func (c *Config) ParseConfig(ctx context.Context, spec *dataspec.RootSpec) (val *dataspec.Block, diags diagnostics.Diag) {
 	c.once.Do(func() {
 		var diag diagnostics.Diag
-		c.value, diag = dataspec.Decode(c.Block, spec, fabctx.GetEvalContext(ctx))
+		c.value, diag = dataspec.DecodeAndEvalBlock(ctx, c.Block, spec)
 		if diags.Extend(diag) {
 			// don't let partially-decoded values live
 			c.value = nil

@@ -155,7 +155,7 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 
 		res.Vars = res.Vars.MergeWithBaseVars(baseEval.Vars)
 
-		updateRefBody(invocation.Body, baseEval.GetBlockInvocation().Body)
+		updateRefBody(invocation.Body, baseEval.Invocation.Body)
 
 	case pluginIsRef && !refFound:
 		diags.Append(&hcl.Diagnostic{
@@ -183,13 +183,6 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 	}
 
 	res.Invocation = invocation
-
-	// Future-proofing: be careful when refactoring, the rest of the program
-	// (specifically the ref handling) relies on res.invocation being *evaluation.BlockInvocation
-	_, ok := res.Invocation.(*evaluation.BlockInvocation)
-	if !ok {
-		panic("Plugin invocation must be block invocation")
-	}
 
 	parsed = &res
 	return

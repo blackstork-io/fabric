@@ -8,9 +8,10 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 
 	"github.com/blackstork-io/fabric/cmd/fabctx"
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/deferred"
 )
 
 func ParseVars(ctx context.Context, block *hclsyntax.Block, localVar *hclsyntax.Attribute) (parsed *definitions.ParsedVars, diags diagnostics.Diag) {
@@ -54,12 +55,13 @@ func ParseVars(ctx context.Context, block *hclsyntax.Block, localVar *hclsyntax.
 	if localVar != nil {
 		varCount++
 	}
-	evalCtx := dataquery.JqEvalContext(fabctx.GetEvalContext(ctx))
+	ctx = deferred.WithQueryFuncs(ctx)
+	evalCtx := fabctx.GetEvalContext(ctx)
 	vars := make([]*definitions.Variable, 0, varCount)
 
 	if block != nil {
 		for _, attr := range block.Body.Attributes {
-			val, diag := attr.Expr.Value(evalCtx)
+			val, diag := dataspec.DecodeAttr(nil, attr, evalCtx)
 			if diags.Extend(diag) {
 				continue
 			}
@@ -77,7 +79,7 @@ func ParseVars(ctx context.Context, block *hclsyntax.Block, localVar *hclsyntax.
 	})
 	if localVar != nil {
 		// ordered last
-		val, diag := localVar.Expr.Value(evalCtx)
+		val, diag := dataspec.DecodeAttr(nil, localVar, evalCtx)
 		if !diags.Extend(diag) {
 			vars = append(vars, &definitions.Variable{
 				Name:      definitions.LocalVarName,
