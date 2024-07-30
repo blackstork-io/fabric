@@ -1,4 +1,3 @@
-//nolint:gosec // This is an internal tool
 package main
 
 import (

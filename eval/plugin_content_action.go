@@ -33,7 +33,6 @@ func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx pl
 	if diags.Extend(diag) {
 		return
 	}
-	// re-evaluate using this
 	diags.Extend(dataspec.EvalBlock(ctx, action.Args, dataCtx))
 	if diags.HasErrors() {
 		return

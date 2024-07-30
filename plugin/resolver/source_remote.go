@@ -362,21 +362,12 @@ func (source RemoteSource) download(ctx context.Context, name Name, version Vers
 			return
 		}
 		// if there is an error, remove extracted binary file
-		fErr := os.Remove(binaryPath)
-		if fErr != nil {
-			source.logger.Error("failed to remove binary file", "path", binaryPath, "error", fErr)
-		}
-		fErr = os.Remove(checksumPath)
-		if fErr != nil {
-			source.logger.Error("failed to remove checksum file", "path", checksumPath, "error", fErr)
-		}
+		os.Remove(binaryPath)
+		os.Remove(checksumPath)
 		// remove directory if it is empty
 		entries, err := os.ReadDir(filepath.Dir(binaryPath))
 		if err == nil && len(entries) == 0 {
-			fErr = os.Remove(filepath.Dir(binaryPath))
-			if fErr != nil {
-				source.logger.Error("failed to remove directory", "path", filepath.Dir(binaryPath), "error", fErr)
-			}
+			os.Remove(filepath.Dir(binaryPath))
 		}
 	}()
 	// read remaining data from the response body to verify the checksum of the downloaded archive

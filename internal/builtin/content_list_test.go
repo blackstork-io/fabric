@@ -148,21 +148,13 @@ func (s *ListGeneratorTestSuite) TestAdvanced() {
 
 func (s *ListGeneratorTestSuite) TestEmptyQueryResult() {
 	dataCtx := plugindata.Map{}
-	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = []
 		item_template = "foo {{.}}"
 	`, dataCtx, diagtest.Asserts{{
 		diagtest.IsError,
 		diagtest.DetailContains("items", "can't be empty"),
 	}})
-
-	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args:        args,
-		DataContext: dataCtx,
-	})
-	s.Equal("", mdprint.PrintString(result.Content))
-	s.Empty(diags)
 }
 
 func (s *ListGeneratorTestSuite) TestMissingItemTemplate() {

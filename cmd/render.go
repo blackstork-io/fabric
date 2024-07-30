@@ -107,6 +107,7 @@ var renderCmd = &cobra.Command{
 		printer = print.WithLogging(printer, slog.Default(), slog.String("format", format))
 		printer = print.WithTracing(printer, tracer, attribute.String("format", format))
 		err = printer.Print(ctx, os.Stdout, content)
+
 		if err != nil {
 			diags.AppendErr(err, "Error while printing")
 		}

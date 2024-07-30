@@ -21,13 +21,13 @@ var detector = circularRefDetector{
 // Adds pointer to circular reference detection.
 // refRange is optional.
 func Add[T any](ptr *T, refRange *hcl.Range) {
-	//nolint:gosec // We are just using pointers as unique type-erased ids, not accessing the data.
+	//nolint:gosec // We are just using pointers as unique ids, not accessing the data.
 	detector.add(unsafe.Pointer(ptr), refRange)
 }
 
 // Checks if the passed in ptr was added previously.
 func Check[T any](ptr *T) bool {
-	//nolint:gosec // We are just using pointers as unique type-erased ids, not accessing the data.
+	//nolint:gosec // We are just using pointers as unique ids, not accessing the data.
 	return detector.check(unsafe.Pointer(ptr))
 }
 
@@ -35,7 +35,7 @@ func Check[T any](ptr *T) bool {
 // appends the backtrace to the diagnostic marked by ExtraMarker
 // (if it exists).
 func Remove[T any](ptr *T, diags *diagnostics.Diag) {
-	//nolint:gosec // We are just using pointers as unique type-erased ids, not accessing the data.
+	//nolint:gosec // We are just using pointers as unique ids, not accessing the data.
 	detector.remove(unsafe.Pointer(ptr), diags)
 }
 

@@ -11,7 +11,6 @@ import (
 
 func ParseCSVContent(ctx context.Context, reader *csv.Reader) (plugindata.List, error) {
 	rowMaps := make(plugindata.List, 0)
-
 	headers, err := reader.Read()
 	if err == io.EOF {
 		return rowMaps, nil

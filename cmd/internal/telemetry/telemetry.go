@@ -89,7 +89,7 @@ func SetupOtelp(ctx context.Context, otelpURL, version string) (shutdown func(co
 }
 
 func createReportDir(dir string) (string, error) {
-	err := os.MkdirAll(dir, 0o750)
+	err := os.MkdirAll(dir, 0o755)
 	if err != nil {
 		return "", err
 	}
@@ -102,7 +102,7 @@ func createReportDir(dir string) (string, error) {
 			path += "_" + strconv.Itoa(i)
 		}
 		if _, err := os.Stat(path); os.IsNotExist(err) {
-			err := os.Mkdir(path, 0o750)
+			err := os.Mkdir(path, 0o755)
 			if err != nil {
 				return "", err
 			}
