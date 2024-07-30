@@ -2,26 +2,27 @@ package diagnostics
 
 import "github.com/hashicorp/hcl/v2"
 
-
 type extraList []any
 
 func getExtra[T any](extra any) (_ T, _ bool) {
 	for extra != nil {
-		switch extraT := extra.(type) {
-		case extraList:
-			for _, extra := range extraT {
+		if list, ok := extra.(extraList); ok {
+			for _, extra := range list {
 				val, found := getExtra[T](extra)
 				if found {
 					return val, found
 				}
 			}
-		case T:
-			return extraT, true
-		case hcl.DiagnosticExtraUnwrapper:
-			extra = extraT.UnwrapDiagnosticExtra()
+			return
+		}
+		if val, ok := extra.(T); ok {
+			return val, true
+		}
+		if val, ok := extra.(hcl.DiagnosticExtraUnwrapper); ok {
+			extra = val.UnwrapDiagnosticExtra()
 			continue
 		}
-		break
+		return
 	}
 	return
 }

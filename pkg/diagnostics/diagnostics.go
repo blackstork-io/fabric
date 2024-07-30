@@ -103,14 +103,13 @@ func FromErr(err error, refiners ...Refiner) (diags Diag) {
 	case errors.As(err, &diags):
 	case errors.As(err, &hclDiags):
 		diags = Diag(hclDiags)
-	default:
-		diag = &hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Detail:   err.Error(),
-		}
-		fallthrough
 	case errors.As(err, &diag):
 		diags = Diag{diag}
+	default:
+		diags = Diag{{
+			Severity: hcl.DiagError,
+			Detail:   err.Error(),
+		}}
 	}
 	var pathErr cty.PathError
 	if errors.As(err, &pathErr) {

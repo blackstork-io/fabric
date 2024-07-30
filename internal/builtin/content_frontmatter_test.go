@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/stretchr/testify/suite"
@@ -14,7 +13,6 @@ import (
 	"github.com/zclconf/go-cty/cty/gocty"
 	"gopkg.in/yaml.v3"
 
-	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
@@ -116,24 +114,10 @@ func (s *FrontMatterGeneratorTestSuite) TestContentAndQueryResultMissing() {
 	val := cty.ObjectVal(map[string]cty.Value{
 		"content": cty.NullVal(cty.DynamicPseudoType),
 	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, nil)
-
-	ctx := context.Background()
-	document := plugin.ContentSection{}
-	content, diags := s.schema.ProvideContent(ctx, "frontmatter", &plugin.ProvideContentParams{
-		Args: args,
-		DataContext: plugindata.Map{
-			"document": plugindata.Map{
-				"content": document.AsData(),
-			},
-		},
-	})
-	s.Nil(content)
-	s.Equal(diagnostics.Diag{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "Content is nil",
-	}}, diags)
+	plugintest.ReencodeCTY(s.T(), s.schema.ContentProviders["frontmatter"].Args, val, diagtest.Asserts{{
+		diagtest.IsError,
+		diagtest.DetailContains(`content`, `is null`),
+	}})
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestInvalidQueryResult() {
@@ -158,7 +142,7 @@ func (s *FrontMatterGeneratorTestSuite) TestInvalidQueryResult() {
 
 	diagtest.Asserts{{
 		diagtest.IsError,
-		diagtest.DetailContains("invalid", "plugin.StringData"),
+		diagtest.DetailContains("invalid", "data type"),
 	}}.AssertMatch(s.T(), diags, nil)
 }
 

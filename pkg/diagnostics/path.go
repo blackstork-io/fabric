@@ -22,7 +22,8 @@ func (p *PathExtra) Refine(diags Diag) {
 			}
 			continue
 		}
-		addExtraFunc(d, &*p)
+		pathCopy := *p
+		addExtraFunc(d, &pathCopy)
 	}
 }
 

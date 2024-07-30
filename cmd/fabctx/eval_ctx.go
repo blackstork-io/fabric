@@ -86,6 +86,6 @@ func GetEvalContext(ctx context.Context) *hcl.EvalContext {
 	return baseEvalContext
 }
 
-func WithEvalContext(ctx context.Context, evalCtxKey *hcl.EvalContext) context.Context {
-	return context.WithValue(ctx, evalCtxKey, evalCtxKey)
+func WithEvalContext(ctx context.Context, evalCtx *hcl.EvalContext) context.Context {
+	return context.WithValue(ctx, evalCtxKey, evalCtx)
 }

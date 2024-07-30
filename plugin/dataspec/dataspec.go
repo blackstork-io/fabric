@@ -18,8 +18,6 @@ func RenderDoc(spec *RootSpec, blockName string, labels ...string) string {
 	// Special-casing the first line generation:
 	// config "data" "csv" { -> config data csv {
 
-	const placeholder = "P"
-
 	if strings.Contains(blockName, " ") {
 		return "<error: block name contains spaces>"
 	}

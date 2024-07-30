@@ -47,14 +47,6 @@ func makePostgreSQLDataSource() *plugin.DataSource {
 	}
 }
 
-func parseSqliteConfig(cfg cty.Value) (string, error) {
-	dbURL := cfg.GetAttr("database_url")
-	if dbURL.IsNull() || dbURL.AsString() == "" {
-		return "", fmt.Errorf("database_url is required")
-	}
-	return dbURL.AsString(), nil
-}
-
 func parseSqliteArgs(args *dataspec.Block) (string, []any, error) {
 	sqlQuery := args.GetAttrVal("sql_query")
 	if sqlQuery.IsNull() || sqlQuery.AsString() == "" {

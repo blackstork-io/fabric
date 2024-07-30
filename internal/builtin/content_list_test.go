@@ -4,10 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
@@ -37,40 +35,23 @@ func (s *ListGeneratorTestSuite) TestSchema() {
 
 func (s *ListGeneratorTestSuite) TestNilQueryResult() {
 	dataCtx := plugindata.Map{}
-	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = null
-	`, dataCtx, diagtest.Asserts{})
-
-	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args:        args,
-		DataContext: dataCtx,
-	})
-	s.Nil(result)
-	s.Equal(diagnostics.Diag{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "Data is nil",
-	}}, diags)
+	`, dataCtx, diagtest.Asserts{{
+		diagtest.IsError,
+		diagtest.SummaryContains("Attribute", "non-null"),
+	}})
 }
 
 func (s *ListGeneratorTestSuite) TestNonArrayQueryResult() {
 	dataCtx := plugindata.Map{}
-	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = "not_an_array"
-	`, dataCtx, diagtest.Asserts{})
-
-	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args:        args,
-		DataContext: dataCtx,
-	})
-	s.Nil(result)
-	s.Equal(diagnostics.Diag{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "Data must be a list",
-	}}, diags)
+	`, dataCtx, diagtest.Asserts{{
+		diagtest.IsError,
+		diagtest.SummaryContains("Incorrect", "type"),
+		diagtest.DetailContains("list of jq queriable required"),
+	}})
 }
 
 func (s *ListGeneratorTestSuite) TestUnordered() {
@@ -170,7 +151,10 @@ func (s *ListGeneratorTestSuite) TestEmptyQueryResult() {
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = []
 		item_template = "foo {{.}}"
-	`, dataCtx, diagtest.Asserts{})
+	`, dataCtx, diagtest.Asserts{{
+		diagtest.IsError,
+		diagtest.DetailContains("items", "can't be empty"),
+	}})
 
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
