@@ -4,7 +4,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/blackstork-io/fabric/internal/builtin"
@@ -112,11 +111,4 @@ func validatePublisher(t testing.TB, pub *plugin.Publisher) {
 	if pub.Config != nil {
 		diagtest.AssertNoErrors(t, pub.Config.ValidateSpec(), nil, "publisher config validation errors")
 	}
-}
-
-func validateAttrSpec(t testing.TB, key string, spec *hcldec.AttrSpec) {
-	t.Helper()
-	assert.Equal(t, key, spec.Name, "argument name should match")
-	assert.NotEmpty(t, spec.Name, "argument name should not be empty")
-	assert.NotEmpty(t, spec.Type, "argument type should not be empty")
 }

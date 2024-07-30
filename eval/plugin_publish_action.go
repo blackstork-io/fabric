@@ -64,19 +64,19 @@ func LoadPluginPublishAction(ctx context.Context, publishers Publishers, node *d
 	// XXX: So format is optional? Not including format in invocation doesn't validate it
 	// anyway, this would change with the new AST
 	if attr, found := utils.Pop(node.Invocation.Body.Attributes, "format"); found {
-		val, diag := dataspec.DecodeAttr(&dataspec.AttrSpec{
+		val, diag := dataspec.DecodeAttr(fabctx.GetEvalContext(ctx), attr, &dataspec.AttrSpec{
 			Name:        "format",
 			Type:        cty.String,
 			Constraints: constraint.RequiredMeaningful,
 			OneOf: constraint.OneOf(utils.FnMap(p.AllowedFormats, func(f plugin.OutputFormat) cty.Value {
 				return cty.StringVal(f.String())
 			})),
-		}, attr, fabctx.GetEvalContext(ctx))
+		})
 
 		if diags.Extend(diag) {
 			return
 		}
-		formatStr := val.AsString()
+		formatStr := val.Value.AsString()
 		switch formatStr {
 		case plugin.OutputFormatMD.String():
 			format = plugin.OutputFormatMD
@@ -95,7 +95,7 @@ func LoadPluginPublishAction(ctx context.Context, publishers Publishers, node *d
 		}
 	}
 
-	args, diag := dataspec.DecodeAndEvalBlock(ctx, node.Invocation.Block, p.Args)
+	args, diag := dataspec.DecodeAndEvalBlock(ctx, node.Invocation.Block, p.Args, nil)
 	if diags.Extend(diag) {
 		return nil, diags
 	}

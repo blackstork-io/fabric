@@ -45,10 +45,6 @@ func (a *AttrSpec) computeMinInclusive() cty.Value {
 	return a.MinInclusive
 }
 
-func (a *AttrSpec) KeyForObjectSpec() string {
-	return a.Name
-}
-
 func formatType(buf *strings.Builder, t cty.Type) {
 	if t.IsTupleType() {
 		buf.WriteString("[")

@@ -13,7 +13,6 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/spf13/pflag"
 
 	"github.com/blackstork-io/fabric/internal/builtin"
@@ -399,20 +398,10 @@ func shortname(name string) string {
 	return name
 }
 
-func templateAttrTypeFunc(val hcldec.Spec) string {
-	switch v := val.(type) {
-	case *hcldec.AttrSpec:
-		return v.Type.FriendlyName()
-	default:
-		return "unknown"
-	}
-}
-
 func init() {
 	base = template.Must(template.New("content-provider").
 		Funcs(sprig.FuncMap()).
 		Funcs(template.FuncMap{
-			"attrType":  templateAttrTypeFunc,
 			"shortname": shortname,
 			"renderDoc": dataspec.RenderDoc,
 			"formatTags": (func(data []string) (string, error) {

@@ -58,11 +58,10 @@ func DecodeAndAssert(t *testing.T, spec *dataspec.RootSpec, body string, dataCtx
 	fm = map[string]*hcl.File{
 		filename: f,
 	}
-	val, dgs := dataspec.DecodeBlock(context.Background(), f.Body.(*hclsyntax.Body).Blocks[0], spec)
+	val, dgs := dataspec.DecodeAndEvalBlock(context.Background(), f.Body.(*hclsyntax.Body).Blocks[0], spec, dataCtx)
 	if diags.Extend(dgs) {
 		return
 	}
-	diags.Extend(dataspec.EvalBlock(context.Background(), val, dataCtx))
 	return
 }
 
@@ -76,7 +75,7 @@ func Decode(t *testing.T, spec *dataspec.RootSpec, body string) (v *dataspec.Blo
 		return
 	}
 
-	v, diag := dataspec.DecodeAndEvalBlock(context.Background(), f.Body.(*hclsyntax.Body).Blocks[0], spec)
+	v, diag := dataspec.DecodeAndEvalBlock(context.Background(), f.Body.(*hclsyntax.Body).Blocks[0], spec, nil)
 	diags.Extend(diag)
 	return
 }

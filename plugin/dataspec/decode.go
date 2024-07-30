@@ -20,11 +20,17 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-func EvaluateDeferred(ctx context.Context, dataCtx plugindata.Map, val cty.Value) (cty.Value, diagnostics.Diag) {
-	return (&transformer{
+// EvaluateDeferred evaluates deferred values in the given attribute.
+func EvaluateDeferred(ctx context.Context, dataCtx plugindata.Map, val *Attr) (res cty.Value, diags diagnostics.Diag) {
+	if val == nil {
+		return
+	}
+	res, diags = (&transformer{
 		ctx:     ctx,
 		dataCtx: dataCtx,
-	}).transform(val)
+	}).transform(val.Value)
+	diags.Refine(diagnostics.DefaultSubject(val.ValueRange))
+	return
 }
 
 type transformer struct {
@@ -166,19 +172,20 @@ func (t *transformer) transform(val cty.Value) (_ cty.Value, diags diagnostics.D
 // Decodes hclsyntax.Block into a Block according to the given RootSpec.
 // Basic validation is performed on the keys, values of attributes are not fully defined until deferred evaluation,
 // so they are not type-checked in the resulting block.
+// This function's result is expected to be processed later with EvalBlock to resolve the deferred values and validate everything.
 func DecodeBlock(ctx context.Context, block *hclsyntax.Block, rootSpec *RootSpec) (res *Block, diags diagnostics.Diag) {
 	return decodeBlock(block, rootSpec.BlockSpec(), fabctx.GetEvalContext(ctx))
 }
 
 // Decodes hclsyntax.Block into a Block according to the given RootSpec.
-// Deferred evaluation is not allowed
-func DecodeAndEvalBlock(ctx context.Context, block *hclsyntax.Block, rootSpec *RootSpec) (res *Block, diags diagnostics.Diag) {
+// Deferred evaluation is performed immediatly.
+func DecodeAndEvalBlock(ctx context.Context, block *hclsyntax.Block, rootSpec *RootSpec, dataCtx plugindata.Map) (res *Block, diags diagnostics.Diag) {
 	res, diags = decodeBlock(block, rootSpec.BlockSpec(), fabctx.GetEvalContext(ctx))
 	if diags.HasErrors() {
 		res = nil
 		return
 	}
-	diags.Extend(EvalBlock(ctx, res, nil))
+	diags.Extend(EvalBlock(ctx, res, dataCtx))
 	if diags.HasErrors() {
 		res = nil
 		return
@@ -186,6 +193,7 @@ func DecodeAndEvalBlock(ctx context.Context, block *hclsyntax.Block, rootSpec *R
 	return
 }
 
+// EvalBlock evaluates deferred values in the given block and validates the attributes.
 func EvalBlock(ctx context.Context, block *Block, dataCtx plugindata.Map) (diags diagnostics.Diag) {
 	if block == nil {
 		return
@@ -196,8 +204,8 @@ func EvalBlock(ctx context.Context, block *Block, dataCtx plugindata.Map) (diags
 	for _, attr := range block.Attrs {
 		// deferred eval transform
 		var diag diagnostics.Diag
-		attr.Value, diag = EvaluateDeferred(ctx, dataCtx, attr.Value)
-		if diags.Extend(diag.Refine(diagnostics.DefaultSubject(attr.ValueRange))) {
+		attr.Value, diag = EvaluateDeferred(ctx, dataCtx, attr)
+		if diags.Extend(diag) {
 			continue
 		}
 		if attr.spec == nil {
@@ -355,20 +363,11 @@ nextBlock:
 				Context:  &attr.SrcRange,
 			})
 		}
-		val, diag := DecodeAttr(spec, attr, ctx)
-
-		if diags.Extend(diag.Refine(diagnostics.DefaultSubject(attr.Expr.Range()))) {
+		decAttr, diag := DecodeAttr(ctx, attr, spec)
+		if diags.Extend(diag) {
 			continue
 		}
-
-		res.Attrs[spec.Name] = &Attr{
-			Name:       spec.Name,
-			NameRange:  attr.NameRange,
-			Value:      val,
-			ValueRange: attr.Expr.Range(),
-			Secret:     spec.Secret,
-			spec:       spec,
-		}
+		res.Attrs[spec.Name] = decAttr
 	}
 	for name, attr := range attrs {
 		if !blockSpec.AllowUnspecifiedAttributes {
@@ -384,30 +383,79 @@ nextBlock:
 			})
 			continue
 		}
-		val, diag := attr.Expr.Value(ctx)
-		if !diags.Extend(diag) {
-			res.Attrs[name] = &Attr{
-				Name:       name,
-				NameRange:  attr.NameRange,
-				Value:      val,
-				ValueRange: attr.Expr.Range(),
-			}
+		decAttr, diag := DecodeAttr(ctx, attr, nil)
+		if diags.Extend(diag) {
+			continue
 		}
+		res.Attrs[name] = decAttr
 	}
 	return
 }
 
-func DecodeAttr(spec *AttrSpec, attr *hclsyntax.Attribute, ctx *hcl.EvalContext) (val cty.Value, diags diagnostics.Diag) {
-	var decodeFn customdecode.CustomExpressionDecoderFunc
+// Decodes hclsyntax.Attribute into a cty.Value according to the given AttrSpec.
+// No validation is performed on the value.
+func DecodeAttr(ctx *hcl.EvalContext, attr *hclsyntax.Attribute, spec *AttrSpec) (val *Attr, diags diagnostics.Diag) {
+	var (
+		decodeFn customdecode.CustomExpressionDecoderFunc
+		value    cty.Value
+		diag     hcl.Diagnostics
+		secret   bool
+	)
 	if spec != nil {
 		decodeFn = customdecode.CustomExpressionDecoderForType(spec.Type)
+		secret = spec.Secret
 	}
-	var diag hcl.Diagnostics
 	if decodeFn != nil {
-		val, diag = decodeFn(attr.Expr, ctx)
+		value, diag = decodeFn(attr.Expr, ctx)
 	} else {
-		val, diag = attr.Expr.Value(ctx)
+		value, diag = attr.Expr.Value(ctx)
+	}
+	diags = diagnostics.Diag(diag).Refine(diagnostics.DefaultSubject(attr.Expr.Range()))
+	if diags.HasErrors() {
+		return
+	}
+	val = &Attr{
+		Name:       attr.Name,
+		NameRange:  attr.NameRange,
+		Value:      value,
+		ValueRange: attr.Expr.Range(),
+		Secret:     secret,
+		spec:       spec,
 	}
 
-	return val, diagnostics.Diag(diag).Refine(diagnostics.DefaultSubject(attr.Expr.Range()))
+	return
+}
+
+// EvalAttr evaluates deferred values in the given attribute and validates it.
+func EvalAttr(ctx context.Context, attr *Attr, dataCtx plugindata.Map) (val cty.Value, diags diagnostics.Diag) {
+	val, diag := EvaluateDeferred(ctx, dataCtx, attr)
+	if diags.Extend(diag) {
+		return
+	}
+	if attr.spec == nil {
+		return // can't convert or validate further
+	}
+	// convert
+	var err error
+	val, err = convert.Convert(val, attr.spec.Type)
+	if err != nil {
+		diags.Extend(diagnostics.FromErr(
+			err,
+			diagnostics.DefaultSummary("Incorrect attribute value type"),
+			diagnostics.DefaultSubject(attr.ValueRange),
+		))
+		return
+	}
+	if attr.spec.Constraints.Is(constraint.TrimSpace) {
+		val = trimSpace(val)
+	}
+	diags.Extend(attr.spec.ValidateValue(val).Refine(diagnostics.DefaultSubject(attr.ValueRange)))
+	return
+}
+
+// DecodeAndEvalAttr decodes hclsyntax.Attribute into a Attr according to the given AttrSpec and evaluates it.
+func DecodeAndEvalAttr(ctx context.Context, hclAttr *hclsyntax.Attribute, spec *AttrSpec, dataCtx plugindata.Map) (attr *Attr, diags diagnostics.Diag) {
+	evalCtx := fabctx.GetEvalContext(ctx)
+	attr, diags = DecodeAttr(evalCtx, hclAttr, spec)
+	return
 }

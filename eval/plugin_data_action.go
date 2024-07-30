@@ -57,7 +57,7 @@ func LoadDataAction(ctx context.Context, sources DataSources, node *definitions.
 			Context: node.Invocation.Range().Ptr(),
 		})
 	}
-	args, diag := dataspec.DecodeAndEvalBlock(ctx, node.Invocation.Block, ds.Args)
+	args, diag := dataspec.DecodeAndEvalBlock(ctx, node.Invocation.Block, ds.Args, nil)
 	if diags.Extend(diag) {
 		return nil, diags
 	}

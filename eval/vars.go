@@ -4,9 +4,6 @@ import (
 	"context"
 	"maps"
 
-	"github.com/zclconf/go-cty/cty"
-	"github.com/zclconf/go-cty/cty/convert"
-
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -30,25 +27,21 @@ func ApplyVars(ctx context.Context, variables *definitions.ParsedVars, dataCtx p
 	dataCtx["vars"] = vars
 	var diag diagnostics.Diag
 	for _, variable := range variables.Variables {
-		vars[variable.Name], diag = evalVar(ctx, dataCtx, variable.Val)
+		vars[variable.Name], diag = evalVar(ctx, dataCtx, variable)
 		diags.Extend(diag.Refine(
-			diagnostics.DefaultSubject(variable.ValRange),
+			diagnostics.DefaultSubject(variable.ValueRange),
 		))
 	}
 
 	return
 }
 
-func evalVar(ctx context.Context, dataCtx plugindata.Map, val cty.Value) (data plugindata.Data, diags diagnostics.Diag) {
-	val, diags = dataspec.EvaluateDeferred(ctx, dataCtx, val)
+func evalVar(ctx context.Context, dataCtx plugindata.Map, attr *dataspec.Attr) (data plugindata.Data, diags diagnostics.Diag) {
+	val, diags := dataspec.EvalAttr(ctx, attr, dataCtx)
 	if diags.HasErrors() {
 		return
 	}
-	v, err := convert.Convert(val, plugindata.Encapsulated.CtyType())
-	if diags.AppendErr(err, "Failed to convert variable value") {
-		return
-	}
-	dataVal, err := plugindata.Encapsulated.FromCty(v)
+	dataVal, err := plugindata.Encapsulated.FromCty(val)
 	if diags.AppendErr(err, "Failed to convert variable value") {
 		return
 	}

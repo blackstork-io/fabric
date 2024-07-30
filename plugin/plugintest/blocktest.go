@@ -151,11 +151,8 @@ func (td *TestDecoder) decode() (val *dataspec.Block, fm map[string]*hcl.File, d
 	if td.evalCtx == nil {
 		td.evalCtx = fabctx.GetEvalContext(td.ctx)
 	}
-	val, dgs := dataspec.DecodeBlock(td.ctx, f.Body.(*hclsyntax.Body).Blocks[0], td.spec)
+	val, dgs := dataspec.DecodeAndEvalBlock(td.ctx, f.Body.(*hclsyntax.Body).Blocks[0], td.spec, td.dataCtx)
 	if diags.Extend(dgs) {
-		return
-	}
-	if diags.Extend(dataspec.EvalBlock(td.ctx, val, td.dataCtx)) {
 		return
 	}
 	return

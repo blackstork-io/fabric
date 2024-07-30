@@ -31,7 +31,7 @@ var _ evaluation.Configuration = (*Config)(nil)
 func (c *Config) ParseConfig(ctx context.Context, spec *dataspec.RootSpec) (val *dataspec.Block, diags diagnostics.Diag) {
 	c.once.Do(func() {
 		var diag diagnostics.Diag
-		c.value, diag = dataspec.DecodeAndEvalBlock(ctx, c.Block, spec)
+		c.value, diag = dataspec.DecodeAndEvalBlock(ctx, c.Block, spec, nil)
 		if diags.Extend(diag) {
 			// don't let partially-decoded values live
 			c.value = nil

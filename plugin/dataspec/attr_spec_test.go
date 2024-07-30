@@ -721,7 +721,7 @@ func TestValidation(t *testing.T) {
 				}
 			}
 
-			objVal, diag := dataspec.DecodeAndEvalBlock(context.Background(), block, &spec)
+			objVal, diag := dataspec.DecodeAndEvalBlock(context.Background(), block, &spec, nil)
 			diags.Extend(diag)
 			tc.asserts.AssertMatch(t, diags, nil)
 			if diags.HasErrors() {

@@ -4,23 +4,15 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/hashicorp/hcl/v2"
-	"github.com/zclconf/go-cty/cty"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 const LocalVarName = "local"
 
 type ParsedVars struct {
 	// stored in the order of definition
-	Variables []*Variable
+	Variables []*dataspec.Attr
 	ByName    map[string]int
-}
-
-type Variable struct {
-	Name      string
-	NameRange hcl.Range
-	Val       cty.Value
-	ValRange  hcl.Range
 }
 
 func (pv *ParsedVars) Empty() bool {
@@ -55,7 +47,7 @@ func (pv *ParsedVars) MergeWithBaseVars(baseVars *ParsedVars) *ParsedVars {
 }
 
 // AppendVar append a variable to the parsed vars struct (last in evaluation order).
-func (pv *ParsedVars) AppendVar(variable *Variable) {
+func (pv *ParsedVars) AppendVar(variable *dataspec.Attr) {
 	idx := len(pv.Variables)
 	pv.Variables = append(pv.Variables, variable)
 	if idx == 0 {

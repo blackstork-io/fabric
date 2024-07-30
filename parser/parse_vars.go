@@ -12,7 +12,13 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/deferred"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
+
+var varsSpec = &dataspec.AttrSpec{
+	Name: "vars",
+	Type: plugindata.Encapsulated.CtyType(),
+}
 
 func ParseVars(ctx context.Context, block *hclsyntax.Block, localVar *hclsyntax.Attribute) (parsed *definitions.ParsedVars, diags diagnostics.Diag) {
 	if block == nil && localVar == nil {
@@ -53,40 +59,30 @@ func ParseVars(ctx context.Context, block *hclsyntax.Block, localVar *hclsyntax.
 	}
 
 	if localVar != nil {
+		localVar.Name = "local"
 		varCount++
 	}
 	ctx = deferred.WithQueryFuncs(ctx)
 	evalCtx := fabctx.GetEvalContext(ctx)
-	vars := make([]*definitions.Variable, 0, varCount)
+	vars := make([]*dataspec.Attr, 0, varCount)
 
 	if block != nil {
 		for _, attr := range block.Body.Attributes {
-			val, diag := dataspec.DecodeAttr(nil, attr, evalCtx)
-			if diags.Extend(diag) {
-				continue
+			val, diag := dataspec.DecodeAttr(evalCtx, attr, varsSpec)
+			if !diags.Extend(diag) {
+				vars = append(vars, val)
 			}
-			vars = append(vars, &definitions.Variable{
-				Name:      attr.Name,
-				NameRange: attr.NameRange,
-				Val:       val,
-				ValRange:  attr.Expr.Range(),
-			})
 		}
 	}
 	// ordered by definition
-	slices.SortFunc(vars, func(a, b *definitions.Variable) int {
+	slices.SortFunc(vars, func(a, b *dataspec.Attr) int {
 		return a.NameRange.Start.Byte - b.NameRange.Start.Byte
 	})
 	if localVar != nil {
 		// ordered last
-		val, diag := dataspec.DecodeAttr(nil, localVar, evalCtx)
+		val, diag := dataspec.DecodeAttr(evalCtx, localVar, varsSpec)
 		if !diags.Extend(diag) {
-			vars = append(vars, &definitions.Variable{
-				Name:      definitions.LocalVarName,
-				NameRange: localVar.NameRange,
-				Val:       val,
-				ValRange:  localVar.Expr.Range(),
-			})
+			vars = append(vars, val)
 		}
 	}
 	byName := make(map[string]int, len(vars))
