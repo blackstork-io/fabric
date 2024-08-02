@@ -22,6 +22,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/hackerone"
 	"github.com/blackstork-io/fabric/internal/microsoft"
 	"github.com/blackstork-io/fabric/internal/nistnvd"
+	"github.com/blackstork-io/fabric/internal/notion"
 	"github.com/blackstork-io/fabric/internal/openai"
 	"github.com/blackstork-io/fabric/internal/opencti"
 	"github.com/blackstork-io/fabric/internal/postgresql"
@@ -311,6 +312,7 @@ func main() {
 		nistnvd.Plugin(version, nil),
 		snyk.Plugin(version, nil),
 		microsoft.Plugin(version, nil),
+		notion.Plugin(version, nil, nil),
 	}
 	// generate markdown for each plugin
 	for _, p := range plugins {
