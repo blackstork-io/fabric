@@ -3,7 +3,6 @@ package github
 import (
 	"bytes"
 	"context"
-	"io"
 	"log/slog"
 
 	gh "github.com/google/go-github/v58/github"
@@ -75,7 +74,7 @@ func parseContent(data plugin.MapData) (document *plugin.ContentSection) {
 
 func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 	// TODO: confirm if to be passed from the caller
-	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	logger := slog.Default()
 	tracer := nooptrace.Tracer{}
 	return func(ctx context.Context, params *plugin.PublishParams) diagnostics.Diag {
 		document := parseContent(params.DataContext)
