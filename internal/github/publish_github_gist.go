@@ -42,8 +42,9 @@ func makeGithubGistPublisher(loader ClientLoaderFn) *plugin.Publisher {
 				Type: cty.String,
 			},
 			&dataspec.AttrSpec{
-				Name: "make_public",
-				Type: cty.Bool,
+				Name:       "make_public",
+				Type:       cty.Bool,
+				DefaultVal: cty.False,
 			},
 			&dataspec.AttrSpec{
 				Name: "gist_id",
@@ -120,7 +121,7 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 			fileName = filenameAttr.AsString()
 		}
 		payload := &gh.Gist{
-			Public: gh.Bool(false),
+			Public: gh.Bool(params.Args.GetAttr("make_public").True()),
 			Files: map[gh.GistFilename]gh.GistFile{
 				gh.GistFilename(fileName): {
 					Content:  gh.String(buff.String()),
@@ -132,10 +133,6 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 		descriptionAttr := params.Args.GetAttr("description")
 		if !descriptionAttr.IsNull() && descriptionAttr.AsString() != "" {
 			payload.Description = gh.String(descriptionAttr.AsString())
-		}
-		makePublicAttr := params.Args.GetAttr("make_public")
-		if !makePublicAttr.IsNull() {
-			payload.Public = gh.Bool(makePublicAttr.True())
 		}
 		slog.InfoContext(ctx, "Publish to github gist", "filename", fileName)
 		gistId := params.Args.GetAttr("gist_id")
