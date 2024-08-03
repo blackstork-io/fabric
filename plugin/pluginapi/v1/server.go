@@ -131,10 +131,11 @@ func (srv *grpcServer) Publish(ctx context.Context, req *PublishRequest) (*Publi
 	datactx := decodeMapData(req.GetDataContext().GetValue())
 	format := decodeOutputFormat(req.GetFormat())
 	diags := srv.schema.Publish(ctx, publisher, &plugin.PublishParams{
-		Config:      cfg,
-		Args:        args,
-		DataContext: datactx,
-		Format:      format,
+		Config:       cfg,
+		Args:         args,
+		DataContext:  datactx,
+		Format:       format,
+		DocumentName: req.GetDocumentName(),
 	})
 	return &PublishResponse{
 		Diagnostics: encodeDiagnosticList(diags),

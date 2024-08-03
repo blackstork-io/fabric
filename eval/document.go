@@ -110,7 +110,7 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugin.MapDat
 	return result, docDataCtx, diags
 }
 
-func (doc *Document) Publish(ctx context.Context, content plugin.Content, data plugin.Data) diagnostics.Diag {
+func (doc *Document) Publish(ctx context.Context, content plugin.Content, data plugin.Data, documentName string) diagnostics.Diag {
 	logger := *slog.Default()
 	logger.DebugContext(ctx, "Fetching data for the document template")
 	docData := plugin.MapData{
@@ -125,7 +125,7 @@ func (doc *Document) Publish(ctx context.Context, content plugin.Content, data p
 	}
 	var diags diagnostics.Diag
 	for _, block := range doc.PublishBlocks {
-		diag := block.Publish(ctx, dataCtx)
+		diag := block.Publish(ctx, dataCtx, documentName)
 		if diag != nil {
 			diags.Extend(diag)
 		}

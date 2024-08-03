@@ -97,6 +97,7 @@ func (s *GithubPublishGistTestSuite) TestBasic() {
 				},
 			},
 		},
+		DocumentName: "test_doc",
 	})
 	s.Require().Nil(diags)
 }
@@ -107,9 +108,9 @@ func (s *GithubPublishGistTestSuite) TestFilenameOptional() {
 		Description: gh.String("test description"),
 		Public:      gh.Bool(false),
 		Files: map[gh.GistFilename]gh.GistFile{
-			"test_document.md": {
+			"test_doc.md": {
 				Content:  gh.String("# Header 1\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit."),
-				Filename: gh.String("test_document.md"),
+				Filename: gh.String("test_doc.md"),
 			},
 		},
 	}).Return(&gh.Gist{HTMLURL: gh.String("http://gist.github.com/mock")}, &gh.Response{}, nil)
@@ -150,6 +151,7 @@ func (s *GithubPublishGistTestSuite) TestFilenameOptional() {
 				},
 			},
 		},
+		DocumentName: "test_doc",
 	})
 	s.Require().Nil(diags)
 }
@@ -169,9 +171,9 @@ func (s *GithubPublishGistTestSuite) TestResetOldFiles() {
 		Public:      gh.Bool(false),
 		Files: map[gh.GistFilename]gh.GistFile{
 			"oldfile.md": {},
-			"test_document.md": {
+			"test_doc.md": {
 				Content:  gh.String("# Header 1\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit."),
-				Filename: gh.String("test_document.md"),
+				Filename: gh.String("test_doc.md"),
 			},
 		},
 	}).Return(&gh.Gist{HTMLURL: gh.String("http://gist.github.com/mock")}, &gh.Response{}, nil)
@@ -212,6 +214,7 @@ func (s *GithubPublishGistTestSuite) TestResetOldFiles() {
 				},
 			},
 		},
+		DocumentName: "test_doc",
 	})
 	s.Require().Nil(diags)
 }

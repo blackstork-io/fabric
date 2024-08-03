@@ -39,10 +39,11 @@ func (f OutputFormat) Ext() string {
 type PublishFunc func(ctx context.Context, params *PublishParams) diagnostics.Diag
 
 type PublishParams struct {
-	Config      cty.Value
-	Args        cty.Value
-	DataContext MapData
-	Format      OutputFormat
+	DocumentName string
+	Config       cty.Value
+	Args         cty.Value
+	DataContext  MapData
+	Format       OutputFormat
 }
 
 type Publisher struct {

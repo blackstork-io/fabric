@@ -21,12 +21,13 @@ type PluginPublishAction struct {
 	Format    plugin.OutputFormat
 }
 
-func (block *PluginPublishAction) Publish(ctx context.Context, dataCtx plugin.MapData) diagnostics.Diag {
+func (block *PluginPublishAction) Publish(ctx context.Context, dataCtx plugin.MapData, documentName string) diagnostics.Diag {
 	return block.Publisher.Execute(ctx, &plugin.PublishParams{
-		Config:      block.Config,
-		Args:        block.Args,
-		DataContext: dataCtx,
-		Format:      block.Format,
+		Config:       block.Config,
+		Args:         block.Args,
+		DataContext:  dataCtx,
+		Format:       block.Format,
+		DocumentName: documentName,
 	})
 }
 

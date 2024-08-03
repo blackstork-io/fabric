@@ -47,11 +47,12 @@ message ProvideContentResponse {
 
 
 message PublishRequest {
-    string         publisher    = 1;
-    CtyValue       args         = 2;
-    CtyValue       config       = 3;
-    MapData        data_context = 4;
-    OutputFormat   format       = 5;
+    string         publisher        = 1;
+    CtyValue       args             = 2;
+    CtyValue       config           = 3;
+    MapData        data_context     = 4;
+    OutputFormat   format           = 5;
+    string         document_name    = 6;
 }
 
 message PublishResponse {

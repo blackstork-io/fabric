@@ -73,24 +73,6 @@ func parseContent(data plugin.MapData) (document *plugin.ContentSection) {
 	return
 }
 
-func parseName(data plugin.MapData) (name string) {
-	documentMap, ok := data["document"]
-	if !ok {
-		return
-	}
-	metaMap, ok := documentMap.(plugin.MapData)["meta"]
-	if !ok {
-		return
-	}
-	documentName := metaMap.(plugin.MapData)["name"]
-	docName, ok := documentName.(plugin.StringData)
-	if !ok {
-		return
-	}
-	name = string(docName)
-	return
-}
-
 func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 	// TODO: confirm if to be passed from the caller
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
@@ -133,8 +115,7 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 		}
 
 		client := loader(params.Config.GetAttr("github_token").AsString())
-
-		fileName := parseName(params.DataContext) + "." + params.Format.String()
+		fileName := params.DocumentName + "." + params.Format.String()
 		filenameAttr := params.Args.GetAttr("filename")
 		if !filenameAttr.IsNull() && filenameAttr.AsString() != "" {
 			fileName = filenameAttr.AsString()
