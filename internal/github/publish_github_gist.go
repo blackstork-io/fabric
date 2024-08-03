@@ -149,7 +149,7 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 					Detail:   err.Error(),
 				}}
 			}
-			slog.InfoContext(ctx, "created gist", "url", *gist.HTMLURL)
+			slog.InfoContext(ctx, "Created gist", "url", *gist.HTMLURL)
 		} else {
 
 			gist, _, err := client.Gists().Get(ctx, gistId.AsString())
@@ -176,7 +176,7 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 					Detail:   err.Error(),
 				}}
 			}
-			slog.InfoContext(ctx, "updated gist", "url", *gist.HTMLURL)
+			slog.InfoContext(ctx, "Updated gist", "url", *gist.HTMLURL)
 		}
 		return nil
 	}
