@@ -9,6 +9,6 @@ var version string
 
 func main() {
 	pluginapiv1.Serve(
-		microsoft.Plugin(version, microsoft.DefaultClientLoader),
+		microsoft.Plugin(version, microsoft.DefaultClientLoader, microsoft.DefaultAzureOpenAIClientLoader),
 	)
 }
