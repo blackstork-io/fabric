@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/zclconf/go-cty/cty"
-
 	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/zclconf/go-cty/cty"
+
 	"github.com/blackstork-io/fabric/internal/microsoft/client"
 	"github.com/blackstork-io/fabric/plugin"
 )
