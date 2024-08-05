@@ -19,7 +19,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
-func makeAzureOpenAITextContentSchema(loader AzureOpenAIClientLoadFn) *plugin.ContentProvider {
+func makeAzureOpenAITextContentSchema(loader AzureOpenaiClientLoadFn) *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		Config: dataspec.ObjectSpec{
 			&dataspec.AttrSpec{
@@ -75,7 +75,7 @@ func makeAzureOpenAITextContentSchema(loader AzureOpenAIClientLoadFn) *plugin.Co
 	}
 }
 
-func genOpenAIText(loader AzureOpenAIClientLoadFn) plugin.ProvideContentFunc {
+func genOpenAIText(loader AzureOpenaiClientLoadFn) plugin.ProvideContentFunc {
 	return func(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
 		apiKey := params.Config.GetAttr("api_key").AsString()
 		resourceEndpoint := params.Config.GetAttr("resource_endpoint").AsString()
@@ -103,7 +103,7 @@ func genOpenAIText(loader AzureOpenAIClientLoadFn) plugin.ProvideContentFunc {
 	}
 }
 
-func renderText(ctx context.Context, cli AzureOpenAIClient, cfg, args cty.Value, dataCtx plugin.MapData) (string, error) {
+func renderText(ctx context.Context, cli AzureOpenaiClient, cfg, args cty.Value, dataCtx plugin.MapData) (string, error) {
 
 	params := azopenai.CompletionsOptions{}
 	params.DeploymentName = to.Ptr(cfg.GetAttr("deployment_name").AsString())

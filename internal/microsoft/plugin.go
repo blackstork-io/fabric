@@ -16,19 +16,19 @@ type ClientLoadFn func() client.Client
 
 var DefaultClientLoader ClientLoadFn = client.New
 
-type AzureOpenAIClientLoadFn func(azureOpenAIKey string, azureOpenAIEndpoint string) (client AzureOpenAIClient, err error)
+type AzureOpenaiClientLoadFn func(azureOpenAIKey string, azureOpenAIEndpoint string) (client AzureOpenaiClient, err error)
 
-type AzureOpenAIClient interface {
+type AzureOpenaiClient interface {
 	GetCompletions(ctx context.Context, body azopenai.CompletionsOptions, options *azopenai.GetCompletionsOptions) (azopenai.GetCompletionsResponse, error)
 }
 
-var DefaultAzureOpenAIClientLoader AzureOpenAIClientLoadFn = func(azureOpenAIKey string, azureOpenAIEndpoint string) (client AzureOpenAIClient, err error) {
+var DefaultAzureOpenAIClientLoader AzureOpenaiClientLoadFn = func(azureOpenAIKey string, azureOpenAIEndpoint string) (client AzureOpenaiClient, err error) {
 	keyCredential := azcore.NewKeyCredential(azureOpenAIKey)
 	client, err = azopenai.NewClientWithKeyCredential(azureOpenAIEndpoint, keyCredential, nil)
 	return
 }
 
-func Plugin(version string, loader ClientLoadFn, openAiClientLoader AzureOpenAIClientLoadFn) *plugin.Schema {
+func Plugin(version string, loader ClientLoadFn, openAiClientLoader AzureOpenaiClientLoadFn) *plugin.Schema {
 	if loader == nil {
 		loader = DefaultClientLoader
 	}
