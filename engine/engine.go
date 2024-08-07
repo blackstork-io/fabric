@@ -469,7 +469,7 @@ func (e *Engine) RenderAndPublishContent(ctx context.Context, target string) (co
 		span.End()
 	}()
 	e.logger.InfoContext(ctx, "Publishing the content", "target", target)
-	diag = doc.Publish(ctx, content, dataCtx)
+	diag = doc.Publish(ctx, content, dataCtx, target)
 	if diags.Extend(diag) {
 		return nil, diags
 	}

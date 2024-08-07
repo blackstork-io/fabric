@@ -1,4 +1,4 @@
-package github
+package github_test
 
 import (
 	"context"
@@ -10,14 +10,16 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/github"
 	github_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/github"
 	"github.com/blackstork-io/fabric/plugin"
 )
 
 type GithubIssuesDataTestSuite struct {
 	suite.Suite
-	plugin *plugin.Schema
-	cli    *github_mocks.Client
+	plugin    *plugin.Schema
+	cli       *github_mocks.Client
+	issuesCli *github_mocks.IssuesClient
 }
 
 func TestGithubDataSuite(t *testing.T) {
@@ -25,13 +27,14 @@ func TestGithubDataSuite(t *testing.T) {
 }
 
 func (s *GithubIssuesDataTestSuite) SetupSuite() {
-	s.plugin = Plugin("1.2.3", func(token string) Client {
+	s.plugin = github.Plugin("1.2.3", func(token string) github.Client {
 		return s.cli
 	})
 }
 
 func (s *GithubIssuesDataTestSuite) SetupTest() {
 	s.cli = &github_mocks.Client{}
+	s.issuesCli = &github_mocks.IssuesClient{}
 }
 
 func (s *GithubIssuesDataTestSuite) TearDownTest() {
@@ -49,7 +52,8 @@ func (s *GithubIssuesDataTestSuite) TestSchema() {
 func int64ptr(i int64) *int64 { return &i }
 
 func (s *GithubIssuesDataTestSuite) TestBasic() {
-	s.cli.On("ListByRepo", mock.Anything, "testorg", "testrepo", &gh.IssueListByRepoOptions{
+	s.cli.On("Issues").Return(s.issuesCli)
+	s.issuesCli.On("ListByRepo", mock.Anything, "testorg", "testrepo", &gh.IssueListByRepoOptions{
 		ListOptions: gh.ListOptions{
 			PerPage: 30,
 			Page:    1,
@@ -97,7 +101,8 @@ func (s *GithubIssuesDataTestSuite) TestBasic() {
 func (s *GithubIssuesDataTestSuite) TestAdvanced() {
 	since, err := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
 	s.Require().NoError(err)
-	s.cli.On("ListByRepo", mock.Anything, "testorg", "testrepo", &gh.IssueListByRepoOptions{
+	s.cli.On("Issues").Return(s.issuesCli)
+	s.issuesCli.On("ListByRepo", mock.Anything, "testorg", "testrepo", &gh.IssueListByRepoOptions{
 		Milestone: "testmilestone",
 		State:     "open",
 		Assignee:  "testassignee",

@@ -156,45 +156,46 @@ type isCty_Data interface {
 }
 
 type Cty_Primitive_ struct {
-	Primitive *Cty_Primitive `protobuf:"bytes,1,opt,name=primitive,proto3,oneof"` // DONE
+	Primitive *Cty_Primitive `protobuf:"bytes,1,opt,name=primitive,proto3,oneof"`
 }
 
 type Cty_Object_ struct {
-	Object *Cty_Object `protobuf:"bytes,2,opt,name=object,proto3,oneof"` // DONE
+	Object *Cty_Object `protobuf:"bytes,2,opt,name=object,proto3,oneof"`
 }
 
 type Cty_Map struct {
-	Map *Cty_Mapping `protobuf:"bytes,3,opt,name=map,proto3,oneof"` // DONE
+	Map *Cty_Mapping `protobuf:"bytes,3,opt,name=map,proto3,oneof"`
 }
 
 type Cty_List struct {
-	List *Cty_Sequence `protobuf:"bytes,4,opt,name=list,proto3,oneof"` // DONE
+	List *Cty_Sequence `protobuf:"bytes,4,opt,name=list,proto3,oneof"`
 }
 
 type Cty_Set struct {
-	Set *Cty_Sequence `protobuf:"bytes,5,opt,name=set,proto3,oneof"` // DONE
+	Set *Cty_Sequence `protobuf:"bytes,5,opt,name=set,proto3,oneof"`
 }
 
 type Cty_Tuple struct {
-	Tuple *Cty_Sequence `protobuf:"bytes,6,opt,name=tuple,proto3,oneof"` // DONE
+	Tuple *Cty_Sequence `protobuf:"bytes,6,opt,name=tuple,proto3,oneof"`
 }
 
 type Cty_Null struct {
 	// Specifies type of null value
-	Null *CtyType `protobuf:"bytes,7,opt,name=null,proto3,oneof"` // DONE
+	Null *CtyType `protobuf:"bytes,7,opt,name=null,proto3,oneof"`
 }
 
 type Cty_Caps struct {
-	Caps *Cty_Capsule `protobuf:"bytes,8,opt,name=caps,proto3,oneof"` // DONE
+	Caps *Cty_Capsule `protobuf:"bytes,8,opt,name=caps,proto3,oneof"`
 }
 
 type Cty_Unknown struct {
 	// Specifies type of the unknown value
-	Unknown *CtyType `protobuf:"bytes,9,opt,name=unknown,proto3,oneof"` // DONE
+	Unknown *CtyType `protobuf:"bytes,9,opt,name=unknown,proto3,oneof"`
 }
 
 type Cty_Dyn struct {
-	Dyn *Cty_Dynamic `protobuf:"bytes,10,opt,name=dyn,proto3,oneof"` // DONE
+	// DynamicPseudoType
+	Dyn *Cty_Dynamic `protobuf:"bytes,10,opt,name=dyn,proto3,oneof"`
 }
 
 func (*Cty_Primitive_) isCty_Data() {}
@@ -395,7 +396,7 @@ type Cty_Primitive_Str struct {
 }
 
 type Cty_Primitive_Num struct {
-	// empty bytes used when encoding the type
+	// empty value is used for marking the type
 	Num []byte `protobuf:"bytes,2,opt,name=num,proto3,oneof"`
 }
 
@@ -518,7 +519,8 @@ type Cty_Sequence struct {
 	unknownFields protoimpl.UnknownFields
 
 	Data []*Cty `protobuf:"bytes,1,rep,name=data,proto3" json:"data,omitempty"`
-	// Original sequence is empty, element added to preserve the type (unless it's a tuple)
+	// Original sequence is empty, element added to preserve the type
+	// Not true for empty tuples, since they are valid values
 	OnlyType bool `protobuf:"varint,2,opt,name=onlyType,proto3" json:"onlyType,omitempty"`
 }
 

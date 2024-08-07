@@ -3,10 +3,7 @@
 package github_mocks
 
 import (
-	context "context"
-
-	github "github.com/google/go-github/v58/github"
-
+	github "github.com/blackstork-io/fabric/internal/github"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -23,72 +20,96 @@ func (_m *Client) EXPECT() *Client_Expecter {
 	return &Client_Expecter{mock: &_m.Mock}
 }
 
-// ListByRepo provides a mock function with given fields: ctx, owner, repo, opts
-func (_m *Client) ListByRepo(ctx context.Context, owner string, repo string, opts *github.IssueListByRepoOptions) ([]*github.Issue, *github.Response, error) {
-	ret := _m.Called(ctx, owner, repo, opts)
+// Gists provides a mock function with given fields:
+func (_m *Client) Gists() github.GistClient {
+	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListByRepo")
+		panic("no return value specified for Gists")
 	}
 
-	var r0 []*github.Issue
-	var r1 *github.Response
-	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, *github.IssueListByRepoOptions) ([]*github.Issue, *github.Response, error)); ok {
-		return rf(ctx, owner, repo, opts)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, *github.IssueListByRepoOptions) []*github.Issue); ok {
-		r0 = rf(ctx, owner, repo, opts)
+	var r0 github.GistClient
+	if rf, ok := ret.Get(0).(func() github.GistClient); ok {
+		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*github.Issue)
+			r0 = ret.Get(0).(github.GistClient)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, *github.IssueListByRepoOptions) *github.Response); ok {
-		r1 = rf(ctx, owner, repo, opts)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*github.Response)
-		}
-	}
-
-	if rf, ok := ret.Get(2).(func(context.Context, string, string, *github.IssueListByRepoOptions) error); ok {
-		r2 = rf(ctx, owner, repo, opts)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
+	return r0
 }
 
-// Client_ListByRepo_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListByRepo'
-type Client_ListByRepo_Call struct {
+// Client_Gists_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Gists'
+type Client_Gists_Call struct {
 	*mock.Call
 }
 
-// ListByRepo is a helper method to define mock.On call
-//   - ctx context.Context
-//   - owner string
-//   - repo string
-//   - opts *github.IssueListByRepoOptions
-func (_e *Client_Expecter) ListByRepo(ctx interface{}, owner interface{}, repo interface{}, opts interface{}) *Client_ListByRepo_Call {
-	return &Client_ListByRepo_Call{Call: _e.mock.On("ListByRepo", ctx, owner, repo, opts)}
+// Gists is a helper method to define mock.On call
+func (_e *Client_Expecter) Gists() *Client_Gists_Call {
+	return &Client_Gists_Call{Call: _e.mock.On("Gists")}
 }
 
-func (_c *Client_ListByRepo_Call) Run(run func(ctx context.Context, owner string, repo string, opts *github.IssueListByRepoOptions)) *Client_ListByRepo_Call {
+func (_c *Client_Gists_Call) Run(run func()) *Client_Gists_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(*github.IssueListByRepoOptions))
+		run()
 	})
 	return _c
 }
 
-func (_c *Client_ListByRepo_Call) Return(_a0 []*github.Issue, _a1 *github.Response, _a2 error) *Client_ListByRepo_Call {
-	_c.Call.Return(_a0, _a1, _a2)
+func (_c *Client_Gists_Call) Return(_a0 github.GistClient) *Client_Gists_Call {
+	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *Client_ListByRepo_Call) RunAndReturn(run func(context.Context, string, string, *github.IssueListByRepoOptions) ([]*github.Issue, *github.Response, error)) *Client_ListByRepo_Call {
+func (_c *Client_Gists_Call) RunAndReturn(run func() github.GistClient) *Client_Gists_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Issues provides a mock function with given fields:
+func (_m *Client) Issues() github.IssuesClient {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for Issues")
+	}
+
+	var r0 github.IssuesClient
+	if rf, ok := ret.Get(0).(func() github.IssuesClient); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(github.IssuesClient)
+		}
+	}
+
+	return r0
+}
+
+// Client_Issues_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Issues'
+type Client_Issues_Call struct {
+	*mock.Call
+}
+
+// Issues is a helper method to define mock.On call
+func (_e *Client_Expecter) Issues() *Client_Issues_Call {
+	return &Client_Issues_Call{Call: _e.mock.On("Issues")}
+}
+
+func (_c *Client_Issues_Call) Run(run func()) *Client_Issues_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Client_Issues_Call) Return(_a0 github.IssuesClient) *Client_Issues_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Client_Issues_Call) RunAndReturn(run func() github.IssuesClient) *Client_Issues_Call {
 	_c.Call.Return(run)
 	return _c
 }

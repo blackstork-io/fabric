@@ -14,11 +14,16 @@ func decodeSchema(src *Schema) (*plugin.Schema, error) {
 	if err != nil {
 		return nil, err
 	}
+	publishers, err := decodePublisherSchemaMap(src.GetPublishers())
+	if err != nil {
+		return nil, err
+	}
 	return &plugin.Schema{
 		Name:             src.GetName(),
 		Version:          src.GetVersion(),
 		DataSources:      dataSources,
 		ContentProviders: contentProviders,
+		Publishers:       publishers,
 		Doc:              src.GetDoc(),
 		Tags:             src.GetTags(),
 	}, nil
@@ -88,6 +93,47 @@ func decodeContentProviderSchema(src *ContentProviderSchema) (*plugin.ContentPro
 		Doc:             src.GetDoc(),
 		Tags:            src.GetTags(),
 	}, nil
+}
+
+func decodePublisherSchemaMap(src map[string]*PublisherSchema) (plugin.Publishers, error) {
+	dst := make(plugin.Publishers, len(src))
+	var err error
+	for k, v := range src {
+		dst[k], err = decodePublisherSchema(v)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return dst, nil
+}
+
+func decodePublisherSchema(src *PublisherSchema) (*plugin.Publisher, error) {
+	if src == nil {
+		return nil, nil
+	}
+	args, err := decodeRootSpec(src.GetArgs())
+	if err != nil {
+		return nil, err
+	}
+	config, err := decodeRootSpec(src.GetConfig())
+	if err != nil {
+		return nil, err
+	}
+	return &plugin.Publisher{
+		Args:           args,
+		Config:         config,
+		Doc:            src.GetDoc(),
+		Tags:           src.GetTags(),
+		AllowedFormats: decodeOutputFormats(src.GetAllowedFormats()),
+	}, nil
+}
+
+func decodeOutputFormats(src []OutputFormat) []plugin.OutputFormat {
+	dst := make([]plugin.OutputFormat, len(src))
+	for i, v := range src {
+		dst[i] = decodeOutputFormat(v)
+	}
+	return dst
 }
 
 func decodeInvocationOrder(src InvocationOrder) plugin.InvocationOrder {

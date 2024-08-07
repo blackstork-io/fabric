@@ -11,4 +11,5 @@ func TestPlugin_Schema(t *testing.T) {
 	assert.Equal(t, "blackstork/github", schema.Name)
 	assert.Equal(t, "1.2.3", schema.Version)
 	assert.NotNil(t, schema.DataSources["github_issues"])
+	assert.NotNil(t, schema.Publishers["github_gist"])
 }

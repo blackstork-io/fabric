@@ -152,11 +152,12 @@ func (p *grpcPlugin) clientPublishFunc(name string, client PluginServiceClient) 
 		datactx := encodeMapData(params.DataContext)
 		format := encodeOutputFormat(params.Format)
 		res, err := client.Publish(ctx, &PublishRequest{
-			Publisher:   name,
-			Config:      cfgEncoded,
-			Args:        argsEncoded,
-			DataContext: datactx,
-			Format:      format,
+			Publisher:    name,
+			Config:       cfgEncoded,
+			Args:         argsEncoded,
+			DataContext:  datactx,
+			Format:       format,
+			DocumentName: params.DocumentName,
 		}, p.callOptions()...)
 
 		if diags.AppendErr(err, "Failed to publish") {
