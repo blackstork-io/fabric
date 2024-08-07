@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/microsoft/client"
@@ -14,7 +16,19 @@ type ClientLoadFn func() client.Client
 
 var DefaultClientLoader ClientLoadFn = client.New
 
-func Plugin(version string, loader ClientLoadFn) *plugin.Schema {
+type AzureOpenaiClientLoadFn func(azureOpenAIKey string, azureOpenAIEndpoint string) (client AzureOpenaiClient, err error)
+
+type AzureOpenaiClient interface {
+	GetCompletions(ctx context.Context, body azopenai.CompletionsOptions, options *azopenai.GetCompletionsOptions) (azopenai.GetCompletionsResponse, error)
+}
+
+var DefaultAzureOpenAIClientLoader AzureOpenaiClientLoadFn = func(azureOpenAIKey string, azureOpenAIEndpoint string) (client AzureOpenaiClient, err error) {
+	keyCredential := azcore.NewKeyCredential(azureOpenAIKey)
+	client, err = azopenai.NewClientWithKeyCredential(azureOpenAIEndpoint, keyCredential, nil)
+	return
+}
+
+func Plugin(version string, loader ClientLoadFn, openAiClientLoader AzureOpenaiClientLoadFn) *plugin.Schema {
 	if loader == nil {
 		loader = DefaultClientLoader
 	}
@@ -24,6 +38,9 @@ func Plugin(version string, loader ClientLoadFn) *plugin.Schema {
 		Version: version,
 		DataSources: plugin.DataSources{
 			"microsoft_sentinel_incidents": makeMicrosoftSentinelIncidentsDataSource(loader),
+		},
+		ContentProviders: plugin.ContentProviders{
+			"azure_openai_text": makeAzureOpenAITextContentSchema(openAiClientLoader),
 		},
 	}
 }
