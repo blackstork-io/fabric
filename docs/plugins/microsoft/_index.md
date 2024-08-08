@@ -32,3 +32,7 @@ fabric {
 ## Data sources
 
 {{< plugin-resources "microsoft" "data-source" >}}
+
+## Content providers
+
+{{< plugin-resources "microsoft" "content-provider" >}}

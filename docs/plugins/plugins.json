@@ -198,6 +198,19 @@
     "shortname": "github",
     "resources": [
       {
+        "name": "github_gist",
+        "type": "publisher",
+        "config_params": [
+          "github_token"
+        ],
+        "arguments": [
+          "description",
+          "filename",
+          "gist_id",
+          "make_public"
+        ]
+      },
+      {
         "name": "github_issues",
         "type": "data-source",
         "config_params": [
@@ -305,6 +318,23 @@
     "version": "v0.4.2",
     "shortname": "microsoft",
     "resources": [
+      {
+        "name": "azure_openai_text",
+        "type": "content-provider",
+        "config_params": [
+          "api_key",
+          "resource_endpoint",
+          "deployment_name",
+          "api_version"
+        ],
+        "arguments": [
+          "completions_count",
+          "max_tokens",
+          "prompt",
+          "temperature",
+          "top_p"
+        ]
+      },
       {
         "name": "microsoft_sentinel_incidents",
         "type": "data-source",
