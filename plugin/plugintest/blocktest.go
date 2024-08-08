@@ -88,6 +88,7 @@ func (td *TestDecoder) SetHeaders(typeName string, labels ...string) *TestDecode
 }
 
 // NewTestDecoder creates a new TestDecoder.
+// This is the preferred way to create the data for testing plugins.
 func NewTestDecoder(t *testing.T, spec *dataspec.RootSpec) *TestDecoder {
 	t.Helper()
 	return &TestDecoder{

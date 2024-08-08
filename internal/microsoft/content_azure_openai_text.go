@@ -17,58 +17,63 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeAzureOpenAITextContentSchema(loader AzureOpenaiClientLoadFn) *plugin.ContentProvider {
 	return &plugin.ContentProvider{
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "api_key",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				Secret:      true,
-			},
-			&dataspec.AttrSpec{
-				Name:        "resource_endpoint",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Name:        "deployment_name",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Name:       "api_version",
-				Type:       cty.String,
-				DefaultVal: cty.StringVal("2024-02-01"),
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "api_key",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+					Secret:      true,
+				},
+				{
+					Name:        "resource_endpoint",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
+				{
+					Name:        "deployment_name",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
+				{
+					Name:       "api_version",
+					Type:       cty.String,
+					DefaultVal: cty.StringVal("2024-02-01"),
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "prompt",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				ExampleVal:  cty.StringVal("Summarize the following text: {{.vars.text_to_summarize}}"),
-			},
-			&dataspec.AttrSpec{
-				Name:       "max_tokens",
-				Type:       cty.Number,
-				DefaultVal: cty.NumberIntVal(1000),
-			},
-			&dataspec.AttrSpec{
-				Name:       "temperature",
-				Type:       cty.Number,
-				DefaultVal: cty.NumberFloatVal(0),
-			},
-			&dataspec.AttrSpec{
-				Name: "top_p",
-				Type: cty.Number,
-			},
-			&dataspec.AttrSpec{
-				Name:       "completions_count",
-				Type:       cty.Number,
-				DefaultVal: cty.NumberIntVal(1),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "prompt",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+					ExampleVal:  cty.StringVal("Summarize the following text: {{.vars.text_to_summarize}}"),
+				},
+				{
+					Name:       "max_tokens",
+					Type:       cty.Number,
+					DefaultVal: cty.NumberIntVal(1000),
+				},
+				{
+					Name:       "temperature",
+					Type:       cty.Number,
+					DefaultVal: cty.NumberFloatVal(0),
+				},
+				{
+					Name: "top_p",
+					Type: cty.Number,
+				},
+				{
+					Name:       "completions_count",
+					Type:       cty.Number,
+					DefaultVal: cty.NumberIntVal(1),
+				},
 			},
 		},
 		ContentFunc: genOpenAIText(loader),
@@ -77,8 +82,8 @@ func makeAzureOpenAITextContentSchema(loader AzureOpenaiClientLoadFn) *plugin.Co
 
 func genOpenAIText(loader AzureOpenaiClientLoadFn) plugin.ProvideContentFunc {
 	return func(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-		apiKey := params.Config.GetAttr("api_key").AsString()
-		resourceEndpoint := params.Config.GetAttr("resource_endpoint").AsString()
+		apiKey := params.Config.GetAttrVal("api_key").AsString()
+		resourceEndpoint := params.Config.GetAttrVal("resource_endpoint").AsString()
 		client, err := loader(apiKey, resourceEndpoint)
 		if err != nil {
 			return nil, diagnostics.Diag{{
@@ -103,27 +108,26 @@ func genOpenAIText(loader AzureOpenaiClientLoadFn) plugin.ProvideContentFunc {
 	}
 }
 
-func renderText(ctx context.Context, cli AzureOpenaiClient, cfg, args cty.Value, dataCtx plugin.MapData) (string, error) {
-
+func renderText(ctx context.Context, cli AzureOpenaiClient, cfg, args *dataspec.Block, dataCtx plugindata.Map) (string, error) {
 	params := azopenai.CompletionsOptions{}
-	params.DeploymentName = to.Ptr(cfg.GetAttr("deployment_name").AsString())
+	params.DeploymentName = to.Ptr(cfg.GetAttrVal("deployment_name").AsString())
 
-	maxTokens, _ := args.GetAttr("max_tokens").AsBigFloat().Int64()
+	maxTokens, _ := args.GetAttrVal("max_tokens").AsBigFloat().Int64()
 	params.MaxTokens = to.Ptr(int32(maxTokens))
 
-	temperature, _ := args.GetAttr("temperature").AsBigFloat().Float32()
+	temperature, _ := args.GetAttrVal("temperature").AsBigFloat().Float32()
 	params.Temperature = to.Ptr(temperature)
 
-	completionsCount, _ := args.GetAttr("completions_count").AsBigFloat().Int64()
+	completionsCount, _ := args.GetAttrVal("completions_count").AsBigFloat().Int64()
 	params.N = to.Ptr(int32(completionsCount))
 
-	topPAttr := args.GetAttr("top_p")
+	topPAttr := args.GetAttrVal("top_p")
 	if !topPAttr.IsNull() {
 		topP, _ := topPAttr.AsBigFloat().Float32()
 		params.TopP = to.Ptr(topP)
 	}
 
-	renderedPrompt, err := templateText(args.GetAttr("prompt").AsString(), dataCtx)
+	renderedPrompt, err := templateText(args.GetAttrVal("prompt").AsString(), dataCtx)
 	if err != nil {
 		return "", err
 	}
@@ -139,7 +143,7 @@ func renderText(ctx context.Context, cli AzureOpenaiClient, cfg, args cty.Value,
 	return *resp.Choices[0].Text, nil
 }
 
-func templateText(text string, dataCtx plugin.MapData) (string, error) {
+func templateText(text string, dataCtx plugindata.Map) (string, error) {
 	tmpl, err := template.New("text").Funcs(sprig.FuncMap()).Parse(text)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse template: %w", err)

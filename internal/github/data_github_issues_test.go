@@ -56,14 +56,8 @@ func int64ptr(i int64) *int64 { return &i }
 
 func (s *GithubIssuesDataTestSuite) TestBasic() {
 	s.cli.On("Issues").Return(s.issuesCli)
-	s.cli.On("ListByRepo", mock.Anything, "testorg", "testrepo", &gh.IssueListByRepoOptions{
-		State:     "open",
-		Sort:      "created",
-		Direction: "desc",
-		ListOptions: gh.ListOptions{
-			PerPage: 30,
-			Page:    1,
-		},
+	s.issuesCli.On("ListByRepo", mock.Anything, "testorg", "testrepo", &gh.IssueListByRepoOptions{
+		Milestone: "", State: "open", Assignee: "", Creator: "", Mentioned: "", Labels: []string(nil), Sort: "created", Direction: "desc", Since: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), ListOptions: gh.ListOptions{Page: 1, PerPage: 30},
 	}).
 		Return([]*gh.Issue{
 			{

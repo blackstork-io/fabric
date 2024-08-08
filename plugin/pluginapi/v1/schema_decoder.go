@@ -114,17 +114,17 @@ func decodePublisherSchema(src *PublisherSchema) (*plugin.Publisher, error) {
 	if src == nil {
 		return nil, nil
 	}
-	args, err := decodeRootSpec(src.GetArgs())
+	args, err := decodeBlockSpec(src.GetArgs())
 	if err != nil {
 		return nil, err
 	}
-	config, err := decodeRootSpec(src.GetConfig())
+	config, err := decodeBlockSpec(src.GetConfig())
 	if err != nil {
 		return nil, err
 	}
 	return &plugin.Publisher{
-		Args:           args,
-		Config:         config,
+		Args:           dataspec.RootSpecFromBlock(args),
+		Config:         dataspec.RootSpecFromBlock(config),
 		Doc:            src.GetDoc(),
 		Tags:           src.GetTags(),
 		AllowedFormats: decodeOutputFormats(src.GetAllowedFormats()),
