@@ -87,13 +87,13 @@ additional variables:
 
 ## Dynamic reference blocks
 
-To create flexible and reusable tempaltes, `dynamic` blocks can be combined with the reference blocks.
+To create flexible and reusable templates, `dynamic` blocks can be combined with the reference blocks.
 
 For example:
 
 ```hcl
 dynamic section ref {
-  dynamic_items = query_jq(".vars.defiend_items")
+  dynamic_items = query_jq(".vars.defined_items")
   base = section.external_section
 }
 ```
