@@ -1,6 +1,6 @@
 ---
 title: Install
-description: Learn how to install Fabric and its plugins to streamline your templating workflow. Fabric binaries for Windows, macOS, and Linux are available at the project's GitHub releases page. Simply download the appropriate release archive for your operating system, unpack it, and you're ready to go.
+description: Learn how to install Fabric and its plugins to streamline your reporting workflow. Install Fabric with Homebrew, run it with Docker or download binaries for Windows, macOS, and Linux from the GitHub releases page.
 type: docs
 weight: 10
 code_blocks_no_wrap: true

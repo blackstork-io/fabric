@@ -51,4 +51,4 @@ Given that Fabric configuration language is built on HCL, IDE extensions designe
 
 For users of Microsoft Visual Studio Code, there is a dedicated [Fabric Extension for Visual Studio Code](https://github.com/blackstork-io/vscode-fabric) available, providing enhanced support for Fabric configurations within the IDE.
 
-![A screenshot of Fabric Extension for Visual Studio Code](./vscode-fabric-screenshot.png)
+![A screenshot of Fabric Extension for Visual Studio Code](./vscode-fabric-screenshot.webp)
