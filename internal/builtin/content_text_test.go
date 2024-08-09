@@ -11,6 +11,8 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
@@ -40,7 +42,7 @@ func (s *TextTestSuite) TestMissingText() {
 	})
 	plugintest.ReencodeCTY(s.T(), s.schema.Args, val, diagtest.Asserts{{
 		diagtest.IsError,
-		diagtest.SummaryContains("Argument value must be non-null"),
+		diagtest.SummaryContains("Attribute must be non-null"),
 	}})
 }
 
@@ -53,8 +55,8 @@ func (s *TextTestSuite) TestBasic() {
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)
@@ -84,8 +86,8 @@ func (s *TextTestSuite) TestCallInvalidTemplate() {
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Nil(result)
@@ -99,11 +101,16 @@ func (s *TextTestSuite) TestCallInvalidTemplate() {
 func (s *TextTestSuite) TestSprigTemplate() {
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"value": cty.StringVal("Hello {{.name | upper}}!"),
-		}),
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		Args: &dataspec.Block{
+			Attrs: dataspec.Attributes{
+				"value": &dataspec.Attr{
+					Name:  "value",
+					Value: cty.StringVal("Hello {{.name | upper}}!"),
+				},
+			},
+		},
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)

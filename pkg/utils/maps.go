@@ -1,5 +1,7 @@
 package utils
 
+import "github.com/blackstork-io/fabric/pkg/diagnostics"
+
 func Contains[K comparable, V any](m map[K]V, key K) bool {
 	_, found := m[key]
 	return found
@@ -52,4 +54,19 @@ func MapMapErr[K comparable, VIn, VOut any](m map[K]VIn, fn func(VIn) (VOut, err
 		}
 	}
 	return out, nil
+}
+
+// Produce a new map by applying function fn to items of the map m.
+// Collects returned diagnostics
+func MapMapDiags[K comparable, VIn, VOut any](diags *diagnostics.Diag, m map[K]VIn, fn func(VIn) (VOut, diagnostics.Diag)) map[K]VOut {
+	if m == nil {
+		return nil
+	}
+	var diag diagnostics.Diag
+	out := make(map[K]VOut, len(m))
+	for k, v := range m {
+		out[k], diag = fn(v)
+		diags.Extend(diag)
+	}
+	return out
 }

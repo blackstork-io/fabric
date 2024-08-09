@@ -15,50 +15,62 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeSqliteDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "database_uri",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				Secret:      true,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "database_uri",
+					Type:        cty.String,
+					Constraints: constraint.RequiredMeaningful,
+					Secret:      true,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "sql_query",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Name: "sql_args",
-				Type: cty.List(cty.DynamicPseudoType),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "sql_query",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+					Doc:         `SQL query to execute`,
+				},
+				{
+					Name: "sql_args",
+					Type: cty.DynamicPseudoType,
+					ExampleVal: cty.TupleVal([]cty.Value{
+						cty.StringVal("example argument"),
+						cty.NumberIntVal(2),
+						cty.BoolVal(false),
+					}),
+					Doc: `A tuple (or list) of strings, numbers, or booleans to be used as arguments in the SQL query`,
+				},
 			},
 		},
 		DataFunc: fetchSqliteData,
 	}
 }
 
-func parseSqliteConfig(cfg cty.Value) (string, error) {
-	dbURI := cfg.GetAttr("database_uri")
-	if dbURI.IsNull() || dbURI.AsString() == "" {
-		return "", fmt.Errorf("database_uri is required")
-	}
-	return dbURI.AsString(), nil
-}
-
-func parseSqliteArgs(args cty.Value) (string, []any, error) {
-	sqlQuery := args.GetAttr("sql_query")
+func parseSqliteArgs(args *dataspec.Block) (string, []any, error) {
+	sqlQuery := args.GetAttrVal("sql_query")
 	if sqlQuery.IsNull() || sqlQuery.AsString() == "" {
 		return "", nil, fmt.Errorf("sql_query is required")
 	}
-	sqlArgs := args.GetAttr("sql_args")
-	if sqlArgs.IsNull() || sqlArgs.LengthInt() == 0 {
+	sqlArgs := args.GetAttrVal("sql_args")
+	if sqlArgs.IsNull() {
 		return sqlQuery.AsString(), nil, nil
 	}
+	argsTy := sqlArgs.Type()
+	if !argsTy.IsTupleType() && !argsTy.IsListType() {
+		return "", nil, fmt.Errorf("sql_args must be a tuple (or a list) of strings, numbers, or booleans, got %s", argsTy.FriendlyName())
+	}
+	if sqlArgs.LengthInt() == 0 {
+		return sqlQuery.AsString(), nil, nil
+	}
+
 	argsList := sqlArgs.AsValueSlice()
 	argsResult := make([]any, len(argsList))
 	for i, arg := range argsList {
@@ -73,21 +85,14 @@ func parseSqliteArgs(args cty.Value) (string, []any, error) {
 		case arg.Type() == cty.Bool:
 			argsResult[i] = arg.True()
 		default:
-			return "", nil, fmt.Errorf("sql_args must be a list of strings, numbers, or booleans")
+			return "", nil, fmt.Errorf("sql_args must be a tuple of strings, numbers, or booleans")
 		}
 	}
 	return sqlQuery.AsString(), argsResult, nil
 }
 
-func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	dbURI, err := parseSqliteConfig(params.Config)
-	if err != nil {
-		return nil, diagnostics.Diag{{
-			Severity: hcl.DiagError,
-			Summary:  "Invalid configuration",
-			Detail:   err.Error(),
-		}}
-	}
+func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
+	dbURI := params.Config.GetAttrVal("database_uri").AsString()
 	sqlQuery, sqlArgs, err := parseSqliteArgs(params.Args)
 	if err != nil {
 		return nil, diagnostics.Diag{{
@@ -123,7 +128,7 @@ func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 			Detail:   err.Error(),
 		}}
 	}
-	result := make(plugin.ListData, 0)
+	result := make(plugindata.List, 0)
 
 	// read rows
 	for rows.Next() {
@@ -141,7 +146,7 @@ func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 				Detail:   err.Error(),
 			}}
 		}
-		row := make(plugin.MapData)
+		row := make(plugindata.Map)
 		for i, column := range columns {
 			if columnValArr[i].valid {
 				row[column] = columnValArr[i].data
@@ -162,7 +167,7 @@ func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 }
 
 type nullData struct {
-	data  plugin.Data
+	data  plugindata.Data
 	valid bool
 }
 
@@ -173,17 +178,17 @@ func (n *nullData) Scan(value any) error {
 	}
 	switch v := value.(type) {
 	case []byte:
-		n.data = plugin.StringData(base64.StdEncoding.EncodeToString(v))
+		n.data = plugindata.String(base64.StdEncoding.EncodeToString(v))
 	case string:
-		n.data = plugin.StringData(v)
+		n.data = plugindata.String(v)
 	case int64:
-		n.data = plugin.NumberData(v)
+		n.data = plugindata.Number(v)
 	case float64:
-		n.data = plugin.NumberData(v)
+		n.data = plugindata.Number(v)
 	case bool:
-		n.data = plugin.BoolData(v)
+		n.data = plugindata.Bool(v)
 	case time.Time:
-		n.data = plugin.StringData(v.Format(time.RFC3339))
+		n.data = plugindata.String(v.Format(time.RFC3339))
 	default:
 		return fmt.Errorf("unsupported type: %T", value)
 	}

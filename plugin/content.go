@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"slices"
 	"sync"
+
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type idStore struct {
@@ -39,9 +41,9 @@ type ContentResult struct {
 type Content interface {
 	setID(id uint32)
 	setMeta(meta *ContentMeta)
-	AsData() Data
+	AsData() plugindata.Data
 	ID() uint32
-	AsJQData() Data
+	AsPluginData() plugindata.Data
 	Meta() *ContentMeta
 }
 
@@ -58,10 +60,10 @@ func (n *ContentEmpty) setMeta(meta *ContentMeta) {
 	n.meta = meta
 }
 
-func (n *ContentEmpty) AsData() Data {
-	return MapData{
-		"type": StringData("empty"),
-		"id":   NumberData(n.id),
+func (n *ContentEmpty) AsData() plugindata.Data {
+	return plugindata.Map{
+		"type": plugindata.String("empty"),
+		"id":   plugindata.Number(n.id),
 		"meta": n.meta.AsData(),
 	}
 }
@@ -74,7 +76,7 @@ func (n *ContentEmpty) Meta() *ContentMeta {
 	return n.meta
 }
 
-func (n *ContentEmpty) AsJQData() Data {
+func (n *ContentEmpty) AsPluginData() plugindata.Data {
 	return n.AsData()
 }
 
@@ -164,7 +166,7 @@ func (c *ContentSection) Meta() *ContentMeta {
 	return c.meta
 }
 
-func (c *ContentSection) AsJQData() Data {
+func (c *ContentSection) AsPluginData() plugindata.Data {
 	return c.AsData()
 }
 
@@ -182,17 +184,17 @@ func (c *ContentSection) Compact() {
 }
 
 // AsData returns the content tree as a map.
-func (c *ContentSection) AsData() Data {
+func (c *ContentSection) AsData() plugindata.Data {
 	if c == nil {
 		return nil
 	}
-	children := make(ListData, len(c.Children))
+	children := make(plugindata.List, len(c.Children))
 	for i, child := range c.Children {
 		children[i] = child.AsData()
 	}
-	return MapData{
-		"type":     StringData("section"),
-		"id":       NumberData(c.id),
+	return plugindata.Map{
+		"type":     plugindata.String("section"),
+		"id":       plugindata.Number(c.id),
 		"children": children,
 		"meta":     c.meta.AsData(),
 	}
@@ -220,18 +222,18 @@ func (c *ContentElement) setMeta(meta *ContentMeta) {
 	c.meta = meta
 }
 
-func (c *ContentElement) AsJQData() Data {
+func (c *ContentElement) AsPluginData() plugindata.Data {
 	return c.AsData()
 }
 
-func (c *ContentElement) AsData() Data {
+func (c *ContentElement) AsData() plugindata.Data {
 	if c == nil {
 		return nil
 	}
-	return MapData{
-		"type":     StringData("element"),
-		"id":       NumberData(c.id),
-		"markdown": StringData(c.Markdown),
+	return plugindata.Map{
+		"type":     plugindata.String("element"),
+		"id":       plugindata.Number(c.id),
+		"markdown": plugindata.String(c.Markdown),
 		"meta":     c.meta.AsData(),
 	}
 }
@@ -242,22 +244,22 @@ type ContentMeta struct {
 	Version  string
 }
 
-func (meta *ContentMeta) AsData() Data {
+func (meta *ContentMeta) AsData() plugindata.Data {
 	if meta == nil {
 		return nil
 	}
-	return MapData{
-		"provider": StringData(meta.Provider),
-		"plugin":   StringData(meta.Plugin),
-		"version":  StringData(meta.Version),
+	return plugindata.Map{
+		"provider": plugindata.String(meta.Provider),
+		"plugin":   plugindata.String(meta.Plugin),
+		"version":  plugindata.String(meta.Version),
 	}
 }
 
-func ParseContentData(data MapData) (Content, error) {
+func ParseContentData(data plugindata.Map) (Content, error) {
 	if data == nil {
 		return nil, nil
 	}
-	typ, ok := data["type"].(StringData)
+	typ, ok := data["type"].(plugindata.String)
 	if !ok {
 		return nil, fmt.Errorf("missing type")
 	}
@@ -273,80 +275,80 @@ func ParseContentData(data MapData) (Content, error) {
 	}
 }
 
-func parseContentSection(data MapData) (*ContentSection, error) {
+func parseContentSection(data plugindata.Map) (*ContentSection, error) {
 	if data == nil {
 		return nil, nil
 	}
 	section := &ContentSection{}
-	children, ok := data["children"].(ListData)
+	children, ok := data["children"].(plugindata.List)
 	if !ok {
 		return nil, fmt.Errorf("missing children")
 	}
 	section.Children = make([]Content, len(children))
 	var err error
 	for i, child := range children {
-		section.Children[i], err = ParseContentData(child.(MapData))
+		section.Children[i], err = ParseContentData(child.(plugindata.Map))
 		if err != nil {
 			return nil, err
 		}
 	}
-	id, ok := data["id"].(NumberData)
+	id, ok := data["id"].(plugindata.Number)
 	if ok {
 		section.id = uint32(id)
 	}
-	meta, ok := data["meta"].(MapData)
+	meta, ok := data["meta"].(plugindata.Map)
 	if ok {
 		section.meta = ParseContentMeta(meta)
 	}
 	return section, nil
 }
 
-func parseContentElement(data MapData) (*ContentElement, error) {
+func parseContentElement(data plugindata.Map) (*ContentElement, error) {
 	if data == nil {
 		return nil, nil
 	}
 	elem := &ContentElement{}
-	markdown, ok := data["markdown"].(StringData)
+	markdown, ok := data["markdown"].(plugindata.String)
 	if !ok {
 		return nil, fmt.Errorf("missing markdown")
 	}
 	elem.Markdown = string(markdown)
-	id, ok := data["id"].(NumberData)
+	id, ok := data["id"].(plugindata.Number)
 	if ok {
 		elem.id = uint32(id)
 	}
-	meta, ok := data["meta"].(MapData)
+	meta, ok := data["meta"].(plugindata.Map)
 	if ok {
 		elem.meta = ParseContentMeta(meta)
 	}
 	return elem, nil
 }
 
-func parseContentEmpty(data MapData) (*ContentEmpty, error) {
+func parseContentEmpty(data plugindata.Map) (*ContentEmpty, error) {
 	if data == nil {
 		return nil, nil
 	}
 	empty := &ContentEmpty{}
-	id, ok := data["id"].(NumberData)
+	id, ok := data["id"].(plugindata.Number)
 	if !ok {
 		return nil, fmt.Errorf("missing id")
 	}
 	empty.id = uint32(id)
-	meta, ok := data["meta"].(MapData)
+	meta, ok := data["meta"].(plugindata.Map)
 	if ok {
 		empty.meta = ParseContentMeta(meta)
 	}
 	return empty, nil
 }
 
-func ParseContentMeta(data Data) *ContentMeta {
+func ParseContentMeta(data plugindata.Data) *ContentMeta {
 	if data == nil {
 		return nil
 	}
-	meta := data.(MapData)
-	provider, _ := meta["provider"].(StringData)
-	plugin, _ := meta["plugin"].(StringData)
-	version, _ := meta["version"].(StringData)
+	meta := data.(plugindata.Map)
+	provider, _ := meta["provider"].(plugindata.String)
+	plugin, _ := meta["plugin"].(plugindata.String)
+	version, _ := meta["version"].(plugindata.String)
 	return &ContentMeta{
 		Provider: string(provider),
 		Plugin:   string(plugin),

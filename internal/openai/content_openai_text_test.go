@@ -13,6 +13,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
@@ -70,7 +71,7 @@ func (s *OpenAITextContentTestSuite) TestBasic() {
 		},
 	}, nil)
 	ctx := context.Background()
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 			prompt = "Tell me a story"
@@ -110,9 +111,9 @@ func (s *OpenAITextContentTestSuite) TestAdvanced() {
 		},
 	}, nil)
 	ctx := context.Background()
-	dataCtx := plugin.MapData{
-		"local": plugin.MapData{
-			"foo": plugin.StringData("bar"),
+	dataCtx := plugindata.Map{
+		"local": plugindata.Map{
+			"foo": plugindata.String("bar"),
 		},
 	}
 
@@ -133,15 +134,10 @@ func (s *OpenAITextContentTestSuite) TestAdvanced() {
 }
 
 func (s *OpenAITextContentTestSuite) TestMissingPrompt() {
-	plugintest.DecodeAndAssert(s.T(), s.schema.Args, "", plugin.MapData{}, diagtest.Asserts{
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, "", plugindata.Map{}, diagtest.Asserts{
 		{
 			diagtest.IsError,
-			diagtest.SummaryEquals("Missing required argument"),
-			diagtest.DetailContains("prompt"),
-		},
-		{
-			diagtest.IsError,
-			diagtest.SummaryEquals("Argument value must be non-null"),
+			diagtest.SummaryEquals("Missing required attribute"),
 			diagtest.DetailContains("prompt"),
 		},
 	})
@@ -150,17 +146,12 @@ func (s *OpenAITextContentTestSuite) TestMissingPrompt() {
 func (s *OpenAITextContentTestSuite) TestMissingAPIKey() {
 	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		prompt = "Tell me a story"
-	`, plugin.MapData{}, diagtest.Asserts{})
+	`, plugindata.Map{}, diagtest.Asserts{})
 	plugintest.DecodeAndAssert(s.T(), s.schema.Config, `
-	`, plugin.MapData{}, diagtest.Asserts{
+	`, plugindata.Map{}, diagtest.Asserts{
 		{
 			diagtest.IsError,
-			diagtest.SummaryEquals("Missing required argument"),
-			diagtest.DetailContains("api_key"),
-		},
-		{
-			diagtest.IsError,
-			diagtest.SummaryEquals("Argument value must be non-null"),
+			diagtest.SummaryEquals("Missing required attribute"),
 			diagtest.DetailContains("api_key"),
 		},
 	})
@@ -172,7 +163,7 @@ func (s *OpenAITextContentTestSuite) TestFailingClient() {
 		Message: "error_message",
 	})
 	ctx := context.Background()
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 			prompt = "Tell me a story"
@@ -194,7 +185,7 @@ func (s *OpenAITextContentTestSuite) TestCancellation() {
 	s.cli.On("GenerateChatCompletion", mock.Anything, mock.Anything).Return(nil, context.Canceled)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 			prompt = "Tell me a story"
@@ -219,7 +210,7 @@ func (s *OpenAITextContentTestSuite) TestErrorEncoding() {
 	}
 	s.cli.On("GenerateChatCompletion", mock.Anything, mock.Anything).Return(nil, want)
 	ctx := context.Background()
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 			prompt = "Tell me a story"

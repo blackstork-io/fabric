@@ -5,11 +5,13 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/deferred"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type PluginContentAction struct {
@@ -18,17 +20,21 @@ type PluginContentAction struct {
 	Vars     *definitions.ParsedVars
 }
 
-func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugin.MapData, doc, parent *plugin.ContentSection, contentID uint32) (res *plugin.ContentResult, diags diagnostics.Diag) {
-	contentMap := plugin.MapData{}
+func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (res *plugin.ContentResult, diags diagnostics.Diag) {
+	contentMap := plugindata.Map{}
 	if action.PluginAction.Meta != nil {
-		contentMap[definitions.BlockKindMeta] = action.PluginAction.Meta.AsJQData()
+		contentMap[definitions.BlockKindMeta] = action.PluginAction.Meta.AsPluginData()
 	}
 	docData := dataCtx[definitions.BlockKindDocument]
-	docData.(plugin.MapData)[definitions.BlockKindContent] = doc.AsData()
+	docData.(plugindata.Map)[definitions.BlockKindContent] = doc.AsData()
 	dataCtx[definitions.BlockKindDocument] = docData
 	dataCtx[definitions.BlockKindContent] = contentMap
 	diag := ApplyVars(ctx, action.Vars, dataCtx)
 	if diags.Extend(diag) {
+		return
+	}
+	diags.Extend(dataspec.EvalBlock(ctx, action.Args, dataCtx))
+	if diags.HasErrors() {
 		return
 	}
 
@@ -59,13 +65,13 @@ func LoadPluginContentAction(ctx context.Context, providers ContentProviders, no
 			Detail:   fmt.Sprintf("'%s' not found in any plugin", node.PluginName),
 		}}
 	}
-	var cfg cty.Value
-	if cp.Config != nil && !cp.Config.IsEmpty() {
+	var cfg *dataspec.Block
+	if cp.Config != nil {
 		cfg, diags = node.Config.ParseConfig(ctx, cp.Config)
 		if diags.HasErrors() {
 			return nil, diags
 		}
-	} else if (cp.Config == nil || cp.Config.IsEmpty()) && node.Config.Exists() {
+	} else if node.Config.Exists() {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
 			Summary:  "ContentProvider doesn't support configuration",
@@ -77,8 +83,11 @@ func LoadPluginContentAction(ctx context.Context, providers ContentProviders, no
 		return nil, diags
 	}
 
-	var args cty.Value
-	args, diag := node.Invocation.ParseInvocation(ctx, cp.Args)
+	args, diag := dataspec.DecodeBlock(
+		deferred.WithQueryFuncs(ctx),
+		node.Invocation.Block,
+		cp.Args,
+	)
 	if diags.Extend(diag) {
 		return nil, diags
 	}

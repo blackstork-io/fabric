@@ -5,8 +5,10 @@ package pluginapi.v1;
 import "pluginapi/v1/content.proto";
 import "pluginapi/v1/cty.proto";
 import "pluginapi/v1/data.proto";
-import "pluginapi/v1/diagnostics.proto";
+import "pluginapi/v1/hcl.proto";
 import "pluginapi/v1/schema.proto";
+import "pluginapi/v1/dataspec.proto";
+
 
 service PluginService {
     rpc GetSchema(GetSchemaRequest) returns (GetSchemaResponse) {}
@@ -22,9 +24,9 @@ message GetSchemaResponse {
 }
 
 message RetrieveDataRequest {
-    string    source = 1;
-    CtyValue  args   = 2;
-    CtyValue  config = 3;
+    string  source = 1;
+    Block   args   = 2;
+    Block   config = 3;
 }
 
 message RetrieveDataResponse {
@@ -33,11 +35,11 @@ message RetrieveDataResponse {
 }
 
 message ProvideContentRequest {
-    string       provider     = 1;
-    CtyValue     args         = 2;
-    CtyValue     config       = 3;
-    MapData      data_context = 4;
-    uint32       content_id   = 5;
+    string   provider     = 1;
+    Block    args         = 2;
+    Block    config       = 3;
+    MapData  data_context = 4;
+    uint32   content_id   = 5;
 }
 
 message ProvideContentResponse {
@@ -47,12 +49,12 @@ message ProvideContentResponse {
 
 
 message PublishRequest {
-    string         publisher        = 1;
-    CtyValue       args             = 2;
-    CtyValue       config           = 3;
-    MapData        data_context     = 4;
-    OutputFormat   format           = 5;
-    string         document_name    = 6;
+    string         publisher     = 1;
+    Block          args          = 2;
+    Block          config        = 3;
+    MapData        data_context  = 4;
+    OutputFormat   format        = 5;
+    string         document_name = 6;
 }
 
 message PublishResponse {

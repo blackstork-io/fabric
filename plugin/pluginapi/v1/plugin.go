@@ -12,6 +12,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 var defaultMsgSize = 1024 * 1024 * 20
@@ -83,9 +84,9 @@ func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient)
 			diags.Add("Content provider error", "Nil params")
 			return
 		}
-		cfgEncoded, diag := encodeCtyValue(params.Config)
+		cfgEncoded, diag := encodeBlock(params.Config)
 		diags.Extend(diag)
-		argsEncoded, diag := encodeCtyValue(params.Args)
+		argsEncoded, diag := encodeBlock(params.Args)
 		diags.Extend(diag)
 		if diags.HasErrors() {
 			return
@@ -107,7 +108,7 @@ func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient)
 }
 
 func (p *grpcPlugin) clientDataFunc(name string, client PluginServiceClient) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (data plugin.Data, diags diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (data plugindata.Data, diags diagnostics.Diag) {
 		p.logger.DebugContext(ctx, "Calling data source", "name", name)
 		defer func(start time.Time) {
 			p.logger.DebugContext(ctx, "Called data source", "name", name, "took", time.Since(start))
@@ -116,9 +117,9 @@ func (p *grpcPlugin) clientDataFunc(name string, client PluginServiceClient) plu
 			diags.Add("Data source error", "Nil params")
 			return
 		}
-		cfgEncoded, diag := encodeCtyValue(params.Config)
+		cfgEncoded, diag := encodeBlock(params.Config)
 		diags.Extend(diag)
-		argsEncoded, diag := encodeCtyValue(params.Args)
+		argsEncoded, diag := encodeBlock(params.Args)
 		diags.Extend(diag)
 
 		res, err := client.RetrieveData(ctx, &RetrieveDataRequest{
@@ -145,9 +146,9 @@ func (p *grpcPlugin) clientPublishFunc(name string, client PluginServiceClient) 
 			diags.Add("Publisher error", "Nil params")
 			return
 		}
-		argsEncoded, diag := encodeCtyValue(params.Args)
+		argsEncoded, diag := encodeBlock(params.Args)
 		diags.Extend(diag)
-		cfgEncoded, diag := encodeCtyValue(params.Config)
+		cfgEncoded, diag := encodeBlock(params.Config)
 		diags.Extend(diag)
 		datactx := encodeMapData(params.DataContext)
 		format := encodeOutputFormat(params.Format)

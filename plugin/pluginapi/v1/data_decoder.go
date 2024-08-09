@@ -4,27 +4,27 @@ import (
 	"fmt"
 
 	"github.com/blackstork-io/fabric/pkg/utils"
-	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-func decodeData(src *Data) plugin.Data {
+func decodeData(src *Data) plugindata.Data {
 	switch src.GetData().(type) {
 	case nil:
 		return nil
 	case *Data_NumberVal:
-		return plugin.NumberData(src.GetNumberVal())
+		return plugindata.Number(src.GetNumberVal())
 	case *Data_StringVal:
-		return plugin.StringData(src.GetStringVal())
+		return plugindata.String(src.GetStringVal())
 	case *Data_BoolVal:
-		return plugin.BoolData(src.GetBoolVal())
+		return plugindata.Bool(src.GetBoolVal())
 	case *Data_MapVal:
 		return decodeMapData(src.GetMapVal().GetValue())
 	case *Data_ListVal:
-		return plugin.ListData(utils.FnMap(src.GetListVal().GetValue(), decodeData))
+		return plugindata.List(utils.FnMap(src.GetListVal().GetValue(), decodeData))
 	}
 	panic(fmt.Sprintf("Unexpected src data type: %T", src.GetData()))
 }
 
-func decodeMapData(src map[string]*Data) plugin.MapData {
-	return plugin.MapData(utils.MapMap(src, decodeData))
+func decodeMapData(src map[string]*Data) plugindata.Map {
+	return plugindata.Map(utils.MapMap(src, decodeData))
 }

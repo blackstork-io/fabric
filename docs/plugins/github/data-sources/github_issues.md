@@ -37,7 +37,10 @@ The data source supports the following configuration arguments:
 
 ```hcl
 config data github_issues {
+  # The GitHub token to use for authentication
+  #
   # Required string.
+  # Must be non-empty
   # For example:
   github_token = "some string"
 }
@@ -49,48 +52,92 @@ The data source supports the following execution arguments:
 
 ```hcl
 data github_issues {
+  # The repository to list issues from, in the format of owner/name
+  #
   # Required string.
+  # Must be non-empty
   # For example:
-  repository = "some string"
+  repository = "blackstork-io/fabric"
 
+  # Filter issues by milestone. Possible values are:
+  # * a milestone number
+  # * "none" for issues with no milestone
+  # * "*" for issues with any milestone
+  # * "" (empty string) performs no filtering
+  #
   # Optional string.
   # Default value:
-  milestone = null
+  milestone = ""
 
+  # Filter issues based on their state
+  #
+  # Optional string.
+  # Must be one of: "open", "closed", "all"
+  # Must be non-empty
+  # Default value:
+  state = "open"
+
+  # Filter issues based on their assignee. Possible values are:
+  # * a user name
+  # * "none" for issues that are not assigned
+  # * "*" for issues with any assigned user
+  # * "" (empty string) performs no filtering.
+  #
   # Optional string.
   # Default value:
-  state = null
+  assignee = ""
 
+  # Filter issues based on their creator. Possible values are:
+  # * a user name
+  # * "" (empty string) performs no filtering.
+  #
   # Optional string.
   # Default value:
-  assignee = null
+  creator = ""
 
+  # Filter issues to once where this username is mentioned. Possible values are:
+  # * a user name
+  # * "" (empty string) performs no filtering.
+  #
   # Optional string.
   # Default value:
-  creator = null
+  mentioned = ""
 
-  # Optional string.
-  # Default value:
-  mentioned = null
-
+  # Filter issues based on their labels.
+  #
   # Optional list of string.
   # Default value:
   labels = null
 
+  # Specifies how to sort issues.
+  #
   # Optional string.
+  # Must be one of: "created", "updated", "comments"
+  # Must be non-empty
   # Default value:
-  sort = null
+  sort = "created"
 
+  # Specifies the direction in which to sort issues.
+  #
   # Optional string.
+  # Must be one of: "asc", "desc"
+  # Must be non-empty
   # Default value:
-  direction = null
+  direction = "desc"
 
+  # Only show results that were last updated after the given time.
+  # This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.
+  #
   # Optional string.
+  # Must be non-empty
   # Default value:
   since = null
 
-  # Optional number.
+  # Limit the number of issues to return. -1 means no limit.
+  #
+  # Optional integer.
+  # Must be >= -1
   # Default value:
-  limit = null
+  limit = -1
 }
 ```

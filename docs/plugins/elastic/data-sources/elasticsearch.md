@@ -106,7 +106,8 @@ data elasticsearch {
   fields = null
 
   # Optional number.
+  # Must be >= 0
   # Default value:
-  size = null
+  size = 1000
 }
 ```

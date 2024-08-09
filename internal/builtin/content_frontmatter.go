@@ -11,39 +11,41 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"gopkg.in/yaml.v3"
 
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeFrontMatterContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genFrontMatterContent,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:       "format",
-				Type:       cty.String,
-				Doc:        `Format of the frontmatter.`,
-				DefaultVal: cty.StringVal("yaml"),
-				OneOf: []cty.Value{
-					cty.StringVal("yaml"),
-					cty.StringVal("toml"),
-					cty.StringVal("json"),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:       "format",
+					Type:       cty.String,
+					Doc:        `Format of the frontmatter.`,
+					DefaultVal: cty.StringVal("yaml"),
+					OneOf: []cty.Value{
+						cty.StringVal("yaml"),
+						cty.StringVal("toml"),
+						cty.StringVal("json"),
+					},
 				},
-			},
-			&dataspec.AttrSpec{
-				Name:        "content",
-				Type:        dataquery.DelayedEvalType.CtyType(),
-				Doc:         `Arbitrary key-value map to be put in the frontmatter.`,
-				Constraints: constraint.RequiredMeaningful,
-				ExampleVal: cty.ObjectVal(map[string]cty.Value{
-					"key": cty.StringVal("arbitrary value"),
-					"key2": cty.MapVal(map[string]cty.Value{
-						"can be nested": cty.NumberIntVal(42),
+				{
+					Name:        "content",
+					Type:        plugindata.Encapsulated.CtyType(),
+					Doc:         `Arbitrary key-value map to be put in the frontmatter.`,
+					Constraints: constraint.RequiredMeaningful,
+					ExampleVal: cty.ObjectVal(map[string]cty.Value{
+						"key": cty.StringVal("arbitrary value"),
+						"key2": cty.MapVal(map[string]cty.Value{
+							"can be nested": cty.NumberIntVal(42),
+						}),
 					}),
-				}),
+				},
 			},
 		},
 		Doc: `Produces the frontmatter.`,
@@ -59,17 +61,24 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 		}}
 	}
 
-	format := params.Args.GetAttr("format").AsString()
-	data := dataquery.DelayedEvalType.MustFromCty(params.Args.GetAttr("content")).Result()
+	format := params.Args.GetAttrVal("format").AsString()
 
-	if data == nil {
+	data, err := plugindata.Encapsulated.FromCty(params.Args.GetAttrVal("content"))
+	if err != nil {
+		return nil, diagnostics.Diag{{
+			Severity: hcl.DiagError,
+			Summary:  "Failed to parse arguments",
+			Detail:   err.Error(),
+		}}
+	}
+	if data == nil || *data == nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
 			Detail:   "Content is nil",
 		}}
 	}
-	m, ok := data.(plugin.MapData)
+	m, ok := (*data).(plugindata.Map)
 	if !ok {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -78,7 +87,6 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 		}}
 	}
 	var result string
-	var err error
 	switch format {
 	case "yaml":
 		result, err = renderYAMLFrontMatter(m)
@@ -107,7 +115,7 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 	}, nil
 }
 
-func validateFrontMatterContentTree(dataCtx plugin.MapData, contentID uint32) error {
+func validateFrontMatterContentTree(dataCtx plugindata.Map, contentID uint32) error {
 	if dataCtx == nil {
 		return fmt.Errorf("DataContext is empty")
 	}
@@ -124,7 +132,7 @@ func validateFrontMatterContentTree(dataCtx plugin.MapData, contentID uint32) er
 	return nil
 }
 
-func renderYAMLFrontMatter(m plugin.MapData) (string, error) {
+func renderYAMLFrontMatter(m plugindata.Map) (string, error) {
 	var buf strings.Builder
 	buf.WriteString("---\n")
 	err := yaml.NewEncoder(&buf).Encode(m)
@@ -135,7 +143,7 @@ func renderYAMLFrontMatter(m plugin.MapData) (string, error) {
 	return buf.String(), nil
 }
 
-func renderTOMLFrontMatter(m plugin.MapData) (string, error) {
+func renderTOMLFrontMatter(m plugindata.Map) (string, error) {
 	var buf strings.Builder
 	buf.WriteString("+++\n")
 	err := toml.NewEncoder(&buf).Encode(m)
@@ -146,7 +154,7 @@ func renderTOMLFrontMatter(m plugin.MapData) (string, error) {
 	return buf.String(), nil
 }
 
-func renderJSONFrontMatter(m plugin.MapData) (string, error) {
+func renderJSONFrontMatter(m plugindata.Map) (string, error) {
 	var buf strings.Builder
 	enc := json.NewEncoder(&buf)
 	enc.SetIndent("", "  ")

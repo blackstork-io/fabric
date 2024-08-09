@@ -11,24 +11,27 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeTerraformStateLocalDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		Config: nil,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "path",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "path",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
 			},
 		},
 		DataFunc: fetchTerraformStateLocalData,
 	}
 }
 
-func fetchTerraformStateLocalData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	path := params.Args.GetAttr("path")
+func fetchTerraformStateLocalData(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
+	path := params.Args.GetAttrVal("path")
 	if path.IsNull() || path.AsString() == "" {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -47,10 +50,10 @@ func fetchTerraformStateLocalData(ctx context.Context, params *plugin.RetrieveDa
 	return data, nil
 }
 
-func readTerraformStateFile(fp string) (plugin.Data, error) {
+func readTerraformStateFile(fp string) (plugindata.Data, error) {
 	data, err := os.ReadFile(fp)
 	if err != nil {
 		return nil, err
 	}
-	return plugin.UnmarshalJSONData(data)
+	return plugindata.UnmarshalJSON(data)
 }

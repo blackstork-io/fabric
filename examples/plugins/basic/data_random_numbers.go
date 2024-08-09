@@ -11,33 +11,39 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 // makeRandomNumbersDataSource creates a new data source for generating random numbers
 func makeRandomNumbersDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		// Config is optional, we can define the schema for the config that is reusable for this data source
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:       "min",
-				Type:       cty.Number,
-				Doc:        `Lower bound (inclusive)`,
-				DefaultVal: cty.NumberIntVal(0),
-			},
-			&dataspec.AttrSpec{
-				Name:       "max",
-				Type:       cty.Number,
-				Doc:        `Upper bound (inclusive)`,
-				DefaultVal: cty.NumberIntVal(100),
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:       "min",
+					Type:       cty.Number,
+					Doc:        `Lower bound (inclusive)`,
+					DefaultVal: cty.NumberIntVal(0),
+				},
+				{
+					Name:       "max",
+					Type:       cty.Number,
+					Doc:        `Upper bound (inclusive)`,
+					DefaultVal: cty.NumberIntVal(100),
+				},
 			},
 		},
 		// We define the schema for the arguments
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "length",
-				Constraints: constraint.Integer | constraint.Required,
-				Type:        cty.Number,
-				ExampleVal:  cty.NumberIntVal(10),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:         "length",
+					Constraints:  constraint.Integer | constraint.RequiredNonNull,
+					Type:         cty.Number,
+					ExampleVal:   cty.NumberIntVal(10),
+					MinInclusive: cty.NumberIntVal(1),
+				},
 			},
 		},
 		// Optional: We can also define the schema for the config
@@ -45,19 +51,12 @@ func makeRandomNumbersDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchRandomNumbers(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	min := params.Config.GetAttr("min")
-	max := params.Config.GetAttr("max")
+func fetchRandomNumbers(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
+	min := params.Config.GetAttrVal("min")
+	max := params.Config.GetAttrVal("max")
 
 	// validating the arguments
-	length := params.Args.GetAttr("length")
-	if length.IsNull() {
-		return nil, diagnostics.Diag{{
-			Severity: hcl.DiagError,
-			Summary:  "Failed to parse arguments",
-			Detail:   "length is required",
-		}}
-	}
+	length := params.Args.GetAttrVal("length")
 	if min.GreaterThan(max).True() {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -70,10 +69,10 @@ func fetchRandomNumbers(ctx context.Context, params *plugin.RetrieveDataParams) 
 	minInt, _ := min.AsBigFloat().Int64()
 	maxInt, _ := max.AsBigFloat().Int64()
 
-	data := make(plugin.ListData, lengthInt)
+	data := make(plugindata.List, lengthInt)
 	for i := int64(0); i < lengthInt; i++ {
 		n := rand.Int63() % (maxInt - minInt + 1) //nolint:G404 // weak rng is ok here
-		data[i] = plugin.NumberData(n + minInt)
+		data[i] = plugindata.Number(n + minInt)
 	}
 	return data, nil
 }

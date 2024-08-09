@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 //go:embed stixview.gohtml
@@ -38,54 +38,56 @@ func init() {
 
 func makeStixViewContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name: "gist_id",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "stix_url",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "caption",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "show_footer",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "show_sidebar",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "show_tlp_as_tags",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "show_marking_nodes",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "show_labels",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "show_idrefs",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "width",
-				Type: cty.Number,
-			},
-			&dataspec.AttrSpec{
-				Name: "height",
-				Type: cty.Number,
-			},
-			&dataspec.AttrSpec{
-				Name: "objects",
-				Type: dataquery.DelayedEvalType.CtyType(),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name: "gist_id",
+					Type: cty.String,
+				},
+				{
+					Name: "stix_url",
+					Type: cty.String,
+				},
+				{
+					Name: "caption",
+					Type: cty.String,
+				},
+				{
+					Name: "show_footer",
+					Type: cty.Bool,
+				},
+				{
+					Name: "show_sidebar",
+					Type: cty.Bool,
+				},
+				{
+					Name: "show_tlp_as_tags",
+					Type: cty.Bool,
+				},
+				{
+					Name: "show_marking_nodes",
+					Type: cty.Bool,
+				},
+				{
+					Name: "show_labels",
+					Type: cty.Bool,
+				},
+				{
+					Name: "show_idrefs",
+					Type: cty.Bool,
+				},
+				{
+					Name: "width",
+					Type: cty.Number,
+				},
+				{
+					Name: "height",
+					Type: cty.Number,
+				},
+				{
+					Name: "objects",
+					Type: plugindata.Encapsulated.CtyType(),
+				},
 			},
 		},
 		ContentFunc: renderStixView,
@@ -115,12 +117,12 @@ func renderStixView(ctx context.Context, params *plugin.ProvideContentParams) (*
 		UID:  base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(uid[:]),
 	}
 
-	objectCty := params.Args.GetAttr("objects")
+	objectCty := params.Args.GetAttrVal("objects")
 	if !objectCty.IsNull() {
-		objects := dataquery.DelayedEvalType.MustFromCty(objectCty).Result()
-		if objects != nil {
+		objects := plugindata.Encapsulated.MustFromCty(objectCty)
+		if objects != nil && *objects != nil {
 			var ok bool
-			rctx.Objects, ok = objects.(plugin.ListData)
+			rctx.Objects, ok = (*objects).(plugindata.List)
 			if !ok {
 				return nil, diagnostics.Diag{{
 					Severity: hcl.DiagError,
@@ -165,7 +167,7 @@ func renderStixView(ctx context.Context, params *plugin.ProvideContentParams) (*
 type renderContext struct {
 	Args    *stixViewArgs
 	UID     string
-	Objects plugin.ListData
+	Objects plugindata.List
 }
 
 type stixViewArgs struct {
@@ -194,53 +196,53 @@ func intPtr(i int) *int {
 	return &i
 }
 
-func parseStixViewArgs(args cty.Value) (*stixViewArgs, error) {
-	if args.IsNull() {
+func parseStixViewArgs(args *dataspec.Block) (*stixViewArgs, error) {
+	if args == nil {
 		return nil, fmt.Errorf("arguments are null")
 	}
 	var dst stixViewArgs
-	gistID := args.GetAttr("gist_id")
+	gistID := args.GetAttrVal("gist_id")
 	if !gistID.IsNull() && gistID.AsString() != "" {
 		dst.GistID = stringPtr(gistID.AsString())
 	}
-	stixURL := args.GetAttr("stix_url")
+	stixURL := args.GetAttrVal("stix_url")
 	if !stixURL.IsNull() && stixURL.AsString() != "" {
 		dst.StixURL = stringPtr(stixURL.AsString())
 	}
-	caption := args.GetAttr("caption")
+	caption := args.GetAttrVal("caption")
 	if !caption.IsNull() && caption.AsString() != "" {
 		dst.Caption = stringPtr(caption.AsString())
 	}
-	showFooter := args.GetAttr("show_footer")
+	showFooter := args.GetAttrVal("show_footer")
 	if !showFooter.IsNull() {
 		dst.ShowFooter = boolPtr(showFooter.True())
 	}
-	showSidebar := args.GetAttr("show_sidebar")
+	showSidebar := args.GetAttrVal("show_sidebar")
 	if !showSidebar.IsNull() {
 		dst.ShowSidebar = boolPtr(showSidebar.True())
 	}
-	showTLPAsTags := args.GetAttr("show_tlp_as_tags")
+	showTLPAsTags := args.GetAttrVal("show_tlp_as_tags")
 	if !showTLPAsTags.IsNull() {
 		dst.ShowTLPAsTags = boolPtr(showTLPAsTags.True())
 	}
-	showMarkingNodes := args.GetAttr("show_marking_nodes")
+	showMarkingNodes := args.GetAttrVal("show_marking_nodes")
 	if !showMarkingNodes.IsNull() {
 		dst.ShowMarkingNodes = boolPtr(showMarkingNodes.True())
 	}
-	showLabels := args.GetAttr("show_labels")
+	showLabels := args.GetAttrVal("show_labels")
 	if !showLabels.IsNull() {
 		dst.ShowLabels = boolPtr(showLabels.True())
 	}
-	showIDRefs := args.GetAttr("show_idrefs")
+	showIDRefs := args.GetAttrVal("show_idrefs")
 	if !showIDRefs.IsNull() {
 		dst.ShowIDRefs = boolPtr(showIDRefs.True())
 	}
-	width := args.GetAttr("width")
+	width := args.GetAttrVal("width")
 	if !width.IsNull() {
 		n, _ := width.AsBigFloat().Int64()
 		dst.Width = intPtr(int(n))
 	}
-	height := args.GetAttr("height")
+	height := args.GetAttrVal("height")
 	if !height.IsNull() {
 		n, _ := height.AsBigFloat().Int64()
 		dst.Height = intPtr(int(n))

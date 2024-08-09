@@ -22,6 +22,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/print"
 	"github.com/blackstork-io/fabric/print/htmlprint"
 	"github.com/blackstork-io/fabric/print/mdprint"
@@ -38,13 +39,15 @@ func makeLocalFilePublisher(logger *slog.Logger, tracer trace.Tracer) *plugin.Pu
 	return &plugin.Publisher{
 		Doc:  "Publishes content to local file",
 		Tags: []string{},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "path",
-				Doc:         "Path to the file",
-				Type:        cty.String,
-				ExampleVal:  cty.StringVal("dist/output.md"),
-				Constraints: constraint.Required,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "path",
+					Doc:         "Path to the file",
+					Type:        cty.String,
+					ExampleVal:  cty.StringVal("dist/output.md"),
+					Constraints: constraint.Required,
+				},
 			},
 		},
 		AllowedFormats: []plugin.OutputFormat{plugin.OutputFormatMD, plugin.OutputFormatHTML, plugin.OutputFormatPDF},
@@ -63,7 +66,7 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 			}}
 		}
 		datactx := params.DataContext
-		datactx["format"] = plugin.StringData(params.Format.String())
+		datactx["format"] = plugindata.String(params.Format.String())
 
 		var printer print.Printer
 		switch params.Format {
@@ -82,7 +85,7 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 		}
 		printer = print.WithLogging(printer, logger, slog.String("format", params.Format.String()))
 		printer = print.WithTracing(printer, tracer, attribute.String("format", params.Format.String()))
-		pathAttr := params.Args.GetAttr("path")
+		pathAttr := params.Args.GetAttrVal("path")
 		if pathAttr.IsNull() || pathAttr.AsString() == "" {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,
@@ -129,7 +132,7 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 	}
 }
 
-func templatePath(pattern string, datactx plugin.MapData) (string, error) {
+func templatePath(pattern string, datactx plugindata.Map) (string, error) {
 	tmpl, err := template.New("pattern").Funcs(sprig.FuncMap()).Parse(pattern)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse a text template: %w", err)

@@ -15,51 +15,56 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeSplunkSearchDataSchema(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "auth_token",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				Secret:      true,
-			},
-			&dataspec.AttrSpec{
-				Name: "host",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "deployment_name",
-				Type: cty.String,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "auth_token",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+					Secret:      true,
+				},
+				{
+					Name: "host",
+					Type: cty.String,
+				},
+				{
+					Name: "deployment_name",
+					Type: cty.String,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "search_query",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Name: "max_count",
-				Type: cty.Number,
-			},
-			&dataspec.AttrSpec{
-				Name: "status_buckets",
-				Type: cty.Number,
-			},
-			&dataspec.AttrSpec{
-				Name: "rf",
-				Type: cty.List(cty.String),
-			},
-			&dataspec.AttrSpec{
-				Name: "earliest_time",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "latest_time",
-				Type: cty.String,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "search_query",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
+				{
+					Name: "max_count",
+					Type: cty.Number,
+				},
+				{
+					Name: "status_buckets",
+					Type: cty.Number,
+				},
+				{
+					Name: "rf",
+					Type: cty.List(cty.String),
+				},
+				{
+					Name: "earliest_time",
+					Type: cty.String,
+				},
+				{
+					Name: "latest_time",
+					Type: cty.String,
+				},
 			},
 		},
 		DataFunc: fetchSplunkSearchData(loader),
@@ -67,7 +72,7 @@ func makeSplunkSearchDataSchema(loader ClientLoadFn) *plugin.DataSource {
 }
 
 func fetchSplunkSearchData(loader ClientLoadFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 		cli, err := makeClient(loader, params.Config)
 		if err != nil {
 			return nil, diagnostics.Diag{{
@@ -89,7 +94,7 @@ func fetchSplunkSearchData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 	}
 }
 
-func search(cli client.Client, ctx context.Context, args cty.Value) (plugin.Data, error) {
+func search(cli client.Client, ctx context.Context, args *dataspec.Block) (plugindata.Data, error) {
 	id, err := randID()
 	if err != nil {
 		return nil, err
@@ -98,29 +103,29 @@ func search(cli client.Client, ctx context.Context, args cty.Value) (plugin.Data
 		ID:       id,
 		ExecMode: "blocking",
 	}
-	if attr := args.GetAttr("search_query"); attr.IsNull() || attr.AsString() == "" {
+	if attr := args.GetAttrVal("search_query"); attr.IsNull() || attr.AsString() == "" {
 		return nil, fmt.Errorf("search_query is required")
 	} else {
 		req.Search = attr.AsString()
 	}
-	if attr := args.GetAttr("max_count"); !attr.IsNull() {
+	if attr := args.GetAttrVal("max_count"); !attr.IsNull() {
 		n, _ := attr.AsBigFloat().Int64()
 		req.MaxCount = client.Int(int(n))
 	}
-	if attr := args.GetAttr("status_buckets"); !attr.IsNull() {
+	if attr := args.GetAttrVal("status_buckets"); !attr.IsNull() {
 		n, _ := attr.AsBigFloat().Int64()
 		req.StatusBuckets = client.Int(int(n))
 	}
-	if attr := args.GetAttr("rf"); !attr.IsNull() {
+	if attr := args.GetAttrVal("rf"); !attr.IsNull() {
 		req.RF = make([]string, attr.LengthInt())
 		for i, v := range attr.AsValueSlice() {
 			req.RF[i] = v.AsString()
 		}
 	}
-	if attr := args.GetAttr("earliest_time"); !attr.IsNull() {
+	if attr := args.GetAttrVal("earliest_time"); !attr.IsNull() {
 		req.EarliestTime = client.String(attr.AsString())
 	}
-	if attr := args.GetAttr("latest_time"); !attr.IsNull() {
+	if attr := args.GetAttrVal("latest_time"); !attr.IsNull() {
 		req.LatestTime = client.String(attr.AsString())
 	}
 	res, err := cli.CreateSearchJob(ctx, req)
@@ -150,7 +155,7 @@ func search(cli client.Client, ctx context.Context, args cty.Value) (plugin.Data
 				if err != nil {
 					return nil, err
 				}
-				result, err := plugin.ParseDataAny(res.Results)
+				result, err := plugindata.ParseAny(res.Results)
 				if err != nil {
 					return nil, err
 				}

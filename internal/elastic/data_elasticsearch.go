@@ -11,94 +11,99 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-const (
-	defaultSearchResultsSize   = 1000
-	maxSimpleSearchResultsSize = 10000
-)
+const maxSimpleSearchResultsSize = 10000
 
 func makeElasticSearchDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchElasticSearchData,
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name: "base_url",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "cloud_id",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name:   "api_key_str",
-				Type:   cty.String,
-				Secret: true,
-			},
-			&dataspec.AttrSpec{
-				Name:   "api_key",
-				Type:   cty.List(cty.String),
-				Secret: true,
-			},
-			&dataspec.AttrSpec{
-				Name: "basic_auth_username",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name:   "basic_auth_password",
-				Type:   cty.String,
-				Secret: true,
-			},
-			&dataspec.AttrSpec{
-				Name:   "bearer_auth",
-				Type:   cty.String,
-				Secret: true,
-			},
-			&dataspec.AttrSpec{
-				Name:   "ca_certs",
-				Type:   cty.String,
-				Secret: true,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name: "base_url",
+					Type: cty.String,
+				},
+				{
+					Name: "cloud_id",
+					Type: cty.String,
+				},
+				{
+					Name:   "api_key_str",
+					Type:   cty.String,
+					Secret: true,
+				},
+				{
+					Name:   "api_key",
+					Type:   cty.List(cty.String),
+					Secret: true,
+				},
+				{
+					Name: "basic_auth_username",
+					Type: cty.String,
+				},
+				{
+					Name:   "basic_auth_password",
+					Type:   cty.String,
+					Secret: true,
+				},
+				{
+					Name:   "bearer_auth",
+					Type:   cty.String,
+					Secret: true,
+				},
+				{
+					Name:   "ca_certs",
+					Type:   cty.String,
+					Secret: true,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "index",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Name: "id",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "query_string",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "query",
-				Type: cty.Map(cty.DynamicPseudoType),
-			},
-			&dataspec.AttrSpec{
-				Name: "aggs",
-				Type: cty.DynamicPseudoType,
-			},
-			&dataspec.AttrSpec{
-				Name: "only_hits",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Name: "fields",
-				Type: cty.List(cty.String),
-			},
-			&dataspec.AttrSpec{
-				Name: "size",
-				Type: cty.Number,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "index",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
+				{
+					Name:        "id",
+					Type:        cty.String,
+					Constraints: constraint.NonNull,
+				},
+				{
+					Name: "query_string",
+					Type: cty.String,
+				},
+				{
+					Name: "query",
+					Type: cty.Map(cty.DynamicPseudoType),
+				},
+				{
+					Name: "aggs",
+					Type: cty.DynamicPseudoType,
+				},
+				{
+					Name: "only_hits",
+					Type: cty.Bool,
+				},
+				{
+					Name: "fields",
+					Type: cty.List(cty.String),
+				},
+				{
+					Name:         "size",
+					Type:         cty.Number,
+					DefaultVal:   cty.NumberIntVal(1000),
+					MinInclusive: cty.NumberIntVal(0),
+				},
 			},
 		},
 	}
 }
 
-func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 	client, err := makeSearchClient(params.Config)
 	if err != nil {
 		return nil, diagnostics.Diag{{
@@ -108,9 +113,9 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 		}}
 	}
 	var diags diagnostics.Diag
-	if (params.Args.GetAttr("only_hits").IsNull() || params.Args.GetAttr("only_hits").True()) &&
-		!params.Args.GetAttr("aggs").IsNull() {
-		if params.Args.GetAttr("query").IsNull() && params.Args.GetAttr("query_string").IsNull() {
+	if (params.Args.GetAttrVal("only_hits").IsNull() || params.Args.GetAttrVal("only_hits").True()) &&
+		!params.Args.GetAttrVal("aggs").IsNull() {
+		if params.Args.GetAttrVal("query").IsNull() && params.Args.GetAttrVal("query_string").IsNull() {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Invalid arguments",
@@ -124,7 +129,7 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 		})
 	}
 
-	index := params.Args.GetAttr("index")
+	index := params.Args.GetAttrVal("index")
 	if index.IsNull() {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -133,23 +138,12 @@ func fetchElasticSearchData(ctx context.Context, params *plugin.RetrieveDataPara
 		}}
 	}
 
-	id := params.Args.GetAttr("id")
-	var data plugin.Data
-	if !id.IsNull() {
+	var data plugindata.Data
+	if params.Args.HasAttr("id") {
 		data, err = getByID(client.Get, params.Args)
 	} else {
-		var size int = defaultSearchResultsSize
-		if sizeArg := params.Args.GetAttr("size"); !sizeArg.IsNull() {
-			size64, _ := sizeArg.AsBigFloat().Int64()
-			size = int(size64)
-			if size < 0 {
-				return nil, diagnostics.Diag{{
-					Severity: hcl.DiagError,
-					Summary:  "Invalid arguments",
-					Detail:   "Size value must be greater or equal 0",
-				}}
-			}
-		}
+		size64, _ := params.Args.GetAttrVal("size").AsBigFloat().Int64()
+		size := int(size64)
 		if size <= maxSimpleSearchResultsSize {
 			slog.DebugContext(ctx, "Sending normal search request", "size", size)
 			data, err = search(client.Search, params.Args, size)

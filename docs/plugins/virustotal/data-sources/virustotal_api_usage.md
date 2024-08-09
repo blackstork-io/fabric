@@ -38,6 +38,7 @@ The data source supports the following configuration arguments:
 ```hcl
 config data virustotal_api_usage {
   # Required string.
+  # Must be non-empty
   # For example:
   api_key = "some string"
 }

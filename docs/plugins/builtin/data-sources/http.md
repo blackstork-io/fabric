@@ -37,10 +37,26 @@ The data source supports the following execution arguments:
 
 ```hcl
 data http {
+  # Basic authentication credentials to be used for HTTP request.
+  #
+  # Optional
+  basic_auth {
+    # Required string.
+    # For example:
+    username = "user@example.com"
+
+    # Note: avoid storing credentials in the templates. Use environment variables instead.
+    #
+    # Required string.
+    # For example:
+    password = "passwd"
+  }
+
+
   # URL to fetch data from. Supported schemas are `http` and `https`
   #
   # Required string.
-  # Must have a length of at least 1
+  # Must be non-empty
   # For example:
   url = "https://example.localhost/file.json"
 
@@ -74,20 +90,5 @@ data http {
   # Optional string.
   # Default value:
   body = null
-
-  # Basic authentication credentials to be used for HTTP request.
-  #
-  # Optional
-  basic_auth {
-    # Required string.
-    # For example:
-    username = "user@example.com"
-
-    # Note: avoid storing credentials in the templates. Use environment variables instead.
-    #
-    # Required string.
-    # For example:
-    password = "passwd"
-  }
 }
 ```

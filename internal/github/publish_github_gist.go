@@ -15,6 +15,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/print"
 	"github.com/blackstork-io/fabric/print/htmlprint"
 	"github.com/blackstork-io/fabric/print/mdprint"
@@ -24,31 +25,33 @@ func makeGithubGistPublisher(loader ClientLoaderFn) *plugin.Publisher {
 	return &plugin.Publisher{
 		Doc:  "Publishes content to github gist",
 		Tags: []string{},
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{{
 				Name:        "github_token",
 				Type:        cty.String,
 				Constraints: constraint.RequiredNonNull,
 				Secret:      true,
-			},
+			}},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name: "description",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "filename",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name:       "make_public",
-				Type:       cty.Bool,
-				DefaultVal: cty.False,
-			},
-			&dataspec.AttrSpec{
-				Name: "gist_id",
-				Type: cty.String,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name: "description",
+					Type: cty.String,
+				},
+				{
+					Name: "filename",
+					Type: cty.String,
+				},
+				{
+					Name:       "make_public",
+					Type:       cty.Bool,
+					DefaultVal: cty.False,
+				},
+				{
+					Name: "gist_id",
+					Type: cty.String,
+				},
 			},
 		},
 		AllowedFormats: []plugin.OutputFormat{plugin.OutputFormatMD, plugin.OutputFormatHTML},
@@ -56,16 +59,16 @@ func makeGithubGistPublisher(loader ClientLoaderFn) *plugin.Publisher {
 	}
 }
 
-func parseContent(data plugin.MapData) (document *plugin.ContentSection) {
+func parseContent(data plugindata.Map) (document *plugin.ContentSection) {
 	documentMap, ok := data["document"]
 	if !ok {
 		return
 	}
-	contentMap, ok := documentMap.(plugin.MapData)["content"]
+	contentMap, ok := documentMap.(plugindata.Map)["content"]
 	if !ok {
 		return
 	}
-	content, err := plugin.ParseContentData(contentMap.(plugin.MapData))
+	content, err := plugin.ParseContentData(contentMap.(plugindata.Map))
 	if err != nil {
 		return
 	}
@@ -87,7 +90,7 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 			}}
 		}
 		datactx := params.DataContext
-		datactx["format"] = plugin.StringData(params.Format.String())
+		datactx["format"] = plugindata.String(params.Format.String())
 		var printer print.Printer
 		switch params.Format {
 		case plugin.OutputFormatMD:
@@ -114,14 +117,14 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 			}}
 		}
 
-		client := loader(params.Config.GetAttr("github_token").AsString())
+		client := loader(params.Config.GetAttrVal("github_token").AsString())
 		fileName := params.DocumentName + "." + params.Format.String()
-		filenameAttr := params.Args.GetAttr("filename")
+		filenameAttr := params.Args.GetAttrVal("filename")
 		if !filenameAttr.IsNull() && filenameAttr.AsString() != "" {
 			fileName = filenameAttr.AsString()
 		}
 		payload := &gh.Gist{
-			Public: gh.Bool(params.Args.GetAttr("make_public").True()),
+			Public: gh.Bool(params.Args.GetAttrVal("make_public").True()),
 			Files: map[gh.GistFilename]gh.GistFile{
 				gh.GistFilename(fileName): {
 					Content:  gh.String(buff.String()),
@@ -130,12 +133,12 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 			},
 		}
 		// overrides params if defined
-		descriptionAttr := params.Args.GetAttr("description")
+		descriptionAttr := params.Args.GetAttrVal("description")
 		if !descriptionAttr.IsNull() && descriptionAttr.AsString() != "" {
 			payload.Description = gh.String(descriptionAttr.AsString())
 		}
 		slog.InfoContext(ctx, "Publish to github gist", "filename", fileName)
-		gistId := params.Args.GetAttr("gist_id")
+		gistId := params.Args.GetAttrVal("gist_id")
 		if gistId.IsNull() || gistId.AsString() == "" {
 			gist, _, err := client.Gists().Create(ctx, payload)
 			if err != nil {

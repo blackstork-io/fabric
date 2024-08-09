@@ -3,58 +3,17 @@ package diagnostics
 // More ergonomic wrapper over hcl.Diagnostics.
 
 import (
+	"errors"
+	"log/slog"
+
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 )
 
-type extraList []any
-
-func diagnosticExtra[T any](extra any) (_ T, _ bool) {
-	for extra != nil {
-		switch extraT := extra.(type) {
-		case extraList:
-			for _, extra := range extraT {
-				val, found := diagnosticExtra[T](extra)
-				if found {
-					return val, found
-				}
-			}
-		case hcl.DiagnosticExtraUnwrapper:
-			extra = extraT.UnwrapDiagnosticExtra()
-			continue
-		case T:
-			return extraT, true
-		}
-		break
-	}
-	return
-}
-
-func DiagnosticExtra[T any](diag *hcl.Diagnostic) (_ T, _ bool) {
-	return diagnosticExtra[T](diag.Extra)
-}
-
-func DiagnosticsExtra[T any](diags Diag) (val T, found bool) {
-	for _, diag := range diags {
-		if val, found = diagnosticExtra[T](diag.Extra); found {
-			return
-		}
-	}
-	return
-}
-
 type Diag hcl.Diagnostics // Diagnostics does implement error interface, but not, itself, an error.
 
-func FindByExtra[T any](diags Diag) *hcl.Diagnostic {
-	for _, diag := range diags {
-		if _, found := diagnosticExtra[T](diag.Extra); found {
-			return diag
-		}
-	}
-	return nil
-}
-
 func (d Diag) Error() string {
+	slog.Debug("Treated diagnostic.Diag as error")
 	return hcl.Diagnostics(d).Error()
 }
 
@@ -85,47 +44,6 @@ func (d *Diag) AddWarn(summary, detail string) {
 	})
 }
 
-// Set the subject for diagnostics if it's not already specified.
-func (d *Diag) DefaultSubject(rng *hcl.Range) {
-	if rng == nil {
-		return
-	}
-	for _, diag := range *d {
-		if diag.Subject == nil {
-			diag.Subject = rng
-		}
-	}
-}
-
-// Adds an extra if no extra with the same type is present.
-func AddExtraIfMissing[T any](d Diag, extra T) {
-	for _, diag := range d {
-		if _, found := diagnosticExtra[T](diag.Extra); !found {
-			AddExtra(diag, extra)
-		}
-	}
-}
-
-// Adds extra without replacing existing extras.
-func AddExtra(diag *hcl.Diagnostic, extra any) {
-	switch extraT := diag.Extra.(type) {
-	case nil:
-		diag.Extra = extra
-	case extraList:
-		extraT = append(extraT, extra)
-		diag.Extra = extraT
-	default:
-		diag.Extra = extraList{extraT, extra}
-	}
-}
-
-// Adds extra without replacing existing extras.
-func (d Diag) AddExtra(extra any) {
-	for _, diag := range d {
-		AddExtra(diag, extra)
-	}
-}
-
 // Appends all diags to diagnostics, returns true if the just-appended diagnostics contain an error.
 func (d *Diag) Extend(diags []*hcl.Diagnostic) (haveAddedErrors bool) {
 	*d = append(*d, diags...)
@@ -151,12 +69,20 @@ func (d *Diag) AppendErr(err error, summary string) (haveAddedErrors bool) {
 	return
 }
 
+// Applies refiners to diagnostics, returns the input diagnostics for chaining.
+func (d Diag) Refine(refiners ...Refiner) Diag {
+	for _, option := range refiners {
+		option.Refine(d)
+	}
+	return d
+}
+
 // AppendErr and appendErr together can't be inlined. We're forbidding go from inlining
 // appendErr into AppendErr and thus preventing AppendErr inlining.
 //
 //go:noinline
 func appendErr(d *Diag, err error, summary string) {
-	d.Extend(FromErr(err, summary))
+	d.Extend(FromErr(err, DefaultSummary(summary)))
 }
 
 func FromHcl(diag *hcl.Diagnostic) Diag {
@@ -166,39 +92,30 @@ func FromHcl(diag *hcl.Diagnostic) Diag {
 	return nil
 }
 
-func extractPathErr(diag Diag, err error) {
-	if pathErr, ok := err.(cty.PathError); ok {
-		diag.AddExtra(NewPathExtra(pathErr.Path))
-	}
-}
-
-func FromErr(err error, summary string) (diags Diag) {
+// Turns error into Diag.
+func FromErr(err error, refiners ...Refiner) (diags Diag) {
 	if err == nil {
 		return nil
 	}
-	if diag, ok := err.(Diag); ok {
-		diags = diag
-	}
-	if diag, ok := err.(hcl.Diagnostics); ok {
-		diags = Diag(diag)
-	}
-	if diag, ok := err.(*hcl.Diagnostic); ok {
+	var diag *hcl.Diagnostic
+	var hclDiags hcl.Diagnostics
+	switch {
+	case errors.As(err, &diags):
+	case errors.As(err, &hclDiags):
+		diags = Diag(hclDiags)
+	case errors.As(err, &diag):
 		diags = Diag{diag}
-	}
-	if diags == nil {
-		diags = Diag{&hcl.Diagnostic{
+	default:
+		diags = Diag{{
 			Severity: hcl.DiagError,
-			Summary:  summary,
 			Detail:   err.Error(),
 		}}
 	}
-	extractPathErr(diags, err)
-	return
-}
-
-func FromErrSubj(err error, summary string, subject *hcl.Range) (diags Diag) {
-	diags = FromErr(err, summary)
-	diags.DefaultSubject(subject)
-	extractPathErr(diags, err)
+	var pathErr cty.PathError
+	if errors.As(err, &pathErr) {
+		refiners = append(refiners, AddPath(pathErr.Path))
+	}
+	refiners = append(refiners, DefaultSummary("Error"))
+	diags.Refine(refiners...)
 	return
 }

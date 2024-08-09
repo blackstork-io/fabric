@@ -1,5 +1,7 @@
 package utils
 
+import "github.com/blackstork-io/fabric/pkg/diagnostics"
+
 // Sets slice[idx] = val, growing the slice if needed, and returns the updated slice.
 func SetAt[T any](slice []T, idx int, val T) []T {
 	needToAlloc := idx - len(slice)
@@ -43,4 +45,19 @@ func FnMapErr[I, O any](s []I, fn func(I) (O, error)) (out []O, err error) {
 		}
 	}
 	return
+}
+
+// Produce a new slice by applying function fn to items of the slice s.
+// Collects slice-like errors from the second return value (diagnostics in our case)
+func FnMapDiags[I, O any](diags *diagnostics.Diag, s []I, fn func(I) (O, diagnostics.Diag)) []O {
+	if s == nil {
+		return nil
+	}
+	var diag diagnostics.Diag
+	out := make([]O, len(s))
+	for i, v := range s {
+		out[i], diag = fn(v)
+		diags.Extend(diag)
+	}
+	return out
 }

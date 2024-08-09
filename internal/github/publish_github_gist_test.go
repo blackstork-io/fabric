@@ -12,6 +12,8 @@ import (
 	"github.com/blackstork-io/fabric/internal/github"
 	github_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/github"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 type GithubPublishGistTestSuite struct {
@@ -61,37 +63,36 @@ func (s *GithubPublishGistTestSuite) TestBasic() {
 		},
 	}).Return(&gh.Gist{HTMLURL: gh.String("http://gist.github.com/mock")}, &gh.Response{}, nil)
 	ctx := context.Background()
-	titleMeta := plugin.MapData{
-		"provider": plugin.StringData("title"),
-		"plugin":   plugin.StringData("blackstork/builtin"),
+	titleMeta := plugindata.Map{
+		"provider": plugindata.String("title"),
+		"plugin":   plugindata.String("blackstork/builtin"),
 	}
+
 	diags := s.plugin.Publish(ctx, "github_gist", &plugin.PublishParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"github_token": cty.StringVal("testtoken"),
-		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"description": cty.StringVal("test description"),
-			"filename":    cty.StringVal("filename.md"),
-			"make_public": cty.NullVal(cty.Bool),
-			"gist_id":     cty.NullVal(cty.String),
-		}),
+		Config: plugintest.NewTestDecoder(s.T(), s.plugin.Publishers["github_gist"].Config).
+			SetAttr("github_token", cty.StringVal("testtoken")).
+			Decode(),
+		Args: plugintest.NewTestDecoder(s.T(), s.plugin.Publishers["github_gist"].Args).
+			SetAttr("description", cty.StringVal("test description")).
+			SetAttr("filename", cty.StringVal("filename.md")).
+			Decode(),
 		Format: plugin.OutputFormatMD,
-		DataContext: plugin.MapData{
-			"document": plugin.MapData{
-				"meta": plugin.MapData{
-					"name": plugin.StringData("test_document"),
+		DataContext: plugindata.Map{
+			"document": plugindata.Map{
+				"meta": plugindata.Map{
+					"name": plugindata.String("test_document"),
 				},
-				"content": plugin.MapData{
-					"type": plugin.StringData("section"),
-					"children": plugin.ListData{
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("# Header 1"),
+				"content": plugindata.Map{
+					"type": plugindata.String("section"),
+					"children": plugindata.List{
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("# Header 1"),
 							"meta":     titleMeta,
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
 						},
 					},
 				},
@@ -115,37 +116,36 @@ func (s *GithubPublishGistTestSuite) TestFilenameOptional() {
 		},
 	}).Return(&gh.Gist{HTMLURL: gh.String("http://gist.github.com/mock")}, &gh.Response{}, nil)
 	ctx := context.Background()
-	titleMeta := plugin.MapData{
-		"provider": plugin.StringData("title"),
-		"plugin":   plugin.StringData("blackstork/builtin"),
+	titleMeta := plugindata.Map{
+		"provider": plugindata.String("title"),
+		"plugin":   plugindata.String("blackstork/builtin"),
 	}
 	diags := s.plugin.Publish(ctx, "github_gist", &plugin.PublishParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"github_token": cty.StringVal("testtoken"),
-		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"description": cty.StringVal("test description"),
-			"filename":    cty.StringVal(""),
-			"make_public": cty.NullVal(cty.Bool),
-			"gist_id":     cty.NullVal(cty.String),
-		}),
+		Config: plugintest.NewTestDecoder(s.T(), s.plugin.Publishers["github_gist"].Config).
+			SetAttr("github_token", cty.StringVal("testtoken")).
+			Decode(),
+		Args: plugintest.NewTestDecoder(s.T(), s.plugin.Publishers["github_gist"].Args).
+			SetAttr("description", cty.StringVal("test description")).
+			SetAttr("filename", cty.StringVal("")).
+			Decode(),
+
 		Format: plugin.OutputFormatMD,
-		DataContext: plugin.MapData{
-			"document": plugin.MapData{
-				"meta": plugin.MapData{
-					"name": plugin.StringData("test_document"),
+		DataContext: plugindata.Map{
+			"document": plugindata.Map{
+				"meta": plugindata.Map{
+					"name": plugindata.String("test_document"),
 				},
-				"content": plugin.MapData{
-					"type": plugin.StringData("section"),
-					"children": plugin.ListData{
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("# Header 1"),
+				"content": plugindata.Map{
+					"type": plugindata.String("section"),
+					"children": plugindata.List{
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("# Header 1"),
 							"meta":     titleMeta,
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
 						},
 					},
 				},
@@ -178,37 +178,35 @@ func (s *GithubPublishGistTestSuite) TestResetOldFiles() {
 		},
 	}).Return(&gh.Gist{HTMLURL: gh.String("http://gist.github.com/mock")}, &gh.Response{}, nil)
 	ctx := context.Background()
-	titleMeta := plugin.MapData{
-		"provider": plugin.StringData("title"),
-		"plugin":   plugin.StringData("blackstork/builtin"),
+	titleMeta := plugindata.Map{
+		"provider": plugindata.String("title"),
+		"plugin":   plugindata.String("blackstork/builtin"),
 	}
 	diags := s.plugin.Publish(ctx, "github_gist", &plugin.PublishParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"github_token": cty.StringVal("testtoken"),
-		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"description": cty.StringVal("test description"),
-			"filename":    cty.StringVal(""),
-			"make_public": cty.NullVal(cty.Bool),
-			"gist_id":     cty.StringVal("gistid"),
-		}),
+		Config: plugintest.NewTestDecoder(s.T(), s.plugin.Publishers["github_gist"].Config).
+			SetAttr("github_token", cty.StringVal("testtoken")).
+			Decode(),
+		Args: plugintest.NewTestDecoder(s.T(), s.plugin.Publishers["github_gist"].Args).
+			SetAttr("description", cty.StringVal("test description")).
+			SetAttr("gist_id", cty.StringVal("gistid")).
+			Decode(),
 		Format: plugin.OutputFormatMD,
-		DataContext: plugin.MapData{
-			"document": plugin.MapData{
-				"meta": plugin.MapData{
-					"name": plugin.StringData("test_document"),
+		DataContext: plugindata.Map{
+			"document": plugindata.Map{
+				"meta": plugindata.Map{
+					"name": plugindata.String("test_document"),
 				},
-				"content": plugin.MapData{
-					"type": plugin.StringData("section"),
-					"children": plugin.ListData{
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("# Header 1"),
+				"content": plugindata.Map{
+					"type": plugindata.String("section"),
+					"children": plugindata.List{
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("# Header 1"),
 							"meta":     titleMeta,
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
 						},
 					},
 				},

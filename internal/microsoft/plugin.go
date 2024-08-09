@@ -6,10 +6,10 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
-	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/microsoft/client"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 type ClientLoadFn func() client.Client
@@ -45,15 +45,15 @@ func Plugin(version string, loader ClientLoadFn, openAiClientLoader AzureOpenaiC
 	}
 }
 
-func makeClient(ctx context.Context, loader ClientLoadFn, cfg cty.Value) (client.Client, error) {
-	if cfg.IsNull() {
+func makeClient(ctx context.Context, loader ClientLoadFn, cfg *dataspec.Block) (client.Client, error) {
+	if cfg == nil {
 		return nil, fmt.Errorf("configuration is required")
 	}
 	cli := loader()
 	res, err := cli.GetClientCredentialsToken(ctx, &client.GetClientCredentialsTokenReq{
-		TenantID:     cfg.GetAttr("tenant_id").AsString(),
-		ClientID:     cfg.GetAttr("client_id").AsString(),
-		ClientSecret: cfg.GetAttr("client_secret").AsString(),
+		TenantID:     cfg.GetAttrVal("tenant_id").AsString(),
+		ClientID:     cfg.GetAttrVal("client_id").AsString(),
+		ClientSecret: cfg.GetAttrVal("client_secret").AsString(),
 	})
 	if err != nil {
 		return nil, err

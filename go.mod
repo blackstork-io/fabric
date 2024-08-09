@@ -9,7 +9,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
 	github.com/elastic/go-elasticsearch/v8 v8.14.0
-	github.com/evanphx/go-hclog-slog v0.0.0-20230905211129-6d31b63d6f09
+	github.com/evanphx/go-hclog-slog v0.0.0-20240717231540-be48fc4c4df5
 	github.com/gobwas/glob v0.2.3
 	github.com/golang-cz/devslog v0.0.8
 	github.com/google/go-github/v58 v58.0.0
@@ -56,8 +56,6 @@ require (
 	google.golang.org/protobuf v1.34.1
 	gopkg.in/yaml.v3 v3.0.1
 )
-
-replace github.com/evanphx/go-hclog-slog v0.0.0-20230905211129-6d31b63d6f09 => github.com/Andrew-Morozko/go-hclog-slog v0.0.0-20240624145756-528e39db2968
 
 require (
 	dario.cat/mergo v1.0.0 // indirect

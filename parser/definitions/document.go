@@ -18,8 +18,8 @@ type Document struct {
 
 var _ FabricBlock = (*Document)(nil)
 
-func (d *Document) GetHCLBlock() *hcl.Block {
-	return d.Block.AsHCLBlock()
+func (d *Document) GetHCLBlock() *hclsyntax.Block {
+	return d.Block
 }
 
 var ctyDocumentType = encapsulator.NewEncoder[Document]("document", nil)

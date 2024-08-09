@@ -214,7 +214,7 @@ func parseBlockDefinitions(body *hclsyntax.Body) (res *DefinedBlocks, diags diag
 			diags.Append(AddIfMissing(res.Config, *key, cfg))
 		case definitions.BlockKindGlobalConfig:
 			if res.GlobalConfig != nil {
-				origRng := res.GlobalConfig.GetHCLBlock().DefRange
+				origRng := res.GlobalConfig.GetHCLBlock().DefRange()
 				diags.Append(&hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  "Global config redefinition",

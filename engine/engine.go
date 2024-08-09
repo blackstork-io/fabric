@@ -23,6 +23,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/resolver"
 	"github.com/blackstork-io/fabric/plugin/runner"
 )
@@ -40,7 +41,7 @@ type Engine struct {
 	lockFile *resolver.LockFile
 	resolver *resolver.Resolver
 	fileMap  map[string]*hcl.File
-	env      plugin.MapData
+	env      plugindata.Map
 }
 
 // New creates a new Engine instance with the provided options.
@@ -354,7 +355,7 @@ var ErrInvalidDataTarget = diagnostics.Diag{{
 	Detail:   "Target must be in the format 'document.<doc-name>.data.<plugin-name>.<block-name>' or 'data.<plugin-name>.<block-name>'",
 }}
 
-func (e *Engine) FetchData(ctx context.Context, target string) (_ plugin.Data, diags diagnostics.Diag) {
+func (e *Engine) FetchData(ctx context.Context, target string) (_ plugindata.Data, diags diagnostics.Diag) {
 	ctx, span := e.tracer.Start(ctx, "Engine.FetchData", trace.WithAttributes(
 		attribute.String("target", target),
 	))
@@ -397,9 +398,9 @@ func (e *Engine) FetchData(ctx context.Context, target string) (_ plugin.Data, d
 	return loadedData.FetchData(ctx)
 }
 
-func (e *Engine) loadEnv(ctx context.Context) (envMap plugin.MapData, diags diagnostics.Diag) {
+func (e *Engine) loadEnv(ctx context.Context) (envMap plugindata.Map, diags diagnostics.Diag) {
 	e.logger.DebugContext(ctx, "Loading env variables")
-	envMap = plugin.MapData{}
+	envMap = plugindata.Map{}
 	if e.config == nil || e.config.EnvVarsPattern == nil {
 		return
 	}
@@ -411,22 +412,22 @@ func (e *Engine) loadEnv(ctx context.Context) (envMap plugin.MapData, diags diag
 		if !e.config.EnvVarsPattern.Match(k) {
 			continue
 		}
-		envMap[k] = plugin.StringData(v.AsString())
+		envMap[k] = plugindata.String(v.AsString())
 	}
 	return
 }
 
-func (e *Engine) initialDataCtx(ctx context.Context) (data plugin.MapData, diags diagnostics.Diag) {
+func (e *Engine) initialDataCtx(ctx context.Context) (data plugindata.Map, diags diagnostics.Diag) {
 	if e.env == nil {
 		e.env, diags = e.loadEnv(ctx)
 	}
-	data = plugin.MapData{
+	data = plugindata.Map{
 		"env": e.env,
 	}
 	return
 }
 
-func (e *Engine) RenderContent(ctx context.Context, target string) (doc *eval.Document, content plugin.Content, data plugin.Data, diags diagnostics.Diag) {
+func (e *Engine) RenderContent(ctx context.Context, target string) (doc *eval.Document, content plugin.Content, data plugindata.Data, diags diagnostics.Diag) {
 	ctx, span := e.tracer.Start(ctx, "Engine.RenderContent", trace.WithAttributes(
 		attribute.String("target", target),
 	))

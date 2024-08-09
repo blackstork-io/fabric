@@ -32,10 +32,6 @@ The data source supports the following execution arguments:
 
 ```hcl
 data rss {
-  # Required string.
-  # For example:
-  url = "https://www.elastic.co/security-labs/rss/feed.xml"
-
   # Basic authentication credentials to be used in a HTTP request fetching RSS feed.
   #
   # Optional
@@ -50,5 +46,10 @@ data rss {
     # For example:
     password = "passwd"
   }
+
+
+  # Required string.
+  # For example:
+  url = "https://www.elastic.co/security-labs/rss/feed.xml"
 }
 ```

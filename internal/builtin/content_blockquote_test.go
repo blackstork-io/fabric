@@ -8,6 +8,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
@@ -34,11 +35,7 @@ func (s *BlockQuoteTestSuite) TestMissingText() {
 	plugintest.DecodeAndAssert(s.T(), s.schema.Args, ``, nil, diagtest.Asserts{
 		{
 			diagtest.IsError,
-			diagtest.DetailContains(`The argument "value" is required`),
-		},
-		{
-			diagtest.IsError,
-			diagtest.SummaryContains(`Argument value must be non-null`),
+			diagtest.DetailContains(`The attribute "value" is required`),
 		},
 	})
 }
@@ -47,7 +44,7 @@ func (s *BlockQuoteTestSuite) TestNullText() {
 	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `value = null`, nil, diagtest.Asserts{
 		{
 			diagtest.IsError,
-			diagtest.SummaryContains(`Argument value must be non-null`),
+			diagtest.SummaryContains(`Attribute must be non-null`),
 		},
 	})
 }
@@ -59,8 +56,8 @@ func (s *BlockQuoteTestSuite) TestCallBlockquote() {
 	`, nil, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)
@@ -78,8 +75,8 @@ func (s *BlockQuoteTestSuite) TestCallBlockquoteMultiline() {
 	`, nil, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)
@@ -97,8 +94,8 @@ func (s *BlockQuoteTestSuite) TestCallBlockquoteMultilineDoubleNewline() {
 	`, nil, nil)
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)

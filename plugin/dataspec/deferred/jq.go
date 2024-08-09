@@ -1,4 +1,4 @@
-package dataquery
+package deferred
 
 import (
 	"context"
@@ -6,23 +6,17 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/itchyny/gojq"
 	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/convert"
 	"github.com/zclconf/go-cty/cty/function"
 
+	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/encapsulator"
 	"github.com/blackstork-io/fabric/pkg/utils"
-	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type JqQuery struct {
-	*JqQueryDefinition
-	Evaluated bool
-	Result    plugin.Data
-}
-
-var _ plugin.CustomEval = (*JqQuery)(nil)
-
-type JqQueryDefinition struct {
 	query     string
 	srcRange  *hcl.Range
 	parseOnce func() (*gojq.Code, diagnostics.Diag)
@@ -34,10 +28,10 @@ var JqQueryType = encapsulator.NewCodec("jq query", &encapsulator.CapsuleOps[JqQ
 		if diags.Extend(diag) {
 			return
 		}
-		if queryVal.IsNull() || !queryVal.Type().Equals(cty.String) {
+		if queryVal.IsNull() || !queryVal.IsKnown() || !queryVal.Type().Equals(cty.String) {
 			diags.Append(&hcl.Diagnostic{
 				Severity:    hcl.DiagError,
-				Summary:     "Invalid argument type",
+				Summary:     "Invalid argument",
 				Detail:      "A string is required",
 				Subject:     expr.Range().Ptr(),
 				Expression:  expr,
@@ -47,37 +41,26 @@ var JqQueryType = encapsulator.NewCodec("jq query", &encapsulator.CapsuleOps[JqQ
 		}
 
 		val = &JqQuery{
-			JqQueryDefinition: &JqQueryDefinition{
-				query:    queryVal.AsString(),
-				srcRange: expr.Range().Ptr(),
-			},
+			query:    queryVal.AsString(),
+			srcRange: expr.Range().Ptr(),
 		}
 		val.parseOnce = utils.OnceVal(val.parse)
 		return
-	},
-	ConversionFrom: func(src cty.Type) func(*JqQuery, cty.Path) (cty.Value, error) {
-		if src.Equals(plugin.EncapsulatedData.CtyType()) {
-			return func(jq *JqQuery, p cty.Path) (cty.Value, error) {
-				if !jq.Evaluated {
-					return cty.NilVal, p.NewErrorf("Attempted to encode non-evaluated JqQuery")
-				}
-				return plugin.EncapsulatedData.ValToCty(jq.Result), nil
-			}
-		}
-		return nil
 	},
 })
 
 const funcName = "query_jq"
 
 // Adds "query_jq" function to the eval context
-func JqEvalContext(base *hcl.EvalContext) (evalCtx *hcl.EvalContext) {
-	// try finding existing jq eval context in base
-	if ctx := utils.EvalContextByFunc(base, funcName); ctx != nil {
-		return base
+func WithQueryFuncs(ctx context.Context) context.Context {
+	evalCtx := fabctx.GetEvalContext(ctx)
+
+	// try finding existing jq eval context
+	if jqEvalCtx := utils.EvalContextByFunc(evalCtx, funcName); jqEvalCtx != nil {
+		return ctx
 	}
 
-	evalCtx = base.NewChild()
+	evalCtx = evalCtx.NewChild()
 	evalCtx.Functions = map[string]function.Function{
 		funcName: function.New(&function.Spec{
 			Params: []function.Parameter{
@@ -87,17 +70,16 @@ func JqEvalContext(base *hcl.EvalContext) (evalCtx *hcl.EvalContext) {
 					Type:        JqQueryType.CtyType(),
 				},
 			},
-			Type: function.StaticReturnType(JqQueryType.CtyType()),
+			Type: function.StaticReturnType(Type.CtyType()),
 			Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
-				// The parsing is done by the customdecode on JqType
-				return args[0], nil
+				return convert.Convert(args[0], retType)
 			},
 		}),
 	}
-	return
+	return fabctx.WithEvalContext(ctx, evalCtx)
 }
 
-func (q *JqQueryDefinition) parse() (code *gojq.Code, diags diagnostics.Diag) {
+func (q *JqQuery) parse() (code *gojq.Code, diags diagnostics.Diag) {
 	if q == nil {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
@@ -137,22 +119,23 @@ func (q *JqQueryDefinition) parse() (code *gojq.Code, diags diagnostics.Diag) {
 	return
 }
 
-func (q *JqQueryDefinition) CustomEval(ctx context.Context, dataCtx plugin.MapData) (result cty.Value, diags diagnostics.Diag) {
-	var newQ *JqQuery
-	newQ, diags = q.Eval(ctx, dataCtx)
-	if diags.HasErrors() {
-		return
-	}
-	result = JqQueryType.ToCty(newQ)
-	return
-}
-
-func (q *JqQueryDefinition) Eval(ctx context.Context, dataCtx plugin.MapData) (result *JqQuery, diags diagnostics.Diag) {
+func (q *JqQuery) DeferredEval(ctx context.Context, dataCtx plugindata.Map) (_ cty.Value, diags diagnostics.Diag) {
 	if q == nil {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
-			Summary:  "Failed to eval the query",
+			Summary:  "Failed to evaluate the query",
 			Detail:   "Query wasn't defined",
+		})
+		return
+	}
+	defer func() {
+		diags.Refine(diagnostics.DefaultSubject(*q.srcRange))
+	}()
+	if dataCtx == nil {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Failed to evaluate the query",
+			Detail:   "Data context wasn't provided. Make sure the query is used in the content provider invocation.",
 		})
 		return
 	}
@@ -160,7 +143,6 @@ func (q *JqQueryDefinition) Eval(ctx context.Context, dataCtx plugin.MapData) (r
 	if diags.HasErrors() {
 		return
 	}
-
 	res, hasResult := code.RunWithContext(ctx, dataCtx.Any()).Next()
 	err, ok := res.(error)
 	if ok {
@@ -168,7 +150,6 @@ func (q *JqQueryDefinition) Eval(ctx context.Context, dataCtx plugin.MapData) (r
 			Severity: hcl.DiagError,
 			Summary:  "Failed to run the query",
 			Detail:   err.Error(),
-			Subject:  q.srcRange,
 			Extra: diagnostics.GoJQError{
 				Err:   err,
 				Query: q.query,
@@ -179,20 +160,14 @@ func (q *JqQueryDefinition) Eval(ctx context.Context, dataCtx plugin.MapData) (r
 	if !hasResult {
 		res = nil
 	}
-	data, err := plugin.ParseDataAny(res)
+	data, err := plugindata.ParseAny(res)
 	if err != nil {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Incorrect query result type",
 			Detail:   err.Error(),
-			Subject:  q.srcRange,
 		})
 		return
 	}
-	result = &JqQuery{
-		JqQueryDefinition: q,
-		Result:            data,
-		Evaluated:         true,
-	}
-	return
+	return plugindata.Encapsulated.ToCty(&data), diags
 }

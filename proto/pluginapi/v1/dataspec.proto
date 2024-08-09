@@ -3,17 +3,8 @@ syntax = "proto3";
 package pluginapi.v1;
 
 import "pluginapi/v1/cty.proto";
-import "pluginapi/v1/hclspec.proto";
+import "pluginapi/v1/hcl.proto";
 
-message Spec {
-    oneof data {
-        AttrSpec    attr     = 1;
-        BlockSpec   block    = 2;
-        ObjectSpec  obj_spec = 3;
-        ObjDumpSpec obj_dump = 4;
-        OpaqueSpec  opaque   = 5;
-    }
-}
 
 message AttrSpec {
     string            name          = 1;
@@ -30,33 +21,37 @@ message AttrSpec {
 }
 
 message BlockSpec {
-    string name     = 1;
-    Spec   nested   = 2;
-    string doc      = 3;
-    bool   required = 4;
-}
-
-message ObjectSpec {
-    message ObjectSpecChild {
-        oneof data {
-            AttrSpec         attr  = 1;
-            BlockSpec        block = 2;
-            KeyForObjectSpec named = 3;
+    message NameMatcher {
+        message Exact {
+            repeated string matches = 1;
+        }
+        oneof matcher {
+            Exact exact = 1;
         }
     }
-    repeated ObjectSpecChild specs = 1;
+    repeated NameMatcher headers_spec                 = 1;
+    bool                 required                     = 2;
+    bool                 repeatable                   = 3;
+    string               doc                          = 4;
+    repeated BlockSpec   block_specs                  = 5;
+    repeated AttrSpec    attr_specs                   = 6;
+    bool                 allow_unspecified_blocks     = 7;
+    bool                 allow_unspecified_attributes = 8;
 }
 
-message ObjDumpSpec {
-    string doc = 1;
+message Attr {
+    string   name        = 1;
+    Range    name_range  = 2;
+    CtyValue value       = 3;
+    Range    value_range = 4;
+    bool     secret      = 5;
 }
 
-message OpaqueSpec {
-    HclSpec spec = 1;
-    string  doc  = 2;
+message Block {
+    repeated string   header         = 1;
+    repeated Range    header_ranges  = 2;
+    map<string, Attr> attributes     = 3;
+    repeated Block    blocks         = 4;
+    Range             contents_range = 5;
 }
 
-message KeyForObjectSpec {
-    Spec   spec = 1;
-    string key  = 2;
-}

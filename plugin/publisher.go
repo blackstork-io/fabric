@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type OutputFormat int
@@ -40,18 +40,18 @@ type PublishFunc func(ctx context.Context, params *PublishParams) diagnostics.Di
 
 type PublishParams struct {
 	DocumentName string
-	Config       cty.Value
-	Args         cty.Value
-	DataContext  MapData
-	Format       OutputFormat
+	Config      *dataspec.Block
+	Args        *dataspec.Block
+	DataContext plugindata.Map
+	Format      OutputFormat
 }
 
 type Publisher struct {
 	Doc            string
 	Tags           []string
 	PublishFunc    PublishFunc
-	Args           dataspec.RootSpec
-	Config         dataspec.RootSpec
+	Args           *dataspec.RootSpec
+	Config         *dataspec.RootSpec
 	AllowedFormats []OutputFormat
 }
 

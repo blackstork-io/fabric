@@ -4,11 +4,13 @@ import (
 	"context"
 	"log/slog"
 	"strconv"
+	"strings"
 
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 // WithLogging wraps the plugin with logging instrumentation.
@@ -54,8 +56,8 @@ func makePublisherLogging(plugin, name string, publisher Publisher, logger *slog
 			slog.String("plugin", plugin),
 			slog.String("publisher", name),
 			slog.String("format", params.Format.String()),
-			slog.Any("config", logDataSpecValue(publisher.Config, params.Config)),
-			slog.Any("args", logDataSpecValue(publisher.Args, params.Args)),
+			slog.Any("config", logDataBlockValue(params.Config)),
+			slog.Any("args", logDataBlockValue(params.Args)),
 			slog.String("document_name", params.DocumentName),
 		))
 		return next(ctx, params)
@@ -68,8 +70,8 @@ func makeContentProviderLogging(plugin, name string, provider ContentProvider, l
 		logger.DebugContext(ctx, "Executing content provider", "params", slog.GroupValue(
 			slog.String("plugin", plugin),
 			slog.String("provider", name),
-			slog.Any("config", logDataSpecValue(provider.Config, params.Config)),
-			slog.Any("args", logDataSpecValue(provider.Args, params.Args)),
+			slog.Any("config", logDataBlockValue(params.Config)),
+			slog.Any("args", logDataBlockValue(params.Args)),
 			slog.Uint64("content_id", uint64(params.ContentID)),
 		))
 		return next(ctx, params)
@@ -78,61 +80,53 @@ func makeContentProviderLogging(plugin, name string, provider ContentProvider, l
 
 func makeDataSourceLogging(plugin, name string, source DataSource, logger *slog.Logger) RetrieveDataFunc {
 	next := source.DataFunc
-	return func(ctx context.Context, params *RetrieveDataParams) (Data, diagnostics.Diag) {
+	return func(ctx context.Context, params *RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 		logger.DebugContext(ctx, "Executing datasource", "params", slog.GroupValue(
 			slog.String("plugin", plugin),
 			slog.String("datasource", name),
-			slog.Any("config", logDataSpecValue(source.Config, params.Config)),
-			slog.Any("args", logDataSpecValue(source.Args, params.Args)),
+			slog.Any("config", logDataBlockValue(params.Config)),
+			slog.Any("args", logDataBlockValue(params.Args)),
 		))
 		return next(ctx, params)
 	}
 }
 
-func logDataSpecValue(spec dataspec.Spec, value cty.Value) slog.Value {
-	switch spec := spec.(type) {
-	case dataspec.ObjectSpec:
-		return logDataSpecObjectValue(spec, value)
-	case *dataspec.ObjectSpec:
-		return logDataSpecObjectValue(*spec, value)
-	case *dataspec.AttrSpec:
-		return logDataSpecAttrValue(spec, value)
-	case *dataspec.BlockSpec:
-		return logDataSpecBlockValue(spec, value)
-	default:
+func logDataBlockValue(value *dataspec.Block) slog.Value {
+	if value == nil {
 		return slog.Value{}
 	}
-}
-
-func logDataSpecObjectValue(spec dataspec.ObjectSpec, value cty.Value) slog.Value {
-	if value.IsNull() || (!value.Type().IsObjectType() && !value.Type().IsMapType()) {
-		return slog.Value{}
-	}
-	m := value.AsValueMap()
-	attrs := []slog.Attr{}
-	for _, attr := range spec {
-		v, ok := m[attr.KeyForObjectSpec()]
-		if !ok {
+	attrs := make([]slog.Attr, 0, len(value.Blocks)+len(value.Attrs))
+	for _, b := range value.Blocks {
+		if b == nil {
 			continue
 		}
 		attrs = append(attrs, slog.Attr{
-			Key:   attr.KeyForObjectSpec(),
-			Value: logDataSpecValue(attr, v),
+			Key:   "block_" + strings.Join(b.Header, "_"),
+			Value: logDataBlockValue(b),
 		})
+	}
+	for _, a := range value.Attrs {
+		if a == nil {
+			continue
+		}
+		attrs = append(attrs, logDataAttr(a))
 	}
 	return slog.GroupValue(attrs...)
 }
 
-func logDataSpecBlockValue(spec *dataspec.BlockSpec, value cty.Value) slog.Value {
-	return logDataSpecValue(spec.Nested, value)
+func logDataAttr(attr *dataspec.Attr) (val slog.Attr) {
+	val.Key = attr.Name
+	if attr.Secret {
+		val.Value = slog.StringValue("<secret>")
+	} else {
+		val.Value = logCtyValue(attr.Value)
+	}
+	return
 }
 
-func logDataSpecAttrValue(spec *dataspec.AttrSpec, value cty.Value) slog.Value {
+func logCtyValue(value cty.Value) slog.Value {
 	if value.IsNull() {
 		return slog.Value{}
-	}
-	if spec.Secret {
-		return slog.StringValue("<secret>")
 	}
 	switch {
 	case value.Type() == cty.String:

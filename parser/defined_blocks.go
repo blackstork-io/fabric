@@ -139,12 +139,12 @@ func (db *DefinedBlocks) Merge(other *DefinedBlocks) (diags diagnostics.Diag) {
 func AddIfMissing[M ~map[K]V, K comparable, V definitions.FabricBlock](m M, key K, newBlock V) *hcl.Diagnostic {
 	if origBlock, found := m[key]; found {
 		kind := origBlock.GetHCLBlock().Type
-		origDefRange := origBlock.GetHCLBlock().DefRange
+		origDefRange := origBlock.GetHCLBlock().DefRange()
 		return &hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  fmt.Sprintf("Duplicate '%s' declaration", kind),
 			Detail:   fmt.Sprintf("'%s' with the same name originally defined at %s:%d", kind, origDefRange.Filename, origDefRange.Start.Line),
-			Subject:  newBlock.GetHCLBlock().DefRange.Ptr(),
+			Subject:  newBlock.GetHCLBlock().DefRange().Ptr(),
 		}
 	}
 	m[key] = newBlock

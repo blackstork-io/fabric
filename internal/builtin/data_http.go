@@ -23,75 +23,82 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeHTTPDataSource(version string) *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchHTTPDataWrapper(version),
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "url",
-				Type:        cty.String,
-				ExampleVal:  cty.StringVal("https://example.localhost/file.json"),
-				Constraints: constraint.RequiredMeaningful,
-				Doc:         "URL to fetch data from. Supported schemas are `http` and `https`",
-			},
-			&dataspec.AttrSpec{
-				Name:       "method",
-				Type:       cty.String,
-				DefaultVal: cty.StringVal("GET"),
-				OneOf: []cty.Value{
-					cty.StringVal("GET"),
-					cty.StringVal("POST"),
-					cty.StringVal("HEAD"),
+		Args: &dataspec.RootSpec{
+			Blocks: []*dataspec.BlockSpec{
+				{
+					Header: dataspec.HeadersSpec{
+						dataspec.ExactMatcher{"basic_auth"},
+					},
+					Doc: `
+						Basic authentication credentials to be used for HTTP request.
+					`,
+					Attrs: []*dataspec.AttrSpec{
+						{
+							Name:        "username",
+							Type:        cty.String,
+							ExampleVal:  cty.StringVal("user@example.com"),
+							Constraints: constraint.RequiredNonNull,
+						},
+						{
+							Name:       "password",
+							Type:       cty.String,
+							ExampleVal: cty.StringVal("passwd"),
+							Doc: `
+								Note: avoid storing credentials in the templates. Use environment variables instead.
+							`,
+							Constraints: constraint.RequiredNonNull,
+						},
+					},
 				},
-				Doc: "HTTP method for the request. Allowed methods are `GET`, `POST` and `HEAD`",
 			},
-			&dataspec.AttrSpec{
-				Name:       "insecure",
-				Type:       cty.Bool,
-				DefaultVal: cty.BoolVal(false),
-				Doc:        "If set to `true`, disabled verification of the server's certificate.",
-			},
-			&dataspec.AttrSpec{
-				Name:       "timeout",
-				Type:       cty.String,
-				DefaultVal: cty.StringVal("30s"),
-				Doc:        "The duration of a timeout for a request. Accepts numbers, with optional fractions and a unit suffix. For example, valid values would be: 1.5s, 30s, 2m, 2m30s, or 1h",
-			},
-			&dataspec.AttrSpec{
-				Name:       "headers",
-				Type:       cty.Map(cty.String),
-				DefaultVal: cty.NullVal(cty.Map(cty.String)),
-				Doc:        `The headers to be set in a request`,
-			},
-			&dataspec.AttrSpec{
-				Name:       "body",
-				Type:       cty.String,
-				DefaultVal: cty.NullVal(cty.String),
-				Doc:        `Request body`,
-			},
-			&dataspec.BlockSpec{
-				Name: "basic_auth",
-				Doc: `
-					Basic authentication credentials to be used for HTTP request.
-				`,
-				Nested: dataspec.ObjectSpec{
-					&dataspec.AttrSpec{
-						Name:        "username",
-						Type:        cty.String,
-						ExampleVal:  cty.StringVal("user@example.com"),
-						Constraints: constraint.RequiredNonNull,
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "url",
+					Type:        cty.String,
+					ExampleVal:  cty.StringVal("https://example.localhost/file.json"),
+					Constraints: constraint.RequiredMeaningful,
+					Doc:         "URL to fetch data from. Supported schemas are `http` and `https`",
+				},
+				{
+					Name:       "method",
+					Type:       cty.String,
+					DefaultVal: cty.StringVal("GET"),
+					OneOf: []cty.Value{
+						cty.StringVal("GET"),
+						cty.StringVal("POST"),
+						cty.StringVal("HEAD"),
 					},
-					&dataspec.AttrSpec{
-						Name:       "password",
-						Type:       cty.String,
-						ExampleVal: cty.StringVal("passwd"),
-						Doc: `
-							Note: avoid storing credentials in the templates. Use environment variables instead.
-						`,
-						Constraints: constraint.RequiredNonNull,
-					},
+					Doc: "HTTP method for the request. Allowed methods are `GET`, `POST` and `HEAD`",
+				},
+				{
+					Name:       "insecure",
+					Type:       cty.Bool,
+					DefaultVal: cty.BoolVal(false),
+					Doc:        "If set to `true`, disabled verification of the server's certificate.",
+				},
+				{
+					Name:       "timeout",
+					Type:       cty.String,
+					DefaultVal: cty.StringVal("30s"),
+					Doc:        "The duration of a timeout for a request. Accepts numbers, with optional fractions and a unit suffix. For example, valid values would be: 1.5s, 30s, 2m, 2m30s, or 1h",
+				},
+				{
+					Name:       "headers",
+					Type:       cty.Map(cty.String),
+					DefaultVal: cty.NullVal(cty.Map(cty.String)),
+					Doc:        `The headers to be set in a request`,
+				},
+				{
+					Name:       "body",
+					Type:       cty.String,
+					DefaultVal: cty.NullVal(cty.String),
+					Doc:        `Request body`,
 				},
 			},
 		},
@@ -99,7 +106,7 @@ func makeHTTPDataSource(version string) *plugin.DataSource {
 		Loads data from a URL.
 
 		At the moment, the data source accepts only responses with UTF-8 charset and parses only responses
-		with MIME types ` + "`text/csv`" + ` or ` + "`application/json`" + `. 
+		with MIME types ` + "`text/csv`" + ` or ` + "`application/json`" + `.
 
 		If MIME type of the response is ` + "`text/csv`" + ` or ` + "`application/json`" + `, the response
 		content will be parsed and returned as a JSON structure (similar to the behaviour of CSV and JSON data
@@ -204,17 +211,17 @@ func SendRequest(ctx context.Context, r *Request) (*Response, error) {
 }
 
 func fetchHTTPDataWrapper(version string) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 		return fetchHTTPData(ctx, params, version)
 	}
 }
 
-func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, version string) (plugin.Data, diagnostics.Diag) {
-	url := params.Args.GetAttr("url").AsString()
-	method := params.Args.GetAttr("method").AsString()
-	insecure := params.Args.GetAttr("insecure").True()
+func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, version string) (plugindata.Data, diagnostics.Diag) {
+	url := params.Args.GetAttrVal("url").AsString()
+	method := params.Args.GetAttrVal("method").AsString()
+	insecure := params.Args.GetAttrVal("insecure").True()
 
-	timeout, err := time.ParseDuration(params.Args.GetAttr("timeout").AsString())
+	timeout, err := time.ParseDuration(params.Args.GetAttrVal("timeout").AsString())
 	if err != nil {
 		return nil, diagnostics.Diag{
 			{
@@ -225,7 +232,7 @@ func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, versi
 		}
 	}
 
-	var req = Request{
+	req := Request{
 		Url:        url,
 		Method:     method,
 		Timeout:    timeout,
@@ -234,20 +241,20 @@ func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, versi
 		Body:       nil,
 	}
 
-	basicAuth := params.Args.GetAttr("basic_auth")
-	if !basicAuth.IsNull() {
-		req.BasicAuthUsername = StringPtr(basicAuth.GetAttr("username").AsString())
-		req.BasicAuthPassword = StringPtr(basicAuth.GetAttr("password").AsString())
+	basicAuth := params.Args.Blocks.GetFirstMatching("basic_auth")
+	if basicAuth != nil {
+		req.BasicAuthUsername = StringPtr(basicAuth.GetAttrVal("username").AsString())
+		req.BasicAuthPassword = StringPtr(basicAuth.GetAttrVal("password").AsString())
 	}
 
-	headers := params.Args.GetAttr("headers")
+	headers := params.Args.GetAttrVal("headers")
 	if !headers.IsNull() {
 		for k, v := range headers.AsValueMap() {
 			req.Headers[k] = v.AsString()
 		}
 	}
 
-	body := params.Args.GetAttr("body")
+	body := params.Args.GetAttrVal("body")
 	if !body.IsNull() && body.AsString() != "" {
 		req.Body = StringPtr(body.AsString())
 	}
@@ -266,7 +273,7 @@ func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, versi
 	}
 	slog.Debug("Response received", "mime_type", response.MimeType, "body_bytes_count", len(response.Body))
 
-	var result plugin.Data
+	var result plugindata.Data
 
 	if response.MimeType == "text/csv" {
 		reader := csv.NewReader(bytes.NewBuffer(response.Body))
@@ -287,7 +294,7 @@ func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, versi
 
 		slog.Debug("Parsing fetched data as JSON", "mime-type", response.MimeType)
 
-		result, err = plugin.UnmarshalJSONData(response.Body)
+		result, err = plugindata.UnmarshalJSON(response.Body)
 		if err != nil {
 			return nil, diagnostics.Diag{
 				{
@@ -299,7 +306,7 @@ func fetchHTTPData(ctx context.Context, params *plugin.RetrieveDataParams, versi
 		}
 	} else {
 		slog.Debug("Returning fetched data as text", "mime-type", response.MimeType)
-		result = plugin.StringData(response.Body)
+		result = plugindata.String(response.Body)
 	}
 	return result, nil
 }

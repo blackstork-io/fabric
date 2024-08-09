@@ -41,7 +41,7 @@ content frontmatter {
   # Arbitrary key-value map to be put in the frontmatter.
   #
   # Required data.
-  # Must have a length of at least 1
+  # Must be non-empty
   # For example:
   content = {
     key = "arbitrary value"

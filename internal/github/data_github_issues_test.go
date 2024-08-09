@@ -13,6 +13,9 @@ import (
 	"github.com/blackstork-io/fabric/internal/github"
 	github_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/github"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 type GithubIssuesDataTestSuite struct {
@@ -54,10 +57,7 @@ func int64ptr(i int64) *int64 { return &i }
 func (s *GithubIssuesDataTestSuite) TestBasic() {
 	s.cli.On("Issues").Return(s.issuesCli)
 	s.issuesCli.On("ListByRepo", mock.Anything, "testorg", "testrepo", &gh.IssueListByRepoOptions{
-		ListOptions: gh.ListOptions{
-			PerPage: 30,
-			Page:    1,
-		},
+		Milestone: "", State: "open", Assignee: "", Creator: "", Mentioned: "", Labels: []string(nil), Sort: "created", Direction: "desc", Since: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), ListOptions: gh.ListOptions{Page: 1, PerPage: 30},
 	}).
 		Return([]*gh.Issue{
 			{
@@ -70,30 +70,22 @@ func (s *GithubIssuesDataTestSuite) TestBasic() {
 
 	ctx := context.Background()
 	data, diags := s.plugin.RetrieveData(ctx, "github_issues", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"github_token": cty.StringVal("testtoken"),
-		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"repository": cty.StringVal("testorg/testrepo"),
-			"limit":      cty.NullVal(cty.Number),
-			"milestone":  cty.NullVal(cty.String),
-			"state":      cty.NullVal(cty.String),
-			"assignee":   cty.NullVal(cty.String),
-			"creator":    cty.NullVal(cty.String),
-			"mentioned":  cty.NullVal(cty.String),
-			"labels":     cty.ListValEmpty(cty.String),
-			"sort":       cty.NullVal(cty.String),
-			"direction":  cty.NullVal(cty.String),
-			"since":      cty.NullVal(cty.String),
-		}),
+		Config: plugintest.NewTestDecoder(s.T(), s.plugin.DataSources["github_issues"].Config).
+			SetHeaders("config").
+			SetAttr("github_token", cty.StringVal("testtoken")).
+			Decode(),
+		Args: plugintest.NewTestDecoder(s.T(), s.plugin.DataSources["github_issues"].Args).
+			SetHeaders("data", "github_issues", `"test"`).
+			SetAttr("repository", cty.StringVal("testorg/testrepo")).
+			Decode(),
 	})
 	s.Require().Nil(diags)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.NumberData(123),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.Number(123),
 		},
-		plugin.MapData{
-			"id": plugin.NumberData(124),
+		plugindata.Map{
+			"id": plugindata.Number(124),
 		},
 	}, data)
 }
@@ -131,10 +123,10 @@ func (s *GithubIssuesDataTestSuite) TestAdvanced() {
 
 	ctx := context.Background()
 	data, diags := s.plugin.RetrieveData(ctx, "github_issues", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"cfg"}, map[string]cty.Value{
 			"github_token": cty.StringVal("testtoken"),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"repository": cty.StringVal("testorg/testrepo"),
 			"limit":      cty.NumberIntVal(2),
 			"milestone":  cty.StringVal("testmilestone"),
@@ -152,12 +144,12 @@ func (s *GithubIssuesDataTestSuite) TestAdvanced() {
 		}),
 	})
 	s.Require().Nil(diags)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.NumberData(123),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.Number(123),
 		},
-		plugin.MapData{
-			"id": plugin.NumberData(124),
+		plugindata.Map{
+			"id": plugindata.Number(124),
 		},
 	}, data)
 }

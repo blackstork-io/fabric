@@ -18,6 +18,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
@@ -72,21 +73,21 @@ func (s *AzureOpenAITextContentTestSuite) TestBasic() {
 		},
 	}, nil)
 	ctx := context.Background()
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
+
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"prompt":            cty.StringVal("Tell me a story"),
-			"max_tokens":        cty.NumberIntVal(1000),
-			"temperature":       cty.NumberFloatVal(0),
-			"top_p":             cty.NilVal,
-			"completions_count": cty.NumberIntVal(1),
-		}),
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"api_key":           cty.StringVal("testtoken"),
-			"resource_endpoint": cty.StringVal("http://test"),
-			"deployment_name":   cty.StringVal("test"),
-			"api_version":       cty.StringVal("2024-02-01"),
-		}),
+		Config: plugintest.NewTestDecoder(s.T(), s.schema.Config).
+			SetAttr("api_key", cty.StringVal("testtoken")).
+			SetAttr("resource_endpoint", cty.StringVal("http://test")).
+			SetAttr("deployment_name", cty.StringVal("test")).
+			SetAttr("api_version", cty.StringVal("2024-02-01")).
+			Decode(),
+		Args: plugintest.NewTestDecoder(s.T(), s.schema.Args).
+			SetAttr("prompt", cty.StringVal("Tell me a story")).
+			SetAttr("max_tokens", cty.NumberIntVal(1000)).
+			SetAttr("temperature", cty.NumberFloatVal(0)).
+			SetAttr("completions_count", cty.NumberIntVal(1)).
+			Decode(),
 		DataContext: dataCtx,
 	})
 	fmt.Println(diags)
@@ -111,26 +112,25 @@ func (s *AzureOpenAITextContentTestSuite) TestAdvanced() {
 	}, nil)
 
 	ctx := context.Background()
-	dataCtx := plugin.MapData{
-		"local": plugin.MapData{
-			"foo": plugin.StringData("bar"),
+	dataCtx := plugindata.Map{
+		"local": plugindata.Map{
+			"foo": plugindata.String("bar"),
 		},
 	}
 
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"prompt":            cty.StringVal("Tell me a story about {{.local.foo | upper}}. {{ .local | toRawJson }}"),
-			"max_tokens":        cty.NumberIntVal(1000),
-			"temperature":       cty.NumberFloatVal(0),
-			"top_p":             cty.NilVal,
-			"completions_count": cty.NumberIntVal(1),
-		}),
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"api_key":           cty.StringVal("testtoken"),
-			"resource_endpoint": cty.StringVal("http://test"),
-			"deployment_name":   cty.StringVal("test"),
-			"api_version":       cty.StringVal("2024-02-01"),
-		}),
+		Config: plugintest.NewTestDecoder(s.T(), s.schema.Config).
+			SetAttr("api_key", cty.StringVal("testtoken")).
+			SetAttr("resource_endpoint", cty.StringVal("http://test")).
+			SetAttr("deployment_name", cty.StringVal("test")).
+			SetAttr("api_version", cty.StringVal("2024-02-01")).
+			Decode(),
+		Args: plugintest.NewTestDecoder(s.T(), s.schema.Args).
+			SetAttr("prompt", cty.StringVal("Tell me a story about {{.local.foo | upper}}. {{ .local | toRawJson }}")).
+			SetAttr("max_tokens", cty.NumberIntVal(1000)).
+			SetAttr("temperature", cty.NumberFloatVal(0)).
+			SetAttr("completions_count", cty.NumberIntVal(1)).
+			Decode(),
 		DataContext: dataCtx,
 	})
 	s.Empty(diags)
@@ -138,15 +138,10 @@ func (s *AzureOpenAITextContentTestSuite) TestAdvanced() {
 }
 
 func (s *AzureOpenAITextContentTestSuite) TestMissingPrompt() {
-	plugintest.DecodeAndAssert(s.T(), s.schema.Args, "", plugin.MapData{}, diagtest.Asserts{
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, "", plugindata.Map{}, diagtest.Asserts{
 		{
 			diagtest.IsError,
-			diagtest.SummaryEquals("Missing required argument"),
-			diagtest.DetailContains("prompt"),
-		},
-		{
-			diagtest.IsError,
-			diagtest.SummaryEquals("Argument value must be non-null"),
+			diagtest.SummaryEquals("Missing required attribute"),
 			diagtest.DetailContains("prompt"),
 		},
 	})
@@ -155,37 +150,22 @@ func (s *AzureOpenAITextContentTestSuite) TestMissingPrompt() {
 func (s *AzureOpenAITextContentTestSuite) TestMissingAPIKey() {
 	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		prompt = "Tell me a story"
-	`, plugin.MapData{}, diagtest.Asserts{})
+	`, plugindata.Map{}, diagtest.Asserts{})
 	plugintest.DecodeAndAssert(s.T(), s.schema.Config, `
-	`, plugin.MapData{}, diagtest.Asserts{
+	`, plugindata.Map{}, diagtest.Asserts{
 		{
 			diagtest.IsError,
-			diagtest.SummaryEquals("Missing required argument"),
+			diagtest.SummaryEquals("Missing required attribute"),
 			diagtest.DetailContains("api_key"),
 		},
 		{
 			diagtest.IsError,
-			diagtest.SummaryEquals("Argument value must be non-null"),
-			diagtest.DetailContains("api_key"),
-		},
-		{
-			diagtest.IsError,
-			diagtest.SummaryEquals("Missing required argument"),
+			diagtest.SummaryEquals("Missing required attribute"),
 			diagtest.DetailContains("resource_endpoint"),
 		},
 		{
 			diagtest.IsError,
-			diagtest.SummaryEquals("Argument value must be non-null"),
-			diagtest.DetailContains("resource_endpoint"),
-		},
-		{
-			diagtest.IsError,
-			diagtest.SummaryEquals("Missing required argument"),
-			diagtest.DetailContains("deployment_name"),
-		},
-		{
-			diagtest.IsError,
-			diagtest.SummaryEquals("Argument value must be non-null"),
+			diagtest.SummaryEquals("Missing required attribute"),
 			diagtest.DetailContains("deployment_name"),
 		},
 	})
@@ -201,21 +181,20 @@ func (s *AzureOpenAITextContentTestSuite) TestFailingClient() {
 		N:              to.Ptr(int32(1)),
 	}, mock.Anything).Return(azopenai.GetCompletionsResponse{}, errors.New("failed to generate text from model"))
 	ctx := context.Background()
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"prompt":            cty.StringVal("Tell me a story"),
-			"max_tokens":        cty.NumberIntVal(1000),
-			"temperature":       cty.NumberFloatVal(0),
-			"top_p":             cty.NilVal,
-			"completions_count": cty.NumberIntVal(1),
-		}),
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"api_key":           cty.StringVal("testtoken"),
-			"resource_endpoint": cty.StringVal("http://test"),
-			"deployment_name":   cty.StringVal("test"),
-			"api_version":       cty.StringVal("2024-02-01"),
-		}),
+		Config: plugintest.NewTestDecoder(s.T(), s.schema.Config).
+			SetAttr("api_key", cty.StringVal("testtoken")).
+			SetAttr("resource_endpoint", cty.StringVal("http://test")).
+			SetAttr("deployment_name", cty.StringVal("test")).
+			SetAttr("api_version", cty.StringVal("2024-02-01")).
+			Decode(),
+		Args: plugintest.NewTestDecoder(s.T(), s.schema.Args).
+			SetAttr("prompt", cty.StringVal("Tell me a story")).
+			SetAttr("max_tokens", cty.NumberIntVal(1000)).
+			SetAttr("temperature", cty.NumberFloatVal(0)).
+			SetAttr("completions_count", cty.NumberIntVal(1)).
+			Decode(),
 		DataContext: dataCtx,
 	})
 	s.Nil(result)

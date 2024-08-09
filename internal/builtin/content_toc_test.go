@@ -9,6 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
@@ -34,51 +35,46 @@ func (s *TOCContentTestSuite) TestSchema() {
 }
 
 func (s *TOCContentTestSuite) TestSimple() {
-	val := cty.ObjectVal(map[string]cty.Value{
-		"start_level": cty.NullVal(cty.Number),
-		"end_level":   cty.NullVal(cty.Number),
-		"ordered":     cty.NullVal(cty.Bool),
-		"scope":       cty.NullVal(cty.String),
-	})
+	val := cty.ObjectVal(map[string]cty.Value{})
 	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
-	titleMeta := plugin.MapData{
-		"provider": plugin.StringData("title"),
-		"plugin":   plugin.StringData("blackstork/builtin"),
+	titleMeta := plugindata.Map{
+		"provider": plugindata.String("title"),
+		"plugin":   plugindata.String("blackstork/builtin"),
 	}
 	res, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"document": plugin.MapData{
-				"content": plugin.MapData{
-					"type": plugin.StringData("section"),
-					"children": plugin.ListData{
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("# Header 1"),
+		DataContext: plugindata.Map{
+			"document": plugindata.Map{
+				"content": plugindata.Map{
+					"type": plugindata.String("section"),
+					"children": plugindata.List{
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("# Header 1"),
 							"meta":     titleMeta,
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("## Header 2"),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("## Header 2"),
 							"meta":     titleMeta,
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("Vestibulum nec odio."),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("Vestibulum nec odio."),
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("### Header 3"),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("### Header 3"),
 							"meta":     titleMeta,
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("Integer sit amet."),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("Integer sit amet."),
 						},
 					},
 				},
@@ -102,63 +98,63 @@ func (s *TOCContentTestSuite) TestAdvanced() {
 	})
 	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
-	titleMeta := plugin.MapData{
-		"provider": plugin.StringData("title"),
-		"plugin":   plugin.StringData("blackstork/builtin"),
+	titleMeta := plugindata.Map{
+		"provider": plugindata.String("title"),
+		"plugin":   plugindata.String("blackstork/builtin"),
 	}
 	res, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 
-		DataContext: plugin.MapData{
-			"document": plugin.MapData{
-				"content": plugin.MapData{
-					"type": plugin.StringData("section"),
-					"children": plugin.ListData{
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("# Header 1"),
+		DataContext: plugindata.Map{
+			"document": plugindata.Map{
+				"content": plugindata.Map{
+					"type": plugindata.String("section"),
+					"children": plugindata.List{
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("# Header 1"),
 							"meta":     titleMeta,
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
 							"meta":     titleMeta,
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("## Header 2"),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("## Header 2"),
 							"meta":     titleMeta,
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("Vestibulum nec odio."),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("Vestibulum nec odio."),
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("### Header 3"),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("### Header 3"),
 							"meta":     titleMeta,
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("Integer sit amet."),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("Integer sit amet."),
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("## Header 4"),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("## Header 4"),
 							"meta":     titleMeta,
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("Vestibulum nec odio."),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("Vestibulum nec odio."),
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("## Header 5"),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("## Header 5"),
 							"meta":     titleMeta,
 						},
-						plugin.MapData{
-							"type":     plugin.StringData("element"),
-							"markdown": plugin.StringData("Vestibulum nec odio."),
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("Vestibulum nec odio."),
 						},
 					},
 				},

@@ -1,6 +1,9 @@
 package pluginapiv1
 
-import "github.com/blackstork-io/fabric/plugin"
+import (
+	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
+)
 
 func decodeSchema(src *Schema) (*plugin.Schema, error) {
 	if src == nil {
@@ -45,18 +48,18 @@ func decodeDataSourceSchema(src *DataSourceSchema) (*plugin.DataSource, error) {
 	if src == nil {
 		return nil, nil
 	}
-	args, err := decodeRootSpec(src.GetArgs())
+	args, err := decodeBlockSpec(src.GetArgs())
 	if err != nil {
 		return nil, err
 	}
-	config, err := decodeRootSpec(src.GetConfig())
+	config, err := decodeBlockSpec(src.GetConfig())
 	if err != nil {
 		return nil, err
 	}
 
 	return &plugin.DataSource{
-		Args:   args,
-		Config: config,
+		Args:   dataspec.RootSpecFromBlock(args),
+		Config: dataspec.RootSpecFromBlock(config),
 		Doc:    src.GetDoc(),
 		Tags:   src.GetTags(),
 	}, nil
@@ -78,17 +81,17 @@ func decodeContentProviderSchema(src *ContentProviderSchema) (*plugin.ContentPro
 	if src == nil {
 		return nil, nil
 	}
-	args, err := decodeRootSpec(src.GetArgs())
+	args, err := decodeBlockSpec(src.GetArgs())
 	if err != nil {
 		return nil, err
 	}
-	config, err := decodeRootSpec(src.GetConfig())
+	config, err := decodeBlockSpec(src.GetConfig())
 	if err != nil {
 		return nil, err
 	}
 	return &plugin.ContentProvider{
-		Args:            args,
-		Config:          config,
+		Args:            dataspec.RootSpecFromBlock(args),
+		Config:          dataspec.RootSpecFromBlock(config),
 		InvocationOrder: decodeInvocationOrder(src.GetInvocationOrder()),
 		Doc:             src.GetDoc(),
 		Tags:            src.GetTags(),
@@ -111,17 +114,17 @@ func decodePublisherSchema(src *PublisherSchema) (*plugin.Publisher, error) {
 	if src == nil {
 		return nil, nil
 	}
-	args, err := decodeRootSpec(src.GetArgs())
+	args, err := decodeBlockSpec(src.GetArgs())
 	if err != nil {
 		return nil, err
 	}
-	config, err := decodeRootSpec(src.GetConfig())
+	config, err := decodeBlockSpec(src.GetConfig())
 	if err != nil {
 		return nil, err
 	}
 	return &plugin.Publisher{
-		Args:           args,
-		Config:         config,
+		Args:           dataspec.RootSpecFromBlock(args),
+		Config:         dataspec.RootSpecFromBlock(config),
 		Doc:            src.GetDoc(),
 		Tags:           src.GetTags(),
 		AllowedFormats: decodeOutputFormats(src.GetAllowedFormats()),

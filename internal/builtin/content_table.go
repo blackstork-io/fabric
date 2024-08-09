@@ -10,11 +10,12 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type tableCellTmpl = *template.Template
@@ -22,35 +23,37 @@ type tableCellTmpl = *template.Template
 func makeTableContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genTableContent,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name: "rows",
-				Type: dataquery.DelayedEvalType.CtyType(),
-				Doc: "A list of objects representing rows in the table.\n" +
-					"May be set statically or as a result of one or more queries.",
-			},
-			&dataspec.AttrSpec{
-				Name: "columns",
-				Type: cty.List(cty.Object(map[string]cty.Type{
-					"header": cty.String,
-					"value":  cty.String,
-				})),
-				Doc: `List of header and value go templates for each column`,
-				ExampleVal: cty.ListVal([]cty.Value{
-					cty.ObjectVal(map[string]cty.Value{
-						"header": cty.StringVal("1st column header template"),
-						"value":  cty.StringVal("1st column values template"),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name: "rows",
+					Type: cty.List(plugindata.Encapsulated.CtyType()),
+					Doc: "A list of objects representing rows in the table.\n" +
+						"May be set statically or as a result of one or more queries.",
+				},
+				{
+					Name: "columns",
+					Type: cty.List(cty.Object(map[string]cty.Type{
+						"header": cty.String,
+						"value":  cty.String,
+					})),
+					Doc: `List of header and value go templates for each column`,
+					ExampleVal: cty.ListVal([]cty.Value{
+						cty.ObjectVal(map[string]cty.Value{
+							"header": cty.StringVal("1st column header template"),
+							"value":  cty.StringVal("1st column values template"),
+						}),
+						cty.ObjectVal(map[string]cty.Value{
+							"header": cty.StringVal("2nd column header template"),
+							"value":  cty.StringVal("2nd column values template"),
+						}),
+						cty.ObjectVal(map[string]cty.Value{
+							"header": cty.StringVal("..."),
+							"value":  cty.StringVal("..."),
+						}),
 					}),
-					cty.ObjectVal(map[string]cty.Value{
-						"header": cty.StringVal("2nd column header template"),
-						"value":  cty.StringVal("2nd column values template"),
-					}),
-					cty.ObjectVal(map[string]cty.Value{
-						"header": cty.StringVal("..."),
-						"value":  cty.StringVal("..."),
-					}),
-				}),
-				Constraints: constraint.RequiredMeaningful,
+					Constraints: constraint.RequiredMeaningful,
+				},
 			},
 		},
 		Doc: `
@@ -68,24 +71,27 @@ func makeTableContentProvider() *plugin.ContentProvider {
 }
 
 func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	var rows plugin.ListData
-	rowsVal := params.Args.GetAttr("rows")
+	var rows plugindata.List
+	rowsVal := params.Args.GetAttrVal("rows")
 	if !rowsVal.IsNull() {
-		res, err := dataquery.DelayedEvalType.FromCty(rowsVal)
-		if err != nil {
-			return nil, diagnostics.FromErr(err, "failed to get rows")
-		}
-		data := res.Result()
-		var ok bool
-		if data != nil {
-			rows, ok = data.(plugin.ListData)
-			if !ok {
-				return nil, diagnostics.Diag{{
-					Severity: hcl.DiagError,
-					Summary:  "Failed to parse arguments",
-					Detail:   fmt.Sprintf("rows must be a list, not %T", data),
-				}}
+		var err error
+		rows, err = utils.FnMapErr(rowsVal.AsValueSlice(), func(v cty.Value) (plugindata.Data, error) {
+			data, err := plugindata.Encapsulated.FromCty(v)
+			if err != nil {
+				return nil, err
 			}
+			if data == nil {
+				return nil, nil
+			}
+			return *data, nil
+		})
+		if err != nil {
+			return nil, diagnostics.Diag{{
+				Severity: hcl.DiagError,
+				Summary:  "Failed to parse arguments",
+				Detail:   err.Error(),
+				Subject:  &params.Args.Attrs["rows"].ValueRange,
+			}}
 		}
 	}
 
@@ -113,7 +119,7 @@ func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (
 }
 
 func parseTableContentArgs(params *plugin.ProvideContentParams) (headers, values []tableCellTmpl, err error) {
-	arr := params.Args.GetAttr("columns")
+	arr := params.Args.GetAttrVal("columns")
 	for _, val := range arr.AsValueSlice() {
 		obj := val.AsValueMap()
 		header := obj["header"]
@@ -139,7 +145,7 @@ func parseTableContentArgs(params *plugin.ProvideContentParams) (headers, values
 	return
 }
 
-func renderTableContent(headers, values []tableCellTmpl, dataCtx plugin.MapData, rowsList plugin.ListData) (string, error) {
+func renderTableContent(headers, values []tableCellTmpl, dataCtx plugindata.Map, rowsList plugindata.List) (string, error) {
 	var buf bytes.Buffer
 
 	data := dataCtx.Any().(map[string]any)

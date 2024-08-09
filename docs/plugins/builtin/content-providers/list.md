@@ -48,7 +48,7 @@ content list {
   # List of items to render.
   #
   # Required data.
-  # Must have a length of at least 1
+  # Must be non-empty
   # For example:
   items = ["First item", "Second item", "Third item"]
 }

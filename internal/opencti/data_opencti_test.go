@@ -13,6 +13,8 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type OpenCTIDataSourceTestSuite struct {
@@ -57,19 +59,19 @@ func (s *OpenCTIDataSourceTestSuite) TestBasicValid() {
 	defer srv.Close()
 	ctx := context.Background()
 	data, diags := s.plugin.RetrieveData(ctx, "opencti", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"graphql_url": cty.StringVal(srv.URL),
 			"auth_token":  cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"graphql_query": cty.StringVal("query issue { stixCoreRelationships { edges { node { x_opencti_stix_ids } } } }"),
 		}),
 	})
 	s.Nil(diags)
-	s.Equal(plugin.MapData{
-		"data": plugin.MapData{
-			"stixCoreRelationships": plugin.MapData{
-				"edges": plugin.ListData{},
+	s.Equal(plugindata.Map{
+		"data": plugindata.Map{
+			"stixCoreRelationships": plugindata.Map{
+				"edges": plugindata.List{},
 			},
 		},
 	}, data)
@@ -82,11 +84,11 @@ func (s *OpenCTIDataSourceTestSuite) TestFailRequest() {
 	defer srv.Close()
 	ctx := context.Background()
 	data, diags := s.plugin.RetrieveData(ctx, "opencti", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"graphql_url": cty.StringVal(srv.URL),
 			"auth_token":  cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"graphql_query": cty.StringVal("query issue { stixCoreRelationships { edges { node { x_opencti_stix_ids } } } }"),
 		}),
 	})
@@ -119,11 +121,11 @@ func (s *OpenCTIDataSourceTestSuite) TestInvalidQuery() {
 	defer srv.Close()
 	ctx := context.Background()
 	data, diags := s.plugin.RetrieveData(ctx, "opencti", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"graphql_url": cty.StringVal(srv.URL),
 			"auth_token":  cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"graphql_query": cty.StringVal("query issue { stixCoreRelationshipsInvalid { edges { node { x_opencti_stix_ids } } } }"),
 		}),
 	})
@@ -157,19 +159,19 @@ func (s *OpenCTIDataSourceTestSuite) TestWithAuth() {
 	defer srv.Close()
 	ctx := context.Background()
 	data, diags := s.plugin.RetrieveData(ctx, "opencti", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"graphql_url": cty.StringVal(srv.URL),
 			"auth_token":  cty.StringVal("token-123"),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"graphql_query": cty.StringVal("query issue { stixCoreRelationships { edges { node { x_opencti_stix_ids } } } }"),
 		}),
 	})
 	s.Nil(diags)
-	s.Equal(plugin.MapData{
-		"data": plugin.MapData{
-			"stixCoreRelationships": plugin.MapData{
-				"edges": plugin.ListData{},
+	s.Equal(plugindata.Map{
+		"data": plugindata.Map{
+			"stixCoreRelationships": plugindata.Map{
+				"edges": plugindata.List{},
 			},
 		},
 	}, data)
@@ -178,11 +180,11 @@ func (s *OpenCTIDataSourceTestSuite) TestWithAuth() {
 func (s *OpenCTIDataSourceTestSuite) TestNullURL() {
 	ctx := context.Background()
 	data, diags := s.plugin.RetrieveData(ctx, "opencti", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"graphql_url": cty.NullVal(cty.String),
 			"auth_token":  cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"graphql_query": cty.StringVal("query{user{id,name}}"),
 		}),
 	})
@@ -197,11 +199,11 @@ func (s *OpenCTIDataSourceTestSuite) TestNullURL() {
 func (s *OpenCTIDataSourceTestSuite) TestEmptyURL() {
 	ctx := context.Background()
 	data, diags := s.plugin.RetrieveData(ctx, "opencti", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"graphql_url": cty.StringVal(""),
 			"auth_token":  cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"graphql_query": cty.StringVal("query{user{id,name}}"),
 		}),
 	})
@@ -216,11 +218,11 @@ func (s *OpenCTIDataSourceTestSuite) TestEmptyURL() {
 func (s *OpenCTIDataSourceTestSuite) TestEmptyQuery() {
 	ctx := context.Background()
 	data, diags := s.plugin.RetrieveData(ctx, "opencti", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"graphql_url": cty.StringVal("http://localhost"),
 			"auth_token":  cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"graphql_query": cty.StringVal(""),
 		}),
 	})
@@ -235,11 +237,11 @@ func (s *OpenCTIDataSourceTestSuite) TestEmptyQuery() {
 func (s *OpenCTIDataSourceTestSuite) TestNullQuery() {
 	ctx := context.Background()
 	data, diags := s.plugin.RetrieveData(ctx, "opencti", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"graphql_url": cty.StringVal("http://localhost"),
 			"auth_token":  cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"graphql_query": cty.NullVal(cty.String),
 		}),
 	})
@@ -255,11 +257,11 @@ func (s *OpenCTIDataSourceTestSuite) TestCancellation() {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	data, diags := s.plugin.RetrieveData(ctx, "opencti", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"graphql_url": cty.StringVal("http://localhost"),
 			"auth_token":  cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"graphql_query": cty.StringVal("query issue { stixCoreRelationships { edges { node { x_opencti_stix_ids } } } }"),
 		}),
 	})

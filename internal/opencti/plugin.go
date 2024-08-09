@@ -14,6 +14,7 @@ import (
 	"github.com/wundergraph/graphql-go-tools/v2/pkg/astvalidation"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 //go:embed opencti.graphql
@@ -38,7 +39,7 @@ type requestData struct {
 	Query string `json:"query"`
 }
 
-func executeQuery(ctx context.Context, url, query, authToken string) (plugin.Data, error) {
+func executeQuery(ctx context.Context, url, query, authToken string) (plugindata.Data, error) {
 	data, err := json.Marshal(requestData{Query: query})
 	if err != nil {
 		return nil, err
@@ -67,7 +68,7 @@ func executeQuery(ctx context.Context, url, query, authToken string) (plugin.Dat
 	if err != nil {
 		return nil, err
 	}
-	return plugin.UnmarshalJSONData(raw)
+	return plugindata.UnmarshalJSON(raw)
 }
 
 func validateQuery(query string) error {

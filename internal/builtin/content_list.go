@@ -10,45 +10,48 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeListContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genListContent,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "item_template",
-				Type:        cty.String,
-				Constraints: constraint.NonNull,
-				DefaultVal:  cty.StringVal("{{.}}"),
-				ExampleVal:  cty.StringVal(`[{{.Title}}]({{.URL}})`),
-				Doc:         "Go template for the item of the list",
-			},
-			&dataspec.AttrSpec{
-				Name:       "format",
-				Type:       cty.String,
-				DefaultVal: cty.StringVal("unordered"),
-				OneOf: []cty.Value{
-					cty.StringVal("unordered"),
-					cty.StringVal("ordered"),
-					cty.StringVal("tasklist"),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "item_template",
+					Type:        cty.String,
+					Constraints: constraint.NonNull,
+					DefaultVal:  cty.StringVal("{{.}}"),
+					ExampleVal:  cty.StringVal(`[{{.Title}}]({{.URL}})`),
+					Doc:         "Go template for the item of the list",
 				},
-			},
-			&dataspec.AttrSpec{
-				Name:        "items",
-				Type:        dataquery.DelayedEvalType.CtyType(),
-				Constraints: constraint.RequiredMeaningful,
-				ExampleVal: cty.ListVal([]cty.Value{
-					cty.StringVal("First item"),
-					cty.StringVal("Second item"),
-					cty.StringVal("Third item"),
-				}),
-				Doc: "List of items to render.",
+				{
+					Name:       "format",
+					Type:       cty.String,
+					DefaultVal: cty.StringVal("unordered"),
+					OneOf: []cty.Value{
+						cty.StringVal("unordered"),
+						cty.StringVal("ordered"),
+						cty.StringVal("tasklist"),
+					},
+				},
+				{
+					Name:        "items",
+					Type:        cty.List(plugindata.Encapsulated.CtyType()),
+					Constraints: constraint.RequiredMeaningful,
+					ExampleVal: cty.ListVal([]cty.Value{
+						cty.StringVal("First item"),
+						cty.StringVal("Second item"),
+						cty.StringVal("Third item"),
+					}),
+					Doc: "List of items to render.",
+				},
 			},
 		},
 		Doc: "Produces a list of items",
@@ -56,9 +59,9 @@ func makeListContentProvider() *plugin.ContentProvider {
 }
 
 func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	format := params.Args.GetAttr("format").AsString()
+	format := params.Args.GetAttrVal("format").AsString()
 
-	tmpl, err := template.New("item").Funcs(sprig.FuncMap()).Parse(params.Args.GetAttr("item_template").AsString())
+	tmpl, err := template.New("item").Funcs(sprig.FuncMap()).Parse(params.Args.GetAttrVal("item_template").AsString())
 	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -66,25 +69,26 @@ func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 			Detail:   err.Error(),
 		}}
 	}
-
-	items := dataquery.DelayedEvalType.MustFromCty(params.Args.GetAttr("items")).Result()
-	if items == nil {
+	items, err := utils.FnMapErr(params.Args.GetAttrVal("items").AsValueSlice(), func(v cty.Value) (plugindata.Data, error) {
+		data, err := plugindata.Encapsulated.FromCty(v)
+		if err != nil {
+			return nil, err
+		}
+		if data == nil {
+			return nil, nil
+		}
+		return *data, nil
+	})
+	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Failed to parse arguments",
-			Detail:   "Data is nil",
-		}}
-	}
-	itemsList, ok := items.(plugin.ListData)
-	if !ok {
-		return nil, diagnostics.Diag{{
-			Severity: hcl.DiagError,
-			Summary:  "Failed to parse arguments",
-			Detail:   "Data must be a list",
+			Detail:   err.Error(),
+			Subject:  &params.Args.Attrs["items"].ValueRange,
 		}}
 	}
 
-	result, err := renderListContent(format, tmpl, itemsList)
+	result, err := renderListContent(format, tmpl, items)
 	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -99,7 +103,7 @@ func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 	}, nil
 }
 
-func renderListContent(format string, tmpl *template.Template, items plugin.ListData) (string, error) {
+func renderListContent(format string, tmpl *template.Template, items plugindata.List) (string, error) {
 	var buf bytes.Buffer
 	var tmpBuf bytes.Buffer
 	for i, item := range items {

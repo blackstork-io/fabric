@@ -50,7 +50,7 @@ content table {
   # List of header and value go templates for each column
   #
   # Required list of object.
-  # Must have a length of at least 1
+  # Must be non-empty
   # For example:
   columns = [{
     header = "1st column header template"

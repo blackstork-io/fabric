@@ -12,6 +12,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
@@ -29,7 +30,7 @@ func Test_fetchJSONData(t *testing.T) {
 		name          string
 		glob          string
 		path          string
-		expectedData  plugin.Data
+		expectedData  plugindata.Data
 		expectedDiags diagtest.Asserts
 	}{
 		{
@@ -61,7 +62,7 @@ func Test_fetchJSONData(t *testing.T) {
 		{
 			name:         "no_glob_matches",
 			glob:         "testdata/json/unknown_dir/*.json",
-			expectedData: plugin.ListData{},
+			expectedData: plugindata.List{},
 		},
 		{
 			name: "no_path_match",
@@ -75,19 +76,19 @@ func Test_fetchJSONData(t *testing.T) {
 		{
 			name: "load_one_file_with_path",
 			path: "testdata/json/a.json",
-			expectedData: plugin.MapData{
-				"property_for": plugin.StringData("a.json"),
+			expectedData: plugindata.Map{
+				"property_for": plugindata.String("a.json"),
 			},
 		},
 		{
 			name: "glob_matches_one_file",
 			glob: "testdata/json/a.json",
-			expectedData: plugin.ListData{
-				plugin.MapData{
-					"file_name": plugin.StringData("a.json"),
-					"file_path": plugin.StringData("testdata/json/a.json"),
-					"content": plugin.MapData{
-						"property_for": plugin.StringData("a.json"),
+			expectedData: plugindata.List{
+				plugindata.Map{
+					"file_name": plugindata.String("a.json"),
+					"file_path": plugindata.String("testdata/json/a.json"),
+					"content": plugindata.Map{
+						"property_for": plugindata.String("a.json"),
 					},
 				},
 			},
@@ -95,32 +96,32 @@ func Test_fetchJSONData(t *testing.T) {
 		{
 			name: "glob_matches_multiple_files",
 			glob: "testdata/json/dir/*.json",
-			expectedData: plugin.ListData{
-				plugin.MapData{
-					"file_name": plugin.StringData("b.json"),
-					"file_path": plugin.StringData("testdata/json/dir/b.json"),
-					"content": plugin.ListData{
-						plugin.MapData{
-							"id":           plugin.NumberData(1),
-							"property_for": plugin.StringData("dir/b.json"),
+			expectedData: plugindata.List{
+				plugindata.Map{
+					"file_name": plugindata.String("b.json"),
+					"file_path": plugindata.String("testdata/json/dir/b.json"),
+					"content": plugindata.List{
+						plugindata.Map{
+							"id":           plugindata.Number(1),
+							"property_for": plugindata.String("dir/b.json"),
 						},
-						plugin.MapData{
-							"id":           plugin.NumberData(2),
-							"property_for": plugin.StringData("dir/b.json"),
+						plugindata.Map{
+							"id":           plugindata.Number(2),
+							"property_for": plugindata.String("dir/b.json"),
 						},
 					},
 				},
-				plugin.MapData{
-					"file_name": plugin.StringData("c.json"),
-					"file_path": plugin.StringData("testdata/json/dir/c.json"),
-					"content": plugin.ListData{
-						plugin.MapData{
-							"id":           plugin.NumberData(3),
-							"property_for": plugin.StringData("dir/c.json"),
+				plugindata.Map{
+					"file_name": plugindata.String("c.json"),
+					"file_path": plugindata.String("testdata/json/dir/c.json"),
+					"content": plugindata.List{
+						plugindata.Map{
+							"id":           plugindata.Number(3),
+							"property_for": plugindata.String("dir/c.json"),
 						},
-						plugin.MapData{
-							"id":           plugin.NumberData(4),
-							"property_for": plugin.StringData("dir/c.json"),
+						plugindata.Map{
+							"id":           plugindata.Number(4),
+							"property_for": plugindata.String("dir/c.json"),
 						},
 					},
 				},
@@ -149,7 +150,7 @@ func Test_fetchJSONData(t *testing.T) {
 			argVal, diag := plugintest.Decode(t, p.DataSources["json"].Args, argsBody)
 			diags.Extend(diag)
 
-			var data plugin.Data
+			var data plugindata.Data
 			if !diags.HasErrors() {
 				ctx := context.Background()
 				var dgs diagnostics.Diag

@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
@@ -42,22 +43,20 @@ func (s *TitleTestSuite) TestMissingValue() {
 	})
 	plugintest.ReencodeCTY(s.T(), s.schema.Args, val, diagtest.Asserts{{
 		diagtest.IsError,
-		diagtest.SummaryContains("Argument value must be non-null"),
+		diagtest.SummaryContains("Attribute must be non-null"),
 	}})
 }
 
 func (s *TitleTestSuite) TestTDefault() {
 	val := cty.ObjectVal(map[string]cty.Value{
-		"value":         cty.StringVal("Hello {{.name}}!"),
-		"absolute_size": cty.NullVal(cty.Number),
-		"relative_size": cty.NullVal(cty.Number),
+		"value": cty.StringVal("Hello {{.name}}!"),
 	})
 	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)
@@ -66,16 +65,14 @@ func (s *TitleTestSuite) TestTDefault() {
 
 func (s *TitleTestSuite) TestWithTextMultiline() {
 	val := cty.ObjectVal(map[string]cty.Value{
-		"value":         cty.StringVal("Hello\n{{.name}}\nfor you!"),
-		"absolute_size": cty.NullVal(cty.Number),
-		"relative_size": cty.NullVal(cty.Number),
+		"value": cty.StringVal("Hello\n{{.name}}\nfor you!"),
 	})
 	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)
@@ -86,14 +83,13 @@ func (s *TitleTestSuite) TestWithSize() {
 	val := cty.ObjectVal(map[string]cty.Value{
 		"value":         cty.StringVal("Hello {{.name}}!"),
 		"absolute_size": cty.NumberIntVal(2),
-		"relative_size": cty.NullVal(cty.Number),
 	})
 	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)
@@ -104,14 +100,13 @@ func (s *TitleTestSuite) TestWithSizeTooBig() {
 	val := cty.ObjectVal(map[string]cty.Value{
 		"value":         cty.StringVal("Hello {{.name}}!"),
 		"absolute_size": cty.NumberIntVal(7),
-		"relative_size": cty.NullVal(cty.Number),
 	})
 	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Equal(diagnostics.Diag{{

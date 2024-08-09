@@ -5,17 +5,15 @@ import (
 	"math/big"
 
 	"github.com/zclconf/go-cty/cty"
-	"github.com/zclconf/go-cty/cty/convert"
 
-	"github.com/blackstork-io/fabric/eval/dataquery"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func panicToErr(r any) error {
 	d := panicToDiag(r, "Failed to decode cty.Type")
 	if d[0].Extra != nil {
-		if e, ok := d[0].Extra.(diagnostics.PathExtra); ok {
+		if e, ok := d[0].Extra.(*diagnostics.PathExtra); ok {
 			return fmt.Errorf("%s: %s (%s)", d[0].Summary, d[0].Detail, e)
 		}
 	}
@@ -245,23 +243,10 @@ func decodeCty(val *Cty, decodeType bool) (retVal cty.Value, retTy cty.Type) {
 		switch val := data.Caps.GetData().(type) {
 		case *Cty_Capsule_PluginData:
 			if decodeType {
-				retTy = plugin.EncapsulatedData.CtyType()
+				retTy = plugindata.Encapsulated.CtyType()
 			} else {
 				pluginData := decodeData(val.PluginData)
-				retVal = plugin.EncapsulatedData.ToCty(&pluginData)
-			}
-			return
-		case *Cty_Capsule_DelayedEval:
-			if decodeType {
-				retTy = dataquery.DelayedEvalType.CtyType()
-			} else {
-				pluginData := decodeData(val.DelayedEval)
-				ctyCapsule := plugin.EncapsulatedData.ToCty(&pluginData)
-				var err error
-				retVal, err = convert.Convert(ctyCapsule, dataquery.DelayedEvalType.CtyType())
-				if err != nil {
-					panic(fmt.Errorf("failed to convert plugin data to delayed eval: %w", err))
-				}
+				retVal = plugindata.Encapsulated.ToCty(&pluginData)
 			}
 			return
 		default:

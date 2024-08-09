@@ -18,6 +18,8 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 func Test_makeRSSDataSchema(t *testing.T) {
@@ -87,41 +89,41 @@ func Test_fetchRSSData(t *testing.T) {
 	defer close()
 
 	type result struct {
-		Data  plugin.Data
+		Data  plugindata.Data
 		Diags diagnostics.Diag
 	}
 
-	ValidRssData := plugin.MapData{
-		"description":   plugin.StringData("This is an example of an RSS feed"),
-		"link":          plugin.StringData("http://www.example.com/main.html"),
-		"pub_date":      plugin.StringData("Sun, 6 Sep 2009 16:20:12 +0000"),
-		"title":         plugin.StringData("RSS Title"),
-		"pub_timestamp": plugin.NumberData(1252254012),
-		"items": plugin.ListData{
-			plugin.MapData{
-				"description":   plugin.StringData("Here is some text containing an interesting description."),
-				"guid":          plugin.StringData("7bd204c6-1655-4c27-aeee-53f933c5395f"),
-				"link":          plugin.StringData("http://www.example.com/blog/post/1"),
-				"pub_date":      plugin.StringData("Sun, 6 Sep 2009 16:20:23 +0000"),
-				"title":         plugin.StringData("Example entry"),
-				"pub_timestamp": plugin.NumberData(1252254023),
+	ValidRssData := plugindata.Map{
+		"description":   plugindata.String("This is an example of an RSS feed"),
+		"link":          plugindata.String("http://www.example.com/main.html"),
+		"pub_date":      plugindata.String("Sun, 6 Sep 2009 16:20:12 +0000"),
+		"title":         plugindata.String("RSS Title"),
+		"pub_timestamp": plugindata.Number(1252254012),
+		"items": plugindata.List{
+			plugindata.Map{
+				"description":   plugindata.String("Here is some text containing an interesting description."),
+				"guid":          plugindata.String("7bd204c6-1655-4c27-aeee-53f933c5395f"),
+				"link":          plugindata.String("http://www.example.com/blog/post/1"),
+				"pub_date":      plugindata.String("Sun, 6 Sep 2009 16:20:23 +0000"),
+				"title":         plugindata.String("Example entry"),
+				"pub_timestamp": plugindata.Number(1252254023),
 			},
 		},
 	}
 
-	ValidAtomData := plugin.MapData{
-		"description": plugin.StringData("A subtitle."),
-		"link":        plugin.StringData("http://example.org/"),
-		"pub_date":    plugin.StringData(""),
-		"title":       plugin.StringData("Example Feed"),
-		"items": plugin.ListData{
-			plugin.MapData{
-				"description":   plugin.StringData("Some text."),
-				"guid":          plugin.StringData("urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"),
-				"link":          plugin.StringData("http://example.org/2003/12/13/atom03"),
-				"pub_date":      plugin.StringData("2003-11-09T17:23:02Z"),
-				"pub_timestamp": plugin.NumberData(1068398582),
-				"title":         plugin.StringData("Atom-Powered Robots Run Amok"),
+	ValidAtomData := plugindata.Map{
+		"description": plugindata.String("A subtitle."),
+		"link":        plugindata.String("http://example.org/"),
+		"pub_date":    plugindata.String(""),
+		"title":       plugindata.String("Example Feed"),
+		"items": plugindata.List{
+			plugindata.Map{
+				"description":   plugindata.String("Some text."),
+				"guid":          plugindata.String("urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"),
+				"link":          plugindata.String("http://example.org/2003/12/13/atom03"),
+				"pub_date":      plugindata.String("2003-11-09T17:23:02Z"),
+				"pub_timestamp": plugindata.Number(1068398582),
+				"title":         plugindata.String("Atom-Powered Robots Run Amok"),
 			},
 		},
 	}
@@ -245,23 +247,19 @@ func Test_fetchRSSData(t *testing.T) {
 				},
 			}
 
-			args := make(map[string]cty.Value)
-
-			args["url"] = cty.StringVal(addr + tc.url)
+			dec := plugintest.NewTestDecoder(t, p.DataSources["rss"].Args).
+				SetAttr("url", cty.StringVal(addr+tc.url))
 
 			if tc.auth != nil {
-				args["basic_auth"] = cty.ObjectVal(map[string]cty.Value{
-					"username": cty.StringVal(tc.auth.Username),
-					"password": cty.StringVal(tc.auth.Password),
-				})
-			} else {
-				args["basic_auth"] = cty.NullVal(cty.Object(map[string]cty.Type{
-					"username": cty.String,
-					"password": cty.String,
-				}))
+				dec.AppendBody(fmt.Sprintf(`
+					basic_auth {
+						username = "%s"
+						password = "%s"
+					}
+					`, tc.auth.Username, tc.auth.Password))
 			}
 
-			params := &plugin.RetrieveDataParams{Args: cty.ObjectVal(args)}
+			params := &plugin.RetrieveDataParams{Args: dec.Decode()}
 
 			data, diags := p.RetrieveData(context.Background(), "rss", params)
 			assert.Equal(tc.expected, result{data, diags})
