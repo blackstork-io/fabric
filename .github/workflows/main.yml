@@ -40,12 +40,11 @@ jobs:
         with:
           go-version: stable
       - name: Build fabric and plugins
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: latest
-          # using dev config: it skips hooks and some other stuff
-          args: build --config ./.goreleaser-dev.yaml --single-target --snapshot --clean
+          version: '~> v2'
+          args: build --snapshot --clean --single-target
 
   golangci-lint:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
