@@ -20,7 +20,8 @@ import (
 // It reencodes provided cty.Value to hcl text and then re-parses that text
 // in accordance to spec. Ugly hack, but there's over a 100 tests in need of
 // a rewrite that can't be automated with regex or similar.
-// New tests should use Decode and provide a string of hcl.
+//
+// Deprecated: use plugintest.NewTestDecoder
 func ReencodeCTY(t *testing.T, spec *dataspec.RootSpec, val cty.Value, asserts [][]diagtest.Assert) *dataspec.Block {
 	t.Helper()
 	ty := val.Type()
@@ -40,6 +41,8 @@ const filename = "<test-data>"
 
 // Decodes a string (representing content of a config/data/content block)
 // into cty.Value according to given spec (i.e. respecting default values)
+//
+// Deprecated: use plugintest.NewTestDecoder
 func DecodeAndAssert(t *testing.T, spec *dataspec.RootSpec, body string, dataCtx plugindata.Map, asserts diagtest.Asserts) (val *dataspec.Block) {
 	t.Helper()
 	var diags diagnostics.Diag
@@ -65,6 +68,7 @@ func DecodeAndAssert(t *testing.T, spec *dataspec.RootSpec, body string, dataCtx
 	return
 }
 
+// Deprecated: use plugintest.NewTestDecoder
 func Decode(t *testing.T, spec *dataspec.RootSpec, body string) (v *dataspec.Block, diags diagnostics.Diag) {
 	t.Helper()
 	src := []byte("block {\n")

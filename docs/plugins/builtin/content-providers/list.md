@@ -47,7 +47,7 @@ content list {
 
   # List of items to render.
   #
-  # Required data.
+  # Required list of jq queriable.
   # Must be non-empty
   # For example:
   items = ["First item", "Second item", "Third item"]

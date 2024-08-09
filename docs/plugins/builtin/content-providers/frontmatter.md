@@ -40,7 +40,7 @@ content frontmatter {
 
   # Arbitrary key-value map to be put in the frontmatter.
   #
-  # Required data.
+  # Required jq queriable.
   # Must be non-empty
   # For example:
   content = {

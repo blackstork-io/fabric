@@ -95,6 +95,7 @@ func makeElasticSearchDataSource() *plugin.DataSource {
 				{
 					Name:         "size",
 					Type:         cty.Number,
+					Constraints:  constraint.NonNull,
 					DefaultVal:   cty.NumberIntVal(1000),
 					MinInclusive: cty.NumberIntVal(0),
 				},

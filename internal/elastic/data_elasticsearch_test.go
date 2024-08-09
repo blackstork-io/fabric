@@ -13,7 +13,6 @@ import (
 	es "github.com/elastic/go-elasticsearch/v8"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/suite"
-	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/elasticsearch"
 	"github.com/zclconf/go-cty/cty"
 
@@ -21,6 +20,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 const (
@@ -47,11 +47,10 @@ func TestIntegrationSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.ctx = context.Background()
-	opts := []testcontainers.ContainerCustomizer{
-		testcontainers.WithImage("docker.io/elasticsearch:8.9.0"),
+	container, err := elasticsearch.Run(
+		s.ctx, "docker.io/elasticsearch:8.9.0",
 		elasticsearch.WithPassword("password123"),
-	}
-	container, err := elasticsearch.RunContainer(s.ctx, opts...)
+	)
 
 	s.Require().NoError(err, "failed to start elasticsearch container")
 	s.container = container
@@ -66,13 +65,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err, "failed to create elasticsearch client")
 	s.client = client
 
-	s.cfg = dataspec.NewBlock([]string{"cfg"}, map[string]cty.Value{
-		"base_url":            cty.StringVal(s.container.Settings.Address),
-		"basic_auth_username": cty.StringVal("elastic"),
-		"basic_auth_password": cty.StringVal("password123"),
-		"ca_certs":            cty.StringVal(string(s.container.Settings.CACert)),
-	})
 	s.schema = makeElasticSearchDataSource()
+
+	s.cfg = plugintest.NewTestDecoder(s.T(), s.schema.Config).
+		SetAttr("base_url", cty.StringVal(s.container.Settings.Address)).
+		SetAttr("basic_auth_username", cty.StringVal("elastic")).
+		SetAttr("basic_auth_password", cty.StringVal("password123")).
+		SetAttr("ca_certs", cty.StringVal(string(s.container.Settings.CACert))).
+		Decode()
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -118,9 +118,9 @@ func (s *IntegrationTestSuite) TearDownTest() {
 }
 
 func (s *IntegrationTestSuite) TestSearchDefaults() {
-	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
-		"index": cty.StringVal(testIndex),
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("index", cty.StringVal(testIndex)).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
@@ -170,11 +170,11 @@ func (s *IntegrationTestSuite) TestSearchDefaults() {
 }
 
 func (s *IntegrationTestSuite) TestSearchFields() {
-	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
-		"index":     cty.StringVal(testIndex),
-		"only_hits": cty.BoolVal(false),
-		"fields":    cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")}),
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		SetAttr("fields", cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")})).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
@@ -222,11 +222,11 @@ func (s *IntegrationTestSuite) TestSearchFields() {
 }
 
 func (s *IntegrationTestSuite) TestSearchQueryString() {
-	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
-		"index":        cty.StringVal(testIndex),
-		"query_string": cty.StringVal("type:foo"),
-		"only_hits":    cty.BoolVal(false),
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("query_string", cty.StringVal("type:foo")).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
@@ -271,13 +271,13 @@ func (s *IntegrationTestSuite) TestSearchQueryString() {
 }
 
 func (s *IntegrationTestSuite) TestSearchQuery() {
-	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
-		"index": cty.StringVal(testIndex),
-		"query": cty.MapVal(map[string]cty.Value{
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("query", cty.MapVal(map[string]cty.Value{
 			"match_all": cty.MapValEmpty(cty.DynamicPseudoType),
-		}),
-		"only_hits": cty.BoolVal(false),
-	})
+		})).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
@@ -334,11 +334,11 @@ func (s *IntegrationTestSuite) TestSearchQuery() {
 }
 
 func (s *IntegrationTestSuite) TestSearchSize() {
-	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
-		"index":     cty.StringVal(testIndex),
-		"only_hits": cty.BoolVal(false),
-		"size":      cty.NumberIntVal(1),
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		SetAttr("size", cty.NumberIntVal(1)).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
@@ -371,11 +371,11 @@ func (s *IntegrationTestSuite) TestSearchSize() {
 }
 
 func (s *IntegrationTestSuite) TestGetByID() {
-	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
-		"id":        cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6"),
-		"index":     cty.StringVal(testIndex),
-		"only_hits": cty.BoolVal(false),
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("id", cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6")).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
@@ -402,12 +402,12 @@ func (s *IntegrationTestSuite) TestGetByID() {
 }
 
 func (s *IntegrationTestSuite) TestGetByIDFields() {
-	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
-		"id":        cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6"),
-		"index":     cty.StringVal(testIndex),
-		"only_hits": cty.BoolVal(false),
-		"fields":    cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")}),
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("id", cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6")).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		SetAttr("fields", cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")})).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
@@ -431,11 +431,11 @@ func (s *IntegrationTestSuite) TestGetByIDFields() {
 }
 
 func (s *IntegrationTestSuite) TestGetByIDNotFound() {
-	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
-		"id":        cty.StringVal("00000000-0000-0000-0000-000000000000"),
-		"index":     cty.StringVal(testIndex),
-		"only_hits": cty.BoolVal(false),
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("id", cty.StringVal("00000000-0000-0000-0000-000000000000")).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
@@ -449,11 +449,11 @@ func (s *IntegrationTestSuite) TestGetByIDNotFound() {
 }
 
 func (s *IntegrationTestSuite) TestScrollSearch() {
-	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
-		"index":     cty.StringVal(testIndex),
-		"only_hits": cty.BoolVal(false),
-		"size":      cty.NumberIntVal(10000 + 1), // to force scroll search
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		SetAttr("size", cty.NumberIntVal(10000+1)). // to force scroll search
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
@@ -467,11 +467,11 @@ func (s *IntegrationTestSuite) TestScrollSearch() {
 }
 
 func (s *IntegrationTestSuite) TestScrollSearchSteps() {
-	args := dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
-		"index":     cty.StringVal(testIndex),
-		"only_hits": cty.BoolVal(false),
-		"size":      cty.NumberIntVal(5), // does not matter
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		SetAttr("size", cty.NumberIntVal(5)).
+		Decode()
 	// There are only 3 results, so with the size 5 and step size 1,
 	// we should hit 4 requests:
 	// - initial search request (1 result)
