@@ -39,17 +39,16 @@ func TestIntegrationSuite(t *testing.T) {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.plugin = Plugin("1.2.3")
 	s.ctx = context.Background()
-	opts := []testcontainers.ContainerCustomizer{
-		testcontainers.WithImage("docker.io/postgres:15.2-alpine"),
+	container, err := postgres.Run(
+		s.ctx, "docker.io/postgres:15.2-alpine",
 		postgres.WithInitScripts(filepath.Join("testdata", "data.sql")),
 		postgres.WithDatabase("testusr123"),
 		postgres.WithPassword("testpsw123"),
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2).
-				WithStartupTimeout(5 * time.Second)),
-	}
-	container, err := postgres.RunContainer(s.ctx, opts...)
+				WithStartupTimeout(5*time.Second)),
+	)
 	s.Require().NoError(err, "failed to start postgres container")
 	s.container = container
 	connURL, err := container.ConnectionString(s.ctx, "sslmode=disable")
