@@ -73,6 +73,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Fetch all tags
+        # checkout only gets the latest commit, so it has no tag info
+        run: git fetch --depth=1 --tags
+
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22.x"
