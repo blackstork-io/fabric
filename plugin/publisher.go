@@ -40,10 +40,10 @@ type PublishFunc func(ctx context.Context, params *PublishParams) diagnostics.Di
 
 type PublishParams struct {
 	DocumentName string
-	Config      *dataspec.Block
-	Args        *dataspec.Block
-	DataContext plugindata.Map
-	Format      OutputFormat
+	Config       *dataspec.Block
+	Args         *dataspec.Block
+	DataContext  plugindata.Map
+	Format       OutputFormat
 }
 
 type Publisher struct {

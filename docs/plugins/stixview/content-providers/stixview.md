@@ -86,7 +86,7 @@ content stixview {
   # Default value:
   height = null
 
-  # Optional data.
+  # Optional jq queriable.
   # Default value:
   objects = null
 }
