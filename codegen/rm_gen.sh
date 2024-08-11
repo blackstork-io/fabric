@@ -1,7 +1,7 @@
 #!/bin/bash
 # Removes all generated files
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.."
 
 grep -R --with-filename --files-with-matches --no-messages --include "*.go" -E -e '^// Code generated .* DO NOT EDIT.$' . | xargs rm
 find ./mocks -type d -empty -exec rmdir {} +
