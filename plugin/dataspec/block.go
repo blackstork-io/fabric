@@ -23,6 +23,8 @@ type Block struct {
 }
 
 // Quickly create a new block without spec (no ranges will be assigned)
+//
+// Deprecated: use plugintest.NewTestDecoder instead
 func NewBlock(headers []string, attrs map[string]cty.Value, blocks ...*Block) *Block {
 	attrib := make(Attributes, len(attrs))
 	for k, v := range attrs {

@@ -321,9 +321,9 @@
         "type": "content-provider",
         "config_params": [
           "api_key",
-          "resource_endpoint",
+          "api_version",
           "deployment_name",
-          "api_version"
+          "resource_endpoint"
         ],
         "arguments": [
           "completions_count",

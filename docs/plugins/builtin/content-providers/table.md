@@ -43,7 +43,7 @@ content table {
   # A list of objects representing rows in the table.
   # May be set statically or as a result of one or more queries.
   #
-  # Optional data.
+  # Optional list of jq queriable.
   # Default value:
   rows = null
 
