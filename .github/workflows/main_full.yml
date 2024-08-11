@@ -32,9 +32,9 @@ jobs:
           go-version: "stable"
       - uses: jidicula/go-fuzz-action@v1.2.0
         with:
-          packages: './...'
-          fuzz-time: 2m
-          fuzz-minimize-time: 1m
+          packages: 'github.com/blackstork-io/fabric/engine'
+          fuzz-time: 5m
+          fuzz-minimize-time: 2m
 
   builds:
     strategy:
