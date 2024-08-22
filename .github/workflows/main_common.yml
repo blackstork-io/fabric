@@ -85,3 +85,16 @@ jobs:
             echo "::error title=Incorrect formatting::Badly formatted files: $FORMAT_CHANGED_FILES"
           fi
           exit 1
+
+  lint-protobuf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+
+      - uses: ./.github/workflows/install_tools
+
+      - name: Lint protobuf files
+        run: ./codegen/lint_protobuf.sh
