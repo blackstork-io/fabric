@@ -34,12 +34,7 @@ jobs:
         with:
           go-version: "stable"
 
-      - name: Restore cached codegen tools
-        id: cache-tools
-        uses: actions/cache/restore@v4
-        with:
-          key: codegen-tools-${{ runner.os }}-${{ hashFiles('./codegen/setup.sh') }}
-          path: ~/go/bin/
+      - uses: ./.github/workflows/install_tools
 
       - name: Regenerate code
         run: |
@@ -56,13 +51,6 @@ jobs:
       - name: Get changed files
         uses: tj-actions/verify-changed-files@v20
         id: format-changed-files
-
-      - name: Cache codegen tools
-        if: steps.cache-tools.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          key: ${{ steps.cache-tools.outputs.cache-primary-key }}
-          path: ~/go/bin/
 
       - name: Verify that code is correctly generated and formatted
         if: steps.codegen-changed-files.outputs.files_changed == 'true' || steps.format-changed-files.outputs.files_changed == 'true'
