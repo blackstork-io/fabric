@@ -3,7 +3,6 @@ syntax = "proto3";
 package pluginapi.v1;
 
 import "pluginapi/v1/content.proto";
-import "pluginapi/v1/cty.proto";
 import "pluginapi/v1/data.proto";
 import "pluginapi/v1/hcl.proto";
 import "pluginapi/v1/schema.proto";
