@@ -371,4 +371,152 @@ func TestEngineVarsHandling(t *testing.T) {
 		},
 		diagtest.Asserts{},
 	)
+	renderTest(
+		t, "required vars in document",
+		[]string{`
+			document "example" {
+				vars {
+					now = "2021-01-01"
+				}
+				required_vars = ["now"]
+				content text {
+					value = "Simple text"
+				}
+			}
+		`},
+		"example",
+		[]string{
+			`Simple text`,
+		},
+		diagtest.Asserts{},
+	)
+	renderTest(
+		t, "required vars missing in document",
+		[]string{`
+			document "example" {
+				required_vars = ["now"]
+				content text {
+					value = "Simple text"
+				}
+			}
+		`},
+		"example",
+		[]string{},
+		diagtest.Asserts{
+			{
+				diagtest.IsError,
+				diagtest.SummaryEquals("Missing required variable"),
+				diagtest.DetailEquals("block requires 'now' var which is not set."),
+			},
+		},
+	)
+	renderTest(
+		t, "required vars in content",
+		[]string{`
+			content text "hello" {
+				vars {
+					name = "Alice"
+				}
+				value = "Hello, {{ .vars.name }}"
+				required_vars = ["name"]
+			}
+			content text "greetings" {
+			    vars {
+					name = "Alice"
+				}
+				value = "Greetings, {{ .vars.other_name }}"
+				required_vars = ["other_name"]
+			}
+			document "bar" {
+				vars {
+					name = "Bruce"
+				}
+
+				content ref {
+					base = content.text.hello
+				}
+
+				content ref {
+					vars {
+						other_name = query_jq(".vars.name")
+					}
+					base = content.text.greetings
+				}
+			}
+		`},
+		"bar",
+		[]string{"Hello, Alice\n\nGreetings, Alice"},
+		diagtest.Asserts{},
+	)
+	renderTest(
+		t, "required vars missing in content",
+		[]string{`
+			content text "hello" {
+				value = "Hello, {{ .vars.name }}"
+				required_vars = ["name"]
+			}
+
+			document "bar" {
+				content ref {
+					base = content.text.hello
+				}
+			}
+		`},
+		"bar",
+		[]string{},
+		diagtest.Asserts{
+			{
+				diagtest.IsError,
+				diagtest.SummaryEquals("Missing required variable"),
+				diagtest.DetailEquals("block requires 'name' var which is not set."),
+			},
+		},
+	)
+	renderTest(
+		t, "required vars in section",
+		[]string{`
+			section "foo" {
+				content text "hello"{
+					value = "Hello, {{ .vars.name }}"
+				}
+				required_vars = ["name"]
+			}
+			document "bar" {
+				section ref {
+					vars {
+						name = "Alice"
+					}
+					base = section.foo
+				}		
+			}
+		`},
+		"bar",
+		[]string{"Hello, Alice"},
+		diagtest.Asserts{},
+	)
+	renderTest(
+		t, "required vars missing in section",
+		[]string{`
+			section "foo" {
+				content text "hello"{
+					value = "Hello, {{ .vars.name }}"
+				}
+				required_vars = ["name"]
+			}
+			document "bar" {
+				section ref {
+					base = section.foo
+				}		
+			}
+		`},
+		"bar",
+		[]string{},
+		diagtest.Asserts{
+			{
+				diagtest.IsError,
+				diagtest.SummaryEquals("Missing required variable"),
+				diagtest.DetailEquals("block requires 'name' var which is not set."),
+			},
+		},
+	)
 }

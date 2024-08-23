@@ -18,10 +18,12 @@ type Section struct {
 }
 
 type ParsedSection struct {
-	Meta    *MetaBlock
-	Title   *ParsedContent
-	Content []*ParsedContent
-	Vars    *ParsedVars
+	Source       *Section
+	Meta         *MetaBlock
+	Title        *ParsedContent
+	Content      []*ParsedContent
+	Vars         *ParsedVars
+	RequiredVars []string
 }
 
 func (s ParsedSection) Name() string {

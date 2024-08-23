@@ -14,6 +14,8 @@ import (
 
 func (db *DefinedBlocks) ParseDocument(ctx context.Context, d *definitions.Document) (doc *definitions.ParsedDocument, diags diagnostics.Diag) {
 	doc = &definitions.ParsedDocument{}
+	doc.Source = d
+
 	if title := d.Block.Body.Attributes[definitions.AttrTitle]; title != nil {
 		doc.Content = append(doc.Content, definitions.NewTitle(title, db.DefaultConfig))
 	}
@@ -112,5 +114,10 @@ func (db *DefinedBlocks) ParseDocument(ctx context.Context, d *definitions.Docum
 	var diag diagnostics.Diag
 	doc.Vars, diag = ParseVars(ctx, varsBlock, d.Block.Body.Attributes[definitions.AttrLocalVar])
 	diags.Extend(diag)
+
+	if requiredVarsAttr := d.Block.Body.Attributes[definitions.AttrRequiredVars]; requiredVarsAttr != nil {
+		diag := gohcl.DecodeExpression(requiredVarsAttr.Expr, nil, &doc.RequiredVars)
+		diags.Extend(diag)
+	}
 	return
 }

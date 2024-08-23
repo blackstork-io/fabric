@@ -16,8 +16,9 @@ import (
 
 type PluginContentAction struct {
 	*PluginAction
-	Provider *plugin.ContentProvider
-	Vars     *definitions.ParsedVars
+	Provider     *plugin.ContentProvider
+	Vars         *definitions.ParsedVars
+	RequiredVars []string
 }
 
 func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (res *plugin.ContentResult, diags diagnostics.Diag) {
@@ -33,6 +34,14 @@ func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx pl
 	if diags.Extend(diag) {
 		return
 	}
+
+	if len(action.RequiredVars) > 0 {
+		diag := verifyRequiredVars(dataCtx, action.RequiredVars, action.Source.Block)
+		if diags.Extend(diag) {
+			return
+		}
+	}
+
 	diags.Extend(dataspec.EvalBlock(ctx, action.Args, dataCtx))
 	if diags.HasErrors() {
 		return
@@ -93,13 +102,15 @@ func LoadPluginContentAction(ctx context.Context, providers ContentProviders, no
 	}
 	return &PluginContentAction{
 		PluginAction: &PluginAction{
+			Source:     node.Source,
 			PluginName: node.PluginName,
 			BlockName:  node.BlockName,
 			Meta:       node.Meta,
 			Config:     cfg,
 			Args:       args,
 		},
-		Provider: cp,
-		Vars:     node.Vars,
+		Provider:     cp,
+		Vars:         node.Vars,
+		RequiredVars: node.RequiredVars,
 	}, diags
 }

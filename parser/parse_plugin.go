@@ -52,6 +52,7 @@ func (db *DefinedBlocks) ParsePlugin(ctx context.Context, plugin *definitions.Pl
 
 func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Plugin) (parsed *definitions.ParsedPlugin, diags diagnostics.Diag) {
 	res := definitions.ParsedPlugin{
+		Source:     plugin,
 		PluginName: plugin.Name(),
 		BlockName:  plugin.BlockName(),
 		// Config and Invocation are to-be filled
@@ -127,6 +128,13 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 	var diag diagnostics.Diag
 	res.Vars, diag = ParseVars(ctx, varsBlock, localVar)
 	diags.Extend(diag)
+
+	reqAttrs, reqAttrsFound := utils.Pop(body.Attributes, definitions.AttrRequiredVars)
+	if reqAttrsFound {
+		diag := gohcl.DecodeExpression(reqAttrs.Expr, nil, &res.RequiredVars)
+		diags.Extend(diag)
+	}
+
 	plugin.Block.Body = body
 	invocation := &evaluation.BlockInvocation{
 		Block: plugin.Block,
@@ -154,6 +162,7 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 		}
 
 		res.Vars = res.Vars.MergeWithBaseVars(baseEval.Vars)
+		res.RequiredVars = append(res.RequiredVars, baseEval.RequiredVars...)
 
 		updateRefBody(invocation.Body, baseEval.Invocation.Body)
 
@@ -183,7 +192,6 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 	}
 
 	res.Invocation = invocation
-
 	parsed = &res
 	return
 }

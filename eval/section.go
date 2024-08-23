@@ -15,9 +15,11 @@ import (
 )
 
 type Section struct {
-	meta     *definitions.MetaBlock
-	children []*Content
-	vars     *definitions.ParsedVars
+	meta         *definitions.MetaBlock
+	children     []*Content
+	vars         *definitions.ParsedVars
+	source       *definitions.Section
+	requiredVars []string
 }
 
 func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (_ *plugin.ContentResult, diags diagnostics.Diag) {
@@ -62,6 +64,14 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map,
 		return nil, diags
 	}
 
+	// verify required vars
+	if len(block.requiredVars) > 0 {
+		diag := verifyRequiredVars(dataCtx, block.requiredVars, block.source.Block)
+		if diags.Extend(diag) {
+			return nil, diags
+		}
+	}
+
 	// execute content blocks based on the invocation order
 	for _, idx := range invokeList {
 		// update the session data (is propagated to dataCtx, maps are by-ref structures)
@@ -86,8 +96,10 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map,
 func LoadSection(ctx context.Context, providers ContentProviders, node *definitions.ParsedSection) (_ *Section, diag diagnostics.Diag) {
 	var diags diagnostics.Diag
 	block := &Section{
-		meta: node.Meta,
-		vars: node.Vars,
+		meta:         node.Meta,
+		vars:         node.Vars,
+		source:       node.Source,
+		requiredVars: node.RequiredVars,
 	}
 
 	if node.Title != nil {
