@@ -15,11 +15,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "stable"
+          go-version: "1.23"
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.59
+          version: v1.60.2
           only-new-issues: true
 
   codegen-check:
@@ -34,12 +34,7 @@ jobs:
         with:
           go-version: "stable"
 
-      - name: Restore cached codegen tools
-        id: cache-tools
-        uses: actions/cache/restore@v4
-        with:
-          key: codegen-tools-${{ runner.os }}-${{ hashFiles('./codegen/setup.sh') }}
-          path: ~/go/bin/
+      - uses: ./.github/workflows/install_tools
 
       - name: Regenerate code
         run: |
@@ -56,13 +51,6 @@ jobs:
       - name: Get changed files
         uses: tj-actions/verify-changed-files@v20
         id: format-changed-files
-
-      - name: Cache codegen tools
-        if: steps.cache-tools.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          key: ${{ steps.cache-tools.outputs.cache-primary-key }}
-          path: ~/go/bin/
 
       - name: Verify that code is correctly generated and formatted
         if: steps.codegen-changed-files.outputs.files_changed == 'true' || steps.format-changed-files.outputs.files_changed == 'true'
@@ -97,3 +85,16 @@ jobs:
             echo "::error title=Incorrect formatting::Badly formatted files: $FORMAT_CHANGED_FILES"
           fi
           exit 1
+
+  lint-protobuf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+
+      - uses: ./.github/workflows/install_tools
+
+      - name: Lint protobuf files
+        run: ./codegen/lint_protobuf.sh

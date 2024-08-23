@@ -1,0 +1,29 @@
+name: Install code generation tools
+
+description: |
+  Installs code generation tools, linters, etc
+  Expects go to be installed
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get installed go version
+      run: echo "GOVERSION=$(go env GOVERSION)" >> "$GITHUB_ENV"
+      shell: bash
+    - name: Restore cached codegen tools
+      id: cache-tools
+      uses: actions/cache/restore@v4
+      with:
+        key: codegen-tools-${{ runner.os }}-${{ env.GOVERSION }}-${{ hashFiles('./codegen/setup.sh') }}
+        path: ~/go/bin/
+    - name: Setup tools
+      if: steps.cache-tools.outputs.cache-hit != 'true'
+      run: ./codegen/setup.sh
+      shell: bash
+
+    - name: Cache codegen tools
+      if: steps.cache-tools.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        key: ${{ steps.cache-tools.outputs.cache-primary-key }}
+        path: ~/go/bin/

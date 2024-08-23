@@ -1,6 +1,6 @@
 module github.com/blackstork-io/fabric
 
-go 1.22.1
+go 1.22
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai v0.6.0
