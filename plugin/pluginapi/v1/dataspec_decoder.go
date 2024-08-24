@@ -8,37 +8,6 @@ import (
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 )
 
-func decodeRootSpec(src *Spec) (dataspec.RootSpec, error) {
-	sp, err := decodeSpec(src)
-	if sp == nil || err != nil {
-		return nil, err
-	}
-	rs, ok := sp.(dataspec.RootSpec)
-	if !ok {
-		return nil, fmt.Errorf("attempted to encode non-root spec %T", sp)
-	}
-	return rs, nil
-}
-
-func decodeSpec(src *Spec) (dataspec.Spec, error) {
-	switch data := src.GetData().(type) {
-	case nil:
-		return nil, nil
-	case *Spec_Attr:
-		return decodeAttrSpec(data.Attr)
-	case *Spec_Block:
-		return decodeBlockSpec(data.Block)
-	case *Spec_ObjSpec:
-		return decodeObjSpec(data.ObjSpec)
-	case *Spec_ObjDump:
-		return decodeObjDumpSpec(data.ObjDump)
-	case *Spec_Opaque:
-		return decodeOpaqueSpec(data.Opaque)
-	default:
-		return nil, fmt.Errorf("unsupported spec: %T", src)
-	}
-}
-
 func decodeAttrSpec(src *AttrSpec) (*dataspec.AttrSpec, error) {
 	t, err := decodeCtyType(src.GetType())
 	if err != nil {
@@ -80,65 +49,68 @@ func decodeAttrSpec(src *AttrSpec) (*dataspec.AttrSpec, error) {
 }
 
 func decodeBlockSpec(src *BlockSpec) (*dataspec.BlockSpec, error) {
-	nested, err := decodeSpec(src.GetNested())
+	blockSpecs, err := utils.FnMapErr(src.GetBlockSpecs(), decodeBlockSpec)
 	if err != nil {
 		return nil, err
 	}
-	return &dataspec.BlockSpec{
-		Name:     src.GetName(),
-		Nested:   nested,
-		Required: src.GetRequired(),
-		Doc:      src.GetDoc(),
-	}, nil
-}
-
-func decodeObjSpec(src *ObjectSpec) (dataspec.ObjectSpec, error) {
-	encodedSpecs := src.GetSpecs()
-	specs := make(dataspec.ObjectSpec, 0, len(encodedSpecs))
-	for _, s := range encodedSpecs {
-		switch sT := s.GetData().(type) {
-		case nil:
-			continue
-		case *ObjectSpec_ObjectSpecChild_Named:
-			parsedSpec, err := decodeSpec(sT.Named.GetSpec())
-			if err != nil {
-				return nil, err
-			}
-			specs = append(specs, dataspec.UnderKey(sT.Named.GetKey(), parsedSpec))
-		case *ObjectSpec_ObjectSpecChild_Attr:
-			parsedSpec, err := decodeAttrSpec(sT.Attr)
-			if err != nil {
-				return nil, err
-			}
-			specs = append(specs, parsedSpec)
-		case *ObjectSpec_ObjectSpecChild_Block:
-			parsedSpec, err := decodeBlockSpec(sT.Block)
-			if err != nil {
-				return nil, err
-			}
-			specs = append(specs, parsedSpec)
+	attrSpecs, err := utils.FnMapErr(src.GetAttrSpecs(), decodeAttrSpec)
+	if err != nil {
+		return nil, err
+	}
+	matchers := src.GetHeadersSpec()
+	header := make(dataspec.HeadersSpec, 0, len(matchers))
+	for _, m := range matchers {
+		switch matcher := m.GetMatcher().(type) {
+		case *BlockSpec_NameMatcher_Exact_:
+			header = append(header, dataspec.ExactMatcher(matcher.Exact.Matches))
 		default:
-			return nil, fmt.Errorf("unsupported named spec: %T", src)
+			return nil, fmt.Errorf("Unexpected matcher type: %T", matcher)
 		}
 	}
 
-	return specs, nil
-}
+	return &dataspec.BlockSpec{
+		Header:     header,
+		Required:   src.GetRequired(),
+		Repeatable: src.GetRepeatable(),
 
-func decodeObjDumpSpec(objDump *ObjDumpSpec) (*dataspec.ObjDumpSpec, error) {
-	return &dataspec.ObjDumpSpec{
-		Doc: objDump.GetDoc(),
+		Doc: src.GetDoc(),
+
+		Blocks: blockSpecs,
+		Attrs:  attrSpecs,
+
+		AllowUnspecifiedBlocks:     src.GetAllowUnspecifiedBlocks(),
+		AllowUnspecifiedAttributes: src.GetAllowUnspecifiedAttributes(),
 	}, nil
 }
 
-func decodeOpaqueSpec(opaque *OpaqueSpec) (*dataspec.OpaqueSpec, error) {
-	res := &dataspec.OpaqueSpec{
-		Doc: opaque.GetDoc(),
-	}
-	var err error
-	res.Spec, err = decodeHclSpec(opaque.GetSpec())
+func decodeAttr(src *Attr) (*dataspec.Attr, error) {
+	val, err := decodeCtyValue(src.GetValue())
 	if err != nil {
 		return nil, err
 	}
-	return res, nil
+	return &dataspec.Attr{
+		Name:       src.GetName(),
+		NameRange:  decodeRange(src.GetNameRange()),
+		Value:      val,
+		ValueRange: decodeRange(src.GetValueRange()),
+		Secret:     src.GetSecret(),
+	}, nil
+}
+
+func decodeBlock(src *Block) (*dataspec.Block, error) {
+	blocks, err := utils.FnMapErr(src.GetBlocks(), decodeBlock)
+	if err != nil {
+		return nil, err
+	}
+	attrs, err := utils.MapMapErr(src.GetAttributes(), decodeAttr)
+	if err != nil {
+		return nil, err
+	}
+	return &dataspec.Block{
+		Header:        src.GetHeader(),
+		HeaderRanges:  utils.FnMap(src.GetHeaderRanges(), decodeRange),
+		Blocks:        blocks,
+		Attrs:         attrs,
+		ContentsRange: decodeRange(src.GetContentsRange()),
+	}, err
 }

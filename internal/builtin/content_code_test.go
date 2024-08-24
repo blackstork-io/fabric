@@ -9,6 +9,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
@@ -37,22 +38,21 @@ func (s *CodeTestSuite) TestMissingValue() {
 		"language": cty.NullVal(cty.String),
 	})
 	plugintest.ReencodeCTY(s.T(), s.schema.Args, val, diagtest.Asserts{{
-		diagtest.SummaryContains("Argument value must be non-null"),
+		diagtest.SummaryContains("Attribute must be non-null"),
 	}})
 }
 
 func (s *CodeTestSuite) TestCallCodeDefault() {
 	ctx := context.Background()
-	val := cty.ObjectVal(map[string]cty.Value{
-		"value":    cty.StringVal(`Hello {{.name}}!`),
-		"language": cty.NullVal(cty.String),
-	})
-	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, val, nil)
+
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("value", cty.StringVal("Hello {{.name}}!")).
+		Decode()
 
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("World"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("World"),
 		},
 	})
 	s.Empty(diags)
@@ -73,8 +73,8 @@ func (s *CodeTestSuite) TestCallCodeWithLanguage() {
 
 	content, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"name": plugin.StringData("world"),
+		DataContext: plugindata.Map{
+			"name": plugindata.String("world"),
 		},
 	})
 	s.Empty(diags)

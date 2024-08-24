@@ -15,33 +15,38 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeCSVDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchCSVData,
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:         "delimiter",
-				Type:         cty.String,
-				DefaultVal:   cty.StringVal(","),
-				MinInclusive: cty.NumberIntVal(1),
-				MaxInclusive: cty.NumberIntVal(1),
-				Doc:          `CSV field delimiter`,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:         "delimiter",
+					Type:         cty.String,
+					DefaultVal:   cty.StringVal(","),
+					MinInclusive: cty.NumberIntVal(1),
+					MaxInclusive: cty.NumberIntVal(1),
+					Doc:          `CSV field delimiter`,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:       "glob",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("path/to/file*.csv"),
-				Doc:        `A glob pattern to select CSV files to read`,
-			},
-			&dataspec.AttrSpec{
-				Name:       "path",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("path/to/file.csv"),
-				Doc:        `A file path to a CSV file to read`,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:       "glob",
+					Type:       cty.String,
+					ExampleVal: cty.StringVal("path/to/file*.csv"),
+					Doc:        `A glob pattern to select CSV files to read`,
+				},
+				{
+					Name:       "path",
+					Type:       cty.String,
+					ExampleVal: cty.StringVal("path/to/file.csv"),
+					Doc:        `A file path to a CSV file to read`,
+				},
 			},
 		},
 		Doc: `
@@ -94,8 +99,7 @@ func makeCSVDataSource() *plugin.DataSource {
 	}
 }
 
-func getDelim(config cty.Value) (r rune, diags diagnostics.Diag) {
-	delim := config.GetAttr("delimiter").AsString()
+func getDelim(delim string) (r rune, diags diagnostics.Diag) {
 	delimRune, runeLen := utf8.DecodeRuneInString(delim)
 	if runeLen == 0 || len(delim) != runeLen {
 		diags = diagnostics.Diag{{
@@ -108,11 +112,11 @@ func getDelim(config cty.Value) (r rune, diags diagnostics.Diag) {
 	return
 }
 
-func fetchCSVData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	glob := params.Args.GetAttr("glob")
-	path := params.Args.GetAttr("path")
+func fetchCSVData(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
+	glob := params.Args.GetAttrVal("glob")
+	path := params.Args.GetAttrVal("path")
 
-	delim, err := getDelim(params.Config)
+	delim, err := getDelim(params.Config.GetAttrVal("delimiter").AsString())
 	if err != nil {
 		slog.Error("Error while getting a delimiter value", slog.Any("error", err))
 		return nil, err
@@ -159,27 +163,27 @@ func fetchCSVData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 	}}
 }
 
-func readCSVFiles(ctx context.Context, pattern string, delimiter rune) (plugin.ListData, error) {
+func readCSVFiles(ctx context.Context, pattern string, delimiter rune) (plugindata.List, error) {
 	paths, err := filepath.Glob(pattern)
 	if err != nil {
 		return nil, err
 	}
-	result := make(plugin.ListData, 0, len(paths))
+	result := make(plugindata.List, 0, len(paths))
 	for _, path := range paths {
 		fileData, err := readAndDecodeCSVFile(ctx, path, delimiter)
 		if err != nil {
 			return result, err
 		}
-		result = append(result, plugin.MapData{
-			"file_path": plugin.StringData(path),
-			"file_name": plugin.StringData(filepath.Base(path)),
+		result = append(result, plugindata.Map{
+			"file_path": plugindata.String(path),
+			"file_name": plugindata.String(filepath.Base(path)),
 			"content":   fileData,
 		})
 	}
 	return result, nil
 }
 
-func readAndDecodeCSVFile(ctx context.Context, path string, delimiter rune) (plugin.ListData, error) {
+func readAndDecodeCSVFile(ctx context.Context, path string, delimiter rune) (plugindata.List, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err

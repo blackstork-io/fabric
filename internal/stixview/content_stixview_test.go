@@ -9,6 +9,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
@@ -34,7 +35,7 @@ func (s *StixViewTestSuite) TestSchema() {
 }
 
 func (s *StixViewTestSuite) TestGistID() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		gist_id = "123"
 	`, dataCtx, diagtest.Asserts{})
@@ -52,7 +53,7 @@ func (s *StixViewTestSuite) TestGistID() {
 }
 
 func (s *StixViewTestSuite) TestStixURL() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		stix_url = "https://example.com/stix.json"
 	`, dataCtx, diagtest.Asserts{})
@@ -71,7 +72,7 @@ func (s *StixViewTestSuite) TestStixURL() {
 }
 
 func (s *StixViewTestSuite) TestAllArgs() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		gist_id = "123"
 		caption = "test caption"
@@ -100,7 +101,7 @@ func (s *StixViewTestSuite) TestAllArgs() {
 }
 
 func (s *StixViewTestSuite) TestDataCtx() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		objects = [
 			{"key" = "value"}

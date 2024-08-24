@@ -11,18 +11,21 @@ import (
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type Section struct {
-	meta     *definitions.MetaBlock
-	children []*Content
-	vars     *definitions.ParsedVars
+	meta         *definitions.MetaBlock
+	children     []*Content
+	vars         *definitions.ParsedVars
+	source       *definitions.Section
+	requiredVars []string
 }
 
-func (block *Section) RenderContent(ctx context.Context, dataCtx plugin.MapData, doc, parent *plugin.ContentSection, contentID uint32) (_ *plugin.ContentResult, diags diagnostics.Diag) {
-	sectionData := plugin.MapData{}
+func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (_ *plugin.ContentResult, diags diagnostics.Diag) {
+	sectionData := plugindata.Map{}
 	if block.meta != nil {
-		sectionData[definitions.BlockKindMeta] = block.meta.AsJQData()
+		sectionData[definitions.BlockKindMeta] = block.meta.AsPluginData()
 	}
 	section := new(plugin.ContentSection)
 	if parent != nil {
@@ -61,6 +64,14 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugin.MapData,
 		return nil, diags
 	}
 
+	// verify required vars
+	if len(block.requiredVars) > 0 {
+		diag := verifyRequiredVars(dataCtx, block.requiredVars, block.source.Block)
+		if diags.Extend(diag) {
+			return nil, diags
+		}
+	}
+
 	// execute content blocks based on the invocation order
 	for _, idx := range invokeList {
 		// update the session data (is propagated to dataCtx, maps are by-ref structures)
@@ -85,8 +96,10 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugin.MapData,
 func LoadSection(ctx context.Context, providers ContentProviders, node *definitions.ParsedSection) (_ *Section, diag diagnostics.Diag) {
 	var diags diagnostics.Diag
 	block := &Section{
-		meta: node.Meta,
-		vars: node.Vars,
+		meta:         node.Meta,
+		vars:         node.Vars,
+		source:       node.Source,
+		requiredVars: node.RequiredVars,
 	}
 
 	if node.Title != nil {

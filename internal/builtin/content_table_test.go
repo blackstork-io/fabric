@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
@@ -49,8 +50,8 @@ func (s *TableGeneratorTestSuite) TestNilRowVars() {
 	]
 	rows = null
 	`
-	dataCtx := plugin.MapData{
-		"col_prefix": plugin.StringData("User"),
+	dataCtx := plugindata.Map{
+		"col_prefix": plugindata.String("User"),
 	}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, val, dataCtx, diagtest.Asserts{})
 	ctx := context.Background()
@@ -78,8 +79,8 @@ func (s *TableGeneratorTestSuite) TestEmptyQueryResult() {
 	rows = null
 	`
 
-	dataCtx := plugin.MapData{
-		"col_prefix": plugin.StringData("User"),
+	dataCtx := plugindata.Map{
+		"col_prefix": plugindata.String("User"),
 	}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, val, dataCtx, diagtest.Asserts{})
 	ctx := context.Background()
@@ -108,8 +109,8 @@ func (s *TableGeneratorTestSuite) TestBasic() {
 		{name = "Jane", age = 43}
 	]
 	`
-	dataCtx := plugin.MapData{
-		"col_prefix": plugin.StringData("User"),
+	dataCtx := plugindata.Map{
+		"col_prefix": plugindata.String("User"),
 	}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, val, dataCtx, diagtest.Asserts{})
 	ctx := context.Background()
@@ -138,8 +139,8 @@ func (s *TableGeneratorTestSuite) TestSprigTemplate() {
 		{name = "Jane", age = 43}
 	]
 	`
-	dataCtx := plugin.MapData{
-		"col_prefix": plugin.StringData("User"),
+	dataCtx := plugindata.Map{
+		"col_prefix": plugindata.String("User"),
 	}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, val, dataCtx, diagtest.Asserts{})
 	ctx := context.Background()
@@ -185,8 +186,8 @@ func (s *TableGeneratorTestSuite) TestNilHeader() {
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"col_prefix": plugin.StringData("User"),
+		DataContext: plugindata.Map{
+			"col_prefix": plugindata.String("User"),
 		},
 	})
 	s.Nil(result)
@@ -214,8 +215,8 @@ func (s *TableGeneratorTestSuite) TestNilValue() {
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"col_prefix": plugin.StringData("User"),
+		DataContext: plugindata.Map{
+			"col_prefix": plugindata.String("User"),
 		},
 	})
 	s.Nil(result)
@@ -232,7 +233,7 @@ func (s *TableGeneratorTestSuite) TestNilColumns() {
 	})
 	plugintest.ReencodeCTY(s.T(), s.schema.Args, val, diagtest.Asserts{{
 		diagtest.IsError,
-		diagtest.SummaryContains("Argument value must be non-null"),
+		diagtest.SummaryContains("Attribute must be non-null"),
 	}})
 }
 
@@ -244,12 +245,12 @@ func (s *TableGeneratorTestSuite) TestEmptyColumns() {
 		{name = "Jane", age = 43}
 	]
 	`
-	dataCtx := plugin.MapData{
-		"col_prefix": plugin.StringData("User"),
+	dataCtx := plugindata.Map{
+		"col_prefix": plugindata.String("User"),
 	}
 	plugintest.DecodeAndAssert(s.T(), s.schema.Args, val, dataCtx, diagtest.Asserts{{
 		diagtest.IsError,
-		diagtest.DetailContains("length", `"columns"`, ">= 1"),
+		diagtest.DetailContains(`"columns"`, "can't be empty"),
 	}})
 }
 
@@ -270,8 +271,8 @@ func (s *TableGeneratorTestSuite) TestInvalidHeaderTemplate() {
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"col_prefix": plugin.StringData("User"),
+		DataContext: plugindata.Map{
+			"col_prefix": plugindata.String("User"),
 		},
 	})
 	s.Nil(result)
@@ -299,8 +300,8 @@ func (s *TableGeneratorTestSuite) TestInvalidValueTemplate() {
 	ctx := context.Background()
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
-		DataContext: plugin.MapData{
-			"col_prefix": plugin.StringData("User"),
+		DataContext: plugindata.Map{
+			"col_prefix": plugindata.String("User"),
 		},
 	})
 	s.Nil(result)

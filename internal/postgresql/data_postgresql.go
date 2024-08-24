@@ -15,47 +15,44 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makePostgreSQLDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "database_url",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				Secret:      true,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "database_url",
+					Type:        cty.String,
+					Constraints: constraint.RequiredMeaningful,
+					Secret:      true,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "sql_query",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Name: "sql_args",
-				Type: cty.List(cty.DynamicPseudoType),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "sql_query",
+					Type:        cty.String,
+					Constraints: constraint.RequiredMeaningful,
+				},
+				{
+					Name: "sql_args",
+					Type: cty.List(cty.DynamicPseudoType),
+				},
 			},
 		},
 		DataFunc: fetchSqliteData,
 	}
 }
 
-func parseSqliteConfig(cfg cty.Value) (string, error) {
-	dbURL := cfg.GetAttr("database_url")
-	if dbURL.IsNull() || dbURL.AsString() == "" {
-		return "", fmt.Errorf("database_url is required")
-	}
-	return dbURL.AsString(), nil
-}
-
-func parseSqliteArgs(args cty.Value) (string, []any, error) {
-	sqlQuery := args.GetAttr("sql_query")
+func parseSqliteArgs(args *dataspec.Block) (string, []any, error) {
+	sqlQuery := args.GetAttrVal("sql_query")
 	if sqlQuery.IsNull() || sqlQuery.AsString() == "" {
 		return "", nil, fmt.Errorf("sql_query is required")
 	}
-	sqlArgs := args.GetAttr("sql_args")
+	sqlArgs := args.GetAttrVal("sql_args")
 	if sqlArgs.IsNull() || sqlArgs.LengthInt() == 0 {
 		return sqlQuery.AsString(), nil, nil
 	}
@@ -79,15 +76,8 @@ func parseSqliteArgs(args cty.Value) (string, []any, error) {
 	return sqlQuery.AsString(), argsResult, nil
 }
 
-func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	dbURL, err := parseSqliteConfig(params.Config)
-	if err != nil {
-		return nil, diagnostics.Diag{{
-			Severity: hcl.DiagError,
-			Summary:  "Invalid configuration",
-			Detail:   err.Error(),
-		}}
-	}
+func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
+	dbURL := params.Config.GetAttrVal("database_url").AsString()
 	sqlQuery, sqlArgs, err := parseSqliteArgs(params.Args)
 	if err != nil {
 		return nil, diagnostics.Diag{{
@@ -123,7 +113,7 @@ func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 			Detail:   err.Error(),
 		}}
 	}
-	result := make(plugin.ListData, 0)
+	result := make(plugindata.List, 0)
 
 	// read rows
 	for rows.Next() {
@@ -141,7 +131,7 @@ func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 				Detail:   err.Error(),
 			}}
 		}
-		row := make(plugin.MapData)
+		row := make(plugindata.Map)
 		for i, column := range columns {
 			if columnValArr[i].valid {
 				row[column] = columnValArr[i].data
@@ -162,7 +152,7 @@ func fetchSqliteData(ctx context.Context, params *plugin.RetrieveDataParams) (pl
 }
 
 type nullData struct {
-	data  plugin.Data
+	data  plugindata.Data
 	valid bool
 }
 
@@ -173,17 +163,17 @@ func (n *nullData) Scan(value any) error {
 	}
 	switch v := value.(type) {
 	case []byte:
-		n.data = plugin.StringData(base64.StdEncoding.EncodeToString(v))
+		n.data = plugindata.String(base64.StdEncoding.EncodeToString(v))
 	case string:
-		n.data = plugin.StringData(v)
+		n.data = plugindata.String(v)
 	case int64:
-		n.data = plugin.NumberData(v)
+		n.data = plugindata.Number(v)
 	case float64:
-		n.data = plugin.NumberData(v)
+		n.data = plugindata.Number(v)
 	case bool:
-		n.data = plugin.BoolData(v)
+		n.data = plugindata.Bool(v)
 	case time.Time:
-		n.data = plugin.StringData(v.Format(time.RFC3339))
+		n.data = plugindata.String(v.Format(time.RFC3339))
 	default:
 		return fmt.Errorf("unsupported type: %T", value)
 	}

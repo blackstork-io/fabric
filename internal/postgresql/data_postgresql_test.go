@@ -16,6 +16,8 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 // IntegrationTestSuite is a test suite to test integration with real postgres instance
@@ -37,17 +39,16 @@ func TestIntegrationSuite(t *testing.T) {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.plugin = Plugin("1.2.3")
 	s.ctx = context.Background()
-	opts := []testcontainers.ContainerCustomizer{
-		testcontainers.WithImage("docker.io/postgres:15.2-alpine"),
+	container, err := postgres.Run(
+		s.ctx, "docker.io/postgres:15.2-alpine",
 		postgres.WithInitScripts(filepath.Join("testdata", "data.sql")),
 		postgres.WithDatabase("testusr123"),
 		postgres.WithPassword("testpsw123"),
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2).
-				WithStartupTimeout(5 * time.Second)),
-	}
-	container, err := postgres.RunContainer(s.ctx, opts...)
+				WithStartupTimeout(5*time.Second)),
+	)
 	s.Require().NoError(err, "failed to start postgres container")
 	s.container = container
 	connURL, err := container.ConnectionString(s.ctx, "sslmode=disable")
@@ -73,42 +74,12 @@ func (s *IntegrationTestSuite) TestSchema() {
 	s.NotNil(source.DataFunc)
 }
 
-func (s *IntegrationTestSuite) TestEmptyDatabaseURL() {
-	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"database_url": cty.StringVal(""),
-		}),
-	})
-	s.Nil(data)
-
-	s.Equal(diags, diagnostics.Diag{{
-		Severity: hcl.DiagError,
-		Summary:  "Invalid configuration",
-		Detail:   "database_url is required",
-	}})
-}
-
-func (s *IntegrationTestSuite) TestNilDatabaseURL() {
-	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"database_url": cty.NullVal(cty.String),
-		}),
-	})
-	s.Nil(data)
-
-	s.Equal(diags, diagnostics.Diag{{
-		Severity: hcl.DiagError,
-		Summary:  "Invalid configuration",
-		Detail:   "database_url is required",
-	}})
-}
-
 func (s *IntegrationTestSuite) TestEmptySQLQuery() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.StringVal(""),
 			"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 		}),
@@ -124,10 +95,10 @@ func (s *IntegrationTestSuite) TestEmptySQLQuery() {
 
 func (s *IntegrationTestSuite) TestNilSQLQuery() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.NullVal(cty.String),
 			"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 		}),
@@ -143,76 +114,76 @@ func (s *IntegrationTestSuite) TestNilSQLQuery() {
 
 func (s *IntegrationTestSuite) TestEmptyTable() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.StringVal("SELECT * FROM testdata_empty"),
 			"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 		}),
 	})
 	s.Nil(diags)
-	s.Equal(data, plugin.ListData{})
+	s.Equal(data, plugindata.List{})
 }
 
 func (s *IntegrationTestSuite) TestSelect() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.StringVal("SELECT * FROM testdata"),
 			"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 		}),
 	})
 	s.Nil(diags)
-	s.Equal(data, plugin.ListData{
-		plugin.MapData{
-			"id":       plugin.NumberData(1),
-			"text_val": plugin.StringData("text_1"),
-			"int_val":  plugin.NumberData(1),
-			"bool_val": plugin.BoolData(true),
+	s.Equal(data, plugindata.List{
+		plugindata.Map{
+			"id":       plugindata.Number(1),
+			"text_val": plugindata.String("text_1"),
+			"int_val":  plugindata.Number(1),
+			"bool_val": plugindata.Bool(true),
 			"null_val": nil,
 		},
-		plugin.MapData{
-			"id":       plugin.NumberData(2),
-			"text_val": plugin.StringData("text_2"),
-			"int_val":  plugin.NumberData(2),
-			"bool_val": plugin.BoolData(false),
-			"null_val": plugin.StringData("null_val_2"),
+		plugindata.Map{
+			"id":       plugindata.Number(2),
+			"text_val": plugindata.String("text_2"),
+			"int_val":  plugindata.Number(2),
+			"bool_val": plugindata.Bool(false),
+			"null_val": plugindata.String("null_val_2"),
 		},
 	})
 }
 
 func (s *IntegrationTestSuite) TestSelectSomeFields() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.StringVal("SELECT id, text_val AS text FROM testdata"),
 			"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 		}),
 	})
 	s.Nil(diags)
-	s.Equal(data, plugin.ListData{
-		plugin.MapData{
-			"id":   plugin.NumberData(1),
-			"text": plugin.StringData("text_1"),
+	s.Equal(data, plugindata.List{
+		plugindata.Map{
+			"id":   plugindata.Number(1),
+			"text": plugindata.String("text_1"),
 		},
-		plugin.MapData{
-			"id":   plugin.NumberData(2),
-			"text": plugin.StringData("text_2"),
+		plugindata.Map{
+			"id":   plugindata.Number(2),
+			"text": plugindata.String("text_2"),
 		},
 	})
 }
 
 func (s *IntegrationTestSuite) TestSelectWithArgs() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.StringVal("SELECT * FROM testdata WHERE text_val = $1 AND int_val = $2 AND bool_val = $3;"),
 			"sql_args": cty.TupleVal([]cty.Value{
 				cty.StringVal("text_2"),
@@ -222,23 +193,23 @@ func (s *IntegrationTestSuite) TestSelectWithArgs() {
 		}),
 	})
 	s.Nil(diags)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id":       plugin.NumberData(2),
-			"text_val": plugin.StringData("text_2"),
-			"int_val":  plugin.NumberData(2),
-			"bool_val": plugin.BoolData(false),
-			"null_val": plugin.StringData("null_val_2"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id":       plugindata.Number(2),
+			"text_val": plugindata.String("text_2"),
+			"int_val":  plugindata.Number(2),
+			"bool_val": plugindata.Bool(false),
+			"null_val": plugindata.String("null_val_2"),
 		},
 	}, data)
 }
 
 func (s *IntegrationTestSuite) TestSelectWithMissingArgs() {
 	data, diags := s.plugin.RetrieveData(s.ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.StringVal("SELECT * FROM testdata WHERE bool_val = $1;"),
 			"sql_args":  cty.NilVal,
 		}),
@@ -255,10 +226,10 @@ func (s *IntegrationTestSuite) TestCancellation() {
 	ctx, cancel := context.WithCancel(s.ctx)
 	cancel()
 	data, diags := s.plugin.RetrieveData(ctx, "postgresql", &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"database_url": cty.StringVal(s.connURL),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"sql_query": cty.StringVal("SELECT * FROM testdata"),
 			"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 		}),

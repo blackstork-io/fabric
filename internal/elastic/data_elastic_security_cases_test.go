@@ -11,6 +11,8 @@ import (
 	"github.com/blackstork-io/fabric/internal/elastic/kbclient"
 	kbclient_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/elastic/kbclient"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type ReportsDataSourceTestSuite struct {
@@ -54,6 +56,7 @@ func (s *ReportsDataSourceTestSuite) TestAuth() {
 	s.cli.On("ListSecurityCases", mock.Anything, &kbclient.ListSecurityCasesReq{
 		Page:    1,
 		PerPage: 10,
+		Search:  kbclient.String("search"),
 	}).Return(&kbclient.ListSecurityCasesRes{
 		Page:    1,
 		PerPage: 10,
@@ -65,35 +68,20 @@ func (s *ReportsDataSourceTestSuite) TestAuth() {
 		},
 	}, nil)
 	res, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"cfg"}, map[string]cty.Value{
 			"kibana_endpoint_url": cty.StringVal("test_kibana_endpoint_url"),
 			"api_key_str":         cty.StringVal("test_api_key_str"),
-			"api_key":             cty.NullVal(cty.List(cty.String)),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"space_id":                cty.NullVal(cty.String),
-			"assignees":               cty.NullVal(cty.List(cty.String)),
-			"default_search_operator": cty.NullVal(cty.String),
-			"from":                    cty.NullVal(cty.String),
-			"owner":                   cty.NullVal(cty.List(cty.String)),
-			"reporters":               cty.NullVal(cty.List(cty.String)),
-			"search":                  cty.NullVal(cty.String),
-			"search_fields":           cty.NullVal(cty.List(cty.String)),
-			"severity":                cty.NullVal(cty.String),
-			"sort_field":              cty.NullVal(cty.String),
-			"sort_order":              cty.NullVal(cty.String),
-			"status":                  cty.NullVal(cty.String),
-			"tags":                    cty.NullVal(cty.List(cty.String)),
-			"to":                      cty.NullVal(cty.String),
-			"size":                    cty.NullVal(cty.Number),
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
+			"search": cty.StringVal("search"),
 		}),
 	})
 	s.Equal("test_kibana_endpoint_url", s.storedUrl)
 	s.Equal(kbclient.String("test_api_key_str"), s.storedApiKey)
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.StringData("1"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.String("1"),
 		},
 	}, res)
 }
@@ -127,33 +115,29 @@ func (s *ReportsDataSourceTestSuite) TestFull() {
 		},
 	}, nil)
 	res, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"cfg"}, map[string]cty.Value{
 			"kibana_endpoint_url": cty.StringVal("test_kibana_endpoint_url"),
 			"api_key_str":         cty.StringVal("test_api_key_str"),
-			"api_key":             cty.NullVal(cty.List(cty.String)),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"space_id":                cty.NullVal(cty.String),
-			"assignees":               cty.ListVal([]cty.Value{cty.StringVal("test_assignee_1"), cty.StringVal("test_assignee_2")}),
-			"default_search_operator": cty.NullVal(cty.String),
-			"from":                    cty.NullVal(cty.String),
-			"owner":                   cty.ListVal([]cty.Value{cty.StringVal("test_owner_1"), cty.StringVal("test_owner_2")}),
-			"reporters":               cty.ListVal([]cty.Value{cty.StringVal("test_reporter_1"), cty.StringVal("test_reporter_2")}),
-			"search":                  cty.StringVal("test_search"),
-			"search_fields":           cty.ListVal([]cty.Value{cty.StringVal("test_search_field_1"), cty.StringVal("test_search_field_2")}),
-			"severity":                cty.StringVal("test_severity"),
-			"sort_field":              cty.StringVal("test_sort_field"),
-			"sort_order":              cty.StringVal("test_sort_order"),
-			"status":                  cty.StringVal("test_status"),
-			"tags":                    cty.ListVal([]cty.Value{cty.StringVal("test_tag_1"), cty.StringVal("test_tag_2")}),
-			"to":                      cty.StringVal("test_to"),
-			"size":                    cty.NumberIntVal(3),
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
+			"assignees":     cty.ListVal([]cty.Value{cty.StringVal("test_assignee_1"), cty.StringVal("test_assignee_2")}),
+			"owner":         cty.ListVal([]cty.Value{cty.StringVal("test_owner_1"), cty.StringVal("test_owner_2")}),
+			"reporters":     cty.ListVal([]cty.Value{cty.StringVal("test_reporter_1"), cty.StringVal("test_reporter_2")}),
+			"search":        cty.StringVal("test_search"),
+			"search_fields": cty.ListVal([]cty.Value{cty.StringVal("test_search_field_1"), cty.StringVal("test_search_field_2")}),
+			"severity":      cty.StringVal("test_severity"),
+			"sort_field":    cty.StringVal("test_sort_field"),
+			"sort_order":    cty.StringVal("test_sort_order"),
+			"status":        cty.StringVal("test_status"),
+			"tags":          cty.ListVal([]cty.Value{cty.StringVal("test_tag_1"), cty.StringVal("test_tag_2")}),
+			"to":            cty.StringVal("test_to"),
+			"size":          cty.NumberIntVal(3),
 		}),
 	})
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.StringData("1"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.String("1"),
 		},
 	}, res)
 }

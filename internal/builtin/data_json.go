@@ -14,23 +14,26 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeJSONDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchJSONData,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:       "glob",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("path/to/file*.json"),
-				Doc:        `A glob pattern to select JSON files to read`,
-			},
-			&dataspec.AttrSpec{
-				Name:       "path",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("path/to/file.json"),
-				Doc:        `A file path to a JSON file to read`,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:       "glob",
+					Type:       cty.String,
+					ExampleVal: cty.StringVal("path/to/file*.json"),
+					Doc:        `A glob pattern to select JSON files to read`,
+				},
+				{
+					Name:       "path",
+					Type:       cty.String,
+					ExampleVal: cty.StringVal("path/to/file.json"),
+					Doc:        `A file path to a JSON file to read`,
+				},
 			},
 		},
 		Doc: `
@@ -62,9 +65,9 @@ func makeJSONDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	glob := params.Args.GetAttr("glob")
-	path := params.Args.GetAttr("path")
+func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
+	glob := params.Args.GetAttrVal("glob")
+	path := params.Args.GetAttrVal("path")
 
 	if !path.IsNull() && path.AsString() != "" {
 		slog.Debug("Reading a file from a path", "path", path.AsString())
@@ -107,7 +110,7 @@ func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plug
 	}}
 }
 
-func readAndDecodeJSONFile(path string) (plugin.Data, error) {
+func readAndDecodeJSONFile(path string) (plugindata.Data, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -123,12 +126,12 @@ func readAndDecodeJSONFile(path string) (plugin.Data, error) {
 	return content.data, nil
 }
 
-func readJSONFiles(ctx context.Context, pattern string) (plugin.ListData, error) {
+func readJSONFiles(ctx context.Context, pattern string) (plugindata.List, error) {
 	paths, err := filepath.Glob(pattern)
 	if err != nil {
 		return nil, err
 	}
-	result := make(plugin.ListData, 0, len(paths))
+	result := make(plugindata.List, 0, len(paths))
 	for _, path := range paths {
 		select {
 		case <-ctx.Done():
@@ -138,9 +141,9 @@ func readJSONFiles(ctx context.Context, pattern string) (plugin.ListData, error)
 			if err != nil {
 				return result, err
 			}
-			result = append(result, plugin.MapData{
-				"file_path": plugin.StringData(path),
-				"file_name": plugin.StringData(filepath.Base(path)),
+			result = append(result, plugindata.Map{
+				"file_path": plugindata.String(path),
+				"file_name": plugindata.String(filepath.Base(path)),
 				"content":   content,
 			})
 		}
@@ -149,21 +152,21 @@ func readJSONFiles(ctx context.Context, pattern string) (plugin.ListData, error)
 }
 
 type jsonData struct {
-	data plugin.Data
+	data plugindata.Data
 }
 
-func (d jsonData) toData(v any) (res plugin.Data, err error) {
+func (d jsonData) toData(v any) (res plugindata.Data, err error) {
 	switch v := v.(type) {
 	case nil:
 		return nil, nil
 	case float64:
-		return plugin.NumberData(v), nil
+		return plugindata.Number(v), nil
 	case string:
-		return plugin.StringData(v), nil
+		return plugindata.String(v), nil
 	case bool:
-		return plugin.BoolData(v), nil
+		return plugindata.Bool(v), nil
 	case map[string]any:
-		m := make(plugin.MapData)
+		m := make(plugindata.Map)
 		for k, v := range v {
 			m[k], err = d.toData(v)
 			if err != nil {
@@ -172,7 +175,7 @@ func (d jsonData) toData(v any) (res plugin.Data, err error) {
 		}
 		return m, nil
 	case []any:
-		l := make(plugin.ListData, len(v))
+		l := make(plugindata.List, len(v))
 		for i, v := range v {
 			l[i], err = d.toData(v)
 			if err != nil {

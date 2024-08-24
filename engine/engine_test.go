@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
-	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func TestEngineFetchData(t *testing.T) {
@@ -30,8 +30,8 @@ func TestEngineFetchData(t *testing.T) {
 			`,
 		},
 		"document.hello.data.json.test",
-		plugin.MapData{
-			"property_for": plugin.StringData("a.json"),
+		plugindata.Map{
+			"property_for": plugindata.String("a.json"),
 		},
 		[][]diagtest.Assert{},
 	)
@@ -50,8 +50,8 @@ func TestEngineFetchData(t *testing.T) {
 			`,
 		},
 		"data.json.test",
-		plugin.MapData{
-			"property_for": plugin.StringData("a.json"),
+		plugindata.Map{
+			"property_for": plugindata.String("a.json"),
 		},
 		[][]diagtest.Assert{},
 	)

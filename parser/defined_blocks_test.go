@@ -3,7 +3,7 @@ package parser_test
 import (
 	"testing"
 
-	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/stretchr/testify/assert"
 
 	definitions_mocks "github.com/blackstork-io/fabric/mocks/parser/definitions"
@@ -16,7 +16,7 @@ func TestAddIfMissing(t *testing.T) {
 	m := map[string]*definitions_mocks.FabricBlock{}
 
 	m1 := definitions_mocks.NewFabricBlock(t)
-	m1.EXPECT().GetHCLBlock().Return(&hcl.Block{})
+	m1.EXPECT().GetHCLBlock().Return(&hclsyntax.Block{})
 
 	diag := parser.AddIfMissing(m, "key_1", m1)
 	assert.Empty(diag)
@@ -30,7 +30,7 @@ func TestAddIfMissing(t *testing.T) {
 	assert.Same(m2, m["key_2"])
 
 	m3 := definitions_mocks.NewFabricBlock(t)
-	m3.EXPECT().GetHCLBlock().Return(&hcl.Block{}).Once()
+	m3.EXPECT().GetHCLBlock().Return(&hclsyntax.Block{}).Once()
 
 	diag = parser.AddIfMissing(m, "key_1", m3)
 	assert.NotEmpty(diag)

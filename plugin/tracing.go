@@ -8,6 +8,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 // WithTracing wraps a plugin schema with tracing instrumentation.
@@ -56,7 +57,7 @@ func makeDataSourcesTracing(plugin string, sources DataSources, tracer trace.Tra
 
 func makeDataSourceTracing(plugin, name string, source *DataSource, tracer trace.Tracer) RetrieveDataFunc {
 	next := source.DataFunc
-	return func(ctx context.Context, params *RetrieveDataParams) (_ Data, diags diagnostics.Diag) {
+	return func(ctx context.Context, params *RetrieveDataParams) (_ plugindata.Data, diags diagnostics.Diag) {
 		ctx, span := tracer.Start(ctx, "DataSource.Execute", trace.WithAttributes(
 			attribute.String("plugin", plugin),
 			attribute.String("datasource", name),

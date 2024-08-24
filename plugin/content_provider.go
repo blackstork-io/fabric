@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type ContentProviders map[string]*ContentProvider
@@ -52,8 +52,8 @@ type ContentProvider struct {
 	Doc             string
 	Tags            []string
 	ContentFunc     ProvideContentFunc
-	Args            dataspec.RootSpec
-	Config          dataspec.RootSpec
+	Args            *dataspec.RootSpec
+	Config          *dataspec.RootSpec
 	InvocationOrder InvocationOrder
 }
 
@@ -90,12 +90,6 @@ func (cg *ContentProvider) Execute(ctx context.Context, params *ProvideContentPa
 			Detail:   "content provider function not loaded",
 		}}
 	}
-
-	var diag diagnostics.Diag
-	params.Config, diag = CustomEvalTransform(ctx, params.DataContext, params.Config)
-	diags.Extend(diag)
-	params.Args, diag = CustomEvalTransform(ctx, params.DataContext, params.Args)
-	diags.Extend(diag)
 	if diags.HasErrors() {
 		return
 	}
@@ -103,9 +97,9 @@ func (cg *ContentProvider) Execute(ctx context.Context, params *ProvideContentPa
 }
 
 type ProvideContentParams struct {
-	Config      cty.Value
-	Args        cty.Value
-	DataContext MapData
+	Config      *dataspec.Block
+	Args        *dataspec.Block
+	DataContext plugindata.Map
 	ContentID   uint32
 }
 

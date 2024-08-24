@@ -7,6 +7,7 @@ import (
 
 	"github.com/blackstork-io/fabric/internal/splunk/client"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 type ClientLoadFn func(token, host, deployment string) client.Client
@@ -26,20 +27,20 @@ func Plugin(version string, loader ClientLoadFn) *plugin.Schema {
 	}
 }
 
-func makeClient(loader ClientLoadFn, cfg cty.Value) (client.Client, error) {
-	if cfg.IsNull() {
+func makeClient(loader ClientLoadFn, cfg *dataspec.Block) (client.Client, error) {
+	if cfg == nil {
 		return nil, fmt.Errorf("configuration is required")
 	}
 
-	token := cfg.GetAttr("auth_token")
+	token := cfg.GetAttrVal("auth_token")
 	if token.IsNull() || token.AsString() == "" {
 		return nil, fmt.Errorf("auth_token is required in configuration")
 	}
-	host := cfg.GetAttr("host")
+	host := cfg.GetAttrVal("host")
 	if host.IsNull() {
 		host = cty.StringVal("")
 	}
-	deployment := cfg.GetAttr("deployment_name")
+	deployment := cfg.GetAttrVal("deployment_name")
 	if deployment.IsNull() {
 		deployment = cty.StringVal("")
 	}

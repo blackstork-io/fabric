@@ -11,6 +11,8 @@ import (
 	"github.com/blackstork-io/fabric/internal/nistnvd/client"
 	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/nistnvd/client"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type CVESDataSourceTestSuite struct {
@@ -63,36 +65,18 @@ func (s *CVESDataSourceTestSuite) TestLimit() {
 		},
 	}, nil)
 	res, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"api_key": cty.StringVal("test_key"),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"last_mod_start_date":  cty.NullVal(cty.String),
-			"last_mod_end_date":    cty.NullVal(cty.String),
-			"pub_start_date":       cty.NullVal(cty.String),
-			"pub_end_date":         cty.NullVal(cty.String),
-			"cpe_name":             cty.NullVal(cty.String),
-			"cve_id":               cty.NullVal(cty.String),
-			"cvss_v3_metrics":      cty.NullVal(cty.String),
-			"cvss_v3_severity":     cty.NullVal(cty.String),
-			"cwe_id":               cty.NullVal(cty.String),
-			"keyword_search":       cty.NullVal(cty.String),
-			"virtual_match_string": cty.NullVal(cty.String),
-			"source_identifier":    cty.NullVal(cty.String),
-			"has_cert_alerts":      cty.NullVal(cty.String),
-			"has_kev":              cty.NullVal(cty.Bool),
-			"has_cert_notes":       cty.NullVal(cty.Bool),
-			"is_vulnerable":        cty.NullVal(cty.Bool),
-			"keyword_exact_match":  cty.NullVal(cty.Bool),
-			"no_rejected":          cty.NullVal(cty.Bool),
-			"limit":                cty.NumberIntVal(123),
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
+			"limit": cty.NumberIntVal(123),
 		}),
 	})
 	s.Equal("test_key", *s.storedApiKey)
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.StringData("1"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.String("1"),
 		},
 	}, res)
 }
@@ -161,10 +145,10 @@ func (s *CVESDataSourceTestSuite) TestFull() {
 		},
 	}, nil)
 	res, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"api_key": cty.StringVal("test_key"),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"last_mod_start_date":  cty.StringVal("2021-01-01T00:00:00Z"),
 			"last_mod_end_date":    cty.StringVal("2021-01-02T00:00:00Z"),
 			"pub_start_date":       cty.StringVal("2021-01-03T00:00:00Z"),
@@ -188,12 +172,12 @@ func (s *CVESDataSourceTestSuite) TestFull() {
 	})
 	s.Equal("test_key", *s.storedApiKey)
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.StringData("1"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.String("1"),
 		},
-		plugin.MapData{
-			"id": plugin.StringData("2"),
+		plugindata.Map{
+			"id": plugindata.String("2"),
 		},
 	}, res)
 }

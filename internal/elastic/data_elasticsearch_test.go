@@ -13,12 +13,14 @@ import (
 	es "github.com/elastic/go-elasticsearch/v8"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/suite"
-	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/elasticsearch"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 const (
@@ -31,7 +33,7 @@ type IntegrationTestSuite struct {
 	container *elasticsearch.ElasticsearchContainer
 	client    *es.Client
 	schema    *plugin.DataSource
-	cfg       cty.Value
+	cfg       *dataspec.Block
 	ctx       context.Context
 }
 
@@ -45,11 +47,10 @@ func TestIntegrationSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.ctx = context.Background()
-	opts := []testcontainers.ContainerCustomizer{
-		testcontainers.WithImage("docker.io/elasticsearch:8.9.0"),
+	container, err := elasticsearch.Run(
+		s.ctx, "docker.io/elasticsearch:8.9.0",
 		elasticsearch.WithPassword("password123"),
-	}
-	container, err := elasticsearch.RunContainer(s.ctx, opts...)
+	)
 
 	s.Require().NoError(err, "failed to start elasticsearch container")
 	s.container = container
@@ -63,17 +64,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	})
 	s.Require().NoError(err, "failed to create elasticsearch client")
 	s.client = client
-	s.cfg = cty.ObjectVal(map[string]cty.Value{
-		"base_url":            cty.StringVal(s.container.Settings.Address),
-		"cloud_id":            cty.NullVal(cty.String),
-		"api_key_str":         cty.NullVal(cty.String),
-		"api_key":             cty.NullVal(cty.List(cty.String)),
-		"basic_auth_username": cty.StringVal("elastic"),
-		"basic_auth_password": cty.StringVal("password123"),
-		"bearer_auth":         cty.NullVal(cty.String),
-		"ca_certs":            cty.StringVal(string(s.container.Settings.CACert)),
-	})
+
 	s.schema = makeElasticSearchDataSource()
+
+	s.cfg = plugintest.NewTestDecoder(s.T(), s.schema.Config).
+		SetAttr("base_url", cty.StringVal(s.container.Settings.Address)).
+		SetAttr("basic_auth_username", cty.StringVal("elastic")).
+		SetAttr("basic_auth_password", cty.StringVal("password123")).
+		SetAttr("ca_certs", cty.StringVal(string(s.container.Settings.CACert))).
+		Decode()
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -119,22 +118,15 @@ func (s *IntegrationTestSuite) TearDownTest() {
 }
 
 func (s *IntegrationTestSuite) TestSearchDefaults() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.NullVal(cty.String),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.NullVal(cty.Bool),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
-		"size":         cty.NullVal(cty.Number),
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("index", cty.StringVal(testIndex)).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})
 	s.Require().Nil(diags)
-	m := data.(plugin.ListData)
+	m := data.(plugindata.List)
 	raw, err := json.MarshalIndent(m, "", "  ")
 	s.Require().NoError(err, "failed to marshal data: %v", err)
 	s.JSONEq(`[
@@ -178,22 +170,17 @@ func (s *IntegrationTestSuite) TestSearchDefaults() {
 }
 
 func (s *IntegrationTestSuite) TestSearchFields() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.NullVal(cty.String),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")}),
-		"size":         cty.NullVal(cty.Number),
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		SetAttr("fields", cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")})).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})
 	s.Require().Nil(diags)
-	m := data.(plugin.MapData)
+	m := data.(plugindata.Map)
 	raw, err := json.MarshalIndent(m["hits"], "", "  ")
 	s.Require().NoError(err, "failed to marshal data: %v", err)
 	s.JSONEq(`{
@@ -235,22 +222,17 @@ func (s *IntegrationTestSuite) TestSearchFields() {
 }
 
 func (s *IntegrationTestSuite) TestSearchQueryString() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.NullVal(cty.String),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.StringVal("type:foo"),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
-		"size":         cty.NullVal(cty.Number),
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("query_string", cty.StringVal("type:foo")).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})
 	s.Require().Nil(diags)
-	m := data.(plugin.MapData)
+	m := data.(plugindata.Map)
 	raw, err := json.MarshalIndent(m["hits"], "", "  ")
 	s.Require().NoError(err, "failed to marshal data: %v", err)
 	s.JSONEq(`{
@@ -289,24 +271,19 @@ func (s *IntegrationTestSuite) TestSearchQueryString() {
 }
 
 func (s *IntegrationTestSuite) TestSearchQuery() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":    cty.NullVal(cty.String),
-		"index": cty.StringVal(testIndex),
-		"query": cty.MapVal(map[string]cty.Value{
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("query", cty.MapVal(map[string]cty.Value{
 			"match_all": cty.MapValEmpty(cty.DynamicPseudoType),
-		}),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
-		"size":         cty.NullVal(cty.Number),
-	})
+		})).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})
 	s.Require().Nil(diags)
-	m := data.(plugin.MapData)
+	m := data.(plugindata.Map)
 	raw, err := json.MarshalIndent(m["hits"], "", "  ")
 	s.Require().NoError(err, "failed to marshal data: %v", err)
 	s.JSONEq(`{
@@ -357,22 +334,17 @@ func (s *IntegrationTestSuite) TestSearchQuery() {
 }
 
 func (s *IntegrationTestSuite) TestSearchSize() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.NullVal(cty.String),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
-		"size":         cty.NumberIntVal(1),
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		SetAttr("size", cty.NumberIntVal(1)).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})
 	s.Require().Nil(diags)
-	m := data.(plugin.MapData)
+	m := data.(plugindata.Map)
 	raw, err := json.MarshalIndent(m["hits"], "", "  ")
 	s.Require().NoError(err, "failed to marshal data: %v", err)
 	s.JSONEq(`{
@@ -399,21 +371,17 @@ func (s *IntegrationTestSuite) TestSearchSize() {
 }
 
 func (s *IntegrationTestSuite) TestGetByID() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6"),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("id", cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6")).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})
 	s.Require().Nil(diags)
-	m := data.(plugin.MapData)
+	m := data.(plugindata.Map)
 	raw, err := json.MarshalIndent(m, "", "  ")
 	s.Require().NoError(err, "failed to marshal data: %v", err)
 	s.JSONEq(`{
@@ -434,21 +402,18 @@ func (s *IntegrationTestSuite) TestGetByID() {
 }
 
 func (s *IntegrationTestSuite) TestGetByIDFields() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6"),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")}),
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("id", cty.StringVal("0c68e63d-daaa-4a62-92e6-e855bd144fb6")).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		SetAttr("fields", cty.ListVal([]cty.Value{cty.StringVal("name"), cty.StringVal("age")})).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})
 	s.Require().Nil(diags)
-	m := data.(plugin.MapData)
+	m := data.(plugindata.Map)
 	raw, err := json.MarshalIndent(m, "", "  ")
 	s.Require().NoError(err, "failed to marshal data: %v", err)
 	s.JSONEq(`{
@@ -466,15 +431,11 @@ func (s *IntegrationTestSuite) TestGetByIDFields() {
 }
 
 func (s *IntegrationTestSuite) TestGetByIDNotFound() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.StringVal("00000000-0000-0000-0000-000000000000"),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("id", cty.StringVal("00000000-0000-0000-0000-000000000000")).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
@@ -488,39 +449,29 @@ func (s *IntegrationTestSuite) TestGetByIDNotFound() {
 }
 
 func (s *IntegrationTestSuite) TestScrollSearch() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.NullVal(cty.String),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
-		"size":         cty.NumberIntVal(10000 + 1), // to force scroll search
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		SetAttr("size", cty.NumberIntVal(10000+1)). // to force scroll search
+		Decode()
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: s.cfg,
 		Args:   args,
 	})
 	s.Require().Nil(diags, fmt.Sprintf("Received diagnostics: %s", diags))
-	dataMap := data.(plugin.MapData)
-	hitsEnvelope := dataMap["hits"].(plugin.MapData)
-	hits := hitsEnvelope["hits"].(plugin.ListData)
+	dataMap := data.(plugindata.Map)
+	hitsEnvelope := dataMap["hits"].(plugindata.Map)
+	hits := hitsEnvelope["hits"].(plugindata.List)
 
 	s.Equal(3, len(hits), fmt.Sprintf("Hits received: %s", hits))
 }
 
 func (s *IntegrationTestSuite) TestScrollSearchSteps() {
-	args := cty.ObjectVal(map[string]cty.Value{
-		"id":           cty.NullVal(cty.String),
-		"index":        cty.StringVal(testIndex),
-		"query":        cty.NullVal(cty.DynamicPseudoType),
-		"query_string": cty.NullVal(cty.String),
-		"only_hits":    cty.BoolVal(false),
-		"aggs":         cty.NullVal(cty.DynamicPseudoType),
-		"fields":       cty.NullVal(cty.String),
-		"size":         cty.NumberIntVal(5), // does not matter
-	})
+	args := plugintest.NewTestDecoder(s.T(), s.schema.Args).
+		SetAttr("index", cty.StringVal(testIndex)).
+		SetAttr("only_hits", cty.BoolVal(false)).
+		SetAttr("size", cty.NumberIntVal(5)).
+		Decode()
 	// There are only 3 results, so with the size 5 and step size 1,
 	// we should hit 4 requests:
 	// - initial search request (1 result)
@@ -528,9 +479,9 @@ func (s *IntegrationTestSuite) TestScrollSearchSteps() {
 	data, err := searchWithScrollConfigurable(s.client, args, 5, 1)
 
 	s.Require().Nil(err, fmt.Sprintf("Received diagnostics: %s", err))
-	dataMap := data.(plugin.MapData)
-	hitsEnvelope := dataMap["hits"].(plugin.MapData)
-	hits := hitsEnvelope["hits"].(plugin.ListData)
+	dataMap := data.(plugindata.Map)
+	hitsEnvelope := dataMap["hits"].(plugindata.Map)
+	hits := hitsEnvelope["hits"].(plugindata.List)
 
 	s.Equal(3, len(hits), fmt.Sprintf("Hits received: %s", hits))
 

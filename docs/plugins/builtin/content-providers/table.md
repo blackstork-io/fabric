@@ -43,14 +43,14 @@ content table {
   # A list of objects representing rows in the table.
   # May be set statically or as a result of one or more queries.
   #
-  # Optional data.
+  # Optional list of jq queriable.
   # Default value:
   rows = null
 
   # List of header and value go templates for each column
   #
   # Required list of object.
-  # Must have a length of at least 1
+  # Must be non-empty
   # For example:
   columns = [{
     header = "1st column header template"

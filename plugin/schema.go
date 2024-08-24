@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type Schema struct {
@@ -48,7 +49,7 @@ func (p *Schema) Validate() diagnostics.Diag {
 	return diags
 }
 
-func (p *Schema) RetrieveData(ctx context.Context, name string, params *RetrieveDataParams) (_ Data, diags diagnostics.Diag) {
+func (p *Schema) RetrieveData(ctx context.Context, name string, params *RetrieveDataParams) (_ plugindata.Data, diags diagnostics.Diag) {
 	if p == nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,

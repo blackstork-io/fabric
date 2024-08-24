@@ -52,13 +52,14 @@ func (db *DefinedBlocks) ParsePlugin(ctx context.Context, plugin *definitions.Pl
 
 func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Plugin) (parsed *definitions.ParsedPlugin, diags diagnostics.Diag) {
 	res := definitions.ParsedPlugin{
+		Source:     plugin,
 		PluginName: plugin.Name(),
 		BlockName:  plugin.BlockName(),
 		// Config and Invocation are to-be filled
 	}
 
 	// Parsing body
-	body := utils.ToHclsyntaxBody(plugin.Block.Body)
+	body := plugin.Block.Body
 
 	configAttr, _ := utils.Pop(body.Attributes, definitions.BlockKindConfig)
 	var configBlock, varsBlock *hclsyntax.Block
@@ -128,9 +129,15 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 	res.Vars, diag = ParseVars(ctx, varsBlock, localVar)
 	diags.Extend(diag)
 
+	reqAttrs, reqAttrsFound := utils.Pop(body.Attributes, definitions.AttrRequiredVars)
+	if reqAttrsFound {
+		diag := gohcl.DecodeExpression(reqAttrs.Expr, nil, &res.RequiredVars)
+		diags.Extend(diag)
+	}
+
+	plugin.Block.Body = body
 	invocation := &evaluation.BlockInvocation{
-		Body:            body,
-		DefinitionRange: plugin.DefRange(),
+		Block: plugin.Block,
 	}
 
 	// Parsing the ref
@@ -155,8 +162,9 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 		}
 
 		res.Vars = res.Vars.MergeWithBaseVars(baseEval.Vars)
+		res.RequiredVars = append(res.RequiredVars, baseEval.RequiredVars...)
 
-		updateRefBody(invocation.Body, baseEval.GetBlockInvocation().Body)
+		updateRefBody(invocation.Body, baseEval.Invocation.Body)
 
 	case pluginIsRef && !refFound:
 		diags.Append(&hcl.Diagnostic{
@@ -184,14 +192,6 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 	}
 
 	res.Invocation = invocation
-
-	// Future-proofing: be careful when refactoring, the rest of the program
-	// (specifically the ref handling) relies on res.invocation being *evaluation.BlockInvocation
-	_, ok := res.Invocation.(*evaluation.BlockInvocation)
-	if !ok {
-		panic("Plugin invocation must be block invocation")
-	}
-
 	parsed = &res
 	return
 }
@@ -238,7 +238,7 @@ func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAtt
 	case configBlock != nil:
 		// anonymous config block
 		config = &definitions.Config{
-			Block: configBlock.AsHCLBlock(),
+			Block: configBlock,
 		}
 	case plugin.IsRef():
 		// Config wasn't provided: inherit config from the base block
@@ -249,7 +249,7 @@ func (db *DefinedBlocks) parsePluginConfig(plugin *definitions.Plugin, configAtt
 			config = defaultCfg
 		} else {
 			config = &definitions.ConfigEmpty{
-				MissingItemRange: plugin.Block.Body.MissingItemRange(),
+				Plugin: plugin,
 			}
 		}
 	}

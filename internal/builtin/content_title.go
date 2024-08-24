@@ -12,6 +12,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 const (
@@ -23,33 +24,35 @@ const (
 func makeTitleContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genTitleContent,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "value",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				Doc:         `Title content`,
-				ExampleVal:  cty.StringVal("Vulnerability Report"),
-			},
-			&dataspec.AttrSpec{
-				Name:        "absolute_size",
-				Type:        cty.Number,
-				Constraints: constraint.Integer,
-				DefaultVal:  cty.NullVal(cty.Number),
-				Doc: `
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "value",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+					Doc:         `Title content`,
+					ExampleVal:  cty.StringVal("Vulnerability Report"),
+				},
+				{
+					Name:        "absolute_size",
+					Type:        cty.Number,
+					Constraints: constraint.Integer,
+					DefaultVal:  cty.NullVal(cty.Number),
+					Doc: `
 					Sets the absolute size of the title.
 					If ` + "`null`" + ` – absoulute title size is determined from the document structure
 				`,
-			},
-			&dataspec.AttrSpec{
-				Name:        "relative_size",
-				Type:        cty.Number,
-				Constraints: constraint.Integer,
-				DefaultVal:  cty.NumberIntVal(0),
-				Doc: `
+				},
+				{
+					Name:        "relative_size",
+					Type:        cty.Number,
+					Constraints: constraint.Integer,
+					DefaultVal:  cty.NumberIntVal(0),
+					Doc: `
 					Adjusts the absolute size of the title.
 					The value (which may be negative) is added to the ` + "`absolute_size`" + ` to produce the final title size
 				`,
+				},
 			},
 		},
 		Doc: `
@@ -62,7 +65,7 @@ func makeTitleContentProvider() *plugin.ContentProvider {
 }
 
 func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	value := params.Args.GetAttr("value")
+	value := params.Args.GetAttrVal("value")
 	if value.IsNull() {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -70,11 +73,11 @@ func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (
 			Detail:   "value is required",
 		}}
 	}
-	absoluteSize := params.Args.GetAttr("absolute_size")
+	absoluteSize := params.Args.GetAttrVal("absolute_size")
 	if absoluteSize.IsNull() {
 		absoluteSize = cty.NumberIntVal(findDefaultTitleSize(params.DataContext) + 1)
 	}
-	relativeSize := params.Args.GetAttr("relative_size")
+	relativeSize := params.Args.GetAttrVal("relative_size")
 
 	titleSize, _ := absoluteSize.AsBigFloat().Int64()
 	relationSize, _ := relativeSize.AsBigFloat().Int64()
@@ -108,7 +111,7 @@ func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (
 	}, nil
 }
 
-func findDefaultTitleSize(datactx plugin.MapData) int64 {
+func findDefaultTitleSize(datactx plugindata.Map) int64 {
 	document, section := parseScope(datactx)
 	if section == nil {
 		return defaultAbsoluteTitleSize

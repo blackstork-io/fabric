@@ -1,13 +1,15 @@
 module github.com/blackstork-io/fabric
 
-go 1.22.1
+go 1.22
 
 require (
+	github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai v0.6.0
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.11.1
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
 	github.com/elastic/go-elasticsearch/v8 v8.14.0
-	github.com/evanphx/go-hclog-slog v0.0.0-20230905211129-6d31b63d6f09
+	github.com/evanphx/go-hclog-slog v0.0.0-20240717231540-be48fc4c4df5
 	github.com/gobwas/glob v0.2.3
 	github.com/golang-cz/devslog v0.0.8
 	github.com/google/go-github/v58 v58.0.0
@@ -27,9 +29,9 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stephenafamo/goldmark-pdf v0.4.1
 	github.com/stretchr/testify v1.9.0
-	github.com/testcontainers/testcontainers-go v0.31.0
-	github.com/testcontainers/testcontainers-go/modules/elasticsearch v0.31.0
-	github.com/testcontainers/testcontainers-go/modules/postgres v0.31.0
+	github.com/testcontainers/testcontainers-go v0.32.0
+	github.com/testcontainers/testcontainers-go/modules/elasticsearch v0.32.0
+	github.com/testcontainers/testcontainers-go/modules/postgres v0.32.0
 	github.com/wundergraph/graphql-go-tools/v2 v2.0.0-rc.46
 	github.com/yuin/goldmark v1.7.1
 	github.com/zclconf/go-cty v1.14.4
@@ -55,14 +57,13 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-replace github.com/evanphx/go-hclog-slog v0.0.0-20230905211129-6d31b63d6f09 => github.com/Andrew-Morozko/go-hclog-slog v0.0.0-20240624145756-528e39db2968
-
 require (
 	dario.cat/mergo v1.0.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/internal v1.7.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
-	github.com/Microsoft/go-winio v0.6.1 // indirect
-	github.com/Microsoft/hcsshim v0.11.4 // indirect
+	github.com/Microsoft/go-winio v0.6.2 // indirect
+	github.com/Microsoft/hcsshim v0.11.5 // indirect
 	github.com/PuerkitoBio/goquery v1.8.0 // indirect
 	github.com/agext/levenshtein v1.2.1 // indirect
 	github.com/alecthomas/chroma/v2 v2.10.0 // indirect
@@ -71,13 +72,14 @@ require (
 	github.com/brittonhayes/notionmd v0.5.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/containerd/containerd v1.7.15 // indirect
+	github.com/containerd/containerd v1.7.18 // indirect
+	github.com/containerd/errdefs v0.1.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/cpuguy83/dockercfg v0.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/distribution/reference v0.5.0 // indirect
+	github.com/distribution/reference v0.6.0 // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
-	github.com/docker/docker v25.0.5+incompatible // indirect
+	github.com/docker/docker v27.1.1+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dstotijn/go-notion v0.11.0 // indirect
@@ -111,6 +113,7 @@ require (
 	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
 	github.com/mmcdole/goxpp v1.1.1-0.20240225020742-a0c311522b23 // indirect
+	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/moby/sys/user v0.1.0 // indirect

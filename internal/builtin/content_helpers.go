@@ -1,6 +1,9 @@
 package builtin
 
-import "github.com/blackstork-io/fabric/plugin"
+import (
+	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
+)
 
 func countDeclarations(data *plugin.ContentSection, name string) int {
 	count := 0
@@ -19,18 +22,18 @@ func countDeclarations(data *plugin.ContentSection, name string) int {
 	return count
 }
 
-func parseScope(datactx plugin.MapData) (document, section *plugin.ContentSection) {
+func parseScope(datactx plugindata.Map) (document, section *plugin.ContentSection) {
 	documentMap, ok := datactx["document"]
 	if !ok {
 		return
 	}
 
-	contentMap, ok := documentMap.(plugin.MapData)["content"]
+	contentMap, ok := documentMap.(plugindata.Map)["content"]
 	if !ok {
 		return
 	}
 
-	content, err := plugin.ParseContentData(contentMap.(plugin.MapData))
+	content, err := plugin.ParseContentData(contentMap.(plugindata.Map))
 	if err != nil {
 		return
 	}
@@ -44,11 +47,11 @@ func parseScope(datactx plugin.MapData) (document, section *plugin.ContentSectio
 	if !ok || sectionMap == nil {
 		return
 	}
-	contentMap, ok = sectionMap.(plugin.MapData)["content"]
+	contentMap, ok = sectionMap.(plugindata.Map)["content"]
 	if !ok {
 		return
 	}
-	content, err = plugin.ParseContentData(contentMap.(plugin.MapData))
+	content, err = plugin.ParseContentData(contentMap.(plugindata.Map))
 	if err != nil {
 		return
 	}

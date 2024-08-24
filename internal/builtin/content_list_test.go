@@ -4,12 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
@@ -35,45 +34,28 @@ func (s *ListGeneratorTestSuite) TestSchema() {
 }
 
 func (s *ListGeneratorTestSuite) TestNilQueryResult() {
-	dataCtx := plugin.MapData{}
-	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+	dataCtx := plugindata.Map{}
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = null
-	`, dataCtx, diagtest.Asserts{})
-
-	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args:        args,
-		DataContext: dataCtx,
-	})
-	s.Nil(result)
-	s.Equal(diagnostics.Diag{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "Data is nil",
-	}}, diags)
+	`, dataCtx, diagtest.Asserts{{
+		diagtest.IsError,
+		diagtest.SummaryContains("Attribute", "non-null"),
+	}})
 }
 
 func (s *ListGeneratorTestSuite) TestNonArrayQueryResult() {
-	dataCtx := plugin.MapData{}
-	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+	dataCtx := plugindata.Map{}
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = "not_an_array"
-	`, dataCtx, diagtest.Asserts{})
-
-	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args:        args,
-		DataContext: dataCtx,
-	})
-	s.Nil(result)
-	s.Equal(diagnostics.Diag{{
-		Severity: hcl.DiagError,
-		Summary:  "Failed to parse arguments",
-		Detail:   "Data must be a list",
-	}}, diags)
+	`, dataCtx, diagtest.Asserts{{
+		diagtest.IsError,
+		diagtest.SummaryContains("Incorrect", "type"),
+		diagtest.DetailContains("list of jq queriable required"),
+	}})
 }
 
 func (s *ListGeneratorTestSuite) TestUnordered() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = ["bar", "baz"]
 		item_template = "foo {{.}}"
@@ -90,7 +72,7 @@ func (s *ListGeneratorTestSuite) TestUnordered() {
 }
 
 func (s *ListGeneratorTestSuite) TestOrdered() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = ["bar", "baz"]
 		item_template = "foo {{.}}"
@@ -107,7 +89,7 @@ func (s *ListGeneratorTestSuite) TestOrdered() {
 }
 
 func (s *ListGeneratorTestSuite) TestTaskList() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = ["bar", "baz"]
 		item_template = "foo {{.}}"
@@ -124,7 +106,7 @@ func (s *ListGeneratorTestSuite) TestTaskList() {
 }
 
 func (s *ListGeneratorTestSuite) TestBasic() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = ["bar", "baz"]
 		item_template = "foo {{.}}"
@@ -140,7 +122,7 @@ func (s *ListGeneratorTestSuite) TestBasic() {
 }
 
 func (s *ListGeneratorTestSuite) TestAdvanced() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = [
 			{
@@ -153,7 +135,6 @@ func (s *ListGeneratorTestSuite) TestAdvanced() {
 			}
 		]
 		item_template = "foo {{.bar}} {{.baz | upper}}"
-		format = null
 	`, dataCtx, diagtest.Asserts{})
 
 	ctx := context.Background()
@@ -166,27 +147,20 @@ func (s *ListGeneratorTestSuite) TestAdvanced() {
 }
 
 func (s *ListGeneratorTestSuite) TestEmptyQueryResult() {
-	dataCtx := plugin.MapData{}
-	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
+	dataCtx := plugindata.Map{}
+	plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = []
 		item_template = "foo {{.}}"
-		format = null
-	`, dataCtx, diagtest.Asserts{})
-
-	ctx := context.Background()
-	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
-		Args:        args,
-		DataContext: dataCtx,
-	})
-	s.Equal("", mdprint.PrintString(result.Content))
-	s.Empty(diags)
+	`, dataCtx, diagtest.Asserts{{
+		diagtest.IsError,
+		diagtest.DetailContains("items", "can't be empty"),
+	}})
 }
 
 func (s *ListGeneratorTestSuite) TestMissingItemTemplate() {
-	dataCtx := plugin.MapData{}
+	dataCtx := plugindata.Map{}
 	args := plugintest.DecodeAndAssert(s.T(), s.schema.Args, `
 		items = ["bar", "baz"]
-		format = null
 	`, dataCtx, diagtest.Asserts{})
 
 	ctx := context.Background()

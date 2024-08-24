@@ -1,10 +1,9 @@
 package openai
 
 import (
-	"github.com/zclconf/go-cty/cty"
-
 	"github.com/blackstork-io/fabric/internal/openai/client"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 const (
@@ -28,11 +27,11 @@ func Plugin(version string, loader ClientLoadFn) *plugin.Schema {
 	}
 }
 
-func makeClient(loader ClientLoadFn, cfg cty.Value) (client.Client, error) {
+func makeClient(loader ClientLoadFn, cfg *dataspec.Block) (client.Client, error) {
 	opts := []client.Option{
-		client.WithAPIKey(cfg.GetAttr("api_key").AsString()),
+		client.WithAPIKey(cfg.GetAttrVal("api_key").AsString()),
 	}
-	orgID := cfg.GetAttr("organization_id")
+	orgID := cfg.GetAttrVal("organization_id")
 	if !orgID.IsNull() && orgID.AsString() != "" {
 		opts = append(opts, client.WithOrgID(orgID.AsString()))
 	}

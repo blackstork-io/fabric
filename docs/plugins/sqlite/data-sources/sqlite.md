@@ -38,6 +38,7 @@ The data source supports the following configuration arguments:
 ```hcl
 config data sqlite {
   # Required string.
+  # Must be non-empty
   # For example:
   database_uri = "some string"
 }
@@ -49,11 +50,18 @@ The data source supports the following execution arguments:
 
 ```hcl
 data sqlite {
+  # SQL query to execute
+  #
   # Required string.
   # For example:
   sql_query = "some string"
 
-  # Optional list of any single type.
+  # A tuple (or list) of strings, numbers, or booleans to be used as arguments in the SQL query
+  #
+  # Optional any type.
+  # For example:
+  # sql_args = ["example argument", 2, false]
+  # 
   # Default value:
   sql_args = null
 }

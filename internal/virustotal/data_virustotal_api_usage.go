@@ -13,50 +13,48 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeVirusTotalAPIUsageDataSchema(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchVirusTotalAPIUsageData(loader),
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "api_key",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				Secret:      true,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "api_key",
+					Type:        cty.String,
+					Constraints: constraint.RequiredMeaningful,
+					Secret:      true,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name: "user_id",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "group_id",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "start_date",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name: "end_date",
-				Type: cty.String,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name: "user_id",
+					Type: cty.String,
+				},
+				{
+					Name: "group_id",
+					Type: cty.String,
+				},
+				{
+					Name: "start_date",
+					Type: cty.String,
+				},
+				{
+					Name: "end_date",
+					Type: cty.String,
+				},
 			},
 		},
 	}
 }
 
 func fetchVirusTotalAPIUsageData(loader ClientLoadFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-		cli, err := makeClient(loader, params.Config)
-		if err != nil {
-			return nil, diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to create client",
-				Detail:   err.Error(),
-			}}
-		}
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
+		cli := loader(params.Config.GetAttrVal("api_key").AsString())
 		args, err := parseAPIUsageArgs(params.Args)
 		if err != nil {
 			return nil, diagnostics.Diag{{
@@ -107,7 +105,7 @@ func fetchVirusTotalAPIUsageData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 			}
 			data = res.Data
 		}
-		result, err := plugin.ParseDataMapAny(data)
+		result, err := plugindata.ParseMapAny(data)
 		if err != nil {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
@@ -126,25 +124,25 @@ type apiUsageArgs struct {
 	EndDate   *time.Time
 }
 
-func parseAPIUsageArgs(args cty.Value) (*apiUsageArgs, error) {
+func parseAPIUsageArgs(args *dataspec.Block) (*apiUsageArgs, error) {
 	dst := apiUsageArgs{}
 
-	if args.IsNull() {
+	if args == nil {
 		return nil, fmt.Errorf("arguments are null")
 	}
 
-	if userID := args.GetAttr("user_id"); !userID.IsNull() {
+	if userID := args.GetAttrVal("user_id"); !userID.IsNull() {
 		userIDStr := userID.AsString()
 		dst.User = &userIDStr
 	}
-	if groupID := args.GetAttr("group_id"); !groupID.IsNull() {
+	if groupID := args.GetAttrVal("group_id"); !groupID.IsNull() {
 		groupIDStr := groupID.AsString()
 		dst.Group = &groupIDStr
 	}
 	if dst.User == nil && dst.Group == nil {
 		return nil, fmt.Errorf("either user_id or group_id must be set")
 	}
-	if startDate := args.GetAttr("start_date"); !startDate.IsNull() {
+	if startDate := args.GetAttrVal("start_date"); !startDate.IsNull() {
 		startDateStr := startDate.AsString()
 		startDate, err := time.Parse("20060102", startDateStr)
 		if err != nil {
@@ -152,7 +150,7 @@ func parseAPIUsageArgs(args cty.Value) (*apiUsageArgs, error) {
 		}
 		dst.StartDate = &startDate
 	}
-	if endDate := args.GetAttr("end_date"); !endDate.IsNull() {
+	if endDate := args.GetAttrVal("end_date"); !endDate.IsNull() {
 		endDateStr := endDate.AsString()
 		endDate, err := time.Parse("20060102", endDateStr)
 		if err != nil {

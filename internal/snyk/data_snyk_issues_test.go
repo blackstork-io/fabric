@@ -10,7 +10,9 @@ import (
 
 	"github.com/blackstork-io/fabric/internal/snyk/client"
 	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/snyk/client"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
@@ -74,19 +76,7 @@ func (s *IssuesDataSourceTestSuite) TestPaging() {
 		"api_key": cty.StringVal("test_api_key"),
 	}), nil)
 	args := plugintest.ReencodeCTY(s.T(), s.schema.Args, cty.ObjectVal(map[string]cty.Value{
-		"group_id":                 cty.StringVal("test_group_id"),
-		"org_id":                   cty.NullVal(cty.String),
-		"scan_item_id":             cty.NullVal(cty.String),
-		"scan_item_type":           cty.NullVal(cty.String),
-		"type":                     cty.NullVal(cty.String),
-		"updated_before":           cty.NullVal(cty.String),
-		"updated_after":            cty.NullVal(cty.String),
-		"created_before":           cty.NullVal(cty.String),
-		"created_after":            cty.NullVal(cty.String),
-		"effective_severity_level": cty.NullVal(cty.List(cty.String)),
-		"status":                   cty.NullVal(cty.List(cty.String)),
-		"ignored":                  cty.NullVal(cty.Bool),
-		"limit":                    cty.NullVal(cty.Number),
+		"group_id": cty.StringVal("test_group_id"),
 	}), nil)
 	res, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: cfg,
@@ -94,9 +84,9 @@ func (s *IssuesDataSourceTestSuite) TestPaging() {
 	})
 	s.Equal("test_api_key", s.storedAPIKey)
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.StringData("1"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.String("1"),
 		},
 	}, res)
 }
@@ -156,36 +146,24 @@ func (s *IssuesDataSourceTestSuite) TestFull() {
 	})
 	s.Equal("test_api_key", s.storedAPIKey)
 	s.Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"id": plugin.StringData("1"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"id": plugindata.String("1"),
 		},
-		plugin.MapData{
-			"id": plugin.StringData("2"),
+		plugindata.Map{
+			"id": plugindata.String("2"),
 		},
 	}, res)
 }
 
 func (s *IssuesDataSourceTestSuite) TestConstraintNoGroupAndOrgID() {
 	_, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"api_key": cty.StringVal("test_api"),
-		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"group_id":                 cty.NullVal(cty.String),
-			"org_id":                   cty.NullVal(cty.String),
-			"scan_item_id":             cty.NullVal(cty.String),
-			"scan_item_type":           cty.NullVal(cty.String),
-			"type":                     cty.NullVal(cty.String),
-			"updated_before":           cty.NullVal(cty.String),
-			"updated_after":            cty.NullVal(cty.String),
-			"created_before":           cty.NullVal(cty.String),
-			"created_after":            cty.NullVal(cty.String),
-			"effective_severity_level": cty.NullVal(cty.List(cty.String)),
-			"status":                   cty.NullVal(cty.List(cty.String)),
-			"ignored":                  cty.NullVal(cty.Bool),
-			"limit":                    cty.NullVal(cty.Number),
-		}),
+		Config: plugintest.NewTestDecoder(s.T(), s.schema.Config).
+			SetAttr("api_key", cty.StringVal("test_api")).
+			Decode(),
+
+		Args: plugintest.NewTestDecoder(s.T(), s.schema.Args).
+			Decode(),
 	})
 	s.Require().Len(diags, 1)
 	s.Equal("Failed to create Snyk request", diags[0].Summary)
@@ -194,26 +172,17 @@ func (s *IssuesDataSourceTestSuite) TestConstraintNoGroupAndOrgID() {
 
 func (s *IssuesDataSourceTestSuite) TestConstraintBothGroupAndOrgID() {
 	_, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
-			"api_key": cty.StringVal("test_api"),
-		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
-			"group_id":                 cty.StringVal("test_group_id"),
-			"org_id":                   cty.StringVal("test_org_id"),
-			"scan_item_id":             cty.NullVal(cty.String),
-			"scan_item_type":           cty.NullVal(cty.String),
-			"type":                     cty.NullVal(cty.String),
-			"updated_before":           cty.NullVal(cty.String),
-			"updated_after":            cty.NullVal(cty.String),
-			"created_before":           cty.NullVal(cty.String),
-			"created_after":            cty.NullVal(cty.String),
-			"effective_severity_level": cty.NullVal(cty.List(cty.String)),
-			"status":                   cty.NullVal(cty.List(cty.String)),
-			"ignored":                  cty.NullVal(cty.Bool),
-			"limit":                    cty.NullVal(cty.Number),
-		}),
+		Config: plugintest.NewTestDecoder(s.T(), s.schema.Config).
+			SetAttr("api_key", cty.StringVal("test_api")).
+			Decode(),
+
+		Args: plugintest.NewTestDecoder(s.T(), s.schema.Args).
+			SetAttr("group_id", cty.StringVal("test_group_id")).
+			SetAttr("org_id", cty.StringVal("test_org_id")).
+			Decode(),
 	})
-	s.Require().Len(diags, 1)
-	s.Equal("Failed to create Snyk request", diags[0].Summary)
-	s.Equal("only one of group_id or org_id is allowed", diags[0].Detail)
+	diagtest.Asserts{{
+		diagtest.IsError,
+		diagtest.DetailContains("only one of group_id or org_id is allowed"),
+	}}.AssertMatch(s.T(), diags, nil)
 }

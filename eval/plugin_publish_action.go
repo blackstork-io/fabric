@@ -3,16 +3,18 @@ package eval
 import (
 	"context"
 	"fmt"
-	"slices"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type PluginPublishAction struct {
@@ -21,12 +23,13 @@ type PluginPublishAction struct {
 	Format    plugin.OutputFormat
 }
 
-func (block *PluginPublishAction) Publish(ctx context.Context, dataCtx plugin.MapData) diagnostics.Diag {
+func (block *PluginPublishAction) Publish(ctx context.Context, dataCtx plugindata.Map, documentName string) diagnostics.Diag {
 	return block.Publisher.Execute(ctx, &plugin.PublishParams{
-		Config:      block.Config,
-		Args:        block.Args,
-		DataContext: dataCtx,
-		Format:      block.Format,
+		Config:       block.Config,
+		Args:         block.Args,
+		DataContext:  dataCtx,
+		Format:       block.Format,
+		DocumentName: documentName,
 	})
 }
 
@@ -39,13 +42,13 @@ func LoadPluginPublishAction(ctx context.Context, publishers Publishers, node *d
 			Detail:   fmt.Sprintf("'%s' not found in any plugin", node.PluginName),
 		}}
 	}
-	var cfg cty.Value
-	if p.Config != nil && !p.Config.IsEmpty() {
+	var cfg *dataspec.Block
+	if p.Config != nil {
 		cfg, diags = node.Config.ParseConfig(ctx, p.Config)
 		if diags.HasErrors() {
 			return nil, diags
 		}
-	} else if (p.Config == nil || p.Config.IsEmpty()) && node.Config.Exists() {
+	} else if node.Config.Exists() {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
 			Summary:  "Publisher doesn't support configuration",
@@ -56,21 +59,24 @@ func LoadPluginPublishAction(ctx context.Context, publishers Publishers, node *d
 		})
 		return nil, diags
 	}
-	body := node.Invocation.GetBody()
+
 	var format plugin.OutputFormat
-	if attr, found := body.Attributes["format"]; found {
-		value, newBody, stdDiag := hcldec.PartialDecode(body, &hcldec.ObjectSpec{
-			"format": &hcldec.AttrSpec{
-				Name:     "format",
-				Type:     cty.String,
-				Required: true,
-			},
-		}, nil)
-		if diags.Extend(stdDiag) {
+	// XXX: So format is optional? Not including format in invocation doesn't validate it
+	// anyway, this would change with the new AST
+	if attr, found := utils.Pop(node.Invocation.Body.Attributes, "format"); found {
+		val, diag := dataspec.DecodeAttr(fabctx.GetEvalContext(ctx), attr, &dataspec.AttrSpec{
+			Name:        "format",
+			Type:        cty.String,
+			Constraints: constraint.RequiredMeaningful,
+			OneOf: constraint.OneOf(utils.FnMap(p.AllowedFormats, func(f plugin.OutputFormat) cty.Value {
+				return cty.StringVal(f.String())
+			})),
+		})
+
+		if diags.Extend(diag) {
 			return
 		}
-		node.Invocation.SetBody(utils.ToHclsyntaxBody(newBody))
-		formatStr := value.GetAttr("format").AsString()
+		formatStr := val.Value.AsString()
 		switch formatStr {
 		case plugin.OutputFormatMD.String():
 			format = plugin.OutputFormatMD
@@ -87,18 +93,9 @@ func LoadPluginPublishAction(ctx context.Context, publishers Publishers, node *d
 			})
 			return
 		}
-		if !slices.Contains(p.AllowedFormats, format) {
-			diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "Invalid format",
-				Detail:   fmt.Sprintf("'%s' is not allowed for this publisher", format.String()),
-				Subject:  &attr.SrcRange,
-			})
-			return
-		}
 	}
-	var args cty.Value
-	args, diag := node.Invocation.ParseInvocation(ctx, p.Args)
+
+	args, diag := dataspec.DecodeAndEvalBlock(ctx, node.Invocation.Block, p.Args, nil)
 	if diags.Extend(diag) {
 		return nil, diags
 	}

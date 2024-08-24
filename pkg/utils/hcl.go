@@ -10,6 +10,16 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 )
 
+func RangeStart(rng hcl.Range) hcl.Range {
+	rng.Start = rng.End
+	return rng
+}
+
+func RangeEnd(rng hcl.Range) hcl.Range {
+	rng.End = rng.Start
+	return rng
+}
+
 func ToHclsyntaxBody(body hcl.Body) *hclsyntax.Body {
 	hclsyntaxBody, ok := body.(*hclsyntax.Body)
 	if !ok {

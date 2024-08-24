@@ -1,0 +1,55 @@
+name: Full PR checks
+
+on:
+  workflow_call:
+
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: ["stable", "oldstable"]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        exclude:
+          # TODO: Tests on windows are failing, paths are not crossplatform
+          - os: "windows-latest"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+      # Run integration tests (testcontainers) on ubuntu
+      - run: go test -race -v -timeout 2m ${{ !startsWith(matrix.os, 'ubuntu') && '-short' || '' }} ./...
+
+  fuzz-test:
+    name: Fuzz test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+      - uses: jidicula/go-fuzz-action@v1.2.0
+        with:
+          packages: 'github.com/blackstork-io/fabric/engine'
+          fuzz-time: 5m
+          fuzz-minimize-time: 2m
+
+  builds:
+    strategy:
+      matrix:
+        go-version: ["stable", "oldstable"]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Build fabric and plugins
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: build --snapshot --clean --single-target

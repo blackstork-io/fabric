@@ -12,117 +12,105 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeSnykIssuesDataSource(loader ClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
 		Doc:      "The `snyk_issues` data source fetches issues from Snyk.",
 		DataFunc: fetchSnykIssues(loader),
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Doc:         "The Snyk API key",
-				Name:        "api_key",
-				Type:        cty.String,
-				Constraints: constraint.RequiredMeaningful,
-				Secret:      true,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Doc:         "The Snyk API key",
+					Name:        "api_key",
+					Type:        cty.String,
+					Constraints: constraint.RequiredMeaningful,
+					Secret:      true,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Doc:  "The group ID",
-				Name: "group_id",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Doc:  "The organization ID",
-				Name: "org_id",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Doc:  "The scan item ID",
-				Name: "scan_item_id",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Doc:  "The scan item type",
-				Name: "scan_item_type",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Doc:  "The issue type",
-				Name: "type",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Doc:  "The updated before date",
-				Name: "updated_before",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Doc:  "The updated after date",
-				Name: "updated_after",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Doc:  "The created before date",
-				Name: "created_before",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Doc:  "The created after date",
-				Name: "created_after",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Doc:  "The effective severity level",
-				Name: "effective_severity_level",
-				Type: cty.List(cty.String),
-			},
-			&dataspec.AttrSpec{
-				Doc:  "The status",
-				Name: "status",
-				Type: cty.List(cty.String),
-			},
-			&dataspec.AttrSpec{
-				Doc:  "The ignored flag",
-				Name: "ignored",
-				Type: cty.Bool,
-			},
-			&dataspec.AttrSpec{
-				Doc:          "The limit of issues to fetch",
-				Name:         "limit",
-				Type:         cty.Number,
-				MinInclusive: cty.NumberIntVal(1),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Doc:  "The group ID",
+					Name: "group_id",
+					Type: cty.String,
+				},
+				{
+					Doc:  "The organization ID",
+					Name: "org_id",
+					Type: cty.String,
+				},
+				{
+					Doc:  "The scan item ID",
+					Name: "scan_item_id",
+					Type: cty.String,
+				},
+				{
+					Doc:  "The scan item type",
+					Name: "scan_item_type",
+					Type: cty.String,
+				},
+				{
+					Doc:  "The issue type",
+					Name: "type",
+					Type: cty.String,
+				},
+				{
+					Doc:  "The updated before date",
+					Name: "updated_before",
+					Type: cty.String,
+				},
+				{
+					Doc:  "The updated after date",
+					Name: "updated_after",
+					Type: cty.String,
+				},
+				{
+					Doc:  "The created before date",
+					Name: "created_before",
+					Type: cty.String,
+				},
+				{
+					Doc:  "The created after date",
+					Name: "created_after",
+					Type: cty.String,
+				},
+				{
+					Doc:  "The effective severity level",
+					Name: "effective_severity_level",
+					Type: cty.List(cty.String),
+				},
+				{
+					Doc:  "The status",
+					Name: "status",
+					Type: cty.List(cty.String),
+				},
+				{
+					Doc:  "The ignored flag",
+					Name: "ignored",
+					Type: cty.Bool,
+				},
+				{
+					Doc:          "The limit of issues to fetch",
+					Name:         "limit",
+					Type:         cty.Number,
+					Constraints:  constraint.NonNull,
+					MinInclusive: cty.NumberIntVal(0),
+					DefaultVal:   cty.NumberIntVal(0),
+				},
 			},
 		},
 	}
 }
 
 func fetchSnykIssues(loader ClientLoadFn) plugin.RetrieveDataFunc {
-	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-		client, err := makeClient(loader, params.Config)
-		if err != nil {
-			return nil, diagnostics.Diag{
-				{
-					Severity: hcl.DiagError,
-					Summary:  "Failed to create Snyk client",
-					Detail:   err.Error(),
-				},
-			}
-		}
-		limit := 0
-		if arg := params.Args.GetAttr("limit"); !arg.IsNull() {
-			n, _ := arg.AsBigFloat().Int64()
-			if n <= 0 {
-				return nil, diagnostics.Diag{
-					{
-						Severity: hcl.DiagError,
-						Summary:  "Invalid limit",
-						Detail:   "limit must be greater than 0",
-					},
-				}
-			}
-			limit = int(n)
+	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
+		client := loader(params.Config.GetAttrVal("api_key").AsString())
+		limit, diags := params.Args.Attrs["limit"].GetInt()
+		if diags.HasErrors() {
+			return nil, diags
 		}
 		req, err := makeRequest(params.Args)
 		if err != nil {
@@ -134,7 +122,7 @@ func fetchSnykIssues(loader ClientLoadFn) plugin.RetrieveDataFunc {
 				},
 			}
 		}
-		var data plugin.ListData
+		var data plugindata.List
 		for {
 			res, err := client.ListIssues(ctx, req)
 			if err != nil {
@@ -147,7 +135,7 @@ func fetchSnykIssues(loader ClientLoadFn) plugin.RetrieveDataFunc {
 				}
 			}
 			for _, v := range res.Data {
-				item, err := plugin.ParseDataAny(v)
+				item, err := plugindata.ParseAny(v)
 				if err != nil {
 					return nil, diagnostics.Diag{
 						{
@@ -173,12 +161,12 @@ func fetchSnykIssues(loader ClientLoadFn) plugin.RetrieveDataFunc {
 	}
 }
 
-func makeRequest(args cty.Value) (*client.ListIssuesReq, error) {
+func makeRequest(args *dataspec.Block) (*client.ListIssuesReq, error) {
 	req := &client.ListIssuesReq{
 		Limit: pageSize,
 	}
-	groupID := args.GetAttr("group_id")
-	orgID := args.GetAttr("org_id")
+	groupID := args.GetAttrVal("group_id")
+	orgID := args.GetAttrVal("org_id")
 	if groupID.IsNull() && orgID.IsNull() {
 		return nil, fmt.Errorf("either group_id or org_id must be set")
 	}
@@ -191,42 +179,42 @@ func makeRequest(args cty.Value) (*client.ListIssuesReq, error) {
 	if !orgID.IsNull() {
 		req.OrgID = client.String(orgID.AsString())
 	}
-	if arg := args.GetAttr("scan_item_id"); !arg.IsNull() {
+	if arg := args.GetAttrVal("scan_item_id"); !arg.IsNull() {
 		req.ScanItemID = client.String(arg.AsString())
 	}
-	if arg := args.GetAttr("scan_item_type"); !arg.IsNull() {
+	if arg := args.GetAttrVal("scan_item_type"); !arg.IsNull() {
 		req.ScanItemType = client.String(arg.AsString())
 	}
-	if arg := args.GetAttr("type"); !arg.IsNull() {
+	if arg := args.GetAttrVal("type"); !arg.IsNull() {
 		req.Type = client.String(arg.AsString())
 	}
-	if arg := args.GetAttr("updated_before"); !arg.IsNull() {
+	if arg := args.GetAttrVal("updated_before"); !arg.IsNull() {
 		req.UpdatedBefore = client.String(arg.AsString())
 	}
-	if arg := args.GetAttr("updated_after"); !arg.IsNull() {
+	if arg := args.GetAttrVal("updated_after"); !arg.IsNull() {
 		req.UpdatedAfter = client.String(arg.AsString())
 	}
-	if arg := args.GetAttr("created_before"); !arg.IsNull() {
+	if arg := args.GetAttrVal("created_before"); !arg.IsNull() {
 		req.CreatedBefore = client.String(arg.AsString())
 	}
-	if arg := args.GetAttr("created_after"); !arg.IsNull() {
+	if arg := args.GetAttrVal("created_after"); !arg.IsNull() {
 		req.CreatedAfter = client.String(arg.AsString())
 	}
-	if arg := args.GetAttr("effective_severity_level"); !arg.IsNull() {
+	if arg := args.GetAttrVal("effective_severity_level"); !arg.IsNull() {
 		list := []string{}
 		for _, v := range arg.AsValueSlice() {
 			list = append(list, v.AsString())
 		}
 		req.EffectiveSeverityLevel = client.StringList(list)
 	}
-	if arg := args.GetAttr("status"); !arg.IsNull() {
+	if arg := args.GetAttrVal("status"); !arg.IsNull() {
 		list := []string{}
 		for _, v := range arg.AsValueSlice() {
 			list = append(list, v.AsString())
 		}
 		req.Status = client.StringList(list)
 	}
-	if arg := args.GetAttr("ignored"); !arg.IsNull() {
+	if arg := args.GetAttrVal("ignored"); !arg.IsNull() {
 		req.Ignored = client.Bool(arg.True())
 	}
 

@@ -42,7 +42,6 @@
         "name": "http",
         "type": "data-source",
         "arguments": [
-          "basic_auth",
           "body",
           "headers",
           "insecure",
@@ -87,7 +86,6 @@
         "name": "rss",
         "type": "data-source",
         "arguments": [
-          "basic_auth",
           "url"
         ]
       },
@@ -198,6 +196,19 @@
     "shortname": "github",
     "resources": [
       {
+        "name": "github_gist",
+        "type": "publisher",
+        "config_params": [
+          "github_token"
+        ],
+        "arguments": [
+          "description",
+          "filename",
+          "gist_id",
+          "make_public"
+        ]
+      },
+      {
         "name": "github_issues",
         "type": "data-source",
         "config_params": [
@@ -306,6 +317,23 @@
     "shortname": "microsoft",
     "resources": [
       {
+        "name": "azure_openai_text",
+        "type": "content-provider",
+        "config_params": [
+          "api_key",
+          "api_version",
+          "deployment_name",
+          "resource_endpoint"
+        ],
+        "arguments": [
+          "completions_count",
+          "max_tokens",
+          "prompt",
+          "temperature",
+          "top_p"
+        ]
+      },
+      {
         "name": "microsoft_sentinel_incidents",
         "type": "data-source",
         "config_params": [
@@ -368,9 +396,9 @@
         "name": "openai_text",
         "type": "content-provider",
         "config_params": [
-          "system_prompt",
           "api_key",
-          "organization_id"
+          "organization_id",
+          "system_prompt"
         ],
         "arguments": [
           "model",

@@ -15,18 +15,21 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeTextContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genTextContent,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "value",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				ExampleVal:  cty.StringVal("Hello world!"),
-				Doc:         `A string to render. Can use go template syntax.`,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "value",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+					ExampleVal:  cty.StringVal("Hello world!"),
+					Doc:         `A string to render. Can use go template syntax.`,
+				},
 			},
 		},
 		Doc: `Renders text`,
@@ -34,7 +37,7 @@ func makeTextContentProvider() *plugin.ContentProvider {
 }
 
 func genTextContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	value := params.Args.GetAttr("value")
+	value := params.Args.GetAttrVal("value")
 	if value.IsNull() {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -58,7 +61,7 @@ func genTextContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 	}, nil
 }
 
-func genTextContentText(text string, datactx plugin.MapData) (string, error) {
+func genTextContentText(text string, datactx plugindata.Map) (string, error) {
 	tmpl, err := template.New("text").Funcs(sprig.FuncMap()).Parse(text)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse text template: %w", err)

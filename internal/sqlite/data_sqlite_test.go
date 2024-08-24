@@ -5,12 +5,14 @@ import (
 	"path"
 	"testing"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 func TestSqliteDataSchema(t *testing.T) {
@@ -22,86 +24,92 @@ func TestSqliteDataSchema(t *testing.T) {
 
 func TestSqliteDataCall(t *testing.T) {
 	type result struct {
-		data  plugin.Data
-		diags diagnostics.Diag
+		data  plugindata.Data
+		diags diagtest.Asserts
 	}
 	tt := []struct {
 		name     string
-		cfg      cty.Value
-		args     cty.Value
+		cfg      map[string]cty.Value
+		args     map[string]cty.Value
 		before   func(tb testing.TB, fs testFS) string
 		expected result
 		canceled bool
 	}{
 		{
 			name: "empty_database_uri",
-			cfg: cty.ObjectVal(map[string]cty.Value{
+			cfg: map[string]cty.Value{
 				"database_uri": cty.StringVal(""),
-			}),
+			},
+			args: map[string]cty.Value{
+				"sql_query": cty.StringVal("SELECT * FROM testdata"),
+			},
 			expected: result{
-				diags: diagnostics.Diag{
+				diags: diagtest.Asserts{
 					{
-						Severity: hcl.DiagError,
-						Summary:  "Invalid configuration",
-						Detail:   "database_uri is required",
+						diagtest.IsError,
+						diagtest.SummaryContains("non-empty"),
+						diagtest.DetailContains("database_uri"),
 					},
 				},
 			},
 		},
 		{
 			name: "nil_database_uri",
-			cfg: cty.ObjectVal(map[string]cty.Value{
+			cfg: map[string]cty.Value{
 				"database_uri": cty.NullVal(cty.String),
-			}),
+			},
 			expected: result{
-				diags: diagnostics.Diag{
+				diags: diagtest.Asserts{
 					{
-						Severity: hcl.DiagError,
-						Summary:  "Invalid configuration",
-						Detail:   "database_uri is required",
+						diagtest.IsError,
+						diagtest.DetailContains("sql_query", "required"),
+					},
+					{
+						diagtest.IsError,
+						diagtest.DetailContains("database_uri", "null"),
 					},
 				},
 			},
 		},
 		{
 			name: "empty_sql_query",
-			cfg: cty.ObjectVal(map[string]cty.Value{
+			cfg: map[string]cty.Value{
 				"database_uri": cty.StringVal("file:./file.db"),
-			}),
-			args: cty.ObjectVal(map[string]cty.Value{
+			},
+			args: (map[string]cty.Value{
 				"sql_query": cty.StringVal(""),
 			}),
 			expected: result{
-				diags: diagnostics.Diag{
+				diags: diagtest.Asserts{
 					{
-						Severity: hcl.DiagError,
-						Summary:  "Invalid arguments",
-						Detail:   "sql_query is required",
+						diagtest.IsError,
+						diagtest.SummaryEquals("Invalid arguments"),
+						diagtest.DetailEquals("sql_query is required"),
 					},
 				},
 			},
 		},
 		{
 			name: "nil_sql_query",
-			cfg: cty.ObjectVal(map[string]cty.Value{
+			cfg: (map[string]cty.Value{
 				"database_uri": cty.StringVal("file:./file.db"),
 			}),
-			args: cty.ObjectVal(map[string]cty.Value{
+			args: (map[string]cty.Value{
 				"sql_query": cty.NullVal(cty.String),
 			}),
 			expected: result{
-				diags: diagnostics.Diag{
+				diags: diagtest.Asserts{
 					{
-						Severity: hcl.DiagError,
-						Summary:  "Invalid arguments",
-						Detail:   "sql_query is required",
+						diagtest.IsError,
+						diagtest.SummaryContains("non-null"),
+						diagtest.DetailContains("sql_query"),
 					},
 				},
 			},
 		},
 		{
 			name: "empty_table",
-			args: cty.ObjectVal(map[string]cty.Value{
+			args: (map[string]cty.Value{
 				"sql_query": cty.StringVal("SELECT * FROM testdata"),
 				"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 			}),
@@ -115,12 +123,12 @@ func TestSqliteDataCall(t *testing.T) {
 				return dsn
 			},
 			expected: result{
-				data: plugin.ListData{},
+				data: plugindata.List{},
 			},
 		},
 		{
 			name: "non_empty_table",
-			args: cty.ObjectVal(map[string]cty.Value{
+			args: (map[string]cty.Value{
 				"sql_query": cty.StringVal("SELECT * FROM testdata"),
 				"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 			}),
@@ -147,25 +155,25 @@ func TestSqliteDataCall(t *testing.T) {
 				return dsn
 			},
 			expected: result{
-				data: plugin.ListData{
-					plugin.MapData{
-						"id":       plugin.NumberData(1),
-						"text_val": plugin.StringData("text_1"),
-						"num_val":  plugin.NumberData(1),
-						"bool_val": plugin.BoolData(true),
+				data: plugindata.List{
+					plugindata.Map{
+						"id":       plugindata.Number(1),
+						"text_val": plugindata.String("text_1"),
+						"num_val":  plugindata.Number(1),
+						"bool_val": plugindata.Bool(true),
 					},
-					plugin.MapData{
-						"id":       plugin.NumberData(2),
-						"text_val": plugin.StringData("text_2"),
-						"num_val":  plugin.NumberData(2),
-						"bool_val": plugin.BoolData(false),
+					plugindata.Map{
+						"id":       plugindata.Number(2),
+						"text_val": plugindata.String("text_2"),
+						"num_val":  plugindata.Number(2),
+						"bool_val": plugindata.Bool(false),
 					},
 				},
 			},
 		},
 		{
 			name: "with_sql_args",
-			args: cty.ObjectVal(map[string]cty.Value{
+			args: (map[string]cty.Value{
 				"sql_query": cty.StringVal("SELECT * FROM testdata WHERE text_val = $1 AND num_val = $2 AND bool_val = $3 AND null_val IS $4;"),
 				"sql_args": cty.TupleVal([]cty.Value{
 					cty.StringVal("text_2"),
@@ -197,12 +205,12 @@ func TestSqliteDataCall(t *testing.T) {
 				return dsn
 			},
 			expected: result{
-				data: plugin.ListData{
-					plugin.MapData{
-						"id":       plugin.NumberData(2),
-						"text_val": plugin.StringData("text_2"),
-						"num_val":  plugin.NumberData(2),
-						"bool_val": plugin.BoolData(false),
+				data: plugindata.List{
+					plugindata.Map{
+						"id":       plugindata.Number(2),
+						"text_val": plugindata.String("text_2"),
+						"num_val":  plugindata.Number(2),
+						"bool_val": plugindata.Bool(false),
 						"null_val": nil,
 					},
 				},
@@ -210,7 +218,7 @@ func TestSqliteDataCall(t *testing.T) {
 		},
 		{
 			name: "missing_sql_args",
-			args: cty.ObjectVal(map[string]cty.Value{
+			args: (map[string]cty.Value{
 				"sql_query": cty.StringVal("SELECT * FROM testdata WHERE bool_val = $1;"),
 				"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 			}),
@@ -237,18 +245,18 @@ func TestSqliteDataCall(t *testing.T) {
 				return dsn
 			},
 			expected: result{
-				diags: diagnostics.Diag{
+				diags: diagtest.Asserts{
 					{
-						Severity: hcl.DiagError,
-						Summary:  "Failed to query database",
-						Detail:   "not enough args to execute query: want 1 got 0",
+						diagtest.IsError,
+						diagtest.SummaryEquals("Failed to query database"),
+						diagtest.DetailEquals("not enough args to execute query: want 1 got 0"),
 					},
 				},
 			},
 		},
 		{
 			name: "table_not_found",
-			args: cty.ObjectVal(map[string]cty.Value{
+			args: (map[string]cty.Value{
 				"sql_query": cty.StringVal("SELECT * FROM testdata"),
 				"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 			}),
@@ -262,21 +270,21 @@ func TestSqliteDataCall(t *testing.T) {
 				return dsn
 			},
 			expected: result{
-				diags: diagnostics.Diag{
+				diags: diagtest.Asserts{
 					{
-						Severity: hcl.DiagError,
-						Summary:  "Failed to query database",
-						Detail:   "no such table: testdata",
+						diagtest.IsError,
+						diagtest.SummaryEquals("Failed to query database"),
+						diagtest.DetailEquals("no such table: testdata"),
 					},
 				},
 			},
 		},
 		{
 			name: "canceled",
-			cfg: cty.ObjectVal(map[string]cty.Value{
+			cfg: (map[string]cty.Value{
 				"database_uri": cty.StringVal("file:./file.db"),
 			}),
-			args: cty.ObjectVal(map[string]cty.Value{
+			args: (map[string]cty.Value{
 				"sql_query": cty.StringVal("SELECT * FROM testdata"),
 				"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 			}),
@@ -303,10 +311,10 @@ func TestSqliteDataCall(t *testing.T) {
 				return dsn
 			},
 			expected: result{
-				diags: diagnostics.Diag{{
-					Severity: hcl.DiagError,
-					Summary:  "Failed to query database",
-					Detail:   "context canceled",
+				diags: diagtest.Asserts{{
+					diagtest.IsError,
+					diagtest.SummaryEquals("Failed to query database"),
+					diagtest.DetailEquals("context canceled"),
 				}},
 			},
 			canceled: true,
@@ -316,25 +324,44 @@ func TestSqliteDataCall(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			p := Plugin("1.2.3")
-			params := plugin.RetrieveDataParams{
-				Config: tc.cfg,
-				Args:   tc.args,
+			config := plugintest.NewTestDecoder(t, p.DataSources["sqlite"].Config).
+				SetHeaders("config", "data", "sqlite")
+			args := plugintest.NewTestDecoder(t, p.DataSources["sqlite"].Args).
+				SetHeaders("data", "sqlite", `"test"`)
+
+			for k, v := range tc.args {
+				args.SetAttr(k, v)
 			}
+			for k, v := range tc.cfg {
+				config.SetAttr(k, v)
+			}
+
 			if tc.before != nil {
 				fs := makeTestFS(t)
 				dsn := tc.before(t, fs)
-				params.Config = cty.ObjectVal(map[string]cty.Value{
-					"database_uri": cty.StringVal(dsn),
-				})
+				config.SetAttr("database_uri", cty.StringVal(dsn))
 			}
-			ctx := context.Background()
-			if tc.canceled {
-				nextCtx, cancel := context.WithCancel(ctx)
-				cancel()
-				ctx = nextCtx
+			params := plugin.RetrieveDataParams{}
+
+			var diags, diag diagnostics.Diag
+			params.Args, diag = args.DecodeDiag()
+			diags.Extend(diag)
+			params.Config, diag = config.DecodeDiag()
+			diags.Extend(diag)
+			var data plugindata.Data
+
+			if !diags.HasErrors() {
+				ctx := context.Background()
+				if tc.canceled {
+					nextCtx, cancel := context.WithCancel(ctx)
+					cancel()
+					ctx = nextCtx
+				}
+				data, diag = p.RetrieveData(ctx, "sqlite", &params)
+				diags.Extend(diag)
 			}
-			data, diags := p.RetrieveData(ctx, "sqlite", &params)
-			assert.Equal(t, tc.expected, result{data, diags}, "unexpected result")
+			tc.expected.diags.AssertMatch(t, diags, nil)
+			assert.Equal(t, tc.expected.data, data, "unexpected result")
 		})
 	}
 }

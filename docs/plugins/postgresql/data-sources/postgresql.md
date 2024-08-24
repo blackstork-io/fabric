@@ -38,6 +38,7 @@ The data source supports the following configuration arguments:
 ```hcl
 config data postgresql {
   # Required string.
+  # Must be non-empty
   # For example:
   database_url = "some string"
 }
@@ -50,6 +51,7 @@ The data source supports the following execution arguments:
 ```hcl
 data postgresql {
   # Required string.
+  # Must be non-empty
   # For example:
   sql_query = "some string"
 

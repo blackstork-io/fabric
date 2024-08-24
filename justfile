@@ -8,8 +8,7 @@ test-run:
 
 format:
     go mod tidy
-    gofumpt -w .
-    gci write --skip-generated -s standard -s default -s "prefix(github.com/blackstork-io/fabric)" .
+    ./gen_code.sh
 
 format-extra: format
     gofumpt -w -extra .
@@ -30,7 +29,7 @@ test-e2e:
     go test -timeout 5m -race -v ./test/e2e/...
 
 generate:
-    go generate ./...
+    ./codegen/gen_code.sh
 
 generate-docs:
-    go run ./tools/docgen --version v0.4.2 --output ./docs/plugins/
+    ./codegen/gen_docs.sh

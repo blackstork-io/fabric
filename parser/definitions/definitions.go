@@ -1,7 +1,7 @@
 package definitions
 
 import (
-	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -16,14 +16,15 @@ const (
 	BlockKindSection      = "section"
 	BlockKindGlobalConfig = "fabric"
 
-	PluginTypeRef = "ref"
-	AttrRefBase   = "base"
-	AttrTitle     = "title"
-	AttrLocalVar  = "local_var"
+	PluginTypeRef    = "ref"
+	AttrRefBase      = "base"
+	AttrTitle        = "title"
+	AttrLocalVar     = "local_var"
+	AttrRequiredVars = "required_vars"
 )
 
 type FabricBlock interface {
-	GetHCLBlock() *hcl.Block
+	GetHCLBlock() *hclsyntax.Block
 	CtyType() cty.Type
 }
 

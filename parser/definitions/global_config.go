@@ -8,12 +8,13 @@ import (
 	"github.com/gobwas/glob"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 const patternName = "expose_env_vars_with_pattern"
@@ -24,20 +25,19 @@ type GlobalConfigDefinition struct {
 	block *hclsyntax.Block
 }
 
-func (g *GlobalConfigDefinition) GetHCLBlock() *hcl.Block {
-	return g.block.AsHCLBlock()
+func (g *GlobalConfigDefinition) GetHCLBlock() *hclsyntax.Block {
+	return g.block
 }
 
 func (g *GlobalConfigDefinition) Parse(ctx context.Context) (cfg *GlobalConfig, diags diagnostics.Diag) {
 	var globalCfg GlobalConfig
 	var diag diagnostics.Diag
-	var body hcl.Body
 
 	evalCtx := fabctx.GetEvalContext(ctx)
 
-	globalCfg.EnvVarsPattern, body, diag = g.parseEnvVarPattern(evalCtx, g.block.Body)
+	globalCfg.EnvVarsPattern, diag = g.parseEnvVarPattern(ctx)
 	diags.Extend(diag)
-	diags.Extend(gohcl.DecodeBody(body, evalCtx, &globalCfg))
+	diags.Extend(gohcl.DecodeBody(g.block.Body, evalCtx, &globalCfg))
 
 	if diags.HasErrors() {
 		return
@@ -45,34 +45,30 @@ func (g *GlobalConfigDefinition) Parse(ctx context.Context) (cfg *GlobalConfig, 
 	return &globalCfg, diags
 }
 
-func (g *GlobalConfigDefinition) parseEnvVarPattern(evalCtx *hcl.EvalContext, body hcl.Body) (pat glob.Glob, rest hcl.Body, diags diagnostics.Diag) {
-	attr, found := g.block.Body.Attributes[patternName]
+func (g *GlobalConfigDefinition) parseEnvVarPattern(ctx context.Context) (pat glob.Glob, diags diagnostics.Diag) {
+	attr, found := utils.Pop(g.block.Body.Attributes, patternName)
 	if !found {
-		return DefaultEnvVarsPattern, body, nil
+		return DefaultEnvVarsPattern, nil
 	}
 	defer func() {
 		if diags.HasErrors() {
 			pat = nil
 		}
-		diags.DefaultSubject(attr.Expr.Range().Ptr())
+		diags.Refine(diagnostics.DefaultSubject(attr.Expr.Range()))
 	}()
 
-	val, rest, diag := hcldec.PartialDecode(
-		g.block.Body,
-		&hcldec.AttrSpec{
-			Name:     patternName,
-			Type:     cty.String,
-			Required: true,
-		},
-		evalCtx,
-	)
+	attrVal, diag := dataspec.DecodeAndEvalAttr(ctx, attr, &dataspec.AttrSpec{
+		Name: patternName,
+		Type: cty.String,
+	}, nil)
+
 	if diags.Extend(diag) {
 		return
 	}
-	if val.IsNull() {
+	if attrVal.Value.IsNull() {
 		return
 	}
-	strVal := val.AsString()
+	strVal := attrVal.Value.AsString()
 
 	trimmedStr := strings.TrimSpace(strVal)
 	if trimmedStr != strVal {

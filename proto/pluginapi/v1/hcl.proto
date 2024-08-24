@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package pluginapi.v1;
+
+message Pos {
+    int64 line   = 1;
+    int64 column = 2;
+    int64 byte   = 3;
+}
+
+message Range {
+    string filename = 1;
+    Pos    start    = 2;
+    Pos    end      = 3;
+}
+
+message Diagnostic {
+    int64   severity = 1;
+    string  summary  = 2;
+    string  detail   = 3;
+    Range   subject  = 4;
+    Range   context  = 5;
+}

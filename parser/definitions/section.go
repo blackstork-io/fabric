@@ -3,7 +3,6 @@ package definitions
 import (
 	"sync"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
@@ -19,10 +18,12 @@ type Section struct {
 }
 
 type ParsedSection struct {
-	Meta    *MetaBlock
-	Title   *ParsedContent
-	Content []*ParsedContent
-	Vars    *ParsedVars
+	Source       *Section
+	Meta         *MetaBlock
+	Title        *ParsedContent
+	Content      []*ParsedContent
+	Vars         *ParsedVars
+	RequiredVars []string
 }
 
 func (s ParsedSection) Name() string {
@@ -50,8 +51,8 @@ func (s *Section) Name() string {
 
 var _ FabricBlock = (*Section)(nil)
 
-func (s *Section) GetHCLBlock() *hcl.Block {
-	return s.Block.AsHCLBlock()
+func (s *Section) GetHCLBlock() *hclsyntax.Block {
+	return s.Block
 }
 
 var ctySectionType = encapsulator.NewEncoder[Section]("section", nil)

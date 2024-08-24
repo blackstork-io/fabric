@@ -1,15 +1,15 @@
 package eval
 
 import (
-	"github.com/zclconf/go-cty/cty"
-
 	"github.com/blackstork-io/fabric/parser/definitions"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
 )
 
 type PluginAction struct {
+	Source     *definitions.Plugin
 	PluginName string
 	BlockName  string
 	Meta       *definitions.MetaBlock
-	Config     cty.Value
-	Args       cty.Value
+	Config     *dataspec.Block
+	Args       *dataspec.Block
 }

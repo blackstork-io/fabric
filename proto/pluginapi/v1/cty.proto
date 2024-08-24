@@ -24,20 +24,19 @@ message Cty {
     message Mapping{
         map<string, Cty> data = 1;
         // Original map is empty, element was added to preserve the type
-        bool onlyType = 2;
+        bool only_type = 2;
     }
 
     message Sequence{
         repeated Cty data = 1;
         // Original sequence is empty, element added to preserve the type
         // Not true for empty tuples, since they are valid values
-        bool onlyType = 2;
+        bool only_type = 2;
     }
 
     message Capsule {
         oneof data {
-            Data pluginData = 1;
-            Data delayedEval = 2;
+            Data plugin_data = 1;
         }
     }
     message Dynamic {}

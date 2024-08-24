@@ -8,6 +8,7 @@ import (
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type Content struct {
@@ -22,7 +23,7 @@ func (action *Content) InvocationOrder() plugin.InvocationOrder {
 	return plugin.InvocationOrderUnspecified
 }
 
-func (action *Content) RenderContent(ctx context.Context, dataCtx plugin.MapData, doc, parent *plugin.ContentSection, contentID uint32) (*plugin.ContentResult, diagnostics.Diag) {
+func (action *Content) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (*plugin.ContentResult, diagnostics.Diag) {
 	if action.Section != nil {
 		return action.Section.RenderContent(ctx, dataCtx, doc, parent, contentID)
 	}

@@ -29,3 +29,7 @@ fabric {
 ## Data sources
 
 {{< plugin-resources "github" "data-source" >}}
+
+## Publishers
+
+{{< plugin-resources "github" "publisher" >}}

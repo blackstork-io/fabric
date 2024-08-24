@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/parser/evaluation"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
@@ -23,7 +22,7 @@ func (c *ConfigPtr) Exists() bool {
 }
 
 // ParseConfig implements Configuration.
-func (c *ConfigPtr) ParseConfig(ctx context.Context, spec dataspec.RootSpec) (val cty.Value, diags diagnostics.Diag) {
+func (c *ConfigPtr) ParseConfig(ctx context.Context, spec *dataspec.RootSpec) (val *dataspec.Block, diags diagnostics.Diag) {
 	return c.Cfg.ParseConfig(ctx, spec)
 }
 

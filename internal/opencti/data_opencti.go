@@ -10,35 +10,40 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeOpenCTIDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "graphql_url",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-			},
-			&dataspec.AttrSpec{
-				Name:   "auth_token",
-				Type:   cty.String,
-				Secret: true,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "graphql_url",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
+				{
+					Name:   "auth_token",
+					Type:   cty.String,
+					Secret: true,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "graphql_query",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "graphql_query",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+				},
 			},
 		},
 		DataFunc: fetchOpenCTIData,
 	}
 }
 
-func fetchOpenCTIData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
-	url := params.Config.GetAttr("graphql_url")
+func fetchOpenCTIData(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
+	url := params.Config.GetAttrVal("graphql_url")
 	if url.IsNull() || url.AsString() == "" {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -46,11 +51,11 @@ func fetchOpenCTIData(ctx context.Context, params *plugin.RetrieveDataParams) (p
 			Detail:   "graphql_url is required",
 		}}
 	}
-	authToken := params.Config.GetAttr("auth_token")
+	authToken := params.Config.GetAttrVal("auth_token")
 	if authToken.IsNull() {
 		authToken = cty.StringVal("")
 	}
-	query := params.Args.GetAttr("graphql_query")
+	query := params.Args.GetAttrVal("graphql_query")
 	if query.IsNull() || query.AsString() == "" {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,

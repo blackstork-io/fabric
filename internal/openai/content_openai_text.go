@@ -17,38 +17,43 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeOpenAITextContentSchema(loader ClientLoadFn) *plugin.ContentProvider {
 	return &plugin.ContentProvider{
-		Config: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name: "system_prompt",
-				Type: cty.String,
-			},
-			&dataspec.AttrSpec{
-				Name:        "api_key",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				Secret:      true,
-			},
-			&dataspec.AttrSpec{
-				Name: "organization_id",
-				Type: cty.String,
+		Config: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name: "system_prompt",
+					Type: cty.String,
+				},
+				{
+					Name:        "api_key",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+					Secret:      true,
+				},
+				{
+					Name: "organization_id",
+					Type: cty.String,
+				},
 			},
 		},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "prompt",
-				Type:        cty.String,
-				Constraints: constraint.RequiredNonNull,
-				ExampleVal:  cty.StringVal("Summarize the following text: {{.vars.text_to_summarize}}"),
-			},
-			&dataspec.AttrSpec{
-				Name:        "model",
-				Type:        cty.String,
-				Constraints: constraint.Meaningful,
-				DefaultVal:  cty.StringVal(defaultModel),
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "prompt",
+					Type:        cty.String,
+					Constraints: constraint.RequiredNonNull,
+					ExampleVal:  cty.StringVal("Summarize the following text: {{.vars.text_to_summarize}}"),
+				},
+				{
+					Name:        "model",
+					Type:        cty.String,
+					Constraints: constraint.Meaningful,
+					DefaultVal:  cty.StringVal(defaultModel),
+				},
 			},
 		},
 		ContentFunc: genOpenAIText(loader),
@@ -81,18 +86,18 @@ func genOpenAIText(loader ClientLoadFn) plugin.ProvideContentFunc {
 	}
 }
 
-func renderText(ctx context.Context, cli client.Client, cfg, args cty.Value, dataCtx plugin.MapData) (string, error) {
+func renderText(ctx context.Context, cli client.Client, cfg, args *dataspec.Block, dataCtx plugindata.Map) (string, error) {
 	params := client.ChatCompletionParams{
-		Model: args.GetAttr("model").AsString(),
+		Model: args.GetAttrVal("model").AsString(),
 	}
-	systemPrompt := cfg.GetAttr("system_prompt")
+	systemPrompt := cfg.GetAttrVal("system_prompt")
 	if !systemPrompt.IsNull() && systemPrompt.AsString() != "" {
 		params.Messages = append(params.Messages, client.ChatCompletionMessage{
 			Role:    "system",
 			Content: systemPrompt.AsString(),
 		})
 	}
-	content, err := templateText(args.GetAttr("prompt").AsString(), dataCtx)
+	content, err := templateText(args.GetAttrVal("prompt").AsString(), dataCtx)
 	if err != nil {
 		return "", err
 	}
@@ -110,7 +115,7 @@ func renderText(ctx context.Context, cli client.Client, cfg, args cty.Value, dat
 	return result.Choices[0].Message.Content, nil
 }
 
-func templateText(text string, dataCtx plugin.MapData) (string, error) {
+func templateText(text string, dataCtx plugindata.Map) (string, error) {
 	tmpl, err := template.New("text").Funcs(sprig.FuncMap()).Parse(text)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse template: %w", err)

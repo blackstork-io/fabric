@@ -13,6 +13,8 @@ import (
 	"github.com/blackstork-io/fabric/internal/splunk/client"
 	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/splunk/client"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type SearchDataSourceTestSuite struct {
@@ -89,12 +91,12 @@ func (s *SearchDataSourceTestSuite) TestSearch() {
 		}, nil)
 
 	data, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"auth_token":      cty.StringVal("test_token"),
 			"host":            cty.StringVal("test_host"),
 			"deployment_name": cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"search_query":   cty.StringVal("test_query"),
 			"status_buckets": cty.NumberIntVal(1),
 			"max_count":      cty.NumberIntVal(2),
@@ -104,9 +106,9 @@ func (s *SearchDataSourceTestSuite) TestSearch() {
 		}),
 	})
 	s.Require().Len(diags, 0)
-	s.Equal(plugin.ListData{
-		plugin.MapData{
-			"key": plugin.StringData("value"),
+	s.Equal(plugindata.List{
+		plugindata.Map{
+			"key": plugindata.String("value"),
 		},
 	}, data)
 
@@ -121,12 +123,12 @@ func (s *SearchDataSourceTestSuite) TestSearchError() {
 		Return(nil, resErr)
 
 	_, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"auth_token":      cty.StringVal("test_token"),
 			"host":            cty.StringVal("test_host"),
 			"deployment_name": cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"search_query":   cty.StringVal("test_query"),
 			"status_buckets": cty.NumberIntVal(1),
 			"max_count":      cty.NumberIntVal(2),
@@ -152,12 +154,12 @@ func (s *SearchDataSourceTestSuite) TestSearchJobError() {
 		Return(nil, resErr)
 
 	_, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"auth_token":      cty.StringVal("test_token"),
 			"host":            cty.StringVal("test_host"),
 			"deployment_name": cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"search_query":   cty.StringVal("test_query"),
 			"status_buckets": cty.NumberIntVal(1),
 			"max_count":      cty.NumberIntVal(2),
@@ -194,12 +196,12 @@ func (s *SearchDataSourceTestSuite) TestSearchJobResultsError() {
 		Return(nil, resErr)
 
 	_, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"auth_token":      cty.StringVal("test_token"),
 			"host":            cty.StringVal("test_host"),
 			"deployment_name": cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"search_query":   cty.StringVal("test_query"),
 			"status_buckets": cty.NumberIntVal(1),
 			"max_count":      cty.NumberIntVal(2),
@@ -214,12 +216,12 @@ func (s *SearchDataSourceTestSuite) TestSearchJobResultsError() {
 
 func (s *SearchDataSourceTestSuite) TestSearchEmptyQuery() {
 	_, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
-		Config: cty.ObjectVal(map[string]cty.Value{
+		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"auth_token":      cty.StringVal("test_token"),
 			"host":            cty.StringVal("test_host"),
 			"deployment_name": cty.NullVal(cty.String),
 		}),
-		Args: cty.ObjectVal(map[string]cty.Value{
+		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"search_query":   cty.StringVal(""),
 			"status_buckets": cty.NumberIntVal(1),
 			"max_count":      cty.NumberIntVal(2),

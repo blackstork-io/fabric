@@ -15,23 +15,26 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeImageContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		ContentFunc: genImageContent,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "src",
-				Type:        cty.String,
-				Constraints: constraint.RequiredMeaningful,
-				ExampleVal:  cty.StringVal("https://example.com/img.png"),
-			},
-			&dataspec.AttrSpec{
-				Name:       "alt",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("Text description of the image"),
-				// Not using empty string as DefaultVal here for semantical meaning
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "src",
+					Type:        cty.String,
+					Constraints: constraint.RequiredMeaningful,
+					ExampleVal:  cty.StringVal("https://example.com/img.png"),
+				},
+				{
+					Name:       "alt",
+					Type:       cty.String,
+					ExampleVal: cty.StringVal("Text description of the image"),
+					// Not using empty string as DefaultVal here for semantical meaning
+				},
 			},
 		},
 		Doc: "Returns an image tag",
@@ -39,20 +42,13 @@ func makeImageContentProvider() *plugin.ContentProvider {
 }
 
 func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
-	src := params.Args.GetAttr("src")
-	if src.IsNull() || src.AsString() == "" {
-		return nil, diagnostics.Diag{{
-			Severity: hcl.DiagError,
-			Summary:  "Failed to parse arguments",
-			Detail:   "src is required",
-		}}
-	}
-	alt := params.Args.GetAttr("alt")
+	src := params.Args.GetAttrVal("src").AsString()
+	alt := params.Args.GetAttrVal("alt")
 	if alt.IsNull() {
 		alt = cty.StringVal("")
 	}
 
-	srcStr, err := renderAsTemplate("src", src.AsString(), params.DataContext)
+	srcStr, err := renderAsTemplate("src", src, params.DataContext)
 	if err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -80,7 +76,7 @@ func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (
 	}, nil
 }
 
-func renderAsTemplate(name, value string, datactx plugin.MapData) (string, error) {
+func renderAsTemplate(name, value string, datactx plugindata.Map) (string, error) {
 	if value == "" {
 		return "", nil
 	}
