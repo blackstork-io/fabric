@@ -15,8 +15,10 @@ import (
 )
 
 type Document struct {
+	Source        *definitions.Document
 	Meta          *definitions.MetaBlock
 	Vars          *definitions.ParsedVars
+	RequiredVars  []string
 	DataBlocks    []*PluginDataAction
 	ContentBlocks []*Content
 	PublishBlocks []*PluginPublishAction
@@ -72,6 +74,14 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 
 	if diags.Extend(diag) {
 		return nil, nil, diags
+	}
+
+	// verify required vars
+	if len(doc.RequiredVars) > 0 {
+		diag := verifyRequiredVars(docDataCtx, doc.RequiredVars, doc.Source.Block)
+		if diags.Extend(diag) {
+			return nil, nil, diags
+		}
 	}
 
 	result := plugin.NewSection(0)
@@ -136,8 +146,10 @@ func (doc *Document) Publish(ctx context.Context, content plugin.Content, data p
 
 func LoadDocument(ctx context.Context, plugins Plugins, node *definitions.ParsedDocument) (_ *Document, diags diagnostics.Diag) {
 	block := Document{
-		Meta: node.Meta,
-		Vars: node.Vars,
+		Source:       node.Source,
+		Meta:         node.Meta,
+		Vars:         node.Vars,
+		RequiredVars: node.RequiredVars,
 	}
 	dataNames := make(map[[2]string]struct{})
 	for _, child := range node.Data {

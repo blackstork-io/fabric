@@ -4,6 +4,9 @@ import (
 	"context"
 	"maps"
 
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
+
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -49,4 +52,19 @@ func evalVar(ctx context.Context, dataCtx plugindata.Map, attr *dataspec.Attr) (
 		data = *dataVal
 	}
 	return
+}
+
+func verifyRequiredVars(docDataCtx plugindata.Map, requiredVars []string, block *hclsyntax.Block) (diag diagnostics.Diag) {
+	vars, varsPresent := docDataCtx["vars"].(plugindata.Map)
+	for _, reqVar := range requiredVars {
+		if !varsPresent || vars[reqVar] == nil {
+			return diagnostics.FromHcl(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Missing required variable",
+				Detail:   "block requires '" + reqVar + "' var which is not set.",
+				Subject:  block.Range().Ptr(),
+			})
+		}
+	}
+	return nil
 }

@@ -49,6 +49,7 @@ func (db *DefinedBlocks) ParseSection(ctx context.Context, section *definitions.
 
 func (db *DefinedBlocks) parseSection(ctx context.Context, section *definitions.Section) (parsed *definitions.ParsedSection, diags diagnostics.Diag) {
 	res := definitions.ParsedSection{}
+	res.Source = section
 	if title := section.Block.Body.Attributes["title"]; title != nil {
 		res.Title = definitions.NewTitle(title, db.DefaultConfig)
 	}
@@ -168,6 +169,11 @@ func (db *DefinedBlocks) parseSection(ctx context.Context, section *definitions.
 	)
 	diags.Extend(diag)
 
+	if requiredVarsAttr := section.Block.Body.Attributes[definitions.AttrRequiredVars]; requiredVarsAttr != nil {
+		diag := gohcl.DecodeExpression(requiredVarsAttr.Expr, nil, &res.RequiredVars)
+		diags.Extend(diag)
+	}
+
 	if refBase == nil {
 		parsed = &res
 		return
@@ -202,6 +208,8 @@ func (db *DefinedBlocks) parseSection(ctx context.Context, section *definitions.
 		res.Meta = baseEval.Meta
 	}
 	res.Vars = res.Vars.MergeWithBaseVars(baseEval.Vars)
+	res.RequiredVars = append(res.RequiredVars, baseEval.RequiredVars...)
+
 	res.Content = append(res.Content, baseEval.Content...)
 
 	parsed = &res

@@ -1,9 +1,11 @@
 package definitions
 
 type ParsedDocument struct {
-	Meta    *MetaBlock
-	Vars    *ParsedVars
-	Content []*ParsedContent
-	Data    []*ParsedPlugin
-	Publish []*ParsedPlugin
+	Source       *Document
+	Meta         *MetaBlock
+	Vars         *ParsedVars
+	RequiredVars []string
+	Content      []*ParsedContent
+	Data         []*ParsedPlugin
+	Publish      []*ParsedPlugin
 }

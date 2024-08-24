@@ -6,6 +6,7 @@ import (
 )
 
 type PluginAction struct {
+	Source     *definitions.Plugin
 	PluginName string
 	BlockName  string
 	Meta       *definitions.MetaBlock

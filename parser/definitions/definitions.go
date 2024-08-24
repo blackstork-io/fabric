@@ -16,10 +16,11 @@ const (
 	BlockKindSection      = "section"
 	BlockKindGlobalConfig = "fabric"
 
-	PluginTypeRef = "ref"
-	AttrRefBase   = "base"
-	AttrTitle     = "title"
-	AttrLocalVar  = "local_var"
+	PluginTypeRef    = "ref"
+	AttrRefBase      = "base"
+	AttrTitle        = "title"
+	AttrLocalVar     = "local_var"
+	AttrRequiredVars = "required_vars"
 )
 
 type FabricBlock interface {
