@@ -22,6 +22,11 @@ func countDeclarations(data *plugin.ContentSection, name string) int {
 	return count
 }
 
+func ParseScope(datactx plugindata.Map) (document, section *plugin.ContentSection) {
+	return parseScope(datactx)
+}
+
+// TODO:(britton) change signature of ParseScope to be exported
 func parseScope(datactx plugindata.Map) (document, section *plugin.ContentSection) {
 	documentMap, ok := datactx["document"]
 	if !ok {

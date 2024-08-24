@@ -8,6 +8,8 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
+	github.com/brittonhayes/notionmd v0.6.1
+	github.com/dstotijn/go-notion v0.11.0
 	github.com/elastic/go-elasticsearch/v8 v8.14.0
 	github.com/evanphx/go-hclog-slog v0.0.0-20240717231540-be48fc4c4df5
 	github.com/gobwas/glob v0.2.3
@@ -69,7 +71,6 @@ require (
 	github.com/alecthomas/chroma/v2 v2.10.0 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
-	github.com/brittonhayes/notionmd v0.5.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/containerd/containerd v1.7.18 // indirect
@@ -82,7 +83,6 @@ require (
 	github.com/docker/docker v27.1.1+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
-	github.com/dstotijn/go-notion v0.11.0 // indirect
 	github.com/elastic/elastic-transport-go/v8 v8.6.0 // indirect
 	github.com/fatih/color v1.17.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect

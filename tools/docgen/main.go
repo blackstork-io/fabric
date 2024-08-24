@@ -278,7 +278,7 @@ func main() {
 		stixview.Plugin(version),
 		nistnvd.Plugin(version, nil),
 		snyk.Plugin(version, nil),
-		microsoft.Plugin(version, nil),
+		microsoft.Plugin(version, nil, nil),
 		notion.Plugin(version, nil, nil),
 	}
 	// generate markdown for each plugin

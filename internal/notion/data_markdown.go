@@ -13,23 +13,27 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
+// TODO:(britton) markdown data source should come from shared local file source
 func makeMarkdownDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
 		DataFunc: fetchMarkdownData,
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:       "glob",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("path/to/file*.md"),
-				Doc:        `A glob pattern to select MD files to read`,
-			},
-			&dataspec.AttrSpec{
-				Name:       "path",
-				Type:       cty.String,
-				ExampleVal: cty.StringVal("path/to/file.md"),
-				Doc:        `A file path to a MD file to read`,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:       "glob",
+					Type:       cty.String,
+					ExampleVal: cty.StringVal("path/to/file*.md"),
+					Doc:        `A glob pattern to select MD files to read`,
+				},
+				{
+					Name:       "path",
+					Type:       cty.String,
+					ExampleVal: cty.StringVal("path/to/file.md"),
+					Doc:        `A file path to a MD file to read`,
+				},
 			},
 		},
 		Doc: `
@@ -56,7 +60,7 @@ func makeMarkdownDataSource() *plugin.DataSource {
 	}
 }
 
-func readMarkdownFile(path string) (plugin.Data, error) {
+func readMarkdownFile(path string) (plugindata.Data, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, diagnostics.Diag{{
@@ -74,35 +78,35 @@ func readMarkdownFile(path string) (plugin.Data, error) {
 			Detail:   err.Error(),
 		}}
 	}
-	return plugin.StringData(string(data)), nil
+	return plugindata.String(string(data)), nil
 }
 
-func readMarkdownFiles(ctx context.Context, pattern string) (plugin.Data, error) {
+func readMarkdownFiles(_ context.Context, pattern string) (plugindata.Data, error) {
 	paths, err := filepath.Glob(pattern)
 	if err != nil {
 		return nil, err
 	}
-	result := make(plugin.ListData, 0, len(paths))
+
+	result := make(plugindata.List, 0, len(paths))
 	for _, path := range paths {
 		fileData, err := readMarkdownFile(path)
 		if err != nil {
 			return result, err
 		}
-		result = append(result, plugin.MapData{
-			"file_path": plugin.StringData(path),
-			"file_name": plugin.StringData(filepath.Base(path)),
+		result = append(result, plugindata.Map{
+			"file_path": plugindata.String(path),
+			"file_name": plugindata.String(filepath.Base(path)),
 			"content":   fileData,
 		})
 	}
 	return result, nil
 }
 
-func fetchMarkdownData(ctx context.Context, params *plugin.RetrieveDataParams) (plugin.Data, diagnostics.Diag) {
+func fetchMarkdownData(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
+	glob := params.Args.GetAttrVal("glob")
+	path := params.Args.GetAttrVal("path")
 
-	glob := params.Args.GetAttr("glob")
-	path := params.Args.GetAttr("path")
-
-	if !(path.IsNull() || path.AsString() == "") {
+	if !path.IsNull() && path.AsString() != "" {
 		slog.Debug("Reading a file from the path", "path", path.AsString())
 		data, err := readMarkdownFile(path.AsString())
 		if err != nil {

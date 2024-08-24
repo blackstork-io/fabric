@@ -6,10 +6,12 @@ import (
 	"io"
 	"log/slog"
 
+	"github.com/blackstork-io/fabric/internal/builtin"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/print/mdprint"
 	"github.com/brittonhayes/notionmd"
 	"github.com/dstotijn/go-notion"
@@ -30,28 +32,30 @@ func makeNotionPagePublisher(logger *slog.Logger, tracer trace.Tracer) *plugin.P
 	return &plugin.Publisher{
 		Doc:  "Publishes content to a Notion page",
 		Tags: []string{},
-		Args: dataspec.ObjectSpec{
-			&dataspec.AttrSpec{
-				Name:        "title",
-				Doc:         "Title of the Notion page",
-				Type:        cty.String,
-				ExampleVal:  cty.StringVal("My Notion Page"),
-				Constraints: constraint.Required,
-			},
-			&dataspec.AttrSpec{
-				Name:        "parent_page_id",
-				Doc:         "Notion parent page ID",
-				Type:        cty.String,
-				ExampleVal:  cty.StringVal("1234567890"),
-				Constraints: constraint.Required,
-			},
-			&dataspec.AttrSpec{
-				Name:        "api_key",
-				Doc:         "Notion API key",
-				Type:        cty.String,
-				ExampleVal:  cty.StringVal("secret_1234567890"),
-				Constraints: constraint.Required,
-				Secret:      true,
+		Args: &dataspec.RootSpec{
+			Attrs: []*dataspec.AttrSpec{
+				{
+					Name:        "title",
+					Doc:         "Title of the Notion page",
+					Type:        cty.String,
+					ExampleVal:  cty.StringVal("My Notion Page"),
+					Constraints: constraint.Required,
+				},
+				{
+					Name:        "parent_page_id",
+					Doc:         "Notion parent page ID",
+					Type:        cty.String,
+					ExampleVal:  cty.StringVal("1234567890"),
+					Constraints: constraint.Required,
+				},
+				{
+					Name:        "api_key",
+					Doc:         "Notion API key",
+					Type:        cty.String,
+					ExampleVal:  cty.StringVal("secret_1234567890"),
+					Constraints: constraint.Required,
+					Secret:      true,
+				},
 			},
 		},
 		AllowedFormats: []plugin.OutputFormat{plugin.OutputFormatMD},
@@ -59,9 +63,9 @@ func makeNotionPagePublisher(logger *slog.Logger, tracer trace.Tracer) *plugin.P
 	}
 }
 
-func publishNotionPage(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFunc {
+func publishNotionPage(logger *slog.Logger, _ trace.Tracer) plugin.PublishFunc {
 	return func(ctx context.Context, params *plugin.PublishParams) diagnostics.Diag {
-		document, _ := parseScope(params.DataContext)
+		document, _ := builtin.ParseScope(params.DataContext)
 		if document == nil {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,
@@ -71,9 +75,9 @@ func publishNotionPage(logger *slog.Logger, tracer trace.Tracer) plugin.PublishF
 		}
 
 		datactx := params.DataContext
-		datactx["format"] = plugin.StringData(params.Format.String())
+		datactx["format"] = plugindata.String(params.Format.String())
 
-		titleAttr := params.Args.GetAttr("title")
+		titleAttr := params.Args.GetAttrVal("title")
 		if titleAttr.IsNull() || titleAttr.AsString() == "" {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,
@@ -82,7 +86,7 @@ func publishNotionPage(logger *slog.Logger, tracer trace.Tracer) plugin.PublishF
 			}}
 		}
 
-		parentPageIDAttr := params.Args.GetAttr("parent_page_id")
+		parentPageIDAttr := params.Args.GetAttrVal("parent_page_id")
 		if parentPageIDAttr.IsNull() || parentPageIDAttr.AsString() == "" {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,
@@ -91,7 +95,7 @@ func publishNotionPage(logger *slog.Logger, tracer trace.Tracer) plugin.PublishF
 			}}
 		}
 
-		apiKeyAttr := params.Args.GetAttr("api_key")
+		apiKeyAttr := params.Args.GetAttrVal("api_key")
 		if apiKeyAttr.IsNull() || apiKeyAttr.AsString() == "" {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,

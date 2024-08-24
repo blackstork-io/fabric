@@ -42,8 +42,8 @@ github.com/andybalholm/cascadia v1.3.1/go.mod h1:R4bJ1UQfqADjvDa4P6HZHLh/3OxWWEq
 github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew1u1fNQOlOtuGxQY=
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/boombuler/barcode v1.0.0/go.mod h1:paBWMcWSl3LHKBqUq+rly7CNSldXjb2rDl3JlRe0mD8=
-github.com/brittonhayes/notionmd v0.5.1 h1:m6E4CUh0UwFiqtKyie9bAF3MorAME3r+/hU0XbTY5ZQ=
-github.com/brittonhayes/notionmd v0.5.1/go.mod h1:r6V8qENKn8hyDEDZsUJFAnY9+fdyEqPA57vwIvEeMpA=
+github.com/brittonhayes/notionmd v0.6.1 h1:yCeL1PLb5Zoksnq8BrNB08BEtmbIpHgzG5LprlF3lVI=
+github.com/brittonhayes/notionmd v0.6.1/go.mod h1:r6V8qENKn8hyDEDZsUJFAnY9+fdyEqPA57vwIvEeMpA=
 github.com/bufbuild/protocompile v0.4.0 h1:LbFKd2XowZvQ/kajzguUp2DC9UEIQhIq77fZZlaQsNA=
 github.com/bufbuild/protocompile v0.4.0/go.mod h1:3v93+mbWn/v3xzN+31nwkJfrEpAUwp+BagBSZWx+TP8=
 github.com/buger/jsonparser v1.1.1 h1:2PnMjfWD7wBILjqQbt530v576A/cAbQvEW9gGIpYMUs=
