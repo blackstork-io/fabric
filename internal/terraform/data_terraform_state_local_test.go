@@ -2,16 +2,17 @@ package terraform
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
-	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 func Test_terraformStateLocalDataSchema(t *testing.T) {
@@ -27,51 +28,42 @@ func Test_fetchTerraformStateLocalData_Call(t *testing.T) {
 		diags diagnostics.Diag
 	}
 	tt := []struct {
-		name     string
-		path     string
-		expected result
+		name        string
+		path        string
+		expectedRes plugindata.Data
+		asserts     diagtest.Asserts
 	}{
 		{
 			name: "notfound",
-			path: "testdata/notfound.tfstate",
-			expected: result{
-				diags: diagnostics.Diag{
-					{
-						Severity: hcl.DiagError,
-						Summary:  "Failed to read terraform state",
-						Detail:   "open testdata/notfound.tfstate: no such file or directory",
-					},
-				},
-			},
+			path: filepath.Join("testdata", "notfound.tfstate"),
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryEquals("Failed to read terraform state"),
+				diagtest.DetailContains("notfound.tfstate"),
+			}},
 		},
 		{
 			name: "empty_path",
 			path: "",
-			expected: result{
-				diags: diagnostics.Diag{
-					{
-						Severity: hcl.DiagError,
-						Summary:  "Failed to parse arguments",
-						Detail:   "path is required",
-					},
-				},
-			},
+			asserts: diagtest.Asserts{{
+				diagtest.IsError,
+				diagtest.SummaryEquals("Missing required attribute"),
+				diagtest.DetailContains("path", "is required"),
+			}},
 		},
 		{
 			name: "valid",
-			path: "testdata/terraform.tfstate",
-			expected: result{
-				data: plugindata.Map{
-					"version": plugindata.Number(1),
-					"serial":  plugindata.Number(0),
-					"modules": plugindata.List{
-						plugindata.Map{
-							"path": plugindata.List{
-								plugindata.String("root"),
-							},
-							"outputs":   plugindata.Map{},
-							"resources": plugindata.Map{},
+			path: filepath.Join("testdata", "terraform.tfstate"),
+			expectedRes: plugindata.Map{
+				"version": plugindata.Number(1),
+				"serial":  plugindata.Number(0),
+				"modules": plugindata.List{
+					plugindata.Map{
+						"path": plugindata.List{
+							plugindata.String("root"),
 						},
+						"outputs":   plugindata.Map{},
+						"resources": plugindata.Map{},
 					},
 				},
 			},
@@ -81,13 +73,23 @@ func Test_fetchTerraformStateLocalData_Call(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			p := Plugin("1.2.3")
-			var got result
-			got.data, got.diags = p.RetrieveData(context.Background(), "terraform_state_local", &plugin.RetrieveDataParams{
-				Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
-					"path": cty.StringVal(tc.path),
-				}),
-			})
-			assert.Equal(t, tc.expected, got)
+			args := plugintest.NewTestDecoder(t, p.DataSources["terraform_state_local"].Args)
+			if tc.path != "" {
+				args.SetAttr("path", cty.StringVal(tc.path))
+			}
+			val, fm, diags := args.DecodeDiagFiles()
+			var (
+				res  plugindata.Data
+				diag diagnostics.Diag
+			)
+			if !diags.HasErrors() {
+				res, diag = p.RetrieveData(context.Background(), "terraform_state_local", &plugin.RetrieveDataParams{
+					Args: val,
+				})
+				diags.Extend(diag)
+			}
+			tc.asserts.AssertMatch(t, diags, fm)
+			assert.Equal(t, tc.expectedRes, res)
 		})
 	}
 }
