@@ -2,12 +2,12 @@ package builtin
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
-	"strings"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
@@ -35,7 +35,7 @@ func Test_fetchJSONData(t *testing.T) {
 	}{
 		{
 			name: "invalid_json_file",
-			glob: "testdata/json/invalid.txt",
+			glob: filepath.Join("testdata", "json", "invalid.txt"),
 			expectedDiags: diagtest.Asserts{{
 				diagtest.IsError,
 				diagtest.SummaryEquals("Failed to read the files"),
@@ -44,7 +44,7 @@ func Test_fetchJSONData(t *testing.T) {
 		},
 		{
 			name: "invalid_json_file_with_path",
-			path: "testdata/json/invalid.txt",
+			path: filepath.Join("testdata", "json", "invalid.txt"),
 			expectedDiags: diagtest.Asserts{{
 				diagtest.IsError,
 				diagtest.SummaryEquals("Failed to read a file"),
@@ -61,32 +61,32 @@ func Test_fetchJSONData(t *testing.T) {
 		},
 		{
 			name:         "no_glob_matches",
-			glob:         "testdata/json/unknown_dir/*.json",
+			glob:         filepath.Join("testdata", "json", "unknown_dir", "*.json"),
 			expectedData: plugindata.List{},
 		},
 		{
 			name: "no_path_match",
-			path: "testdata/json/unknown_dir/does-not-exist.json",
+			path: filepath.Join("testdata", "json", "unknown_dir", "does-not-exist.json"),
 			expectedDiags: diagtest.Asserts{{
 				diagtest.IsError,
 				diagtest.SummaryEquals("Failed to read a file"),
-				diagtest.DetailEquals("open testdata/json/unknown_dir/does-not-exist.json: no such file or directory"),
+				diagtest.DetailContains("open", "does-not-exist.json"),
 			}},
 		},
 		{
 			name: "load_one_file_with_path",
-			path: "testdata/json/a.json",
+			path: filepath.Join("testdata", "json", "a.json"),
 			expectedData: plugindata.Map{
 				"property_for": plugindata.String("a.json"),
 			},
 		},
 		{
 			name: "glob_matches_one_file",
-			glob: "testdata/json/a.json",
+			glob: filepath.Join("testdata", "json", "a.json"),
 			expectedData: plugindata.List{
 				plugindata.Map{
 					"file_name": plugindata.String("a.json"),
-					"file_path": plugindata.String("testdata/json/a.json"),
+					"file_path": plugindata.String(filepath.Join("testdata", "json", "a.json")),
 					"content": plugindata.Map{
 						"property_for": plugindata.String("a.json"),
 					},
@@ -95,11 +95,11 @@ func Test_fetchJSONData(t *testing.T) {
 		},
 		{
 			name: "glob_matches_multiple_files",
-			glob: "testdata/json/dir/*.json",
+			glob: filepath.Join("testdata", "json", "dir", "*.json"),
 			expectedData: plugindata.List{
 				plugindata.Map{
 					"file_name": plugindata.String("b.json"),
-					"file_path": plugindata.String("testdata/json/dir/b.json"),
+					"file_path": plugindata.String(filepath.Join("testdata", "json", "dir", "b.json")),
 					"content": plugindata.List{
 						plugindata.Map{
 							"id":           plugindata.Number(1),
@@ -113,7 +113,7 @@ func Test_fetchJSONData(t *testing.T) {
 				},
 				plugindata.Map{
 					"file_name": plugindata.String("c.json"),
-					"file_path": plugindata.String("testdata/json/dir/c.json"),
+					"file_path": plugindata.String(filepath.Join("testdata", "json", "dir", "c.json")),
 					"content": plugindata.List{
 						plugindata.Map{
 							"id":           plugindata.Number(3),
@@ -136,29 +136,28 @@ func Test_fetchJSONData(t *testing.T) {
 					"json": makeJSONDataSource(),
 				},
 			}
-			args := make([]string, 0)
+
+			args := plugintest.NewTestDecoder(t, p.DataSources["json"].Args)
 			if tc.path != "" {
-				args = append(args, fmt.Sprintf("path = %q", tc.path))
+				args.SetAttr("path", cty.StringVal(tc.path))
 			}
 			if tc.glob != "" {
-				args = append(args, fmt.Sprintf("glob = %q", tc.glob))
+				args.SetAttr("glob", cty.StringVal(tc.glob))
 			}
-			argsBody := strings.Join(args, ",")
 
-			var diags diagnostics.Diag
+			argVal, fm, diags := args.DecodeDiagFiles()
 
-			argVal, diag := plugintest.Decode(t, p.DataSources["json"].Args, argsBody)
-			diags.Extend(diag)
-
-			var data plugindata.Data
+			var (
+				data plugindata.Data
+				diag diagnostics.Diag
+			)
 			if !diags.HasErrors() {
 				ctx := context.Background()
-				var dgs diagnostics.Diag
-				data, dgs = p.RetrieveData(ctx, "json", &plugin.RetrieveDataParams{Args: argVal})
-				diags.Extend(dgs)
+				data, diag = p.RetrieveData(ctx, "json", &plugin.RetrieveDataParams{Args: argVal})
+				diags.Extend(diag)
 			}
 			assert.Equal(t, tc.expectedData, data)
-			tc.expectedDiags.AssertMatch(t, diags, nil)
+			tc.expectedDiags.AssertMatch(t, diags, fm)
 		})
 	}
 }
@@ -166,7 +165,7 @@ func Test_fetchJSONData(t *testing.T) {
 func Test_readJSONFilesCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	data, err := readJSONFiles(ctx, "testdata/json/a.json")
+	data, err := readJSONFiles(ctx, filepath.Join("testdata", "json", "a.json"))
 	assert.Nil(t, data)
 	assert.Error(t, context.Canceled, err)
 }

@@ -2,11 +2,11 @@ package builtin
 
 import (
 	"context"
-	"fmt"
-	"strings"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
@@ -32,16 +32,16 @@ func Test_fetchTXTData(t *testing.T) {
 	}{
 		{
 			name:         "valid_path",
-			path:         "testdata/txt/data.txt",
+			path:         filepath.Join("testdata", "txt", "data.txt"),
 			expectedData: plugindata.String("data_content"),
 		},
 		{
 			name: "with_glob_matches",
-			glob: "testdata/txt/dat*.txt",
+			glob: filepath.Join("testdata", "txt", "dat*.txt"),
 			expectedData: plugindata.List{
 				plugindata.Map{
 					"file_name": plugindata.String("data.txt"),
-					"file_path": plugindata.String("testdata/txt/data.txt"),
+					"file_path": plugindata.String(filepath.Join("testdata", "txt", "data.txt")),
 					"content":   plugindata.String("data_content"),
 				},
 			},
@@ -56,30 +56,30 @@ func Test_fetchTXTData(t *testing.T) {
 		},
 		{
 			name:         "no_glob_matches",
-			glob:         "testdata/txt/does-not-exist*.txt",
+			glob:         filepath.Join("testdata", "txt", "does-not-exist*.txt"),
 			expectedData: plugindata.List{},
 		},
 		{
 			name: "invalid_path",
-			path: "testdata/txt/does_not_exist.txt",
+			path: filepath.Join("testdata", "txt", "does_not_exist.txt"),
 			expectedDiags: diagtest.Asserts{{
 				diagtest.IsError,
 				diagtest.SummaryEquals("Failed to read a file"),
-				diagtest.DetailEquals("<nil>: Failed to open a file; open testdata/txt/does_not_exist.txt: no such file or directory"),
+				diagtest.DetailContains("Failed to open a file", "does_not_exist.txt"),
 			}},
 		},
 		{
 			name:         "empty_file_with_path",
-			path:         "testdata/txt/empty.txt",
+			path:         filepath.Join("testdata", "txt", "empty.txt"),
 			expectedData: plugindata.String(""),
 		},
 		{
 			name: "empty_file_with_glob",
-			glob: "testdata/txt/empt*.txt",
+			glob: filepath.Join("testdata", "txt", "empt*.txt"),
 			expectedData: plugindata.List{
 				plugindata.Map{
 					"file_name": plugindata.String("empty.txt"),
-					"file_path": plugindata.String("testdata/txt/empty.txt"),
+					"file_path": plugindata.String(filepath.Join("testdata", "txt", "empty.txt")),
 					"content":   plugindata.String(""),
 				},
 			},
@@ -94,29 +94,27 @@ func Test_fetchTXTData(t *testing.T) {
 				},
 			}
 
-			args := make([]string, 0)
+			args := plugintest.NewTestDecoder(t, p.DataSources["txt"].Args)
 			if tc.path != "" {
-				args = append(args, fmt.Sprintf("path = %q", tc.path))
+				args.SetAttr("path", cty.StringVal(tc.path))
 			}
 			if tc.glob != "" {
-				args = append(args, fmt.Sprintf("glob = %q", tc.glob))
+				args.SetAttr("glob", cty.StringVal(tc.glob))
 			}
-			argsBody := strings.Join(args, ",")
 
-			var diags diagnostics.Diag
+			argVal, fm, diags := args.DecodeDiagFiles()
 
-			argVal, diag := plugintest.Decode(t, p.DataSources["txt"].Args, argsBody)
-			diags.Extend(diag)
-
-			var data plugindata.Data
+			var (
+				diag diagnostics.Diag
+				data plugindata.Data
+			)
 			if !diags.HasErrors() {
 				ctx := context.Background()
-				var dgs diagnostics.Diag
-				data, dgs = p.RetrieveData(ctx, "txt", &plugin.RetrieveDataParams{Args: argVal})
-				diags.Extend(dgs)
+				data, diag = p.RetrieveData(ctx, "txt", &plugin.RetrieveDataParams{Args: argVal})
+				diags.Extend(diag)
 			}
 			assert.Equal(t, tc.expectedData, data)
-			tc.expectedDiags.AssertMatch(t, diags, nil)
+			tc.expectedDiags.AssertMatch(t, diags, fm)
 		})
 	}
 }
