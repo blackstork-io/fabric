@@ -95,7 +95,7 @@ func (s *StixViewTestSuite) TestAllArgs() {
 	s.Empty(diags)
 	s.Equal(strings.Join([]string{
 		`<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`,
-		`<div data-stix-gist-id="123" data-show-sidebar=true data-show-footer=true data-show-tlp-as-tags=true data-caption="test caption" data-show-marking-nodes=true data-show-labels=true data-show-idrefs=true data-graph-width=400 data-graph-height=300>`,
+		`<div data-stix-gist-id="123" data-show-sidebar="true" data-show-footer="true" data-show-tlp-as-tags="true" data-caption="test caption" data-show-marking-nodes="true" data-show-labels="true" data-show-idrefs="true" data-graph-width="400" data-graph-height="300">`,
 		`</div>`,
 	}, "\n"), mdprint.PrintString(res.Content))
 }
@@ -117,5 +117,5 @@ func (s *StixViewTestSuite) TestDataCtx() {
 	s.Contains(mdprint.PrintString(res.Content), `<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`)
 	s.Contains(mdprint.PrintString(res.Content), `<div id="graph-`)
 	s.Contains(mdprint.PrintString(res.Content), `window.stixview.init(`)
-	s.Contains(mdprint.PrintString(res.Content), `"objects":  [{"key":"value"}]}`)
+	s.Contains(mdprint.PrintString(res.Content), `"objects": [{"key":"value"}]`)
 }
