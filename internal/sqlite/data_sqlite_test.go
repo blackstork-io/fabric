@@ -2,9 +2,12 @@ package sqlite
 
 import (
 	"context"
-	"path"
+	"maps"
+	"path/filepath"
+	"runtime"
 	"testing"
 
+	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/zclconf/go-cty/cty"
 
@@ -114,7 +117,7 @@ func TestSqliteDataCall(t *testing.T) {
 				"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 			}),
 			before: func(tb testing.TB, fs testFS) string {
-				dsn := "file:" + path.Join(fs.path, "file.db")
+				dsn := "file:" + filepath.Join(fs.path, "file.db")
 				prepareTestDB(tb, testData{
 					dsn:    dsn,
 					schema: "CREATE TABLE testdata (id INTEGER PRIMARY KEY, text_val TEXT)",
@@ -133,7 +136,7 @@ func TestSqliteDataCall(t *testing.T) {
 				"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 			}),
 			before: func(tb testing.TB, fs testFS) string {
-				dsn := "file:" + path.Join(fs.path, "file.db")
+				dsn := "file:" + filepath.Join(fs.path, "file.db")
 				prepareTestDB(tb, testData{
 					dsn:    dsn,
 					schema: "CREATE TABLE testdata (id INTEGER PRIMARY KEY, text_val TEXT, num_val INTEGER, bool_val BOOLEAN)",
@@ -183,7 +186,7 @@ func TestSqliteDataCall(t *testing.T) {
 				}),
 			}),
 			before: func(tb testing.TB, fs testFS) string {
-				dsn := "file:" + path.Join(fs.path, "file.db")
+				dsn := "file:" + filepath.Join(fs.path, "file.db")
 				prepareTestDB(tb, testData{
 					dsn:    dsn,
 					schema: "CREATE TABLE testdata (id INTEGER PRIMARY KEY, text_val TEXT, num_val INTEGER, bool_val BOOLEAN, null_val TEXT DEFAULT NULL)",
@@ -223,7 +226,7 @@ func TestSqliteDataCall(t *testing.T) {
 				"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 			}),
 			before: func(tb testing.TB, fs testFS) string {
-				dsn := "file:" + path.Join(fs.path, "file.db")
+				dsn := "file:" + filepath.Join(fs.path, "file.db")
 				prepareTestDB(tb, testData{
 					dsn:    dsn,
 					schema: "CREATE TABLE testdata (id INTEGER PRIMARY KEY, text_val TEXT, num_val INTEGER, bool_val BOOLEAN)",
@@ -261,7 +264,7 @@ func TestSqliteDataCall(t *testing.T) {
 				"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 			}),
 			before: func(tb testing.TB, fs testFS) string {
-				dsn := "file:" + path.Join(fs.path, "file.db")
+				dsn := "file:" + filepath.Join(fs.path, "file.db")
 				prepareTestDB(tb, testData{
 					dsn:    dsn,
 					schema: "CREATE TABLE testdata_other (id INTEGER PRIMARY KEY)",
@@ -289,7 +292,7 @@ func TestSqliteDataCall(t *testing.T) {
 				"sql_args":  cty.ListValEmpty(cty.DynamicPseudoType),
 			}),
 			before: func(tb testing.TB, fs testFS) string {
-				dsn := "file:" + path.Join(fs.path, "file.db")
+				dsn := "file:" + filepath.Join(fs.path, "file.db")
 				prepareTestDB(tb, testData{
 					dsn:    dsn,
 					schema: "CREATE TABLE testdata (id INTEGER PRIMARY KEY, text_val TEXT, num_val INTEGER, bool_val BOOLEAN)",
@@ -323,6 +326,10 @@ func TestSqliteDataCall(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
+			if runtime.GOOS == "windows" && tc.name == "missing_sql_args" {
+				t.Skip("Skipping missing_sql_args test: bug in sqlite prevents deleting the db")
+			}
+
 			p := Plugin("1.2.3")
 			config := plugintest.NewTestDecoder(t, p.DataSources["sqlite"].Config).
 				SetHeaders("config", "data", "sqlite")
@@ -344,10 +351,11 @@ func TestSqliteDataCall(t *testing.T) {
 			params := plugin.RetrieveDataParams{}
 
 			var diags, diag diagnostics.Diag
-			params.Args, diag = args.DecodeDiag()
+			var fm, fm2 map[string]*hcl.File
+			params.Args, fm, diags = args.DecodeDiagFiles()
+			params.Config, fm2, diag = config.DecodeDiagFiles()
 			diags.Extend(diag)
-			params.Config, diag = config.DecodeDiag()
-			diags.Extend(diag)
+			maps.Copy(fm, fm2)
 			var data plugindata.Data
 
 			if !diags.HasErrors() {
@@ -360,7 +368,7 @@ func TestSqliteDataCall(t *testing.T) {
 				data, diag = p.RetrieveData(ctx, "sqlite", &params)
 				diags.Extend(diag)
 			}
-			tc.expected.diags.AssertMatch(t, diags, nil)
+			tc.expected.diags.AssertMatch(t, diags, fm)
 			assert.Equal(t, tc.expected.data, data, "unexpected result")
 		})
 	}
