@@ -130,7 +130,7 @@ func (n tocNode) render(pos, depth int, ordered bool) string {
 	if ordered {
 		format = "%s" + strconv.Itoa(pos+1) + ". [%s](#%s)\n"
 	}
-	const indentStep = "  ";
+	const indentStep = "  "
 	dst := []string{
 		fmt.Sprintf(format, strings.Repeat(indentStep, depth), n.title, anchorize(n.title)),
 		n.children.render(depth+1, ordered),
