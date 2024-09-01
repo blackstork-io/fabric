@@ -113,7 +113,7 @@ func (srv *grpcServer) Publish(ctx context.Context, req *PublishRequest) (*Publi
 	slog.DebugContext(ctx, "Publish")
 	defer func() {
 		if r := recover(); r != nil {
-			slog.ErrorContext(ctx, "Publish done", "panic", r)
+			slog.ErrorContext(ctx, "Publishing failed", "panic", r)
 			panic(r)
 		} else {
 			slog.DebugContext(ctx, "Publish done")
