@@ -32,6 +32,9 @@ func encodePos(src hcl.Pos) *Pos {
 }
 
 func encodeRange(src *hcl.Range) *Range {
+	if src == nil {
+		return nil
+	}
 	return &Range{
 		Filename: src.Filename,
 		Start:    encodePos(src.Start),
