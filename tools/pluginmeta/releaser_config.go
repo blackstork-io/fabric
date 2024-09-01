@@ -14,7 +14,7 @@ type ReleaserArchive struct {
 	ID           string   `yaml:"id"`
 	Format       string   `yaml:"format"`
 	Builds       []string `yaml:"builds"`
-	NameTemplate string   `yaml:"name_template"`
+	NameTemplate string   `yaml:"version_template"`
 }
 
 type ReleaserFormatOverride struct {

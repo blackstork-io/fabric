@@ -8,7 +8,7 @@ env:
   - CGO_ENABLED=0
 
 snapshot:
-  name_template: "{{ .Version }}-dev+{{if .IsGitDirty}}dirty.{{end}}rev.{{.FullCommit}}"
+  version_template: "{{ .Version }}-dev+{{if .IsGitDirty}}dirty.{{end}}rev.{{.FullCommit}}"
 
 builds:
   # CLI

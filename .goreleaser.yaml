@@ -252,7 +252,7 @@ archives:
     format: tar.gz
     builds:
       - fabric
-    name_template: >-
+    version_template: >-
       {{ .ProjectName }}_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -270,7 +270,7 @@ archives:
     format: tar.gz
     builds:
       - plugin_elastic
-    name_template: >-
+    version_template: >-
       plugin_elastic_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -282,7 +282,7 @@ archives:
     format: tar.gz
     builds:
       - plugin_github
-    name_template: >-
+    version_template: >-
       plugin_github_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -294,7 +294,7 @@ archives:
     format: tar.gz
     builds:
       - plugin_graphql
-    name_template: >-
+    version_template: >-
       plugin_graphql_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -306,7 +306,7 @@ archives:
     format: tar.gz
     builds:
       - plugin_openai
-    name_template: >-
+    version_template: >-
       plugin_openai_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -318,7 +318,7 @@ archives:
     format: tar.gz
     builds:
       - plugin_opencti
-    name_template: >-
+    version_template: >-
       plugin_opencti_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -330,7 +330,7 @@ archives:
     format: tar.gz
     builds:
       - plugin_postgresql
-    name_template: >-
+    version_template: >-
       plugin_postgresql_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -342,7 +342,7 @@ archives:
     format: tar.gz
     builds:
       - plugin_sqlite
-    name_template: >-
+    version_template: >-
       plugin_sqlite_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -354,7 +354,7 @@ archives:
     format: tar.gz
     builds:
       - plugin_terraform
-    name_template: >-
+    version_template: >-
       plugin_terraform_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -366,7 +366,7 @@ archives:
     format: tar.gz
     builds:
       - plugin_hackerone
-    name_template: >-
+    version_template: >-
       plugin_hackerone_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -378,7 +378,7 @@ archives:
     format: tar.gz
     builds:
       - plugin_virustotal
-    name_template: >-
+    version_template: >-
       plugin_virustotal_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -390,7 +390,7 @@ archives:
     format: tar.gz
     builds:
       - plugin_splunk
-    name_template: >-
+    version_template: >-
       plugin_splunk_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -402,7 +402,7 @@ archives:
     format: tar.gz
     builds:
       - plugin_stixview
-    name_template: >-
+    version_template: >-
       plugin_stixview_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -414,7 +414,7 @@ archives:
     format: tar.gz
     builds:
       - plugin_nist_nvd
-    name_template: >-
+    version_template: >-
       plugin_nist_nvd_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -425,7 +425,7 @@ archives:
     format: tar.gz
     builds:
       - plugin_snyk
-    name_template: >-
+    version_template: >-
       plugin_snyk_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -436,7 +436,7 @@ archives:
     format: tar.gz
     builds:
       - plugin_microsoft
-    name_template: >-
+    version_template: >-
       plugin_microsoft_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
@@ -475,12 +475,12 @@ dockers:
       - "--platform=linux/386"
 
 docker_manifests:
-  - name_template: "{{ .Env.CONTAINER_REPO_NAME }}:{{ .Version }}"
+  - version_template: "{{ .Env.CONTAINER_REPO_NAME }}:{{ .Version }}"
     image_templates:
     - "{{ .Env.CONTAINER_REPO_NAME }}:latest-amd64v1"
     - "{{ .Env.CONTAINER_REPO_NAME }}:latest-arm64v8"
     - "{{ .Env.CONTAINER_REPO_NAME }}:latest-386"
-  - name_template: "{{ .Env.CONTAINER_REPO_NAME }}:latest"
+  - version_template: "{{ .Env.CONTAINER_REPO_NAME }}:latest"
     image_templates:
     - "{{ .Env.CONTAINER_REPO_NAME }}:latest-amd64v1"
     - "{{ .Env.CONTAINER_REPO_NAME }}:latest-arm64v8"
