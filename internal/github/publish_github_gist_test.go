@@ -2,6 +2,7 @@ package github_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	gh "github.com/google/go-github/v58/github"
@@ -215,4 +216,50 @@ func (s *GithubPublishGistTestSuite) TestResetOldFiles() {
 		DocumentName: "test_doc",
 	})
 	s.Require().Nil(diags)
+}
+
+func (s *GithubPublishGistTestSuite) TestError() {
+	s.cli.On("Gists").Return(s.gistCli)
+	s.gistCli.On("Create", mock.Anything, mock.Anything).Return(nil, nil, errors.New("github api failed"))
+	ctx := context.Background()
+	titleMeta := plugindata.Map{
+		"provider": plugindata.String("title"),
+		"plugin":   plugindata.String("blackstork/builtin"),
+	}
+
+	diags := s.plugin.Publish(ctx, "github_gist", &plugin.PublishParams{
+		Config: plugintest.NewTestDecoder(s.T(), s.plugin.Publishers["github_gist"].Config).
+			SetAttr("github_token", cty.StringVal("testtoken")).
+			Decode(),
+		Args: plugintest.NewTestDecoder(s.T(), s.plugin.Publishers["github_gist"].Args).
+			SetAttr("description", cty.StringVal("test description")).
+			SetAttr("filename", cty.StringVal("filename.md")).
+			Decode(),
+		Format: plugin.OutputFormatMD,
+		DataContext: plugindata.Map{
+			"document": plugindata.Map{
+				"meta": plugindata.Map{
+					"name": plugindata.String("test_document"),
+				},
+				"content": plugindata.Map{
+					"type": plugindata.String("section"),
+					"children": plugindata.List{
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("# Header 1"),
+							"meta":     titleMeta,
+						},
+						plugindata.Map{
+							"type":     plugindata.String("element"),
+							"markdown": plugindata.String("Lorem ipsum dolor sit amet, consectetur adipiscing elit."),
+						},
+					},
+				},
+			},
+		},
+		DocumentName: "test_doc",
+	})
+	s.Require().Len(diags, 1)
+	s.Require().Equal("Failed to create gist", diags[0].Summary)
+	s.Require().Equal("github api failed", diags[0].Detail)
 }
