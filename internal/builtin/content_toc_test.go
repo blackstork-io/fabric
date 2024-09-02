@@ -84,8 +84,8 @@ func (s *TOCContentTestSuite) TestSimple() {
 	s.Len(diags, 0, "no errors")
 	s.Equal(strings.Join([]string{
 		"- [Header 1](#header-1)",
-		"   - [Header 2](#header-2)",
-		"      - [Header 3](#header-3)",
+		"  - [Header 2](#header-2)",
+		"    - [Header 3](#header-3)",
 	}, "\n")+"\n", mdprint.PrintString(res.Content))
 }
 
@@ -164,7 +164,7 @@ func (s *TOCContentTestSuite) TestAdvanced() {
 	s.Len(diags, 0, "no errors")
 	s.Equal(strings.Join([]string{
 		"1. [Header 2](#header-2)",
-		"   1. [Header 3](#header-3)",
+		"  1. [Header 3](#header-3)",
 		"2. [Header 4](#header-4)",
 		"3. [Header 5](#header-5)",
 	}, "\n")+"\n", mdprint.PrintString(res.Content))
