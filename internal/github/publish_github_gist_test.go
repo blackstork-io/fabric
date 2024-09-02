@@ -12,6 +12,7 @@ import (
 
 	"github.com/blackstork-io/fabric/internal/github"
 	github_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/github"
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/plugintest"
@@ -260,6 +261,9 @@ func (s *GithubPublishGistTestSuite) TestError() {
 		DocumentName: "test_doc",
 	})
 	s.Require().Len(diags, 1)
-	s.Require().Equal("Failed to create gist", diags[0].Summary)
-	s.Require().Equal("github api failed", diags[0].Detail)
+	diagtest.Asserts{{
+		diagtest.IsError,
+		diagtest.SummaryEquals("Failed to create gist"),
+		diagtest.DetailEquals("github api failed"),
+	}}.AssertMatch(s.T(), diags, nil)
 }
