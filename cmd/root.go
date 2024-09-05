@@ -18,7 +18,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/sdk/instrumentation"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/term"
 
@@ -153,10 +152,8 @@ var rootCmd = &cobra.Command{
 				Handlers: []slog.Handler{
 					handler,
 					otelslog.NewHandler(
-						otelslog.WithInstrumentationScope(instrumentation.Scope{
-							Name:    "github.com/blackstork-io/fabric",
-							Version: version,
-						}),
+						"github.com/blackstork-io/fabric",
+						otelslog.WithVersion(version),
 					),
 				},
 			})
