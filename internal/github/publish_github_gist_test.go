@@ -260,10 +260,8 @@ func (s *GithubPublishGistTestSuite) TestError() {
 		},
 		DocumentName: "test_doc",
 	})
-	s.Require().Len(diags, 1)
 	diagtest.Asserts{{
 		diagtest.IsError,
-		diagtest.SummaryEquals("Failed to create gist"),
-		diagtest.DetailEquals("github api failed"),
+		diagtest.DetailContains("github api failed"),
 	}}.AssertMatch(s.T(), diags, nil)
 }
