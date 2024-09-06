@@ -105,9 +105,7 @@ func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentPar
 		}}
 	}
 	return &plugin.ContentResult{
-		Content: &plugin.ContentElement{
-			Markdown: result,
-		},
+		Content: plugin.NewElementFromMarkdown(result),
 		Location: &plugin.Location{
 			Index:  1,
 			Effect: plugin.LocationEffectBefore,

@@ -105,9 +105,7 @@ func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (
 	text = strings.ReplaceAll(text, "\n", " ")
 	text = strings.Repeat("#", int(titleSize)+1) + " " + text
 	return &plugin.ContentResult{
-		Content: &plugin.ContentElement{
-			Markdown: text,
-		},
+		Content: plugin.NewElementFromMarkdown(text),
 	}, nil
 }
 

@@ -113,9 +113,7 @@ func genTOC(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.C
 	}
 
 	return &plugin.ContentResult{
-		Content: &plugin.ContentElement{
-			Markdown: titles.render(0, args.ordered),
-		},
+		Content: plugin.NewElementFromMarkdown(titles.render(0, args.ordered)),
 	}, nil
 }
 
@@ -177,7 +175,7 @@ func extractTitles(section *plugin.ContentSection) []string {
 			if meta == nil || meta.Plugin != Name || meta.Provider != "title" {
 				continue
 			}
-			titles = append(titles, content.Markdown)
+			titles = append(titles, string(content.AsMarkdownSrc()))
 		}
 	}
 	return titles
