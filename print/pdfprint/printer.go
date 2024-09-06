@@ -5,13 +5,16 @@ import (
 	"context"
 	"image/color"
 	"io"
+	"log/slog"
 
 	pdf "github.com/stephenafamo/goldmark-pdf"
 	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/ast/astsrc"
+	"github.com/blackstork-io/fabric/print"
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
@@ -32,13 +35,34 @@ func Print(w io.Writer, el plugin.Content) error {
 }
 
 func (p Printer) Print(ctx context.Context, w io.Writer, el plugin.Content) (err error) {
-	p.removeFrontatter(el)
-	buf := bytes.NewBuffer(nil)
+	p.removeFrontmatter(el)
+	print.ReplaceNodesInContent(el, func(src *astsrc.ASTSource, n ast.Node) (repl ast.Node, skipChildren bool) {
+		switch n := n.(type) {
+		case *ast.HTMLBlock:
+			slog.Info("HTML block found in AST, replacing with message segment")
+			p := ast.NewCodeBlock()
+			p.AppendChild(p, ast.NewRawTextSegment(
+				src.Appendf("<node of type %q is not supported by the pdf renderer>", n.Kind()),
+			))
+			return p, false
+		case *ast.RawHTML:
+			slog.Info("Raw HTML found in AST, replacing with message segment")
+			p := ast.NewCodeSpan()
+			p.AppendChild(p, ast.NewRawTextSegment(
+				src.Appendf("<node of type %q is not supported by the pdf renderer>", n.Kind()),
+			))
+			return p, false
+		}
+		return n, false
+	})
+
+	buf := &bytes.Buffer{}
 	if err := p.md.Print(ctx, buf, el); err != nil {
 		return err
 	}
+
 	md := goldmark.New(
-		goldmark.WithExtensions(extension.GFM),
+		plugin.BaseMarkdownOptions,
 		goldmark.WithParserOptions(
 			parser.WithAutoHeadingID(),
 		),
@@ -59,7 +83,7 @@ func (p Printer) Print(ctx context.Context, w io.Writer, el plugin.Content) (err
 	return md.Convert(buf.Bytes(), w)
 }
 
-func (p Printer) removeFrontatter(el plugin.Content) bool {
+func (p Printer) removeFrontmatter(el plugin.Content) bool {
 	section, ok := el.(*plugin.ContentSection)
 	if !ok {
 		return false

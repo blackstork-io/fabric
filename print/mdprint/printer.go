@@ -3,9 +3,18 @@ package mdprint
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
+	"log/slog"
+
+	markdown "github.com/blackstork-io/goldmark-markdown"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/ast"
 
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/ast/astsrc"
+	"github.com/blackstork-io/fabric/plugin/ast/nodes"
+	"github.com/blackstork-io/fabric/print"
 )
 
 // Printer is the interface for printing markdown content.
@@ -38,19 +47,51 @@ func (p Printer) Print(ctx context.Context, w io.Writer, el plugin.Content) (err
 func (p Printer) printContent(w io.Writer, content plugin.Content) (err error) {
 	switch content := content.(type) {
 	case *plugin.ContentElement:
-		if err = p.printContentElement(w, content); err != nil {
-			return
+		if content.IsAst() {
+			src, node := content.AsNode()
+			err = p.printContentElement(w, src, node)
+		} else {
+			_, err = w.Write(content.AsMarkdownSrc())
 		}
 	case *plugin.ContentSection:
-		if err = p.printContentSection(w, content); err != nil {
-			return
-		}
+		err = p.printContentSection(w, content)
 	}
-	return nil
+	return
 }
 
-func (p Printer) printContentElement(w io.Writer, elem *plugin.ContentElement) error {
-	_, err := w.Write([]byte(elem.Markdown))
+func (p Printer) printContentElement(w io.Writer, source *astsrc.ASTSource, node *nodes.FabricContentNode) error {
+	n := print.ReplaceNodes(node, func(n ast.Node) (repl ast.Node, skipChildren bool) {
+		switch nT := n.(type) {
+		case *nodes.CustomBlock:
+			slog.Info("OtherBlock found in AST, replacing with message segment")
+			p := ast.NewCodeBlock()
+			p.AppendChild(p, ast.NewRawTextSegment(
+				source.Appendf("<node of type %q is not supported by the pdf renderer>", nT.Data.GetTypeUrl()),
+			))
+			return p, false
+		case *nodes.CustomInline:
+			slog.Info("OtherInline found in AST, replacing with message segment")
+			p := ast.NewCodeSpan()
+			p.AppendChild(p, ast.NewRawTextSegment(
+				source.Appendf("<node of type %q is not supported by the pdf renderer>", nT.Data.GetTypeUrl()),
+			))
+			return p, false
+		}
+		return n, false
+	})
+	err := goldmark.New(
+		plugin.BaseMarkdownOptions,
+		goldmark.WithExtensions(
+			markdown.NewRenderer(
+				markdown.WithIgnoredNodes(
+					nodes.ContentNodeKind,
+				),
+			),
+		),
+	).Renderer().Render(w, source.AsBytes(), n)
+	if err != nil {
+		return fmt.Errorf("failed to render markdown from AST: %w", err)
+	}
 	return err
 }
 
