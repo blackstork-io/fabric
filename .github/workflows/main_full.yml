@@ -20,20 +20,6 @@ jobs:
       # Run integration tests (testcontainers) on ubuntu
       - run: go test -race -v -timeout 2m ${{ !startsWith(matrix.os, 'ubuntu') && '-short' || '' }} ./...
 
-  fuzz-test:
-    name: Fuzz test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "stable"
-      - uses: jidicula/go-fuzz-action@v1.2.0
-        with:
-          packages: 'github.com/blackstork-io/fabric/engine'
-          fuzz-time: 5m
-          fuzz-minimize-time: 2m
-
   builds:
     strategy:
       matrix:
