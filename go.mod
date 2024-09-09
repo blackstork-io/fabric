@@ -35,21 +35,21 @@ require (
 	github.com/wundergraph/graphql-go-tools/v2 v2.0.0-rc.46
 	github.com/yuin/goldmark v1.7.1
 	github.com/zclconf/go-cty v1.14.4
-	go.opentelemetry.io/contrib/bridges/otelslog v0.1.0
+	go.opentelemetry.io/contrib/bridges/otelslog v0.4.0
 	go.opentelemetry.io/contrib/instrumentation/host v0.51.0
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.51.0
-	go.opentelemetry.io/otel v1.26.0
+	go.opentelemetry.io/otel v1.29.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.2.0-alpha
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.26.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.25.0
 	go.opentelemetry.io/otel/exporters/stdout/stdoutlog v0.2.0-alpha.0.20240511152133-7ba796cb3997
 	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.26.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.26.0
-	go.opentelemetry.io/otel/log v0.2.0-alpha
-	go.opentelemetry.io/otel/sdk v1.26.0
+	go.opentelemetry.io/otel/log v0.5.0
+	go.opentelemetry.io/otel/sdk v1.29.0
 	go.opentelemetry.io/otel/sdk/log v0.2.0-alpha.0.20240511152133-7ba796cb3997
-	go.opentelemetry.io/otel/sdk/metric v1.26.0
-	go.opentelemetry.io/otel/trace v1.26.0
+	go.opentelemetry.io/otel/sdk/metric v1.29.0
+	go.opentelemetry.io/otel/trace v1.29.0
 	golang.org/x/exp v0.0.0-20240314144324-c7f7c6466f7f
 	golang.org/x/term v0.21.0
 	google.golang.org/grpc v1.64.1
@@ -84,7 +84,7 @@ require (
 	github.com/elastic/elastic-transport-go/v8 v8.6.0 // indirect
 	github.com/fatih/color v1.17.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/go-logr/logr v1.4.1 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-swiss/fonts v0.0.0-20221219152310-0b267088f53d // indirect
@@ -136,13 +136,13 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.25.0 // indirect
-	go.opentelemetry.io/otel/metric v1.26.0 // indirect
+	go.opentelemetry.io/otel/metric v1.29.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.2.0 // indirect
 	golang.org/x/crypto v0.24.0 // indirect
 	golang.org/x/mod v0.18.0 // indirect
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/tools v0.22.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237 // indirect

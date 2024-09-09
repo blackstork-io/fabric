@@ -140,6 +140,7 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 		slog.InfoContext(ctx, "Publish to github gist", "filename", fileName)
 		gistId := params.Args.GetAttrVal("gist_id")
 		if gistId.IsNull() || gistId.AsString() == "" {
+			slog.DebugContext(ctx, "No gist id set, creating a new gist", "is_public", payload.Public, "files", len(payload.Files))
 			gist, _, err := client.Gists().Create(ctx, payload)
 			if err != nil {
 				return diagnostics.Diag{{
@@ -150,7 +151,7 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 			}
 			slog.InfoContext(ctx, "Created gist", "url", *gist.HTMLURL)
 		} else {
-
+			slog.DebugContext(ctx, "Fetching the gist", "gist_id", gistId.AsString())
 			gist, _, err := client.Gists().Get(ctx, gistId.AsString())
 			if err != nil {
 				return diagnostics.Diag{{
@@ -167,6 +168,7 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 					payload.Files[gh.GistFilename(*file.Filename)] = gh.GistFile{}
 				}
 			}
+			slog.DebugContext(ctx, "Updating the gist", "gist_id", gistId.AsString())
 			gist, _, err = client.Gists().Edit(ctx, gistId.AsString(), payload)
 			if err != nil {
 				return diagnostics.Diag{{

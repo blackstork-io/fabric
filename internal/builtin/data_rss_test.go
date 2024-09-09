@@ -74,7 +74,7 @@ func makeTestRssServer() (baseAddr string, closer func()) {
 	}
 	defer resp.Body.Close()
 	if http.StatusOK != resp.StatusCode {
-		panic("resp status code is wrone")
+		panic("resp status code is wrong")
 	}
 
 	closer = close
