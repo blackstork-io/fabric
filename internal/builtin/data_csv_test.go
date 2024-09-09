@@ -2,15 +2,15 @@ package builtin
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
-	"strings"
+	"maps"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
@@ -38,7 +38,7 @@ func Test_fetchCSVData(t *testing.T) {
 	}{
 		{
 			name:      "comma_delim_path",
-			path:      "testdata/csv/comma.csv",
+			path:      filepath.Join("testdata", "csv", "comma.csv"),
 			delimiter: ",",
 			expectedData: plugindata.List{
 				plugindata.Map{
@@ -66,7 +66,7 @@ func Test_fetchCSVData(t *testing.T) {
 		},
 		{
 			name:      "semicolon_delim_path",
-			path:      "testdata/csv/semicolon.csv",
+			path:      filepath.Join("testdata", "csv", "semicolon.csv"),
 			delimiter: ";",
 			expectedData: plugindata.List{
 				plugindata.Map{
@@ -94,12 +94,12 @@ func Test_fetchCSVData(t *testing.T) {
 		},
 		{
 			name:      "comma_delim_glob",
-			glob:      "testdata/csv/comm*.csv",
+			glob:      filepath.Join("testdata", "csv", "comm*.csv"),
 			delimiter: ",",
 			expectedData: plugindata.List{
 				plugindata.Map{
 					"file_name": plugindata.String("comma.csv"),
-					"file_path": plugindata.String("testdata/csv/comma.csv"),
+					"file_path": plugindata.String(filepath.Join("testdata", "csv", "comma.csv")),
 					"content": plugindata.List{
 						plugindata.Map{
 							"id":     plugindata.String("b8fa4bb0-6dd4-45ba-96e0-9a182b2b932e"),
@@ -136,7 +136,7 @@ func Test_fetchCSVData(t *testing.T) {
 		},
 		{
 			name:      "invalid_delimiter",
-			path:      "testdata/csv/comma.csv",
+			path:      filepath.Join("testdata", "csv", "comma.csv"),
 			delimiter: "abc",
 			expectedDiags: diagtest.Asserts{{
 				diagtest.IsError,
@@ -147,7 +147,7 @@ func Test_fetchCSVData(t *testing.T) {
 		},
 		{
 			name: "default_delimiter",
-			path: "testdata/csv/comma.csv",
+			path: filepath.Join("testdata", "csv", "comma.csv"),
 			expectedData: plugindata.List{
 				plugindata.Map{
 					"id":     plugindata.String("b8fa4bb0-6dd4-45ba-96e0-9a182b2b932e"),
@@ -174,17 +174,17 @@ func Test_fetchCSVData(t *testing.T) {
 		},
 		{
 			name: "invalid_path",
-			path: "testdata/csv/does_not_exist.csv",
+			path: filepath.Join("testdata", "csv", "does_not_exist.csv"),
 			expectedDiags: diagtest.Asserts{{
 				diagtest.IsError,
 				diagtest.SummaryContains("Failed to read a file"),
-				diagtest.DetailContains("no such file or directory"),
+				diagtest.DetailContains("does_not_exist.csv"),
 			}},
 		},
 
 		{
 			name: "invalid_csv",
-			path: "testdata/csv/invalid.csv",
+			path: filepath.Join("testdata", "csv", "invalid.csv"),
 			expectedDiags: diagtest.Asserts{{
 				diagtest.IsError,
 				diagtest.SummaryContains("Failed to read a file"),
@@ -193,7 +193,7 @@ func Test_fetchCSVData(t *testing.T) {
 		},
 		{
 			name:         "empty_csv",
-			path:         "testdata/csv/empty.csv",
+			path:         filepath.Join("testdata", "csv", "empty.csv"),
 			delimiter:    ",",
 			expectedData: plugindata.List{},
 		},
@@ -206,34 +206,33 @@ func Test_fetchCSVData(t *testing.T) {
 					"csv": makeCSVDataSource(),
 				},
 			}
-			config := ""
+			cfg := plugintest.NewTestDecoder(t, p.DataSources["csv"].Config)
+
 			if tc.delimiter != "" {
-				config = fmt.Sprintf("delimiter = %q", tc.delimiter)
+				cfg.SetAttr("delimiter", cty.StringVal(tc.delimiter))
 			}
 
-			args := make([]string, 0)
+			args := plugintest.NewTestDecoder(t, p.DataSources["csv"].Args)
 			if tc.path != "" {
-				args = append(args, fmt.Sprintf("path = %q", tc.path))
+				args.SetAttr("path", cty.StringVal(tc.path))
 			}
 			if tc.glob != "" {
-				args = append(args, fmt.Sprintf("glob = %q", tc.glob))
+				args.SetAttr("glob", cty.StringVal(tc.glob))
 			}
-			argsBody := strings.Join(args, ",")
+			argVal, fm, diags := args.DecodeDiagFiles()
 
-			var diags diagnostics.Diag
-			argVal, diag := plugintest.Decode(t, p.DataSources["csv"].Args, argsBody)
+			cfgVal, fm2, diag := cfg.DecodeDiagFiles()
+			maps.Copy(fm, fm2)
 			diags.Extend(diag)
-			cfgVal, diag := plugintest.Decode(t, p.DataSources["csv"].Config, config)
-			diags.Extend(diag)
+
 			var data plugindata.Data
 			if !diags.HasErrors() {
 				ctx := context.Background()
-				var dgs diagnostics.Diag
-				data, dgs = p.RetrieveData(ctx, "csv", &plugin.RetrieveDataParams{Config: cfgVal, Args: argVal})
-				diags.Extend(dgs)
+				data, diag = p.RetrieveData(ctx, "csv", &plugin.RetrieveDataParams{Config: cfgVal, Args: argVal})
+				diags.Extend(diag)
 			}
 			assert.Equal(t, tc.expectedData, data)
-			tc.expectedDiags.AssertMatch(t, diags, nil)
+			tc.expectedDiags.AssertMatch(t, diags, fm)
 		})
 	}
 }
@@ -242,7 +241,7 @@ func Test_readCSVFileCancellation(t *testing.T) {
 	const defaultCSVDelimiter = ','
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	data, err := readAndDecodeCSVFile(ctx, "testdata/csv/comma.csv", defaultCSVDelimiter)
+	data, err := readAndDecodeCSVFile(ctx, filepath.Join("testdata", "csv", "comma.csv"), defaultCSVDelimiter)
 	assert.Nil(t, data)
 	assert.Error(t, context.Canceled, err)
 }

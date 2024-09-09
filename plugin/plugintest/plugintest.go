@@ -2,6 +2,8 @@ package plugintest
 
 import (
 	"context"
+	"fmt"
+	"sync/atomic"
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
@@ -14,6 +16,14 @@ import (
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
+
+var uniqueID atomic.Uint32
+
+// Generates a unique filename for a test file
+// This allows to merge file maps from config and args
+func getFileName() string {
+	return fmt.Sprintf("generated-test-file-%d.fabric", uniqueID.Add(1))
+}
 
 // We have a massive amount of tests that break as soon as we add
 // schemas with default values. This function is a workaround.
@@ -37,8 +47,6 @@ func ReencodeCTY(t *testing.T, spec *dataspec.RootSpec, val cty.Value, asserts [
 	return DecodeAndAssert(t, spec, string(hclwrite.Format(f.Bytes())), nil, asserts)
 }
 
-const filename = "<test-data>"
-
 // Decodes a string (representing content of a config/data/content block)
 // into cty.Value according to given spec (i.e. respecting default values)
 //
@@ -54,6 +62,7 @@ func DecodeAndAssert(t *testing.T, spec *dataspec.RootSpec, body string, dataCtx
 	src := []byte("block {\n")
 	src = append(src, body...)
 	src = append(src, "\n}\n"...)
+	filename := getFileName()
 	f, diag := hclsyntax.ParseConfig(src, filename, hcl.InitialPos)
 	if diags.Extend(diag) {
 		return
@@ -74,7 +83,7 @@ func Decode(t *testing.T, spec *dataspec.RootSpec, body string) (v *dataspec.Blo
 	src := []byte("block {\n")
 	src = append(src, body...)
 	src = append(src, "\n}\n"...)
-	f, stdDiag := hclsyntax.ParseConfig(src, filename, hcl.InitialPos)
+	f, stdDiag := hclsyntax.ParseConfig(src, getFileName(), hcl.InitialPos)
 	if diags.Extend(stdDiag) {
 		return
 	}

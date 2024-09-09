@@ -1,14 +1,12 @@
 package resolver
 
 import (
-	"bytes"
 	"context"
 	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"testing"
-	"text/template"
 
 	"github.com/stretchr/testify/require"
 )
@@ -242,7 +240,7 @@ func TestLocalSource_Resolve(t *testing.T) {
 				checksums: nil,
 			},
 			want: &ResolvedPlugin{
-				BinaryPath: "{{.tempDir}}/blackstork/sqlite@1.0.0",
+				BinaryPath: filepath.Join("blackstork", "sqlite@1.0.0"),
 				Checksums:  []Checksum{mustChecksum(t, "binary:"+runtime.GOOS+":"+runtime.GOARCH+":XmieKwFnK/M5luddXjcv9gxTbOFZmhRY6GfNj0vvUWA=")},
 			},
 			wantErr: false,
@@ -261,7 +259,7 @@ func TestLocalSource_Resolve(t *testing.T) {
 				checksums: nil,
 			},
 			want: &ResolvedPlugin{
-				BinaryPath: "{{.tempDir}}/blackstork/sqlite@1.0.0.exe",
+				BinaryPath: filepath.Join("blackstork", "sqlite@1.0.0.exe"),
 				Checksums:  []Checksum{mustChecksum(t, "binary:"+runtime.GOOS+":"+runtime.GOARCH+":XmieKwFnK/M5luddXjcv9gxTbOFZmhRY6GfNj0vvUWA=")},
 			},
 			wantErr: false,
@@ -287,7 +285,7 @@ func TestLocalSource_Resolve(t *testing.T) {
 				checksums: nil,
 			},
 			want: &ResolvedPlugin{
-				BinaryPath: "{{.tempDir}}/blackstork/sqlite@1.0.0",
+				BinaryPath: filepath.Join("blackstork", "sqlite@1.0.0"),
 				Checksums: []Checksum{
 					mustChecksum(t, "archive:darwin:amd64:XmieKwFnK/M5luddXjcv9gxTbOFZmhRY6GfNj0vvUWA="),
 					mustChecksum(t, "archive:linux:amd64:YmieKwFnK/M5luddXjcv9gxTbOFZmhRY6GfNj0vvUWA="),
@@ -327,7 +325,7 @@ func TestLocalSource_Resolve(t *testing.T) {
 				checksums: []Checksum{mustChecksum(t, "binary:"+runtime.GOOS+":"+runtime.GOARCH+":XmieKwFnK/M5luddXjcv9gxTbOFZmhRY6GfNj0vvUWA=")},
 			},
 			want: &ResolvedPlugin{
-				BinaryPath: "{{.tempDir}}/blackstork/sqlite@1.0.0",
+				BinaryPath: filepath.Join("blackstork", "sqlite@1.0.0"),
 				Checksums:  []Checksum{mustChecksum(t, "binary:"+runtime.GOOS+":"+runtime.GOARCH+":XmieKwFnK/M5luddXjcv9gxTbOFZmhRY6GfNj0vvUWA=")},
 			},
 			wantErr: false,
@@ -341,15 +339,8 @@ func TestLocalSource_Resolve(t *testing.T) {
 				t.Errorf("LocalSource.Resolve() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if want := tt.want; want != nil {
-				tmpl, err := template.New("test").Parse(tt.want.BinaryPath)
-				require.NoError(t, err)
-				var buf bytes.Buffer
-				err = tmpl.Execute(&buf, map[string]interface{}{
-					"tempDir": tt.fields.Path,
-				})
-				require.NoError(t, err)
-				want.BinaryPath = buf.String()
+			if tt.want != nil {
+				tt.want.BinaryPath = filepath.Join(tt.fields.Path, tt.want.BinaryPath)
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("LocalSource.Resolve() = %v, want %v", got, tt.want)

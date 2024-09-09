@@ -45,7 +45,7 @@ func (tb *TestBlock) SetAttr(name string, value cty.Value) *TestBlock {
 }
 
 func (tb *TestBlock) AppendBody(body string) *TestBlock {
-	f, diags := hclwrite.ParseConfig([]byte(body), filename, hcl.InitialPos)
+	f, diags := hclwrite.ParseConfig([]byte(body), "<tmp-file>", hcl.InitialPos)
 	if diags.HasErrors() {
 		panic(diags)
 	}
@@ -121,22 +121,24 @@ func (td *TestDecoder) WithContext(ctx context.Context) *TestDecoder {
 // Decode decodes the block and asserts diagnostics.
 func (td *TestDecoder) Decode(asserts ...[]diagtest.Assert) (val *dataspec.Block) {
 	td.t.Helper()
-	val, fm, diags := td.decode()
+	val, fm, diags := td.DecodeDiagFiles()
 	diagtest.Asserts.AssertMatch(asserts, td.t, diags, fm)
 	return
 }
 
+// Decodes the block and returns diagnostics.
 func (td *TestDecoder) DecodeDiag() (val *dataspec.Block, diags diagnostics.Diag) {
 	td.t.Helper()
-	val, _, diags = td.decode()
+	val, _, diags = td.DecodeDiagFiles()
 	return
 }
 
-func (td *TestDecoder) decode() (val *dataspec.Block, fm map[string]*hcl.File, diags diagnostics.Diag) {
+func (td *TestDecoder) DecodeDiagFiles() (val *dataspec.Block, fm map[string]*hcl.File, diags diagnostics.Diag) {
 	td.t.Helper()
 	file := hclwrite.NewFile()
 	file.Body().AppendBlock(td.block.block)
 	data := hclwrite.Format(file.Bytes())
+	filename := getFileName()
 	fm = map[string]*hcl.File{
 		filename: {
 			Body:  nil,

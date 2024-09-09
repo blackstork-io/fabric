@@ -6,9 +6,8 @@ import (
 	"crypto/rand"
 	_ "embed"
 	"encoding/base32"
-	"encoding/json"
 	"fmt"
-	"text/template"
+	"html/template"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
@@ -22,19 +21,7 @@ import (
 //go:embed stixview.gohtml
 var stixViewTmplStr string
 
-var stixViewTmpl *template.Template
-
-func init() {
-	stixViewTmpl = template.Must(template.New("stixview").Funcs(template.FuncMap{
-		"json": func(v interface{}) string {
-			data, err := json.Marshal(v)
-			if err != nil {
-				return fmt.Sprintf("error: %s", err)
-			}
-			return string(data)
-		},
-	}).Parse(stixViewTmplStr))
-}
+var stixViewTmpl = template.Must(template.New("stixview").Parse(stixViewTmplStr))
 
 func makeStixViewContentProvider() *plugin.ContentProvider {
 	return &plugin.ContentProvider{
@@ -147,7 +134,7 @@ func renderStixView(ctx context.Context, params *plugin.ProvideContentParams) (*
 			Detail:   "Must provide either stix_url or gist_id or objects",
 		}}
 	}
-	buf := bytes.NewBufferString("")
+	buf := &bytes.Buffer{}
 	err = stixViewTmpl.Execute(buf, rctx)
 	if err != nil {
 		return nil, diagnostics.Diag{{
