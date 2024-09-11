@@ -8,6 +8,8 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
+	github.com/brittonhayes/notionmd v0.6.1
+	github.com/dstotijn/go-notion v0.11.0
 	github.com/elastic/go-elasticsearch/v8 v8.14.0
 	github.com/evanphx/go-hclog-slog v0.0.0-20240717231540-be48fc4c4df5
 	github.com/gobwas/glob v0.2.3
@@ -90,6 +92,7 @@ require (
 	github.com/go-swiss/fonts v0.0.0-20221219152310-0b267088f53d // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
+	github.com/gomarkdown/markdown v0.0.0-20240723152757-afa4a469d4f9 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1 // indirect
