@@ -121,7 +121,6 @@ func AcquireToken(ctx context.Context, tenantId string, clientId string, cred co
 	if err != nil {
 		return
 	}
-	confidentialClient.AcquireTokenSilent(ctx, scopes)
 	result, err := confidentialClient.AcquireTokenSilent(ctx, scopes)
 	if err != nil {
 		// cache miss, authenticate with another AcquireToken... method

@@ -334,6 +334,24 @@
         ]
       },
       {
+        "name": "microsoft_graph",
+        "type": "data-source",
+        "config_params": [
+          "cert_thumbprint",
+          "client_id",
+          "client_secret",
+          "key_passphrase",
+          "private_key",
+          "private_key_file",
+          "tenant_id"
+        ],
+        "arguments": [
+          "api_version",
+          "endpoint",
+          "query_params"
+        ]
+      },
+      {
         "name": "microsoft_sentinel_incidents",
         "type": "data-source",
         "config_params": [

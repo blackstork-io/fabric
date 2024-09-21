@@ -12,10 +12,11 @@ import (
 	"testing"
 
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
-	"github.com/blackstork-io/fabric/plugin/dataspec"
-	"github.com/blackstork-io/fabric/plugin/plugintest"
 	"github.com/stretchr/testify/assert"
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
 func TestPlugin_Schema(t *testing.T) {
@@ -100,5 +101,4 @@ func TestMakeDefaultGraphClientLoader(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, client)
 	})
-
 }
