@@ -337,7 +337,6 @@
         "name": "microsoft_graph",
         "type": "data-source",
         "config_params": [
-          "cert_thumbprint",
           "client_id",
           "client_secret",
           "key_passphrase",

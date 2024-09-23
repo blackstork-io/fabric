@@ -49,11 +49,6 @@ func makeMicrosoftGraphDataSource(loader MicrosoftGraphClientLoadFn) *plugin.Dat
 					Type: cty.String,
 				},
 				{
-					Doc:  "The certificate thumbprint. Ignored if client_secret is provided.",
-					Name: "cert_thumbprint",
-					Type: cty.String,
-				},
-				{
 					Doc:  "The key passphrase. Ignored if client_secret is provided.",
 					Name: "key_passphrase",
 					Type: cty.String,

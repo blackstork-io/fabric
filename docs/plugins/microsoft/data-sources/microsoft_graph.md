@@ -70,12 +70,6 @@ config data microsoft_graph {
   # Default value:
   private_key = null
 
-  # The certificate thumbprint. Ignored if client_secret is provided.
-  #
-  # Optional string.
-  # Default value:
-  cert_thumbprint = null
-
   # The key passphrase. Ignored if client_secret is provided.
   #
   # Optional string.
