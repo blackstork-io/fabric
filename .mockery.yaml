@@ -51,6 +51,7 @@ packages:
     config:
     interfaces:
       AzureOpenaiClient:
+      MicrosoftGraphClient:
   github.com/blackstork-io/fabric/plugin/resolver:
     config:
       inpackage: true

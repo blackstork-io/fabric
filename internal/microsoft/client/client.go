@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
 	"github.com/google/go-querystring/query"
 )
 
@@ -17,6 +18,8 @@ const (
 	defaultURL = "https://management.azure.com"
 	version    = "2023-11-01"
 )
+
+var scopes = []string{"https://graph.microsoft.com/.default"}
 
 func String(s string) *string {
 	return &s
@@ -111,6 +114,23 @@ func (c *client) GetClientCredentialsToken(ctx context.Context, req *GetClientCr
 		return nil, err
 	}
 	return &data, nil
+}
+
+func AcquireToken(ctx context.Context, tenantId string, clientId string, cred confidential.Credential) (accessToken string, err error) {
+	confidentialClient, err := confidential.New(authURL+"/"+tenantId, clientId, cred)
+	if err != nil {
+		return
+	}
+	result, err := confidentialClient.AcquireTokenSilent(ctx, scopes)
+	if err != nil {
+		// cache miss, authenticate with another AcquireToken... method
+		result, err = confidentialClient.AcquireTokenByCredential(ctx, scopes)
+		if err != nil {
+			return
+		}
+	}
+	accessToken = result.AccessToken
+	return
 }
 
 func (c *client) ListIncidents(ctx context.Context, req *ListIncidentsReq) (*ListIncidentsRes, error) {
