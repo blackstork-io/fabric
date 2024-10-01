@@ -14,6 +14,8 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
+const defaultSize = 50
+
 func makeMicrosoftGraphDataSource(loader MicrosoftGraphClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
 		Doc:      "The `microsoft_graph` data source queries Microsoft Graph.",
@@ -58,22 +60,42 @@ func makeMicrosoftGraphDataSource(loader MicrosoftGraphClientLoadFn) *plugin.Dat
 		Args: &dataspec.RootSpec{
 			Attrs: []*dataspec.AttrSpec{
 				{
-					Doc:        "The API version",
 					Name:       "api_version",
+					Doc:        "The API version",
 					Type:       cty.String,
 					DefaultVal: cty.StringVal("beta"),
 				},
 				{
-					Doc:         "The endpoint to query",
 					Name:        "endpoint",
+					Doc:         "The endpoint to query",
 					Type:        cty.String,
 					Constraints: constraint.RequiredNonNull,
 					ExampleVal:  cty.StringVal("/security/incidents"),
 				},
 				{
-					Doc:  "The query parameters",
 					Name: "query_params",
+					Doc:  "The query parameters",
 					Type: cty.Map(cty.String),
+				},
+				{
+					Name:         "objects_size",
+					Doc:          "Number of objects to be returned",
+					Type:         cty.Number,
+					Constraints:  constraint.NonNull,
+					DefaultVal:   cty.NumberIntVal(defaultSize),
+					MinInclusive: cty.NumberIntVal(1),
+				},
+				{
+					Name:       "only_objects",
+					Doc:        "Return only the list of objects. If `false`, returns an object with `objects` and `totalCount` fields",
+					Type:       cty.Bool,
+					DefaultVal: cty.BoolVal(true),
+				},
+				{
+					Name:       "is_object_endpoint",
+					Doc:        "If API endpoint response should be treated as a list or as an object. If set to `true`, `only_objects`, `query_params` and `objects_size` are ignored.",
+					Type:       cty.Bool,
+					DefaultVal: cty.BoolVal(false),
 				},
 			},
 		},
@@ -92,18 +114,32 @@ func fetchMicrosoftGraph(loader MicrosoftGraphClientLoadFn) plugin.RetrieveDataF
 			}}
 		}
 		endPoint := params.Args.GetAttrVal("endpoint").AsString()
-		queryParamsAttr := params.Args.GetAttrVal("query_params")
-		var queryParams url.Values
+		isObjectEndpoint := params.Args.GetAttrVal("is_object_endpoint")
 
-		if !queryParamsAttr.IsNull() {
-			queryParams = url.Values{}
-			queryMap := queryParamsAttr.AsValueMap()
-			for k, v := range queryMap {
-				queryParams.Add(k, v.AsString())
+		var response plugindata.Data
+
+		if isObjectEndpoint.True() {
+			response, err = cli.QueryGraphObject(ctx, endPoint)
+		} else {
+
+			queryParamsAttr := params.Args.GetAttrVal("query_params")
+			var queryParams url.Values
+
+			if !queryParamsAttr.IsNull() {
+				queryParams = url.Values{}
+				queryMap := queryParamsAttr.AsValueMap()
+				for k, v := range queryMap {
+					queryParams.Add(k, v.AsString())
+				}
 			}
-		}
 
-		response, err := cli.QueryGraph(ctx, endPoint, queryParams)
+			onlyObjects := params.Args.GetAttrVal("only_objects")
+
+			size64, _ := params.Args.GetAttrVal("objects_size").AsBigFloat().Int64()
+			size := int(size64)
+
+			response, err = cli.QueryGraph(ctx, endPoint, queryParams, size, onlyObjects.True())
+		}
 		if err != nil {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
@@ -111,14 +147,6 @@ func fetchMicrosoftGraph(loader MicrosoftGraphClientLoadFn) plugin.RetrieveDataF
 				Detail:   err.Error(),
 			}}
 		}
-		data, err := plugindata.ParseAny(response)
-		if err != nil {
-			return nil, diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to parse response",
-				Detail:   err.Error(),
-			}}
-		}
-		return data, nil
+		return response, nil
 	}
 }

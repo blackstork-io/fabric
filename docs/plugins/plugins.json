@@ -347,6 +347,9 @@
         "arguments": [
           "api_version",
           "endpoint",
+          "is_object_endpoint",
+          "objects_size",
+          "only_objects",
           "query_params"
         ]
       },

@@ -7,6 +7,8 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
+	plugindata "github.com/blackstork-io/fabric/plugin/plugindata"
+
 	url "net/url"
 )
 
@@ -23,29 +25,29 @@ func (_m *MicrosoftGraphClient) EXPECT() *MicrosoftGraphClient_Expecter {
 	return &MicrosoftGraphClient_Expecter{mock: &_m.Mock}
 }
 
-// QueryGraph provides a mock function with given fields: ctx, endpoint, queryParams
-func (_m *MicrosoftGraphClient) QueryGraph(ctx context.Context, endpoint string, queryParams url.Values) (interface{}, error) {
-	ret := _m.Called(ctx, endpoint, queryParams)
+// QueryGraph provides a mock function with given fields: ctx, endpoint, queryParams, size, onlyObjects
+func (_m *MicrosoftGraphClient) QueryGraph(ctx context.Context, endpoint string, queryParams url.Values, size int, onlyObjects bool) (plugindata.Data, error) {
+	ret := _m.Called(ctx, endpoint, queryParams, size, onlyObjects)
 
 	if len(ret) == 0 {
 		panic("no return value specified for QueryGraph")
 	}
 
-	var r0 interface{}
+	var r0 plugindata.Data
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, url.Values) (interface{}, error)); ok {
-		return rf(ctx, endpoint, queryParams)
+	if rf, ok := ret.Get(0).(func(context.Context, string, url.Values, int, bool) (plugindata.Data, error)); ok {
+		return rf(ctx, endpoint, queryParams, size, onlyObjects)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, url.Values) interface{}); ok {
-		r0 = rf(ctx, endpoint, queryParams)
+	if rf, ok := ret.Get(0).(func(context.Context, string, url.Values, int, bool) plugindata.Data); ok {
+		r0 = rf(ctx, endpoint, queryParams, size, onlyObjects)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(interface{})
+			r0 = ret.Get(0).(plugindata.Data)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, url.Values) error); ok {
-		r1 = rf(ctx, endpoint, queryParams)
+	if rf, ok := ret.Get(1).(func(context.Context, string, url.Values, int, bool) error); ok {
+		r1 = rf(ctx, endpoint, queryParams, size, onlyObjects)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -62,23 +64,84 @@ type MicrosoftGraphClient_QueryGraph_Call struct {
 //   - ctx context.Context
 //   - endpoint string
 //   - queryParams url.Values
-func (_e *MicrosoftGraphClient_Expecter) QueryGraph(ctx interface{}, endpoint interface{}, queryParams interface{}) *MicrosoftGraphClient_QueryGraph_Call {
-	return &MicrosoftGraphClient_QueryGraph_Call{Call: _e.mock.On("QueryGraph", ctx, endpoint, queryParams)}
+//   - size int
+//   - onlyObjects bool
+func (_e *MicrosoftGraphClient_Expecter) QueryGraph(ctx interface{}, endpoint interface{}, queryParams interface{}, size interface{}, onlyObjects interface{}) *MicrosoftGraphClient_QueryGraph_Call {
+	return &MicrosoftGraphClient_QueryGraph_Call{Call: _e.mock.On("QueryGraph", ctx, endpoint, queryParams, size, onlyObjects)}
 }
 
-func (_c *MicrosoftGraphClient_QueryGraph_Call) Run(run func(ctx context.Context, endpoint string, queryParams url.Values)) *MicrosoftGraphClient_QueryGraph_Call {
+func (_c *MicrosoftGraphClient_QueryGraph_Call) Run(run func(ctx context.Context, endpoint string, queryParams url.Values, size int, onlyObjects bool)) *MicrosoftGraphClient_QueryGraph_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(url.Values))
+		run(args[0].(context.Context), args[1].(string), args[2].(url.Values), args[3].(int), args[4].(bool))
 	})
 	return _c
 }
 
-func (_c *MicrosoftGraphClient_QueryGraph_Call) Return(result interface{}, err error) *MicrosoftGraphClient_QueryGraph_Call {
+func (_c *MicrosoftGraphClient_QueryGraph_Call) Return(objects plugindata.Data, err error) *MicrosoftGraphClient_QueryGraph_Call {
+	_c.Call.Return(objects, err)
+	return _c
+}
+
+func (_c *MicrosoftGraphClient_QueryGraph_Call) RunAndReturn(run func(context.Context, string, url.Values, int, bool) (plugindata.Data, error)) *MicrosoftGraphClient_QueryGraph_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// QueryGraphObject provides a mock function with given fields: ctx, endpoint
+func (_m *MicrosoftGraphClient) QueryGraphObject(ctx context.Context, endpoint string) (plugindata.Data, error) {
+	ret := _m.Called(ctx, endpoint)
+
+	if len(ret) == 0 {
+		panic("no return value specified for QueryGraphObject")
+	}
+
+	var r0 plugindata.Data
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (plugindata.Data, error)); ok {
+		return rf(ctx, endpoint)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) plugindata.Data); ok {
+		r0 = rf(ctx, endpoint)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(plugindata.Data)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, endpoint)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MicrosoftGraphClient_QueryGraphObject_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'QueryGraphObject'
+type MicrosoftGraphClient_QueryGraphObject_Call struct {
+	*mock.Call
+}
+
+// QueryGraphObject is a helper method to define mock.On call
+//   - ctx context.Context
+//   - endpoint string
+func (_e *MicrosoftGraphClient_Expecter) QueryGraphObject(ctx interface{}, endpoint interface{}) *MicrosoftGraphClient_QueryGraphObject_Call {
+	return &MicrosoftGraphClient_QueryGraphObject_Call{Call: _e.mock.On("QueryGraphObject", ctx, endpoint)}
+}
+
+func (_c *MicrosoftGraphClient_QueryGraphObject_Call) Run(run func(ctx context.Context, endpoint string)) *MicrosoftGraphClient_QueryGraphObject_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *MicrosoftGraphClient_QueryGraphObject_Call) Return(result plugindata.Data, err error) *MicrosoftGraphClient_QueryGraphObject_Call {
 	_c.Call.Return(result, err)
 	return _c
 }
 
-func (_c *MicrosoftGraphClient_QueryGraph_Call) RunAndReturn(run func(context.Context, string, url.Values) (interface{}, error)) *MicrosoftGraphClient_QueryGraph_Call {
+func (_c *MicrosoftGraphClient_QueryGraphObject_Call) RunAndReturn(run func(context.Context, string) (plugindata.Data, error)) *MicrosoftGraphClient_QueryGraphObject_Call {
 	_c.Call.Return(run)
 	return _c
 }
