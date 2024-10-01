@@ -101,5 +101,24 @@ data microsoft_graph {
   # Optional map of string.
   # Default value:
   query_params = null
+
+  # Number of objects to be returned
+  #
+  # Optional number.
+  # Must be >= 1
+  # Default value:
+  objects_size = 50
+
+  # Return only the list of objects. If `false`, returns an object with `objects` and `totalCount` fields
+  #
+  # Optional bool.
+  # Default value:
+  only_objects = true
+
+  # If API endpoint response should be treated as a list or as an object. If set to `true`, `only_objects`, `query_params` and `objects_size` are ignored.
+  #
+  # Optional bool.
+  # Default value:
+  is_object_endpoint = false
 }
 ```
