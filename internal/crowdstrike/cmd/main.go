@@ -9,6 +9,6 @@ var version string
 
 func main() {
 	pluginapiv1.Serve(
-		crowdstrike.Plugin(version),
+		crowdstrike.Plugin(version, nil),
 	)
 }
