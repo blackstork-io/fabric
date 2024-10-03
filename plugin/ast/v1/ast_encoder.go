@@ -129,7 +129,7 @@ func (e *encoder) encodeNode(node ast.Node) *Node {
 		kind = &Node_Heading{
 			Heading: &Heading{
 				Base:  e.encodeBaseBlock(&n.BaseBlock),
-				Level: uint32(n.Level),
+				Level: uint32(n.Level), //nolint:gosec // Level is bounded by 1-6.
 			},
 		}
 	case *ast.ThematicBreak:
@@ -172,7 +172,7 @@ func (e *encoder) encodeNode(node ast.Node) *Node {
 				Base:    e.encodeBaseBlock(&n.BaseBlock),
 				Marker:  uint32(n.Marker),
 				IsTight: n.IsTight,
-				Start:   uint32(n.Start),
+				Start:   uint32(n.Start), //nolint:gosec // Start numbers must be nine digits or less (https://spec.commonmark.org/0.31.2/#example-265)
 			},
 		}
 	case *ast.ListItem:
