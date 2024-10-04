@@ -26,21 +26,7 @@ func makeFalconCspmIomsDataSource(loader ClientLoaderFn) *plugin.DataSource {
 
 func fetchFalconCspmIomsData(loader ClientLoaderFn) plugin.RetrieveDataFunc {
 	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
-		clientId := params.Args.GetAttrVal("client_id").AsString()
-		clientSecret := params.Args.GetAttrVal("client_secret").AsString()
-		cfg := &falcon.ApiConfig{
-			ClientId:     clientId,
-			ClientSecret: clientSecret,
-		}
-		memberCID := params.Args.GetAttrVal("member_cid")
-		if !memberCID.IsNull() {
-			cfg.MemberCID = memberCID.AsString()
-		}
-		clientCloud := params.Args.GetAttrVal("client_cloud")
-		if !clientCloud.IsNull() {
-			cfg.Cloud = falcon.Cloud(clientCloud.AsString())
-		}
-		cli, err := loader(cfg)
+		cli, err := loader(makeApiConfig(params.Config))
 		if err != nil {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
