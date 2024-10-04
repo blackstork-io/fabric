@@ -93,6 +93,24 @@ func makeDataSourceConfig() *dataspec.RootSpec {
 	}
 }
 
+func makeApiConfig(cfg *dataspec.Block) *falcon.ApiConfig {
+	clientId := cfg.GetAttrVal("client_id").AsString()
+	clientSecret := cfg.GetAttrVal("client_secret").AsString()
+	apiCfg := &falcon.ApiConfig{
+		ClientId:     clientId,
+		ClientSecret: clientSecret,
+	}
+	memberCID := cfg.GetAttrVal("member_cid")
+	if !memberCID.IsNull() {
+		apiCfg.MemberCID = memberCID.AsString()
+	}
+	clientCloud := cfg.GetAttrVal("client_cloud")
+	if !clientCloud.IsNull() {
+		apiCfg.Cloud = falcon.Cloud(clientCloud.AsString())
+	}
+	return apiCfg
+}
+
 func encodeResponse(data any) (plugindata.Data, error) {
 	raw, err := json.Marshal(data)
 	if err != nil {
