@@ -2,6 +2,7 @@ package print
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/yuin/goldmark/ast"
@@ -18,6 +19,7 @@ type Printer interface {
 // ReplaceNodes walks the AST starting from the given node and replaces nodes in it.
 // If replacer returns nil - the node is deleted
 func ReplaceNodes(n ast.Node, replacer func(n ast.Node) (repl ast.Node, skipChildren bool)) ast.Node {
+	const maxReplacementsWithoutAdvance = 100
 	if n == nil {
 		return nil
 	}
@@ -26,6 +28,7 @@ func ReplaceNodes(n ast.Node, replacer func(n ast.Node) (repl ast.Node, skipChil
 		return n
 	}
 	c := n.FirstChild()
+	replacementsWithoutAdvance := 0
 	for c != nil {
 		repl := ReplaceNodes(c, replacer)
 		switch repl {
@@ -33,10 +36,19 @@ func ReplaceNodes(n ast.Node, replacer func(n ast.Node) (repl ast.Node, skipChil
 			next := c.NextSibling()
 			n.RemoveChild(n, c)
 			c = next
+			replacementsWithoutAdvance = 0
 		case c:
 			c = c.NextSibling()
+			replacementsWithoutAdvance = 0
 		default:
+			if replacementsWithoutAdvance >= maxReplacementsWithoutAdvance {
+				panic(fmt.Sprintf("Replacer stuck at node %s", repl.Kind()))
+			}
+			replacementsWithoutAdvance++
 			n.ReplaceChild(n, c, repl)
+			// Intentionally trying to replace the replacement result
+			// This allows replacer to not care whether the replacement node
+			// or its children need to be further replaced
 			c = repl
 		}
 	}
