@@ -17,9 +17,13 @@ type Printer interface {
 	Print(ctx context.Context, w io.Writer, el plugin.Content) error
 }
 
-// ErrReplacerSkipChildren could be returned from the ReplaceNodes replacer func
-// to skip children. Will never be returned by ReplaceNodes itself.
-var ErrReplacerSkipChildren = errors.New("Skip children")
+var (
+	// ErrReplacerSkipChildren could be returned from the ReplaceNodes replacer func
+	// to skip children. Will never be returned by ReplaceNodes itself.
+	ErrReplacerSkipChildren = errors.New("skip children")
+	// ErrReplacerStuck means that replacer failed to make progress
+	ErrReplacerStuck = errors.New("replacer stuck")
+)
 
 // ReplaceNodes walks the AST starting from the given node and replaces nodes in it.
 // If replacer returns nil - the node is deleted
@@ -53,7 +57,7 @@ func ReplaceNodes(n ast.Node, replacer func(n ast.Node) (repl ast.Node, err erro
 			replacementsWithoutAdvance = 0
 		default:
 			if replacementsWithoutAdvance >= maxReplacementsWithoutAdvance {
-				panic(fmt.Sprintf("Replacer stuck at node %s", repl.Kind()))
+				return n, fmt.Errorf("%w: node %q", ErrReplacerStuck, repl.Kind())
 			}
 			replacementsWithoutAdvance++
 			n.ReplaceChild(n, c, repl)
