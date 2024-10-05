@@ -14,6 +14,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/ast"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
@@ -130,7 +131,7 @@ func renderStixView(ctx context.Context, params *plugin.ProvideContentParams) (*
 	if rctx.Objects == nil && args.StixURL == nil && args.GistID == nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
-			Summary:  "Missing arugments",
+			Summary:  "Missing arguments",
 			Detail:   "Must provide either stix_url or gist_id or objects",
 		}}
 	}
@@ -145,9 +146,9 @@ func renderStixView(ctx context.Context, params *plugin.ProvideContentParams) (*
 	}
 
 	return &plugin.ContentResult{
-		Content: &plugin.ContentElement{
-			Markdown: buf.String(),
-		},
+		Content: plugin.NewElement(
+			ast.HTMLBlock(buf.Bytes()),
+		),
 	}, nil
 }
 

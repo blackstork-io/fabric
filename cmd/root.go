@@ -24,6 +24,7 @@ import (
 	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/cmd/internal/multilog"
 	"github.com/blackstork-io/fabric/cmd/internal/telemetry"
+	"github.com/blackstork-io/fabric/pkg/utils/slogutil"
 )
 
 var (
@@ -147,7 +148,7 @@ var rootCmd = &cobra.Command{
 		}
 		var logger *slog.Logger
 		if env.otelpEnabled || rawArgs.debug {
-			logger = slog.New(multilog.Handler{
+			handler = multilog.Handler{
 				Level: level,
 				Handlers: []slog.Handler{
 					handler,
@@ -156,10 +157,10 @@ var rootCmd = &cobra.Command{
 						otelslog.WithVersion(version),
 					),
 				},
-			})
-		} else {
-			logger = slog.New(handler)
+			}
 		}
+		handler = slogutil.NewSourceRewriter(handler)
+		logger = slog.New(handler)
 		logger = logger.With("command", cmd.Name())
 		slog.SetDefault(logger)
 		slog.SetLogLoggerLevel(slog.LevelDebug)

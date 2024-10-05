@@ -50,8 +50,6 @@ func genCodeContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 	}
 	text = fmt.Sprintf("```%s\n%s\n```", lang.AsString(), text)
 	return &plugin.ContentResult{
-		Content: &plugin.ContentElement{
-			Markdown: text,
-		},
+		Content: plugin.NewElementFromMarkdown(text),
 	}, nil
 }

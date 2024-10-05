@@ -1,6 +1,12 @@
 package pluginapiv1
 
-import "github.com/blackstork-io/fabric/plugin"
+import (
+	"fmt"
+	"log/slog"
+
+	"github.com/blackstork-io/fabric/pkg/utils"
+	"github.com/blackstork-io/fabric/plugin"
+)
 
 func decodeContentResult(src *ContentResult) *plugin.ContentResult {
 	if src == nil {
@@ -13,47 +19,20 @@ func decodeContentResult(src *ContentResult) *plugin.ContentResult {
 }
 
 func decodeContent(src *Content) plugin.Content {
-	if src == nil {
-		return nil
-	}
-	switch val := src.Value.(type) {
+	switch val := src.GetValue().(type) {
 	case *Content_Element:
-		return decodeContentElement(val.Element)
+		return plugin.NewElementFromMarkdownAndAST(val.Element.GetMarkdown(), val.Element.GetAst())
 	case *Content_Section:
-		return decodeContentSection(val.Section)
+		return &plugin.ContentSection{
+			Children: utils.FnMap(val.Section.GetChildren(), decodeContent),
+		}
 	case *Content_Empty:
-		return decodeContentEmpty(val.Empty)
+		return &plugin.ContentEmpty{}
+	case nil:
+		return nil
 	default:
+		slog.Error("unknown content type", "type", fmt.Sprintf("%T", src))
 		return nil
-	}
-}
-
-func decodeContentElement(src *ContentElement) *plugin.ContentElement {
-	if src == nil {
-		return nil
-	}
-	return &plugin.ContentElement{
-		Markdown: src.GetMarkdown(),
-	}
-}
-
-func decodeContentEmpty(src *ContentEmpty) *plugin.ContentEmpty {
-	if src == nil {
-		return nil
-	}
-	return &plugin.ContentEmpty{}
-}
-
-func decodeContentSection(src *ContentSection) *plugin.ContentSection {
-	if src == nil {
-		return nil
-	}
-	children := make([]plugin.Content, len(src.GetChildren()))
-	for i, child := range src.GetChildren() {
-		children[i] = decodeContent(child)
-	}
-	return &plugin.ContentSection{
-		Children: children,
 	}
 }
 

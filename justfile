@@ -8,7 +8,7 @@ test-run:
 
 format:
     go mod tidy
-    ./gen_code.sh
+    ./codegen/format.sh
 
 format-extra: format
     gofumpt -w -extra .

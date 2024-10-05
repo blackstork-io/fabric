@@ -56,11 +56,10 @@ func (s *CodeTestSuite) TestCallCodeDefault() {
 		},
 	})
 	s.Empty(diags)
-	s.Equal(&plugin.ContentResult{
-		Content: &plugin.ContentElement{
-			Markdown: "```\nHello World!\n```",
-		},
-	}, content)
+	s.Equal(
+		plugindata.String("```\nHello World!\n```"),
+		content.Content.AsData().(plugindata.Map)["markdown"],
+	)
 }
 
 func (s *CodeTestSuite) TestCallCodeWithLanguage() {
@@ -78,9 +77,8 @@ func (s *CodeTestSuite) TestCallCodeWithLanguage() {
 		},
 	})
 	s.Empty(diags)
-	s.Equal(&plugin.ContentResult{
-		Content: &plugin.ContentElement{
-			Markdown: "```json\n{\"hello\": \"world\"}\n```",
-		},
-	}, content)
+	s.Equal(
+		plugindata.String("```json\n{\"hello\": \"world\"}\n```"),
+		content.Content.AsData().(plugindata.Map)["markdown"],
+	)
 }

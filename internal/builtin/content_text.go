@@ -55,9 +55,7 @@ func genTextContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 		}}
 	}
 	return &plugin.ContentResult{
-		Content: &plugin.ContentElement{
-			Markdown: text,
-		},
+		Content: plugin.NewElementFromMarkdown(text),
 	}, nil
 }
 

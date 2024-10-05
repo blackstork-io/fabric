@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -49,7 +50,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				WithOccurrence(2).
 				WithStartupTimeout(5*time.Second)),
 	)
-	s.Require().NoError(err, "failed to start postgres container")
+	if err != nil {
+		if strings.Contains(err.Error(), "Cannot connect to the Docker daemon") {
+			s.T().Skip("Docker not available for integration tests")
+		} else {
+			s.Require().NoError(err, "failed to start postgres container")
+		}
+	}
 	s.container = container
 	connURL, err := container.ConnectionString(s.ctx, "sslmode=disable")
 	s.Require().NoError(err, "failed to get postgres connection string")

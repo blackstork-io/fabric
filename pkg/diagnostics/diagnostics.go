@@ -8,12 +8,14 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/blackstork-io/fabric/pkg/utils/slogutil"
 )
 
 type Diag hcl.Diagnostics // Diagnostics does implement error interface, but not, itself, an error.
 
 func (d Diag) Error() string {
-	slog.Debug("Treated diagnostic.Diag as error")
+	slog.Debug("Treated diagnostic.Diag as error", slogutil.SourceOverride(1))
 	return hcl.Diagnostics(d).Error()
 }
 

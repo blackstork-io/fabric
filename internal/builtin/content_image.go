@@ -70,9 +70,7 @@ func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (
 	srcStr = strings.TrimSpace(strings.ReplaceAll(srcStr, "\n", ""))
 	altStr = strings.TrimSpace(strings.ReplaceAll(altStr, "\n", ""))
 	return &plugin.ContentResult{
-		Content: &plugin.ContentElement{
-			Markdown: fmt.Sprintf("![%s](%s)", altStr, srcStr),
-		},
+		Content: plugin.NewElementFromMarkdown(fmt.Sprintf("![%s](%s)", altStr, srcStr)),
 	}, nil
 }
 

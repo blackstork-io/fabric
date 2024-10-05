@@ -97,9 +97,7 @@ func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 		}}
 	}
 	return &plugin.ContentResult{
-		Content: &plugin.ContentElement{
-			Markdown: result,
-		},
+		Content: plugin.NewElementFromMarkdown(result),
 	}, nil
 }
 

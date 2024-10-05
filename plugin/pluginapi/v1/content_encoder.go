@@ -1,6 +1,12 @@
 package pluginapiv1
 
-import "github.com/blackstork-io/fabric/plugin"
+import (
+	"fmt"
+	"log/slog"
+
+	"github.com/blackstork-io/fabric/pkg/utils"
+	"github.com/blackstork-io/fabric/plugin"
+)
 
 func encodeContentResult(src *plugin.ContentResult) *ContentResult {
 	if src == nil {
@@ -13,60 +19,43 @@ func encodeContentResult(src *plugin.ContentResult) *ContentResult {
 }
 
 func encodeContent(src plugin.Content) *Content {
-	if src == nil {
-		return nil
-	}
+	var variant isContent_Value
 	switch val := src.(type) {
+	case nil:
+		return nil
 	case *plugin.ContentElement:
-		return &Content{
-			Value: &Content_Element{
-				Element: encodeContentElement(val),
-			},
+		if val == nil {
+			break
+		}
+		el := &ContentElement{
+			Markdown: val.AsMarkdownSrc(),
+		}
+		if val.IsAst() {
+			el.Ast = val.AsSerializedNode()
+		}
+		variant = &Content_Element{
+			Element: el,
 		}
 	case *plugin.ContentSection:
-		return &Content{
-			Value: &Content_Section{
-				Section: encodeContentSection(val),
+		if val == nil {
+			break
+		}
+		variant = &Content_Section{
+			Section: &ContentSection{
+				Children: utils.FnMap(val.Children, encodeContent),
 			},
 		}
 	case *plugin.ContentEmpty:
-		return &Content{
-			Value: &Content_Empty{
-				Empty: encodeContentEmpty(val),
-			},
+		variant = &Content_Empty{
+			Empty: &ContentEmpty{},
 		}
 	default:
-		return nil
+		slog.Error("unknown content type", "type", fmt.Sprintf("%T", src))
 	}
-}
 
-func encodeContentSection(src *plugin.ContentSection) *ContentSection {
-	if src == nil {
-		return nil
+	return &Content{
+		Value: variant,
 	}
-	children := make([]*Content, len(src.Children))
-	for i, child := range src.Children {
-		children[i] = encodeContent(child)
-	}
-	return &ContentSection{
-		Children: children,
-	}
-}
-
-func encodeContentElement(src *plugin.ContentElement) *ContentElement {
-	if src == nil {
-		return nil
-	}
-	return &ContentElement{
-		Markdown: src.Markdown,
-	}
-}
-
-func encodeContentEmpty(src *plugin.ContentEmpty) *ContentEmpty {
-	if src == nil {
-		return nil
-	}
-	return &ContentEmpty{}
 }
 
 func encodeLocation(src *plugin.Location) *Location {
@@ -74,7 +63,7 @@ func encodeLocation(src *plugin.Location) *Location {
 		return nil
 	}
 	return &Location{
-		Index:  uint32(src.Index),
+		Index:  src.Index,
 		Effect: encodeLocationEffect(src.Effect),
 	}
 }

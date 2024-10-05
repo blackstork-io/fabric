@@ -36,8 +36,6 @@ func renderGreetingMessage(ctx context.Context, params *plugin.ProvideContentPar
 	// that it exists, non-null and non-empty, with whitespace trimmed
 	name := params.Args.GetAttrVal("name").AsString()
 	return &plugin.ContentResult{
-		Content: &plugin.ContentElement{
-			Markdown: fmt.Sprintf("Hello, %s!", name),
-		},
+		Content: plugin.NewElementFromMarkdown(fmt.Sprintf("Hello, %s!", name)),
 	}, nil
 }

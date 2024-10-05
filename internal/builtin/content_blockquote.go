@@ -40,8 +40,6 @@ func genBlockQuoteContent(ctx context.Context, params *plugin.ProvideContentPara
 	}
 	text = "> " + strings.ReplaceAll(text, "\n", "\n> ")
 	return &plugin.ContentResult{
-		Content: &plugin.ContentElement{
-			Markdown: text,
-		},
+		Content: plugin.NewElementFromMarkdown(text),
 	}, nil
 }
