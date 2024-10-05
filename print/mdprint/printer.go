@@ -60,7 +60,7 @@ func (p Printer) printContent(w io.Writer, content plugin.Content) (err error) {
 }
 
 func (p Printer) printContentElement(w io.Writer, source *astsrc.ASTSource, node *nodes.FabricContentNode) error {
-	n := print.ReplaceNodes(node, func(n ast.Node) (repl ast.Node, skipChildren bool) {
+	n, err := print.ReplaceNodes(node, func(n ast.Node) (repl ast.Node, err error) {
 		switch nT := n.(type) {
 		case *nodes.CustomBlock:
 			slog.Info("OtherBlock found in AST, replacing with message segment")
@@ -68,18 +68,21 @@ func (p Printer) printContentElement(w io.Writer, source *astsrc.ASTSource, node
 			p.AppendChild(p, ast.NewRawTextSegment(
 				source.Appendf("<node of type %q is not supported by the pdf renderer>", nT.Data.GetTypeUrl()),
 			))
-			return p, false
+			return p, nil
 		case *nodes.CustomInline:
 			slog.Info("OtherInline found in AST, replacing with message segment")
 			p := ast.NewCodeSpan()
 			p.AppendChild(p, ast.NewRawTextSegment(
 				source.Appendf("<node of type %q is not supported by the pdf renderer>", nT.Data.GetTypeUrl()),
 			))
-			return p, false
+			return p, nil
 		}
-		return n, false
+		return n, nil
 	})
-	err := goldmark.New(
+	if err != nil {
+		return fmt.Errorf("replacement failed: %w", err)
+	}
+	err = goldmark.New(
 		plugin.BaseMarkdownOptions,
 		goldmark.WithExtensions(
 			markdown.NewRenderer(

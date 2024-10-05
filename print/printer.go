@@ -2,6 +2,7 @@ package print
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
@@ -16,21 +17,31 @@ type Printer interface {
 	Print(ctx context.Context, w io.Writer, el plugin.Content) error
 }
 
+// ErrReplacerSkipChildren could be returned from the ReplaceNodes replacer func
+// to skip children. Will never be returned by ReplaceNodes itself.
+var ErrReplacerSkipChildren = errors.New("Skip children")
+
 // ReplaceNodes walks the AST starting from the given node and replaces nodes in it.
 // If replacer returns nil - the node is deleted
-func ReplaceNodes(n ast.Node, replacer func(n ast.Node) (repl ast.Node, skipChildren bool)) ast.Node {
+func ReplaceNodes(n ast.Node, replacer func(n ast.Node) (repl ast.Node, err error)) (ast.Node, error) {
 	const maxReplacementsWithoutAdvance = 100
 	if n == nil {
-		return nil
+		return nil, nil
 	}
-	n, skipChildren := replacer(n)
-	if n == nil || skipChildren {
-		return n
+	n, err := replacer(n)
+	if n == nil || err != nil {
+		if err == ErrReplacerSkipChildren {
+			err = nil
+		}
+		return n, err
 	}
 	c := n.FirstChild()
 	replacementsWithoutAdvance := 0
 	for c != nil {
-		repl := ReplaceNodes(c, replacer)
+		repl, err := ReplaceNodes(c, replacer)
+		if err != nil {
+			return n, err
+		}
 		switch repl {
 		case nil:
 			next := c.NextSibling()
@@ -52,24 +63,29 @@ func ReplaceNodes(n ast.Node, replacer func(n ast.Node) (repl ast.Node, skipChil
 			c = repl
 		}
 	}
-	return n
+	return n, nil
 }
 
 // ReplaceNodesInContent runs ReplaceNodes on plugin.ContentAST nodes
-func ReplaceNodesInContent(el plugin.Content, replacer func(src *astsrc.ASTSource, n ast.Node) (repl ast.Node, skipChildren bool)) {
+// Replacer is not expected to replace the top-level plugin node (ContentNode)
+func ReplaceNodesInContent(el plugin.Content, replacer func(src *astsrc.ASTSource, n ast.Node) (repl ast.Node, err error)) error {
 	switch el := el.(type) {
 	case *plugin.ContentSection:
 		for _, child := range el.Children {
-			ReplaceNodesInContent(child, replacer)
+			err := ReplaceNodesInContent(child, replacer)
+			if err != nil {
+				return err
+			}
 		}
 	case *plugin.ContentElement:
 		if !el.IsAst() {
-			return
+			return nil
 		}
 		src, node := el.AsNode()
-		ReplaceNodes(node, func(n ast.Node) (repl ast.Node, skipChildren bool) {
+		_, err := ReplaceNodes(node, func(n ast.Node) (repl ast.Node, err error) {
 			return replacer(src, n)
 		})
-		node.Dump(src.AsBytes(), 0)
+		return err
 	}
+	return nil
 }

@@ -3,6 +3,7 @@ package pdfprint
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"image/color"
 	"io"
 	"log/slog"
@@ -36,7 +37,7 @@ func Print(w io.Writer, el plugin.Content) error {
 
 func (p Printer) Print(ctx context.Context, w io.Writer, el plugin.Content) (err error) {
 	p.removeFrontmatter(el)
-	print.ReplaceNodesInContent(el, func(src *astsrc.ASTSource, n ast.Node) (repl ast.Node, skipChildren bool) {
+	err = print.ReplaceNodesInContent(el, func(src *astsrc.ASTSource, n ast.Node) (repl ast.Node, err error) {
 		switch n := n.(type) {
 		case *ast.HTMLBlock:
 			slog.Info("HTML block found in AST, replacing with message segment")
@@ -44,17 +45,20 @@ func (p Printer) Print(ctx context.Context, w io.Writer, el plugin.Content) (err
 			p.AppendChild(p, ast.NewRawTextSegment(
 				src.Appendf("<node of type %q is not supported by the pdf renderer>", n.Kind()),
 			))
-			return p, false
+			return p, nil
 		case *ast.RawHTML:
 			slog.Info("Raw HTML found in AST, replacing with message segment")
 			p := ast.NewCodeSpan()
 			p.AppendChild(p, ast.NewRawTextSegment(
 				src.Appendf("<node of type %q is not supported by the pdf renderer>", n.Kind()),
 			))
-			return p, false
+			return p, nil
 		}
-		return n, false
+		return n, nil
 	})
+	if err != nil {
+		return fmt.Errorf("replacement failed: %w", err)
+	}
 
 	buf := &bytes.Buffer{}
 	if err := p.md.Print(ctx, buf, el); err != nil {
