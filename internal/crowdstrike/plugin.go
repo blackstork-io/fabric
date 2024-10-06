@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/blackstork-io/fabric/plugin"
-	"github.com/blackstork-io/fabric/plugin/dataspec"
-	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
-	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/crowdstrike/gofalcon/falcon"
 	"github.com/crowdstrike/gofalcon/falcon/client"
 	"github.com/crowdstrike/gofalcon/falcon/client/cspm_registration"
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type CspmRegistrationClient interface {

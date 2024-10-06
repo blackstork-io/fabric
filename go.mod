@@ -9,6 +9,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
+	github.com/crowdstrike/gofalcon v0.8.0
 	github.com/elastic/go-elasticsearch/v8 v8.14.0
 	github.com/evanphx/go-hclog-slog v0.0.0-20240717231540-be48fc4c4df5
 	github.com/gobwas/glob v0.2.3
@@ -78,7 +79,6 @@ require (
 	github.com/containerd/errdefs v0.1.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/cpuguy83/dockercfg v0.3.1 // indirect
-	github.com/crowdstrike/gofalcon v0.8.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
