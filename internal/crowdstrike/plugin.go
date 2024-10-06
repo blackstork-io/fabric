@@ -1,6 +1,7 @@
 package crowdstrike
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -94,7 +95,7 @@ func makeDataSourceConfig() *dataspec.RootSpec {
 	}
 }
 
-func makeApiConfig(cfg *dataspec.Block) *falcon.ApiConfig {
+func makeApiConfig(ctx context.Context, cfg *dataspec.Block) *falcon.ApiConfig {
 	clientId := cfg.GetAttrVal("client_id").AsString()
 	clientSecret := cfg.GetAttrVal("client_secret").AsString()
 	apiCfg := &falcon.ApiConfig{
@@ -109,6 +110,7 @@ func makeApiConfig(cfg *dataspec.Block) *falcon.ApiConfig {
 	if !clientCloud.IsNull() {
 		apiCfg.Cloud = falcon.Cloud(clientCloud.AsString())
 	}
+	apiCfg.Context = ctx
 	return apiCfg
 }
 
