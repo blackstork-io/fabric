@@ -21,7 +21,7 @@ document "cspm_ioms" {
   title = "List of CSPM IOMS"
 
   content table {
-        rows = query_jq(".data.falcon_cspm_ioms.cspm.value")
+        rows = query_jq(".data.falcon_cspm_ioms.cspm")
         columns = [
             {
                 "header" = "Account Id"
