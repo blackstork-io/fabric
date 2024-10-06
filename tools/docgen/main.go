@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/blackstork-io/fabric/internal/builtin"
+	"github.com/blackstork-io/fabric/internal/crowdstrike"
 	"github.com/blackstork-io/fabric/internal/elastic"
 	"github.com/blackstork-io/fabric/internal/github"
 	"github.com/blackstork-io/fabric/internal/graphql"
@@ -278,6 +279,7 @@ func main() {
 		nistnvd.Plugin(version, nil),
 		snyk.Plugin(version, nil),
 		microsoft.Plugin(version, nil, nil, nil),
+		crowdstrike.Plugin(version, nil),
 	}
 	// generate markdown for each plugin
 	for _, p := range plugins {

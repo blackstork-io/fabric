@@ -134,6 +134,26 @@
     ]
   },
   {
+    "name": "blackstork/crowdstrike",
+    "version": "v0.4.2",
+    "shortname": "crowdstrike",
+    "resources": [
+      {
+        "name": "falcon_cspm_ioms",
+        "type": "data-source",
+        "config_params": [
+          "client_cloud",
+          "client_id",
+          "client_secret",
+          "member_cid"
+        ],
+        "arguments": [
+          "size"
+        ]
+      }
+    ]
+  },
+  {
     "name": "blackstork/elastic",
     "version": "v0.4.2",
     "shortname": "elastic",
