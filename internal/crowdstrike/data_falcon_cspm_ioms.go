@@ -35,7 +35,7 @@ func makeFalconCspmIomsDataSource(loader ClientLoaderFn) *plugin.DataSource {
 
 func fetchFalconCspmIomsData(loader ClientLoaderFn) plugin.RetrieveDataFunc {
 	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
-		cli, err := loader(makeApiConfig(params.Config))
+		cli, err := loader(makeApiConfig(ctx, params.Config))
 		if err != nil {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
