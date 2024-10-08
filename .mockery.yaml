@@ -59,6 +59,7 @@ packages:
       CspmRegistrationClient:
       DetectsClient:
       SpotVulnerabilitiesClient:
+      IntelClient:
   github.com/blackstork-io/fabric/plugin/resolver:
     config:
       inpackage: true

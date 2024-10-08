@@ -4,12 +4,12 @@ fabric {
     }
 }
 
-document "cspm_ioms" {
+document "intel_indicators" {
   meta {
     name = "example_document"
   }
 
-  data falcon_cspm_ioms "cspm" {
+  data falcon_intel_indicators "indicators" {
     config {
         client_id = ""
         client_secret = ""
@@ -18,18 +18,18 @@ document "cspm_ioms" {
     limit = 100
   }
   
-  title = "List of CSPM IOMS"
+  title = "List of Intel Indicators"
 
   content table {
-        rows = query_jq(".data.falcon_cspm_ioms.cspm")
+        rows = query_jq(".data.falcon_intel_indicators.indicators")
         columns = [
             {
-                "header" = "Account Id"
-                "value"  = "{{.row.value.account_id}}"
+                "header" = "Id"
+                "value"  = "{{.row.value.id}}"
             },
             {
-                "header" = "Cloud Provider"
-                "value"  = "{{.row.value.cloud_provider}}"
+                "header" = "Indicator"
+                "value"  = "{{.row.value.indicator}}"
             }
         ]
   }
