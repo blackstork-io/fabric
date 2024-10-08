@@ -67,6 +67,53 @@ func (_c *Client_CspmRegistration_Call) RunAndReturn(run func() crowdstrike.Cspm
 	return _c
 }
 
+// Intel provides a mock function with given fields:
+func (_m *Client) Intel() crowdstrike.IntelClient {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for Intel")
+	}
+
+	var r0 crowdstrike.IntelClient
+	if rf, ok := ret.Get(0).(func() crowdstrike.IntelClient); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(crowdstrike.IntelClient)
+		}
+	}
+
+	return r0
+}
+
+// Client_Intel_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Intel'
+type Client_Intel_Call struct {
+	*mock.Call
+}
+
+// Intel is a helper method to define mock.On call
+func (_e *Client_Expecter) Intel() *Client_Intel_Call {
+	return &Client_Intel_Call{Call: _e.mock.On("Intel")}
+}
+
+func (_c *Client_Intel_Call) Run(run func()) *Client_Intel_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Client_Intel_Call) Return(_a0 crowdstrike.IntelClient) *Client_Intel_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Client_Intel_Call) RunAndReturn(run func() crowdstrike.IntelClient) *Client_Intel_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewClient creates a new instance of Client. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewClient(t interface {

@@ -8,6 +8,7 @@ import (
 	"github.com/crowdstrike/gofalcon/falcon"
 	"github.com/crowdstrike/gofalcon/falcon/client"
 	"github.com/crowdstrike/gofalcon/falcon/client/cspm_registration"
+	"github.com/crowdstrike/gofalcon/falcon/client/intel"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
@@ -20,8 +21,13 @@ type CspmRegistrationClient interface {
 	GetConfigurationDetections(params *cspm_registration.GetConfigurationDetectionsParams, opts ...cspm_registration.ClientOption) (*cspm_registration.GetConfigurationDetectionsOK, error)
 }
 
+type IntelClient interface {
+	QueryIntelIndicatorEntities(params *intel.QueryIntelIndicatorEntitiesParams, opts ...intel.ClientOption) (*intel.QueryIntelIndicatorEntitiesOK, error)
+}
+
 type Client interface {
 	CspmRegistration() CspmRegistrationClient
+	Intel() IntelClient
 }
 
 type ClientAdapter struct {
@@ -30,6 +36,10 @@ type ClientAdapter struct {
 
 func (c *ClientAdapter) CspmRegistration() CspmRegistrationClient {
 	return c.client.CspmRegistration
+}
+
+func (c *ClientAdapter) Intel() IntelClient {
+	return c.client.Intel
 }
 
 type ClientLoaderFn func(cfg *falcon.ApiConfig) (client Client, err error)
@@ -50,7 +60,8 @@ func Plugin(version string, loader ClientLoaderFn) *plugin.Schema {
 		Name:    "blackstork/crowdstrike",
 		Version: version,
 		DataSources: plugin.DataSources{
-			"falcon_cspm_ioms": makeFalconCspmIomsDataSource(loader),
+			"falcon_cspm_ioms":        makeFalconCspmIomsDataSource(loader),
+			"falcon_intel_indicators": makeFalconIntelIndicatorsDataSource(loader),
 		},
 	}
 }

@@ -57,6 +57,7 @@ packages:
     interfaces:
       Client:
       CspmRegistrationClient:
+      IntelClient:
   github.com/blackstork-io/fabric/plugin/resolver:
     config:
       inpackage: true
