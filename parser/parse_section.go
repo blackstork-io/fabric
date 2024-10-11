@@ -81,6 +81,7 @@ func (db *DefinedBlocks) parseSection(ctx context.Context, section *definitions.
 			definitions.BlockKindMeta,
 			definitions.BlockKindSection,
 			definitions.BlockKindVars,
+			definitions.BlockKindDynamic,
 		}
 	}
 	validChildrenSet := utils.SliceToSet(validChildren)
@@ -157,6 +158,14 @@ func (db *DefinedBlocks) parseSection(ctx context.Context, section *definitions.
 			}
 			res.Content = append(res.Content, &definitions.ParsedContent{
 				Section: parsedSubSection,
+			})
+		case definitions.BlockKindDynamic:
+			dynamic, diag := db.ParseDynamic(ctx, block)
+			if diags.Extend(diag) {
+				continue
+			}
+			res.Content = append(res.Content, &definitions.ParsedContent{
+				Dynamic: dynamic,
 			})
 		}
 	}

@@ -93,6 +93,15 @@ func (db *DefinedBlocks) ParseDocument(ctx context.Context, d *definitions.Docum
 			doc.Content = append(doc.Content, &definitions.ParsedContent{
 				Section: parsedSection,
 			})
+		case definitions.BlockKindDynamic:
+			dynamic, diag := db.ParseDynamic(ctx, block)
+			if diags.Extend(diag) {
+				continue
+			}
+			doc.Content = append(doc.Content, &definitions.ParsedContent{
+				Dynamic: dynamic,
+			})
+
 		default:
 			diags.Append(definitions.NewNestingDiag(
 				d.Block.Type,
@@ -105,6 +114,7 @@ func (db *DefinedBlocks) ParseDocument(ctx context.Context, d *definitions.Docum
 					definitions.BlockKindVars,
 					definitions.BlockKindSection,
 					definitions.BlockKindPublish,
+					definitions.BlockKindDynamic,
 				},
 			))
 			continue

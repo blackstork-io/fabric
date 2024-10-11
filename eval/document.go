@@ -84,22 +84,28 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 		}
 	}
 
+	// evaluate/expand dynamic content/section blocks
+	children, diag := unwrapDynamicContent(ctx, doc.ContentBlocks, docDataCtx, nil)
+	if diags.Extend(diag) {
+		return nil, nil, diags
+	}
+
 	result := plugin.NewSection(0)
 	// create a position map for content blocks
-	posMap := make(map[int]uint32)
-	for i := range doc.ContentBlocks {
+	posMap := make(map[int]uint32, len(children))
+	for i := range children {
 		empty := new(plugin.ContentEmpty)
 		result.Add(empty, nil)
 		posMap[i] = empty.ID()
 	}
 	// sort content blocks by invocation order
-	invokeList := make([]int, 0, len(doc.ContentBlocks))
-	for i := range doc.ContentBlocks {
+	invokeList := make([]int, 0, len(children))
+	for i := range children {
 		invokeList = append(invokeList, i)
 	}
 	slices.SortStableFunc(invokeList, func(a, b int) int {
-		ao := doc.ContentBlocks[a].InvocationOrder()
-		bo := doc.ContentBlocks[b].InvocationOrder()
+		ao := children[a].InvocationOrder()
+		bo := children[b].InvocationOrder()
 		return ao.Weight() - bo.Weight()
 	})
 	// execute content blocks based on the invocation order
@@ -111,7 +117,7 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 		// TODO: if section, set section
 
 		// execute the content block
-		_, diag := doc.ContentBlocks[idx].RenderContent(ctx, dataCtx, result, result, posMap[idx])
+		_, diag := children[idx].RenderContent(ctx, dataCtx, result, result, posMap[idx])
 		if diags.Extend(diag) {
 			return nil, nil, diags
 		}
