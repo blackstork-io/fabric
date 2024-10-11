@@ -454,8 +454,12 @@ func EvalAttr(ctx context.Context, attr *Attr, dataCtx plugindata.Map) (val cty.
 }
 
 // DecodeAndEvalAttr decodes hclsyntax.Attribute into a Attr according to the given AttrSpec and evaluates it.
-func DecodeAndEvalAttr(ctx context.Context, hclAttr *hclsyntax.Attribute, spec *AttrSpec, dataCtx plugindata.Map) (attr *Attr, diags diagnostics.Diag) {
+func DecodeAndEvalAttr(ctx context.Context, hclAttr *hclsyntax.Attribute, spec *AttrSpec, dataCtx plugindata.Map) (val cty.Value, diags diagnostics.Diag) {
 	evalCtx := fabctx.GetEvalContext(ctx)
-	attr, diags = DecodeAttr(evalCtx, hclAttr, spec)
+	attr, diags := DecodeAttr(evalCtx, hclAttr, spec)
+	if diags.HasErrors() {
+		return
+	}
+	val, diags = EvalAttr(ctx, attr, dataCtx)
 	return
 }
