@@ -9,7 +9,6 @@ import (
 	"github.com/blackstork-io/fabric/pkg/encapsulator"
 )
 
-// Document and section are very similar conceptually.
 type Document struct {
 	Block *hclsyntax.Block
 	Name  string
