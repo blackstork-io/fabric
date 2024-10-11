@@ -143,11 +143,11 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 	// Parsing the ref
 	var refBaseConfig evaluation.Configuration
 
-	refBase, refFound := utils.Pop(body.Attributes, definitions.AttrRefBase)
+	refBase, refBaseFound := utils.Pop(body.Attributes, definitions.AttrRefBase)
 	pluginIsRef := plugin.IsRef()
 	switch {
-	case !pluginIsRef && !refFound: // happy path, no ref
-	case pluginIsRef && refFound: // happy path, ref present
+	case !pluginIsRef && !refBaseFound: // happy path, no ref
+	case pluginIsRef && refBaseFound: // happy path, ref present
 		baseEval, diag := db.parseRefBase(ctx, plugin, refBase.Expr)
 		if diags.Extend(diag) {
 			return
@@ -166,7 +166,7 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 
 		updateRefBody(invocation.Body, baseEval.Invocation.Body)
 
-	case pluginIsRef && !refFound:
+	case pluginIsRef && !refBaseFound:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Ref block missing 'base' argument",
@@ -175,7 +175,7 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 			Context:  &body.SrcRange,
 		})
 		return
-	case !pluginIsRef && refFound:
+	case !pluginIsRef && refBaseFound:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
 			Summary:  "Non-ref block contains 'base' argument",
