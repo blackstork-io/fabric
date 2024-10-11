@@ -27,6 +27,7 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map,
 	if block.meta != nil {
 		sectionData[definitions.BlockKindMeta] = block.meta.AsPluginData()
 	}
+	dataCtx[definitions.BlockKindSection] = sectionData
 	section := new(plugin.ContentSection)
 	if parent != nil {
 		err := parent.Add(section, &plugin.Location{
@@ -40,26 +41,31 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map,
 			}}
 		}
 	}
+
+	children, diag := unwrapDynamicContent(ctx, block.children, dataCtx, nil)
+	if diags.Extend(diag) {
+		return nil, diags
+	}
+
 	// create a position map for content blocks
 	posMap := make(map[int]uint32)
-	for i := range block.children {
+	for i := range children {
 		empty := new(plugin.ContentEmpty)
 		section.Add(empty, nil)
 		posMap[i] = empty.ID()
 	}
 	// sort content blocks by invocation order
-	invokeList := make([]int, 0, len(block.children))
-	for i := range block.children {
+	invokeList := make([]int, 0, len(children))
+	for i := range children {
 		invokeList = append(invokeList, i)
 	}
 	slices.SortStableFunc(invokeList, func(a, b int) int {
-		ao := block.children[a].InvocationOrder()
-		bo := block.children[b].InvocationOrder()
+		ao := children[a].InvocationOrder()
+		bo := children[b].InvocationOrder()
 		return ao.Weight() - bo.Weight()
 	})
-	dataCtx[definitions.BlockKindSection] = sectionData
 
-	diag := ApplyVars(ctx, block.vars, dataCtx)
+	diag = ApplyVars(ctx, block.vars, dataCtx)
 	if diags.Extend(diag) {
 		return nil, diags
 	}
@@ -78,7 +84,7 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map,
 		sectionData[definitions.BlockKindContent] = section.AsData()
 
 		// execute the content block
-		_, diag := block.children[idx].RenderContent(ctx, maps.Clone(dataCtx), doc, section, posMap[idx])
+		_, diag := children[idx].RenderContent(ctx, maps.Clone(dataCtx), doc, section, posMap[idx])
 		if diags.Extend(diag) {
 			return nil, diags
 		}

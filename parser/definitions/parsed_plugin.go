@@ -18,4 +18,5 @@ type ParsedPlugin struct {
 type ParsedContent struct {
 	Section *ParsedSection
 	Plugin  *ParsedPlugin
+	Dynamic *ParsedDynamic
 }

@@ -15,12 +15,15 @@ const (
 	BlockKindVars         = "vars"
 	BlockKindSection      = "section"
 	BlockKindGlobalConfig = "fabric"
+	BlockKindDynamic      = "dynamic"
 
 	PluginTypeRef    = "ref"
 	AttrRefBase      = "base"
 	AttrTitle        = "title"
 	AttrLocalVar     = "local_var"
 	AttrRequiredVars = "required_vars"
+	AttrDynamicCond  = "condition"
+	AttrDynamicItems = "items"
 )
 
 type FabricBlock interface {
