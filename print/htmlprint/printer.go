@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"strings"
 
 	"github.com/pelletier/go-toml/v2"
 	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer/html"
 	"gopkg.in/yaml.v3"
@@ -86,7 +84,7 @@ func (p Printer) Print(ctx context.Context, w io.Writer, el plugin.Content) (err
 		return err
 	}
 	md := goldmark.New(
-		goldmark.WithExtensions(extension.GFM),
+		plugin.BaseMarkdownOptions,
 		goldmark.WithParserOptions(
 			parser.WithAutoHeadingID(),
 		),
@@ -151,9 +149,9 @@ func (p Printer) firstTitle(el plugin.Content) (string, bool) {
 	case *plugin.ContentElement:
 		meta := el.Meta()
 		if meta.Plugin == "blackstork/builtin" && meta.Provider == "title" {
-			return strings.TrimSpace(
-				strings.TrimPrefix(el.Markdown, "#"),
-			), true
+			return string(bytes.TrimSpace(
+				bytes.TrimPrefix(el.AsMarkdownSrc(), []byte("#")),
+			)), true
 		}
 	}
 	return "", false
@@ -179,16 +177,16 @@ func (p Printer) extractFrontmatter(el plugin.Content) (*plugin.ContentElement, 
 }
 
 func (p Printer) parseFrontmatter(fm *plugin.ContentElement) (result map[string]any, err error) {
-	str := fm.Markdown
+	str := fm.AsMarkdownSrc()
 	switch {
-	case strings.HasPrefix(str, "{"):
-		err = json.Unmarshal([]byte(str), &result)
-	case strings.HasPrefix(str, "---"):
-		str = strings.Trim(str, "-")
-		err = yaml.Unmarshal([]byte(str), &result)
-	case strings.HasPrefix(str, "+++"):
-		str = strings.Trim(str, "+")
-		err = toml.Unmarshal([]byte(str), &result)
+	case bytes.HasPrefix(str, []byte("{")):
+		err = json.Unmarshal(str, &result)
+	case bytes.HasPrefix(str, []byte("---")):
+		str = bytes.Trim(str, "-")
+		err = yaml.Unmarshal(str, &result)
+	case bytes.HasPrefix(str, []byte("+++")):
+		str = bytes.Trim(str, "+")
+		err = toml.Unmarshal(str, &result)
 	default:
 		err = fmt.Errorf("invalid frontmatter format")
 	}

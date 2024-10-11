@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin/ast/nodes"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
@@ -102,7 +103,8 @@ func (p *Schema) ProvideContent(ctx context.Context, name string, params *Provid
 	if diags.HasErrors() {
 		return nil, diags
 	}
-	result.Content.setMeta(&ContentMeta{
+	// TODO: set metadata in content provider
+	result.Content.setMeta(&nodes.ContentMeta{
 		Provider: name,
 		Plugin:   p.Name,
 		Version:  p.Version,

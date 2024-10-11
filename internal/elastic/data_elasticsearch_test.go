@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	es "github.com/elastic/go-elasticsearch/v8"
@@ -51,8 +52,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.ctx, "docker.io/elasticsearch:8.9.0",
 		elasticsearch.WithPassword("password123"),
 	)
+	if err != nil {
+		if strings.Contains(err.Error(), "Cannot connect to the Docker daemon") {
+			s.T().Skip("Docker not available for integration tests")
+		} else {
+			s.Require().NoError(err, "failed to start elasticsearch container")
+		}
+	}
 
-	s.Require().NoError(err, "failed to start elasticsearch container")
 	s.container = container
 	client, err := es.NewClient(es.Config{
 		Addresses: []string{

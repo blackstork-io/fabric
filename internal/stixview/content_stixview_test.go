@@ -49,6 +49,7 @@ func (s *StixViewTestSuite) TestGistID() {
 		`<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`,
 		`<div data-stix-gist-id="123">`,
 		`</div>`,
+		``,
 	}, "\n"), mdprint.PrintString(res.Content))
 }
 
@@ -68,6 +69,7 @@ func (s *StixViewTestSuite) TestStixURL() {
 		`<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`,
 		`<div data-stix-url="https://example.com/stix.json">`,
 		`</div>`,
+		``,
 	}, "\n"), mdprint.PrintString(res.Content))
 }
 
@@ -97,6 +99,7 @@ func (s *StixViewTestSuite) TestAllArgs() {
 		`<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`,
 		`<div data-stix-gist-id="123" data-show-sidebar="true" data-show-footer="true" data-show-tlp-as-tags="true" data-caption="test caption" data-show-marking-nodes="true" data-show-labels="true" data-show-idrefs="true" data-graph-width="400" data-graph-height="300">`,
 		`</div>`,
+		``,
 	}, "\n"), mdprint.PrintString(res.Content))
 }
 
