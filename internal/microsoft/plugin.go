@@ -13,6 +13,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/microsoft/client"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type ClientLoadFn func() client.Client
@@ -22,7 +23,11 @@ var DefaultClientLoader ClientLoadFn = client.New
 type AzureOpenaiClientLoadFn func(azureOpenAIKey string, azureOpenAIEndpoint string) (client AzureOpenaiClient, err error)
 
 type AzureOpenaiClient interface {
-	GetCompletions(ctx context.Context, body azopenai.CompletionsOptions, options *azopenai.GetCompletionsOptions) (azopenai.GetCompletionsResponse, error)
+	GetCompletions(
+		ctx context.Context,
+		body azopenai.CompletionsOptions,
+		options *azopenai.GetCompletionsOptions,
+	) (azopenai.GetCompletionsResponse, error)
 }
 
 var DefaultAzureOpenAIClientLoader AzureOpenaiClientLoadFn = func(azureOpenAIKey string, azureOpenAIEndpoint string) (client AzureOpenaiClient, err error) {
@@ -32,7 +37,17 @@ var DefaultAzureOpenAIClientLoader AzureOpenaiClientLoadFn = func(azureOpenAIKey
 }
 
 type MicrosoftGraphClient interface {
-	QueryGraph(ctx context.Context, endpoint string, queryParams url.Values) (result interface{}, err error)
+	QueryGraph(
+		ctx context.Context,
+		endpoint string,
+		queryParams url.Values,
+		size int,
+		onlyObjects bool,
+	) (objects plugindata.Data, err error)
+	QueryGraphObject(
+		ctx context.Context,
+		endpoint string,
+	) (result plugindata.Data, err error)
 }
 
 type AcquireTokenFn func(ctx context.Context, tenantId string, clientId string, cred confidential.Credential) (string, error)
@@ -99,7 +114,12 @@ func MakeDefaultMicrosoftGraphClientLoader(tokenFn AcquireTokenFn) MicrosoftGrap
 	}
 }
 
-func Plugin(version string, loader ClientLoadFn, openAiClientLoader AzureOpenaiClientLoadFn, graphClientLoader MicrosoftGraphClientLoadFn) *plugin.Schema {
+func Plugin(
+	version string,
+	loader ClientLoadFn,
+	openAiClientLoader AzureOpenaiClientLoadFn,
+	graphClientLoader MicrosoftGraphClientLoadFn,
+) *plugin.Schema {
 	if loader == nil {
 		loader = DefaultClientLoader
 	}

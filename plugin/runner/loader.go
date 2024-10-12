@@ -167,8 +167,9 @@ func (l *loader) registerPublisher(ctx context.Context, name string, schema *plu
 }
 
 func (l *loader) registerPlugin(ctx context.Context, schema *plugin.Schema, closefn func() error) diagnostics.Diag {
-	l.logger.DebugContext(ctx, "Registering plugin", "name", schema.Name, "version", schema.Version)
+	l.logger.DebugContext(ctx, "Registering a plugin", "name", schema.Name, "version", schema.Version)
 	if diags := schema.Validate(); diags.HasErrors() {
+		l.logger.ErrorContext(ctx, "Validation errors while registering a plugin", "name", schema.Name, "version", schema.Version)
 		return diags
 	}
 	schema = plugin.WithLogging(schema, l.logger)
