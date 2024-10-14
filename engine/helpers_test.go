@@ -16,30 +16,51 @@ import (
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
-func renderTest(t *testing.T, testName string, files []string, docName string, expectedResult []string, diagAsserts diagtest.Asserts) {
+type (
+	optDocName      string
+	optRequiredTags []string
+)
+
+func renderTest(t *testing.T, testName string, files []string, expectedResult []string, opts ...any) {
 	t.Helper()
-	t.Run(testName, func(t *testing.T) {
-		t.Helper()
-		sourceDir := fstest.MapFS{}
-		for i, content := range files {
-			sourceDir[fmt.Sprintf("file_%d.fabric", i)] = &fstest.MapFile{
-				Data: []byte(content),
-				Mode: 0o777,
-			}
+	sourceDir := fstest.MapFS{}
+	for i, content := range files {
+		sourceDir[fmt.Sprintf("file_%d.fabric", i)] = &fstest.MapFile{
+			Data: []byte(content),
+			Mode: 0o777,
 		}
-		eng := New()
-		defer func() {
-			eng.Cleanup()
-		}()
+	}
+	eng := New()
+	ctx := fabctx.New(fabctx.NoSignals)
+
+	target := "test-doc"
+	var requiredTags []string
+	diagAsserts := diagtest.Asserts{}
+
+	for _, opt := range opts {
+		switch v := opt.(type) {
+		case diagtest.Asserts:
+			diagAsserts = v
+		case optDocName:
+			target = string(v)
+		case optRequiredTags:
+			requiredTags = []string(v)
+		default:
+			t.Fatalf("unknown option type: %T", v)
+		}
+	}
+
+	t.Run(testName, func(t *testing.T) {
+		defer eng.Cleanup()
 
 		var res string
-		ctx := fabctx.New(fabctx.NoSignals)
 		diags := eng.ParseDir(ctx, sourceDir)
 		if !diags.HasErrors() {
 			if !diags.Extend(eng.LoadPluginResolver(ctx, false)) && !diags.Extend(eng.LoadPluginRunner(ctx)) {
-				_, content, _, diag := eng.RenderContent(ctx, docName)
-				diags.Extend(diag)
-				res = mdprint.PrintString(content)
+				_, content, _, diag := eng.RenderContent(ctx, target, requiredTags)
+				if !diags.Extend(diag) {
+					res = mdprint.PrintString(content)
+				}
 			}
 		}
 
@@ -47,11 +68,14 @@ func renderTest(t *testing.T, testName string, files []string, docName string, e
 			// so nil == []string{}
 			assert.Empty(t, res)
 		} else {
-			assert.EqualValues(
+			ok := assert.EqualValues(
 				t,
 				strings.Join(expectedResult, "\n\n"),
 				res,
 			)
+			if !ok {
+				t.Logf("Got:\n\n%s", res)
+			}
 		}
 		diagAsserts.AssertMatch(t, diags, eng.FileMap())
 	})
