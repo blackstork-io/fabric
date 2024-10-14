@@ -52,14 +52,14 @@ func (t *transformer) transform(val cty.Value) (_ cty.Value, diags diagnostics.D
 			// TODO: warn in these cases
 			switch {
 			case val.IsNull():
-				slog.Debug("Null dererred value", "path", t.path.NewErrorf("path"))
+				slog.Debug("Null deferred value", "path", t.path.NewErrorf("path"))
 				val = cty.NullVal(cty.DynamicPseudoType)
 			case !val.IsKnown():
-				slog.Debug("Unknown dererred value", "path", t.path.NewErrorf("path"))
+				slog.Debug("Unknown deferred value", "path", t.path.NewErrorf("path"))
 				val = cty.UnknownVal(cty.DynamicPseudoType)
 			default:
 				eval := deferred.Type.MustFromCty(val)
-				val, diags = eval.Eval(t.ctx, t.dataCtx)
+				val, diags = eval.DeferredEval(t.ctx, t.dataCtx)
 				diags.Refine(diagnostics.AddPath(t.path))
 			}
 		case plugindata.Encapsulated.CtyTypeEqual(ty):
@@ -101,7 +101,7 @@ func (t *transformer) transform(val cty.Value) (_ cty.Value, diags diagnostics.D
 		case ty.IsSetType() && cty.CanSetVal(vals):
 			val = cty.SetVal(vals)
 		default:
-			// Lists are replaced by tuples if no longer homogenious.
+			// Lists are replaced by tuples if no longer homogenous.
 			// Sets are attempted to be converted to set type.
 			val = cty.TupleVal(vals)
 			if ty.IsSetType() {
@@ -193,7 +193,30 @@ func DecodeAndEvalBlock(ctx context.Context, block *hclsyntax.Block, rootSpec *R
 	return
 }
 
+// EvalBlockCopy evaluates deferred values in the given block and validates the attributes.
+// The original block is not modified.
+func EvalBlockCopy(ctx context.Context, block *Block, dataCtx plugindata.Map) (evaluatedBlock *Block, diags diagnostics.Diag) {
+	if block == nil {
+		return
+	}
+	blockC := *block
+	evaluatedBlock = &blockC
+
+	evaluatedBlock.Blocks = utils.FnMapDiags(&diags, block.Blocks, func(block *Block) (*Block, diagnostics.Diag) {
+		return EvalBlockCopy(ctx, block, dataCtx)
+	})
+	evaluatedBlock.Attrs = utils.MapMapDiags(&diags, block.Attrs, func(attr *Attr) (*Attr, diagnostics.Diag) {
+		attrC := *attr
+		var diag diagnostics.Diag
+		attrC.Value, diag = EvalAttr(ctx, attr, dataCtx)
+		return &attrC, diag
+	})
+	return
+}
+
 // EvalBlock evaluates deferred values in the given block and validates the attributes.
+// WARNING: This function modifies the input block (its attributes and blocks) in place.
+// Not suitable for evaluating deferred blocks
 func EvalBlock(ctx context.Context, block *Block, dataCtx plugindata.Map) (diags diagnostics.Diag) {
 	if block == nil {
 		return
@@ -202,31 +225,9 @@ func EvalBlock(ctx context.Context, block *Block, dataCtx plugindata.Map) (diags
 		diags.Extend(EvalBlock(ctx, block, dataCtx))
 	}
 	for _, attr := range block.Attrs {
-		// deferred eval transform
-		var diag diagnostics.Diag
-		attr.Value, diag = EvaluateDeferred(ctx, dataCtx, attr)
-		if diags.Extend(diag) {
-			continue
-		}
-		if attr.spec == nil {
-			continue // can't convert
-		}
-		// convert
-
-		var err error
-		attr.Value, err = convert.Convert(attr.Value, attr.spec.Type)
-		if err != nil {
-			diags.Extend(diagnostics.FromErr(
-				err,
-				diagnostics.DefaultSummary("Incorrect attribute value type"),
-				diagnostics.DefaultSubject(attr.ValueRange),
-			))
-			continue
-		}
-		if attr.spec.Constraints.Is(constraint.TrimSpace) {
-			attr.Value = trimSpace(attr.Value)
-		}
-		diags.Extend(attr.spec.ValidateValue(attr.Value).Refine(diagnostics.DefaultSubject(attr.ValueRange)))
+		val, diag := EvalAttr(ctx, attr, dataCtx)
+		diags.Extend(diag)
+		attr.Value = val
 	}
 	return
 }
