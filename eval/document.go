@@ -54,7 +54,23 @@ func (doc *Document) FetchData(ctx context.Context) (plugindata.Data, diagnostic
 	return result, diags
 }
 
-func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Map) (plugin.Content, plugindata.Data, diagnostics.Diag) {
+func filterChildrenByTags(children []*Content, requiredTags []string) []*Content {
+	return slices.DeleteFunc(children, func(child *Content) bool {
+		switch {
+		case child.Plugin != nil:
+			return !child.Plugin.Meta.MatchesTags(requiredTags)
+		case child.Section != nil:
+			if child.Section.meta.MatchesTags(requiredTags) {
+				return false
+			}
+			child.Section.children = filterChildrenByTags(child.Section.children, requiredTags)
+			return len(child.Section.children) == 0
+		}
+		return false
+	})
+}
+
+func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Map, requiredTags []string) (*plugin.ContentSection, plugindata.Data, diagnostics.Diag) {
 	logger := *slog.Default()
 	logger.DebugContext(ctx, "Fetching data for the document template")
 	data, diags := doc.FetchData(ctx)
@@ -88,6 +104,10 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 	children, diag := unwrapDynamicContent(ctx, doc.ContentBlocks, docDataCtx, nil)
 	if diags.Extend(diag) {
 		return nil, nil, diags
+	}
+	// filter out content blocks that do not match tags
+	if !doc.Meta.MatchesTags(requiredTags) {
+		children = filterChildrenByTags(children, requiredTags)
 	}
 
 	result := plugin.NewSection(0)

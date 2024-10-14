@@ -32,7 +32,6 @@ func TestEngineVarsHandling(t *testing.T) {
 				}
 			}
 		`},
-		"test-doc",
 		[]string{
 			`base:
 {
@@ -46,7 +45,6 @@ func TestEngineVarsHandling(t *testing.T) {
   "q_b": "unique to base"
 }`,
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "refs query in override",
@@ -71,7 +69,6 @@ func TestEngineVarsHandling(t *testing.T) {
 				}
 			}
 		`},
-		"test-doc",
 		[]string{
 			`base:
 {
@@ -83,7 +80,6 @@ func TestEngineVarsHandling(t *testing.T) {
   "b": "redefined"
 }`,
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "inheritance",
@@ -111,7 +107,6 @@ func TestEngineVarsHandling(t *testing.T) {
 			}
 		  }
 		`},
-		"test-doc",
 		[]string{
 			`1: {
   "contentVar": "contentVar",
@@ -126,7 +121,6 @@ func TestEngineVarsHandling(t *testing.T) {
   "docVar": "docVar"
 }`,
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "combined inheritance and shadowing",
@@ -155,7 +149,6 @@ func TestEngineVarsHandling(t *testing.T) {
 				}
 			}
 		`},
-		"test-doc",
 		[]string{
 			`{
   "v1": 1,
@@ -168,7 +161,6 @@ func TestEngineVarsHandling(t *testing.T) {
   "v8": 8
 }`,
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "combined inheritance and shadowing section ref",
@@ -204,7 +196,6 @@ func TestEngineVarsHandling(t *testing.T) {
 				}
 			}
 		`},
-		"test-doc",
 		[]string{
 			`{
   "v1": 1,
@@ -217,7 +208,6 @@ func TestEngineVarsHandling(t *testing.T) {
   "v8": 8
 }`,
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "deep nesting and complex result type",
@@ -243,7 +233,6 @@ func TestEngineVarsHandling(t *testing.T) {
 				}
 			}
 		`},
-		"test-doc",
 		[]string{
 			`{
   "a": {
@@ -264,7 +253,6 @@ func TestEngineVarsHandling(t *testing.T) {
   }
 }`,
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "local vars",
@@ -276,13 +264,11 @@ func TestEngineVarsHandling(t *testing.T) {
 				}
 			}
 		`},
-		"test-doc",
 		[]string{
 			`{
   "local": "local"
 }`,
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "local vars with var local redefinition",
@@ -297,7 +283,6 @@ func TestEngineVarsHandling(t *testing.T) {
 				}
 			}
 		`},
-		"test-doc",
 		nil,
 		diagtest.Asserts{
 			{
@@ -319,7 +304,6 @@ func TestEngineVarsHandling(t *testing.T) {
 				}
 			}
 		`},
-		"test-doc",
 		[]string{
 			`{
   "local": "local",
@@ -343,13 +327,11 @@ func TestEngineVarsHandling(t *testing.T) {
 				}
 			}
 		`},
-		"test-doc",
 		[]string{
 			`{
   "local": "local"
 }`,
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "local vars sections",
@@ -363,13 +345,11 @@ func TestEngineVarsHandling(t *testing.T) {
 				}
 			}
 		`},
-		"test-doc",
 		[]string{
 			`{
   "local": "local"
 }`,
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "required vars in document",
@@ -384,11 +364,10 @@ func TestEngineVarsHandling(t *testing.T) {
 				}
 			}
 		`},
-		"example",
 		[]string{
 			`Simple text`,
 		},
-		diagtest.Asserts{},
+		optDocName("example"),
 	)
 	renderTest(
 		t, "required vars missing in document",
@@ -400,7 +379,6 @@ func TestEngineVarsHandling(t *testing.T) {
 				}
 			}
 		`},
-		"example",
 		[]string{},
 		diagtest.Asserts{
 			{
@@ -409,6 +387,7 @@ func TestEngineVarsHandling(t *testing.T) {
 				diagtest.DetailEquals("block requires 'now' var which is not set."),
 			},
 		},
+		optDocName("example"),
 	)
 	renderTest(
 		t, "required vars in content",
@@ -444,9 +423,8 @@ func TestEngineVarsHandling(t *testing.T) {
 				}
 			}
 		`},
-		"bar",
 		[]string{"Hello, Alice\n\nGreetings, Alice"},
-		diagtest.Asserts{},
+		optDocName("bar"),
 	)
 	renderTest(
 		t, "required vars missing in content",
@@ -462,7 +440,6 @@ func TestEngineVarsHandling(t *testing.T) {
 				}
 			}
 		`},
-		"bar",
 		[]string{},
 		diagtest.Asserts{
 			{
@@ -471,6 +448,7 @@ func TestEngineVarsHandling(t *testing.T) {
 				diagtest.DetailEquals("block requires 'name' var which is not set."),
 			},
 		},
+		optDocName("bar"),
 	)
 	renderTest(
 		t, "required vars in section",
@@ -487,12 +465,11 @@ func TestEngineVarsHandling(t *testing.T) {
 						name = "Alice"
 					}
 					base = section.foo
-				}		
+				}
 			}
 		`},
-		"bar",
 		[]string{"Hello, Alice"},
-		diagtest.Asserts{},
+		optDocName("bar"),
 	)
 	renderTest(
 		t, "required vars missing in section",
@@ -506,10 +483,9 @@ func TestEngineVarsHandling(t *testing.T) {
 			document "bar" {
 				section ref {
 					base = section.foo
-				}		
+				}
 			}
 		`},
-		"bar",
 		[]string{},
 		diagtest.Asserts{
 			{
@@ -518,5 +494,6 @@ func TestEngineVarsHandling(t *testing.T) {
 				diagtest.DetailEquals("block requires 'name' var which is not set."),
 			},
 		},
+		optDocName("bar"),
 	)
 }
