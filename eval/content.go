@@ -50,7 +50,7 @@ func LoadContent(ctx context.Context, providers ContentProviders, node *definiti
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Unsupported content block",
-			Detail:   "Content block must be either 'content' or 'section'",
+			Detail:   "Content block must be either 'content', 'section' or 'dynamic'",
 		})
 	}
 	if diags.HasErrors() {

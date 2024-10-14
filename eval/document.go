@@ -100,7 +100,7 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 		}
 	}
 
-	// evaluate/expand dynamic content/section blocks
+	// evaluate/expand dynamic blocks
 	children, diag := unwrapDynamicContent(ctx, doc.ContentBlocks, docDataCtx, nil)
 	if diags.Extend(diag) {
 		return nil, nil, diags

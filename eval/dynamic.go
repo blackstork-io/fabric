@@ -13,6 +13,7 @@ import (
 	"github.com/blackstork-io/fabric/parser"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/deferred"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
@@ -46,8 +47,10 @@ func LoadDynamic(ctx context.Context, providers ContentProviders, node *definiti
 	evalCtx := fabctx.GetEvalContext(deferred.WithQueryFuncs(ctx))
 	block.condition, diag = dataspec.DecodeAttr(evalCtx, node.Condition, dynamicBlockCond)
 	diags.Extend(diag)
-	block.items, diag = dataspec.DecodeAttr(evalCtx, node.Items, dynamicBlockItems)
-	diags.Extend(diag)
+	if node.Items != nil {
+		block.items, diag = dataspec.DecodeAttr(evalCtx, node.Items, dynamicBlockItems)
+		diags.Extend(diag)
+	}
 
 	for _, child := range node.Content {
 		decoded, diag := LoadContent(ctx, providers, child)
@@ -57,40 +60,49 @@ func LoadDynamic(ctx context.Context, providers ContentProviders, node *definiti
 	return block, diags
 }
 
+func addDynamicVars(child *Content, dynVarVals *definitions.ParsedVars) *Content {
+	if child.Plugin != nil {
+		chAction := *child.Plugin
+		chAction.Vars = chAction.Vars.MergeWithBaseVars(dynVarVals)
+
+		return &Content{
+			Plugin: &chAction,
+		}
+	}
+	if child.Section != nil {
+		chSection := *child.Section
+		chSection.vars = chSection.vars.MergeWithBaseVars(dynVarVals)
+		chSection.children = utils.FnMap(chSection.children, func(child *Content) *Content {
+			return addDynamicVars(child, dynVarVals)
+		})
+		return &Content{
+			Section: &chSection,
+		}
+	}
+	if child.Dynamic != nil {
+		if child.Dynamic.items == nil {
+			chDynamic := *child.Dynamic
+			chDynamic.children = utils.FnMap(chDynamic.children, func(child *Content) *Content {
+				return addDynamicVars(child, dynVarVals)
+			})
+			return &Content{
+				Dynamic: &chDynamic,
+			}
+		}
+	}
+	return child
+}
+
 func unwrapDynamicContent(ctx context.Context, children []*Content, dataCtx plugindata.Map, dynVarVals *definitions.ParsedVars) (res []*Content, diags diagnostics.Diag) {
 	ctx = deferred.WithQueryFuncs(ctx)
 	res = make([]*Content, 0, len(children))
 	// unwrap dynamic content
 	for _, child := range children {
+		if !dynVarVals.Empty() {
+			child = addDynamicVars(child, dynVarVals)
+		}
 		if child.Dynamic == nil {
-			// add dynamic var to clone of child's vars
-			if dynVarVals.Empty() {
-				// no dynamic var present, add child as is
-				res = append(res, child)
-				continue
-			}
-			// dynamic var present, add it to child's vars
-			if child.Plugin != nil {
-				chAction := *child.Plugin
-				chAction.Vars = chAction.Vars.MergeWithBaseVars(dynVarVals)
-
-				res = append(res, &Content{
-					Plugin: &chAction,
-				})
-			} else if child.Section != nil {
-				chSection := *child.Section
-				chSection.vars = chSection.vars.MergeWithBaseVars(dynVarVals)
-
-				res = append(res, &Content{
-					Section: &chSection,
-				})
-			} else {
-				diags.Append(&hcl.Diagnostic{
-					Severity: hcl.DiagError,
-					Summary:  "Invalid content block",
-					Detail:   "Content block must be either a plugin or a section",
-				})
-			}
+			res = append(res, child)
 			continue
 		}
 		dynDataCtx := dataCtx
@@ -187,7 +199,9 @@ func unwrapDynamicContent(ctx context.Context, children []*Content, dataCtx plug
 }
 
 func parseDynVars(ctx context.Context, idx, val plugindata.Data, rng hcl.Range) (parsed *definitions.ParsedVars, diags diagnostics.Diag) {
-	// use existing vars parser by creating a synthetic dynamic_vars block
+	// use existing vars parser by creating a synthetic (dynamic_)vars block
+	const itemIndex = "dynamic_item_index"
+	const item = "dynamic_item"
 	return parser.ParseVars(ctx, &hclsyntax.Block{
 		Type:            "dynamic_vars",
 		TypeRange:       rng,
@@ -197,8 +211,8 @@ func parseDynVars(ctx context.Context, idx, val plugindata.Data, rng hcl.Range) 
 			SrcRange: rng,
 			EndRange: rng,
 			Attributes: map[string]*hclsyntax.Attribute{
-				"dynamic_item_index": {
-					Name: "dynamic_item_index",
+				itemIndex: {
+					Name: itemIndex,
 					Expr: &hclsyntax.LiteralValueExpr{
 						Val: plugindata.Encapsulated.ValToCty(idx),
 					},
@@ -206,8 +220,8 @@ func parseDynVars(ctx context.Context, idx, val plugindata.Data, rng hcl.Range) 
 					NameRange:   rng,
 					EqualsRange: rng,
 				},
-				"dynamic_item": {
-					Name: "dynamic_item",
+				item: {
+					Name: item,
 					Expr: &hclsyntax.LiteralValueExpr{
 						Val: plugindata.Encapsulated.ValToCty(val),
 					},

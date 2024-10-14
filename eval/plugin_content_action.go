@@ -41,15 +41,14 @@ func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx pl
 			return
 		}
 	}
-
-	diags.Extend(dataspec.EvalBlock(ctx, action.Args, dataCtx))
-	if diags.HasErrors() {
+	evaluatedBlock, diag := dataspec.EvalBlockCopy(ctx, action.Args, dataCtx)
+	if diags.Extend(diag) {
 		return
 	}
 
 	res, diag = action.Provider.Execute(ctx, &plugin.ProvideContentParams{
 		Config:      action.Config,
-		Args:        action.Args,
+		Args:        evaluatedBlock,
 		DataContext: dataCtx,
 		ContentID:   contentID,
 	})
