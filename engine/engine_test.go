@@ -571,7 +571,9 @@ func TestEngineRenderContent(t *testing.T) {
 			`,
 		},
 		[]string{},
-		diagtest.Asserts{},
+		diagtest.Asserts{
+			{diagtest.IsWarning, diagtest.SummaryContains("No content")},
+		},
 	)
 	renderTest(
 		t, "Data ref name warning",
@@ -593,6 +595,7 @@ func TestEngineRenderContent(t *testing.T) {
 		[]string{},
 		diagtest.Asserts{
 			{diagtest.IsWarning, diagtest.SummaryContains("Data conflict")},
+			{diagtest.IsWarning, diagtest.SummaryContains("No content")},
 		},
 	)
 	renderTest(
