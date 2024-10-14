@@ -451,6 +451,15 @@ func (e *Engine) RenderContent(ctx context.Context, target string, requiredTags 
 	if diags.Extend(diag) {
 		return nil, nil, nil, diags
 	}
+
+	if content.IsEmpty() {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagWarning,
+			Summary:  "No content to render",
+			Detail:   "Document did not produce any content, perhaps it's empty or '--with-meta-tags' filter is too strict?",
+			Subject:  doc.Source.Block.DefRange().Ptr(),
+		})
+	}
 	return doc, content, data, diags
 }
 
