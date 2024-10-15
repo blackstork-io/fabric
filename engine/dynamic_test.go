@@ -2,6 +2,8 @@ package engine
 
 import (
 	"testing"
+
+	"github.com/blackstork-io/fabric/pkg/diagnostics/diagtest"
 )
 
 func TestDynamic(t *testing.T) {
@@ -430,5 +432,24 @@ func TestDynamic(t *testing.T) {
 			"5. XYZ",
 			"4. foo",
 		},
+	)
+	renderTest(
+		t, "warn on empty",
+		[]string{`
+			document "test-doc" {
+				dynamic {
+					content text {
+						value = "hello"
+					}
+				}
+			}
+		`},
+		[]string{
+			"hello",
+		},
+		diagtest.Asserts{{
+			diagtest.IsWarning,
+			diagtest.DetailContains("Dynamic block missing", "can be removed"),
+		}},
 	)
 }

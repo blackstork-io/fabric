@@ -28,7 +28,6 @@ func (db *DefinedBlocks) ParseDynamic(ctx context.Context, block *hclsyntax.Bloc
 			Detail:   "Dynamic block missing both 'items' and 'condition' can be removed, as it has no effect",
 			Subject:  block.DefRange().Ptr(),
 		})
-		return
 	}
 
 	if res.Condition == nil {
