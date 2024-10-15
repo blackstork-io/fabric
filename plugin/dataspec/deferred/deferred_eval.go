@@ -44,7 +44,7 @@ func init() {
 					// Avoid double wrapping (shouldn't happen in practice)
 					return defEvalVal, nil
 				}
-				evaluable := val.(Evaluable) //nolint:errcheck // we know it's Evaluable
+				evaluable := val.(Evaluable) //nolint // we know it's Evaluable
 				return &deferredEval{
 					Evaluable: evaluable,
 				}, nil
