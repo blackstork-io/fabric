@@ -97,6 +97,14 @@ func (db *DefinedBlocks) ParseDynamic(ctx context.Context, block *hclsyntax.Bloc
 			})
 		}
 	}
+	if len(res.Content) == 0 {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagWarning,
+			Summary:  "Dynamic block without content",
+			Detail:   "Dynamic block without any content can be removed, as it has no effect",
+			Subject:  block.DefRange().Ptr(),
+		})
+	}
 	parsed = &res
 	return
 }
