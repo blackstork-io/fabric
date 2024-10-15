@@ -94,14 +94,14 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 
 	// verify required vars
 	if len(doc.RequiredVars) > 0 {
-		diag := verifyRequiredVars(docDataCtx, doc.RequiredVars, doc.Source.Block)
+		diag = verifyRequiredVars(docDataCtx, doc.RequiredVars, doc.Source.Block)
 		if diags.Extend(diag) {
 			return nil, nil, diags
 		}
 	}
 
 	// evaluate/expand dynamic blocks
-	children, diag := unwrapDynamicContent(ctx, doc.ContentBlocks, docDataCtx, nil)
+	children, diag := UnwrapDynamicContent(ctx, doc.ContentBlocks, docDataCtx)
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}

@@ -42,7 +42,12 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map,
 		}
 	}
 
-	children, diag := unwrapDynamicContent(ctx, block.children, dataCtx, nil)
+	diag := ApplyVars(ctx, block.vars, dataCtx)
+	if diags.Extend(diag) {
+		return nil, diags
+	}
+
+	children, diag := UnwrapDynamicContent(ctx, block.children, dataCtx)
 	if diags.Extend(diag) {
 		return nil, diags
 	}
@@ -64,11 +69,6 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map,
 		bo := children[b].InvocationOrder()
 		return ao.Weight() - bo.Weight()
 	})
-
-	diag = ApplyVars(ctx, block.vars, dataCtx)
-	if diags.Extend(diag) {
-		return nil, diags
-	}
 
 	// verify required vars
 	if len(block.requiredVars) > 0 {

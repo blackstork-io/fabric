@@ -56,7 +56,7 @@ var renderCmd = &cobra.Command{
 				strings.Split(tags, ","),
 				strings.TrimSpace,
 			),
-			func(tag string) bool { return len(tag) == 0 },
+			func(tag string) bool { return tag == "" },
 		)
 		ctx := cmd.Context()
 		logger := slog.Default()

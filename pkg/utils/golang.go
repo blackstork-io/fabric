@@ -29,3 +29,12 @@ func Must[T any](val T, err error) T {
 	}
 	return val
 }
+
+// Clone performs a shallow clone operation on pointer value
+func Clone[T any](val *T) *T {
+	if val == nil {
+		return nil
+	}
+	valC := *val
+	return &valC
+}
