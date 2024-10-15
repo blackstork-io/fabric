@@ -476,10 +476,8 @@ func (e *Engine) PublishContent(ctx context.Context, target string, doc *eval.Do
 	}()
 	e.logger.InfoContext(ctx, "Publishing the content", "target", target)
 	diag := doc.Publish(ctx, content, dataCtx, target)
-	if diags.Extend(diag) {
-		return diags
-	}
-	return diags
+	diags.Extend(diag)
+	return
 }
 
 func (e *Engine) loadDocument(ctx context.Context, name string) (_ *eval.Document, diags diagnostics.Diag) {

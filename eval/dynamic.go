@@ -3,6 +3,7 @@ package eval
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"maps"
 
 	"github.com/hashicorp/hcl/v2"
@@ -60,148 +61,155 @@ func LoadDynamic(ctx context.Context, providers ContentProviders, node *definiti
 	return block, diags
 }
 
-func addDynamicVars(child *Content, dynVarVals *definitions.ParsedVars) *Content {
-	if child.Plugin != nil {
-		chAction := *child.Plugin
-		chAction.Vars = chAction.Vars.MergeWithBaseVars(dynVarVals)
-
-		return &Content{
-			Plugin: &chAction,
-		}
-	}
-	if child.Section != nil {
-		chSection := *child.Section
-		chSection.vars = chSection.vars.MergeWithBaseVars(dynVarVals)
-		chSection.children = utils.FnMap(chSection.children, func(child *Content) *Content {
-			return addDynamicVars(child, dynVarVals)
-		})
-		return &Content{
-			Section: &chSection,
-		}
-	}
-	if child.Dynamic != nil {
-		if child.Dynamic.items == nil {
-			chDynamic := *child.Dynamic
-			chDynamic.children = utils.FnMap(chDynamic.children, func(child *Content) *Content {
-				return addDynamicVars(child, dynVarVals)
-			})
-			return &Content{
-				Dynamic: &chDynamic,
-			}
-		}
-	}
-	return child
-}
-
-func unwrapDynamicContent(ctx context.Context, children []*Content, dataCtx plugindata.Map, dynVarVals *definitions.ParsedVars) (res []*Content, diags diagnostics.Diag) {
-	ctx = deferred.WithQueryFuncs(ctx)
+func applyDynamicContentVars(ctx context.Context, children []*Content, dataCtx plugindata.Map, dynVarVals *definitions.ParsedVars) (res []*Content, diags diagnostics.Diag) {
 	res = make([]*Content, 0, len(children))
+
 	// unwrap dynamic content
 	for _, child := range children {
-		if !dynVarVals.Empty() {
-			child = addDynamicVars(child, dynVarVals)
-		}
-		if child.Dynamic == nil {
-			res = append(res, child)
-			continue
-		}
-		dynDataCtx := dataCtx
-		// found dynamic content
-		if !dynVarVals.Empty() {
-			// apply dynamic vars to child dynamic var data context
-			// this is the case of nested dynamic blocks, child dynamic block
-			// can access parent dynamic block vars
-			dynDataCtx = maps.Clone(dynDataCtx)
-			if diags.Extend(ApplyVars(ctx, dynVarVals, dynDataCtx)) {
-				continue
+		switch {
+		case child.Plugin != nil:
+			plugin := utils.Clone(child.Plugin)
+			plugin.Vars = plugin.Vars.MergeWithBaseVars(dynVarVals)
+			res = append(res, &Content{Plugin: plugin})
+		case child.Section != nil:
+			section := utils.Clone(child.Section)
+			section.vars = section.vars.MergeWithBaseVars(dynVarVals)
+			res = append(res, &Content{Section: section})
+		case child.Dynamic != nil:
+			dynamic := child.Dynamic
+			if child.Dynamic.items == nil {
+				// propagate parent's dynamic values
+				dynamic = utils.Clone(dynamic)
+				var diag diagnostics.Diag
+				dynamic.children, diag = applyDynamicContentVars(ctx, dynamic.children, dataCtx, dynVarVals)
+				if diags.Extend(diag) {
+					continue
+				}
 			}
-		}
-
-		val, diag := dataspec.EvalAttr(ctx, child.Dynamic.condition, dynDataCtx)
-		if diags.Extend(diag) {
-			continue
-		}
-		if val.IsNull() || val.False() {
-			continue
-		}
-		if child.Dynamic.items == nil {
-			// no dynamic vars defined, pass parent's
-			content, diag := unwrapDynamicContent(ctx, child.Dynamic.children, dataCtx, dynVarVals)
+			nonDynamicContent, diag := unwrapDynamicItem(ctx, dynamic, dataCtx)
 			diags.Extend(diag)
-			res = append(res, content...)
-			continue
-		}
-		// iterate over items
-		val, diag = dataspec.EvalAttr(ctx, child.Dynamic.items, dynDataCtx)
-		if diags.Extend(diag) || val.IsNull() {
-			continue
-		}
-		data := plugindata.Encapsulated.MustFromCty(val)
-		if data == nil {
-			diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "Invalid dynamic block items",
-				Detail:   "Dynamic block items must be a list or a map, got nil",
-				Subject:  child.Dynamic.items.ValueRange.Ptr(),
-			})
-			continue
-		}
-		switch dt := (*data).(type) {
-		case nil:
-			continue
-		case plugindata.List:
-			for idx, item := range dt {
-				dynVars, diag := parseDynVars(ctx, plugindata.Number(idx), item, child.Dynamic.items.ValueRange)
-				if diags.Extend(diag) {
-					// infallible
-					return
-				}
-				ndc, diag := unwrapDynamicContent(
-					ctx, child.Dynamic.children, dataCtx,
-					dynVars,
-				)
-				if diags.Extend(diag) {
-					// stop dynamic block processing on error: it's likely that
-					// the error will be repeated for each item and only add noise
-					break
-				}
-				res = append(res, ndc...)
-			}
-		case plugindata.Map:
-			for key, item := range dt {
-				dynVars, diag := parseDynVars(ctx, plugindata.String(key), item, child.Dynamic.items.ValueRange)
-				if diags.Extend(diag) {
-					// infallible
-					return
-				}
-				ndc, diag := unwrapDynamicContent(
-					ctx, child.Dynamic.children, dataCtx,
-					dynVars,
-				)
-				if diags.Extend(diag) {
-					// stop dynamic block processing on error: it's likely that
-					// the error will be repeated for each item and only add noise
-					break
-				}
-				res = append(res, ndc...)
-			}
+			res = append(res, nonDynamicContent...)
 		default:
-			diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "Invalid dynamic block items",
-				Detail:   fmt.Sprintf("Dynamic block items must be a list or a map, got %T", dt),
-				Subject:  child.Dynamic.items.ValueRange.Ptr(),
-			})
-			continue
+			slog.Warn("Child has unknown type")
+			res = append(res, child)
 		}
 	}
 	return
 }
 
+// unwrapDynamicContent unwraps dynamic content in children
+func UnwrapDynamicContent(ctx context.Context, children []*Content, dataCtx plugindata.Map) (res []*Content, diags diagnostics.Diag) {
+	return unwrapDynamicContent(deferred.WithQueryFuncs(ctx), children, dataCtx)
+}
+
+func unwrapDynamicContent(ctx context.Context, children []*Content, dataCtx plugindata.Map) (res []*Content, diags diagnostics.Diag) {
+	// Goal: expand dynamic content on the first layer of children
+	// (without descending into child sections)
+	res = make([]*Content, 0, len(children))
+
+	// unwrap dynamic content
+	for _, child := range children {
+		if child.Dynamic == nil {
+			res = append(res, child)
+			continue
+		}
+		nonDynamicContent, diag := unwrapDynamicItem(ctx, child.Dynamic, dataCtx)
+		diags.Extend(diag)
+		res = append(res, nonDynamicContent...)
+	}
+	return
+}
+
+func unwrapDynamicItem(ctx context.Context, dynamic *Dynamic, dataCtx plugindata.Map) (res []*Content, diags diagnostics.Diag) {
+	// Evaluate dynamic condition
+	val, diag := dataspec.EvalAttr(ctx, dynamic.condition, dataCtx)
+	if diags.Extend(diag) {
+		return
+	}
+	if val.IsNull() || val.False() {
+		return
+	}
+
+	// iterate over dynamic items
+	if dynamic.items == nil {
+		res, diag = unwrapDynamicContent(ctx, dynamic.children, dataCtx)
+		diags.Extend(diag)
+		return
+	}
+
+	val, diag = dataspec.EvalAttr(ctx, dynamic.items, dataCtx)
+	if diags.Extend(diag) || val.IsNull() {
+		return
+	}
+	data := plugindata.Encapsulated.MustFromCty(val)
+	if data == nil {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Invalid dynamic block items",
+			Detail:   "Dynamic block items must be a list or a map, got nil",
+			Subject:  dynamic.items.ValueRange.Ptr(),
+		})
+		return
+	}
+
+	var dynamicItems [][2]plugindata.Data
+	switch dt := (*data).(type) {
+	case nil:
+		return
+	case plugindata.List:
+		dynamicItems = make([][2]plugindata.Data, 0, len(dt))
+		for idx, item := range dt {
+			dynamicItems = append(dynamicItems, [2]plugindata.Data{
+				plugindata.Number(idx),
+				item,
+			})
+		}
+	case plugindata.Map:
+		dynamicItems = make([][2]plugindata.Data, 0, len(dt))
+		for key, item := range dt {
+			dynamicItems = append(dynamicItems, [2]plugindata.Data{
+				plugindata.String(key),
+				item,
+			})
+		}
+	default:
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Invalid dynamic block items",
+			Detail:   fmt.Sprintf("Dynamic block items must be a list or a map, got %T", dt),
+			Subject:  dynamic.items.ValueRange.Ptr(),
+		})
+		return
+	}
+
+	newDataCtx := maps.Clone(dataCtx)
+	vars := getVarsCopy(newDataCtx)
+	for _, kv := range dynamicItems {
+		vars[itemIndexVarName] = kv[0]
+		vars[itemVarName] = kv[1]
+		newDynVarVals, diag := parseDynVars(ctx, kv[0], kv[1], dynamic.items.ValueRange)
+		if diags.Extend(diag) {
+			// infallible
+			return
+		}
+		nonDynamicContent, diag := applyDynamicContentVars(ctx, dynamic.children, newDataCtx, newDynVarVals)
+		if diags.Extend(diag) {
+			// stop dynamic block processing on error: it's likely that
+			// the error will be repeated for each item and only add noise
+			break
+		}
+		res = append(res, nonDynamicContent...)
+	}
+	return
+}
+
+const (
+	itemIndexVarName = "dynamic_item_index"
+	itemVarName      = "dynamic_item"
+)
+
 func parseDynVars(ctx context.Context, idx, val plugindata.Data, rng hcl.Range) (parsed *definitions.ParsedVars, diags diagnostics.Diag) {
 	// use existing vars parser by creating a synthetic (dynamic_)vars block
-	const itemIndex = "dynamic_item_index"
-	const item = "dynamic_item"
 	return parser.ParseVars(ctx, &hclsyntax.Block{
 		Type:            "dynamic_vars",
 		TypeRange:       rng,
@@ -211,8 +219,8 @@ func parseDynVars(ctx context.Context, idx, val plugindata.Data, rng hcl.Range) 
 			SrcRange: rng,
 			EndRange: rng,
 			Attributes: map[string]*hclsyntax.Attribute{
-				itemIndex: {
-					Name: itemIndex,
+				itemIndexVarName: {
+					Name: itemIndexVarName,
 					Expr: &hclsyntax.LiteralValueExpr{
 						Val: plugindata.Encapsulated.ValToCty(idx),
 					},
@@ -220,8 +228,8 @@ func parseDynVars(ctx context.Context, idx, val plugindata.Data, rng hcl.Range) 
 					NameRange:   rng,
 					EqualsRange: rng,
 				},
-				item: {
-					Name: item,
+				itemVarName: {
+					Name: itemVarName,
 					Expr: &hclsyntax.LiteralValueExpr{
 						Val: plugindata.Encapsulated.ValToCty(val),
 					},
