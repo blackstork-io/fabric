@@ -452,4 +452,24 @@ func TestDynamic(t *testing.T) {
 			diagtest.DetailContains("Dynamic block missing", "can be removed"),
 		}},
 	)
+	renderTest(
+		t, "warn on no children empty",
+		[]string{`
+			document "test-doc" {
+				content text {
+					value = "hello"
+				}
+				dynamic {
+					items = ["a", "b"]
+				}
+			}
+		`},
+		[]string{
+			"hello",
+		},
+		diagtest.Asserts{{
+			diagtest.IsWarning,
+			diagtest.SummaryContains("Dynamic block without content"),
+		}},
+	)
 }
