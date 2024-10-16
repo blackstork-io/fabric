@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -13,7 +14,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/builtin"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/print"
 	"github.com/blackstork-io/fabric/print/htmlprint"
 	"github.com/blackstork-io/fabric/print/mdprint"
@@ -22,12 +23,15 @@ import (
 var (
 	publish bool
 	format  string
+	tags    string
 )
 
 func init() {
 	rootCmd.AddCommand(renderCmd)
 	renderCmd.Flags().BoolVar(&publish, "publish", false, "publish the rendered document")
 	renderCmd.Flags().StringVar(&format, "format", "md", "default output format of the document (md, html or pdf)")
+	renderCmd.Flags().StringVar(&tags, "with-meta-tags", "", "comma separated list of meta tags. Only content blocks matching these tags will be rendered")
+
 	renderCmd.SetUsageTemplate(UsageTemplate(
 		[2]string{"TARGET", "name of the document to be rendered as 'document.<name>'"},
 	))
@@ -47,6 +51,13 @@ var renderCmd = &cobra.Command{
 		default:
 			return fmt.Errorf("target should have the format '%s<name_of_the_document>'", docPrefix)
 		}
+		requiredTags := slices.DeleteFunc(
+			utils.FnMap(
+				strings.Split(tags, ","),
+				strings.TrimSpace,
+			),
+			func(tag string) bool { return tag == "" },
+		)
 		ctx := cmd.Context()
 		logger := slog.Default()
 
@@ -77,19 +88,15 @@ var renderCmd = &cobra.Command{
 		if diags.Extend(diag) {
 			return diags
 		}
-		var content plugin.Content
-		if publish {
-			content, diag = eng.RenderAndPublishContent(ctx, target)
-		} else {
-			_, content, _, diag = eng.RenderContent(ctx, target)
-		}
+
+		doc, content, dataCtx, diag := eng.RenderContent(ctx, target, requiredTags)
 		if diags.Extend(diag) {
 			return diags
 		}
 
-		// If publish requested, no need to print out to stdout
 		if publish {
-			return nil
+			diags.Extend(eng.PublishContent(ctx, target, doc, content, dataCtx))
+			return diags
 		}
 
 		logger.InfoContext(ctx, "Printing to stdout", "format", format)

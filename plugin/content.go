@@ -185,14 +185,20 @@ func (c *ContentSection) AsPluginData() plugindata.Data {
 // Compact removes empty sections from the content tree.
 func (c *ContentSection) Compact() {
 	c.Children = slices.DeleteFunc(c.Children, func(c Content) bool {
-		_, ok := c.(*ContentEmpty)
-		return ok
-	})
-	for _, child := range c.Children {
-		if section, ok := child.(*ContentSection); ok {
-			section.Compact()
+		if _, ok := c.(*ContentEmpty); ok {
+			return true
 		}
-	}
+		if section, ok := c.(*ContentSection); ok {
+			section.Compact()
+			return section.IsEmpty()
+		}
+		return false
+	})
+}
+
+// IsEmpty returns true if the section does not contain children
+func (c *ContentSection) IsEmpty() bool {
+	return len(c.Children) == 0
 }
 
 // AsData returns the content tree as a map.

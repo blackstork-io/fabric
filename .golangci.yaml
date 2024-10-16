@@ -85,7 +85,6 @@ linters-settings:
 linters:
   disable-all: true
   enable:
-    - exportloopref
     - gci
     - gocritic
     - gofmt
@@ -95,7 +94,6 @@ linters:
     - gosimple
     - govet
     - ineffassign
-    - nolintlint
     - staticcheck
     - typecheck
     - unused
