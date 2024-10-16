@@ -52,6 +52,11 @@ packages:
     interfaces:
       AzureOpenaiClient:
       MicrosoftGraphClient:
+  github.com/blackstork-io/fabric/internal/crowdstrike:
+    config:
+    interfaces:
+      Client:
+      CspmRegistrationClient:
   github.com/blackstork-io/fabric/plugin/resolver:
     config:
       inpackage: true
