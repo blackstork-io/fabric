@@ -67,6 +67,53 @@ func (_c *Client_CspmRegistration_Call) RunAndReturn(run func() crowdstrike.Cspm
 	return _c
 }
 
+// Discover provides a mock function with given fields:
+func (_m *Client) Discover() crowdstrike.DiscoverClient {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for Discover")
+	}
+
+	var r0 crowdstrike.DiscoverClient
+	if rf, ok := ret.Get(0).(func() crowdstrike.DiscoverClient); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(crowdstrike.DiscoverClient)
+		}
+	}
+
+	return r0
+}
+
+// Client_Discover_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Discover'
+type Client_Discover_Call struct {
+	*mock.Call
+}
+
+// Discover is a helper method to define mock.On call
+func (_e *Client_Expecter) Discover() *Client_Discover_Call {
+	return &Client_Discover_Call{Call: _e.mock.On("Discover")}
+}
+
+func (_c *Client_Discover_Call) Run(run func()) *Client_Discover_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Client_Discover_Call) Return(_a0 crowdstrike.DiscoverClient) *Client_Discover_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Client_Discover_Call) RunAndReturn(run func() crowdstrike.DiscoverClient) *Client_Discover_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewClient creates a new instance of Client. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewClient(t interface {

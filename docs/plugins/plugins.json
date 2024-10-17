@@ -150,6 +150,20 @@
         "arguments": [
           "size"
         ]
+      },
+      {
+        "name": "falcon_discover_host_details",
+        "type": "data-source",
+        "config_params": [
+          "client_cloud",
+          "client_id",
+          "client_secret",
+          "member_cid"
+        ],
+        "arguments": [
+          "filter",
+          "size"
+        ]
       }
     ]
   },
