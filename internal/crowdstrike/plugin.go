@@ -8,6 +8,7 @@ import (
 	"github.com/crowdstrike/gofalcon/falcon"
 	"github.com/crowdstrike/gofalcon/falcon/client"
 	"github.com/crowdstrike/gofalcon/falcon/client/cspm_registration"
+	"github.com/crowdstrike/gofalcon/falcon/client/spotlight_vulnerabilities"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/plugin"
@@ -20,8 +21,13 @@ type CspmRegistrationClient interface {
 	GetConfigurationDetections(params *cspm_registration.GetConfigurationDetectionsParams, opts ...cspm_registration.ClientOption) (*cspm_registration.GetConfigurationDetectionsOK, error)
 }
 
+type SpotVulnerabilitiesClient interface {
+	CombinedQueryVulnerabilities(params *spotlight_vulnerabilities.CombinedQueryVulnerabilitiesParams, opts ...spotlight_vulnerabilities.ClientOption) (*spotlight_vulnerabilities.CombinedQueryVulnerabilitiesOK, error)
+}
+
 type Client interface {
 	CspmRegistration() CspmRegistrationClient
+	SpotlightVulnerabilities() SpotVulnerabilitiesClient
 }
 
 type ClientAdapter struct {
@@ -30,6 +36,10 @@ type ClientAdapter struct {
 
 func (c *ClientAdapter) CspmRegistration() CspmRegistrationClient {
 	return c.client.CspmRegistration
+}
+
+func (c *ClientAdapter) SpotlightVulnerabilities() SpotVulnerabilitiesClient {
+	return c.client.SpotlightVulnerabilities
 }
 
 type ClientLoaderFn func(cfg *falcon.ApiConfig) (client Client, err error)
@@ -50,7 +60,8 @@ func Plugin(version string, loader ClientLoaderFn) *plugin.Schema {
 		Name:    "blackstork/crowdstrike",
 		Version: version,
 		DataSources: plugin.DataSources{
-			"falcon_cspm_ioms": makeFalconCspmIomsDataSource(loader),
+			"falcon_cspm_ioms":       makeFalconCspmIomsDataSource(loader),
+			"falcon_vulnerabilities": makeFalconVulnerabilitiesDataSource(loader),
 		},
 	}
 }
