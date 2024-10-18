@@ -29,9 +29,10 @@ func makeFalconDetectionDetailsDataSource(loader ClientLoaderFn) *plugin.DataSou
 					Doc:  "Host search expression using Falcon Query Language (FQL)",
 				},
 				{
-					Name:        "size",
+					Name:        "limit",
 					Type:        cty.Number,
-					Constraints: constraint.Integer | constraint.RequiredNonNull,
+					Constraints: constraint.Integer,
+					DefaultVal:  cty.NumberIntVal(10),
 					Doc:         "limit the number of queried items",
 				},
 			},
@@ -97,9 +98,9 @@ func fetchFalconDetectionDetailsData(loader ClientLoaderFn) plugin.RetrieveDataF
 }
 
 func fetchDetects(ctx context.Context, cli DetectsClient, params *plugin.RetrieveDataParams) (*detects.QueryDetectsOK, error) {
-	size, _ := params.Args.GetAttrVal("size").AsBigFloat().Int64()
+	limit, _ := params.Args.GetAttrVal("limit").AsBigFloat().Int64()
 	apiParams := &detects.QueryDetectsParams{}
-	apiParams.SetLimit(&size)
+	apiParams.SetLimit(&limit)
 	apiParams.Context = ctx
 	filter := params.Args.GetAttrVal("filter")
 	if !filter.IsNull() {

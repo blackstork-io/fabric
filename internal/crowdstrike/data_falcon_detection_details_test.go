@@ -98,7 +98,7 @@ func (s *CrowdstrikeDetectionDetailsTestSuite) TestBasic() {
 			SetAttr("client_secret", cty.StringVal("test")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.Datasource().Args).
-			SetAttr("size", cty.NumberIntVal(10)).
+			SetAttr("limit", cty.NumberIntVal(10)).
 			SetAttr("filter", cty.StringVal("test_filter")).
 			Decode(),
 	})
@@ -135,7 +135,7 @@ func (s *CrowdstrikeDetectionDetailsTestSuite) TestDetectionError() {
 			SetAttr("client_secret", cty.StringVal("test")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.Datasource().Args).
-			SetAttr("size", cty.NumberIntVal(10)).
+			SetAttr("limit", cty.NumberIntVal(10)).
 			Decode(),
 	})
 	diagtest.Asserts{{
@@ -157,7 +157,7 @@ func (s *CrowdstrikeDetectionDetailsTestSuite) TestError() {
 			SetAttr("client_secret", cty.StringVal("test")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.Datasource().Args).
-			SetAttr("size", cty.NumberIntVal(10)).
+			SetAttr("limit", cty.NumberIntVal(10)).
 			Decode(),
 	})
 	diagtest.Asserts{{
@@ -165,15 +165,4 @@ func (s *CrowdstrikeDetectionDetailsTestSuite) TestError() {
 		diagtest.SummaryContains("Failed to query Falcon detects"),
 		diagtest.DetailContains("something went wrong"),
 	}}.AssertMatch(s.T(), diags, nil)
-}
-
-func (s *CrowdstrikeDetectionDetailsTestSuite) TestMissingArgs() {
-	plugintest.NewTestDecoder(
-		s.T(),
-		s.Datasource().Args,
-	).Decode([]diagtest.Assert{
-		diagtest.IsError,
-		diagtest.SummaryEquals("Missing required attribute"),
-		diagtest.DetailContains("size"),
-	})
 }
