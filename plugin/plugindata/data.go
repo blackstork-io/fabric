@@ -3,6 +3,7 @@ package plugindata
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 )
 
 type Data interface {
@@ -148,4 +149,24 @@ func ParseMapAny(v map[string]any) (Map, error) {
 
 type Convertible interface {
 	AsPluginData() Data
+}
+
+func IsTruthy(d Data) bool {
+	switch d := d.(type) {
+	case Bool:
+		return bool(d)
+	case Number:
+		return float64(d) != 0
+	case String:
+		return string(d) != ""
+	case List:
+		return len(d) > 0
+	case Map:
+		return len(d) > 0
+	case nil:
+		return false
+	default:
+		slog.Debug("unsupported data type", "dt", d)
+		return false
+	}
 }

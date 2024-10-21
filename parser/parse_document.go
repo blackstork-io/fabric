@@ -18,7 +18,7 @@ func (db *DefinedBlocks) ParseDocument(ctx context.Context, d *definitions.Docum
 
 	if title := d.Block.Body.Attributes[definitions.AttrTitle]; title != nil {
 		titleContent, diag := db.ParseTitle(ctx, title)
-		if !diag.Extend(diags){
+		if !diag.Extend(diags) {
 			doc.Content = append(doc.Content, titleContent)
 		}
 	}

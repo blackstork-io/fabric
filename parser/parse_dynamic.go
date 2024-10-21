@@ -2,10 +2,10 @@ package parser
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
-	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/circularRefDetector"
@@ -18,29 +18,24 @@ func (db *DefinedBlocks) ParseDynamic(ctx context.Context, block *hclsyntax.Bloc
 		Block: block,
 	}
 
-	res.Condition = block.Body.Attributes[definitions.AttrDynamicCond]
-	res.Items = block.Body.Attributes[definitions.AttrDynamicItems]
+	res.Items, _ = utils.Pop(block.Body.Attributes, definitions.AttrDynamicItems)
 
-	if res.Items == nil && res.Condition == nil {
+	if res.Items == nil {
 		diags.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagWarning,
-			Summary:  "Dynamic block without items and condition",
-			Detail:   "Dynamic block missing both 'items' and 'condition' can be removed, as it has no effect",
+			Severity: hcl.DiagError,
+			Summary:  "Dynamic block without items",
+			Detail:   fmt.Sprintf("Dynamic block must have an attribute %q", definitions.AttrDynamicItems),
 			Subject:  block.DefRange().Ptr(),
 		})
 	}
 
-	if res.Condition == nil {
-		res.Condition = &hclsyntax.Attribute{
-			Name: definitions.AttrDynamicCond,
-			Expr: &hclsyntax.LiteralValueExpr{
-				Val:      cty.True,
-				SrcRange: block.TypeRange,
-			},
-			SrcRange:    block.TypeRange,
-			NameRange:   block.TypeRange,
-			EqualsRange: block.TypeRange,
-		}
+	for k, v := range block.Body.Attributes {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagWarning,
+			Summary:  "Unsupported attribute",
+			Detail:   fmt.Sprintf("Dynamic block does not support attribute %q, it will be ignored", k),
+			Subject:  &v.NameRange,
+		})
 	}
 
 	validChildren := []string{

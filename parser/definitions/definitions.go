@@ -22,7 +22,7 @@ const (
 	AttrTitle        = "title"
 	AttrLocalVar     = "local_var"
 	AttrRequiredVars = "required_vars"
-	AttrDynamicCond  = "condition"
+	AttrIsIncluded   = "is_included"
 	AttrDynamicItems = "items"
 )
 

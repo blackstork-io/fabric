@@ -11,10 +11,7 @@ type Dynamic struct {
 type ParsedDynamic struct {
 	Block *hclsyntax.Block
 	// Items is a list of items to be iterated over dynamically.
-	// Nil if not present.
-	Items *hclsyntax.Attribute
-	// Condition is a condition that must be met for the block to be included.
-	// Always present, defaults to true.
-	Condition *hclsyntax.Attribute
-	Content   []*ParsedContent
+	// Always present.
+	Items   *hclsyntax.Attribute
+	Content []*ParsedContent
 }

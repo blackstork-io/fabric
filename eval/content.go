@@ -24,14 +24,14 @@ func (action *Content) InvocationOrder() plugin.InvocationOrder {
 	return plugin.InvocationOrderUnspecified
 }
 
-func (action *Content) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (*plugin.ContentResult, diagnostics.Diag) {
+func (action *Content) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) diagnostics.Diag {
 	if action.Section != nil {
 		return action.Section.RenderContent(ctx, dataCtx, doc, parent, contentID)
 	}
 	if action.Plugin != nil {
 		return action.Plugin.RenderContent(ctx, dataCtx, doc, parent, contentID)
 	}
-	return nil, diagnostics.Diag{{
+	return diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Content block not found",
 	}}

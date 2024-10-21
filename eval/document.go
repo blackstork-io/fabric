@@ -137,7 +137,7 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 		// TODO: if section, set section
 
 		// execute the content block
-		_, diag := children[idx].RenderContent(ctx, dataCtx, result, result, posMap[idx])
+		diag := children[idx].RenderContent(ctx, dataCtx, result, result, posMap[idx])
 		if diags.Extend(diag) {
 			return nil, nil, diags
 		}

@@ -186,6 +186,8 @@ func (db *DefinedBlocks) parseSection(ctx context.Context, section *definitions.
 		diags.Extend(diag)
 	}
 
+	res.IsIncluded = section.Block.Body.Attributes[definitions.AttrIsIncluded]
+
 	if refBase == nil {
 		parsed = &res
 		return
@@ -218,6 +220,9 @@ func (db *DefinedBlocks) parseSection(ctx context.Context, section *definitions.
 	}
 	if res.Meta == nil {
 		res.Meta = baseEval.Meta
+	}
+	if res.IsIncluded == nil {
+		res.IsIncluded = baseEval.IsIncluded
 	}
 	res.Vars = res.Vars.MergeWithBaseVars(baseEval.Vars)
 	res.RequiredVars = append(res.RequiredVars, baseEval.RequiredVars...)
