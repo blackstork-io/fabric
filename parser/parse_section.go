@@ -51,7 +51,10 @@ func (db *DefinedBlocks) parseSection(ctx context.Context, section *definitions.
 	res := definitions.ParsedSection{}
 	res.Source = section
 	if title := section.Block.Body.Attributes["title"]; title != nil {
-		res.Title = definitions.NewTitle(title, db.DefaultConfig)
+		titleContent, diag := db.ParseTitle(ctx, title)
+		if !diag.Extend(diags) {
+			res.Title = titleContent
+		}
 	}
 
 	var origMeta *hcl.Range

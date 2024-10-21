@@ -17,7 +17,10 @@ func (db *DefinedBlocks) ParseDocument(ctx context.Context, d *definitions.Docum
 	doc.Source = d
 
 	if title := d.Block.Body.Attributes[definitions.AttrTitle]; title != nil {
-		doc.Content = append(doc.Content, definitions.NewTitle(title, db.DefaultConfig))
+		titleContent, diag := db.ParseTitle(ctx, title)
+		if !diag.Extend(diags){
+			doc.Content = append(doc.Content, titleContent)
+		}
 	}
 
 	var origMeta *hcl.Range
