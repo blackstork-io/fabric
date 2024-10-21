@@ -25,35 +25,9 @@ func TestDynamic(t *testing.T) {
 			"2: c",
 		},
 	)
-	renderTest(
-		t, "dynamic conditional content",
-		[]string{`
-			document "test-doc" {
-				vars {
-				   show1 = true
-				   show2 = false
-				}
-				dynamic {
-					condition = query_jq(".vars.show1")
-					content text {
-						value = "show1 block"
-					}
-				}
-				dynamic {
-					condition = query_jq(".vars.show2")
-					content text {
-						value = "show2 block"
-					}
-				}
-			}
-		`},
-		[]string{
-			"show1 block",
-		},
-	)
 
 	renderTest(
-		t, "dynamic conditional + items",
+		t, "dynamic items + is_included",
 		[]string{`
 			document "test-doc" {
 				vars {
@@ -61,16 +35,16 @@ func TestDynamic(t *testing.T) {
 				   show2 = false
 				}
 				dynamic {
-					condition = query_jq(".vars.show1")
 					items = ["dyn_item"]
 					content text {
+						is_included = query_jq(".vars.show1")
 						value = "show1 block {{.vars.dynamic_item}}"
 					}
 				}
 				dynamic {
-					condition = query_jq(".vars.show2")
 					items = ["dyn_item"]
 					content text {
+						is_included = query_jq(".vars.show2")
 						value = "show2 block {{.vars.dynamic_item}}"
 					}
 				}
@@ -81,15 +55,15 @@ func TestDynamic(t *testing.T) {
 		},
 	)
 	renderTest(
-		t, "dynamic conditional with nested items",
+		t, "is_included with nested dynamics",
 		[]string{`
 			document "test-doc" {
 				vars {
 				   show1 = true
 				   show2 = false
 				}
-				dynamic {
-					condition = query_jq(".vars.show1")
+				section {
+					is_included = query_jq(".vars.show1")
 					dynamic {
 						items = ["dyn_item"]
 						content text {
@@ -97,8 +71,8 @@ func TestDynamic(t *testing.T) {
 						}
 					}
 				}
-				dynamic {
-					condition = query_jq(".vars.show2")
+				section {
+					is_included = query_jq(".vars.show2")
 					dynamic {
 						items = ["dyn_item"]
 						content text {
@@ -257,7 +231,7 @@ func TestDynamic(t *testing.T) {
 		},
 	)
 	renderTest(
-		t, "dynamic with nested condition",
+		t, "dynamic with nested is_included",
 		[]string{`
 			document "test-doc" {
 				dynamic {
@@ -267,11 +241,9 @@ func TestDynamic(t *testing.T) {
 					}
 					section {
 						title = query_jq("\"Section \" + .vars.dynamic_item")
-						dynamic {
-							condition = query_jq(".vars.dynamic_item == \"B\"")
-							content text {
-								value = "only for B: {{.vars.dynamic_item_index}} {{.vars.dynamic_item}}"
-							}
+						content text {
+							is_included = query_jq(".vars.dynamic_item == \"B\"")
+							value = "only for B: {{.vars.dynamic_item_index}} {{.vars.dynamic_item}}"
 						}
 					}
 				}
@@ -286,7 +258,7 @@ func TestDynamic(t *testing.T) {
 		},
 	)
 	renderTest(
-		t, "dynamic with immediate nested condition",
+		t, "dynamic with immediate nested is_included",
 		[]string{`
 			document "test-doc" {
 				dynamic {
@@ -294,11 +266,9 @@ func TestDynamic(t *testing.T) {
 					content text {
 						value = "test {{.vars.dynamic_item}}"
 					}
-					dynamic {
-						condition = query_jq(".vars.dynamic_item == \"B\"")
-						content text {
-							value = "only for B: {{.vars.dynamic_item_index}} {{.vars.dynamic_item}}"
-						}
+					content text {
+						is_included = query_jq(".vars.dynamic_item == \"B\"")
+						value = "only for B: {{.vars.dynamic_item_index}} {{.vars.dynamic_item}}"
 					}
 				}
 			}
@@ -391,8 +361,8 @@ func TestDynamic(t *testing.T) {
 					content text {
 						value = "1. {{.vars.dynamic_item}}"
 					}
-					dynamic {
-						condition = query_jq(".vars.dynamic_item != \"b\"")
+					section {
+						is_included = query_jq(".vars.dynamic_item != \"b\"")
 						content text {
 							value = "2. {{.vars.dynamic_item}}"
 						}
@@ -401,14 +371,14 @@ func TestDynamic(t *testing.T) {
 								value = "3. {{.vars.dynamic_item}}"
 							}
 							dynamic {
-								condition = query_jq(".vars.dynamic_item_index != 0")
 								items = query_jq("[.vars.dynamic_item, \"XYZ\", \"foo\"]")
-								content text {
-									value = "4. {{.vars.dynamic_item}}"
-								}
-								dynamic {
-									condition = query_jq(".vars.dynamic_item != \"foo\"")
+								section {
+									is_included = query_jq(".vars.dynamic_item_index != 0")
 									content text {
+										value = "4. {{.vars.dynamic_item}}"
+									}
+									content text {
+										is_included = query_jq(".vars.dynamic_item != \"foo\"")
 										value = "5. {{.vars.dynamic_item}}"
 									}
 								}
@@ -422,12 +392,13 @@ func TestDynamic(t *testing.T) {
 			"1. a",
 			"2. a",
 			"3. a",
+			"4. XYZ",
+			"5. XYZ",
+			"4. foo",
 			"1. b",
 			"1. c",
 			"2. c",
 			"3. c",
-			"4. c",
-			"5. c",
 			"4. XYZ",
 			"5. XYZ",
 			"4. foo",
@@ -444,12 +415,10 @@ func TestDynamic(t *testing.T) {
 				}
 			}
 		`},
-		[]string{
-			"hello",
-		},
+		[]string{},
 		diagtest.Asserts{{
-			diagtest.IsWarning,
-			diagtest.DetailContains("Dynamic block missing", "can be removed"),
+			diagtest.IsError,
+			diagtest.SummaryEquals("Dynamic block without items"),
 		}},
 	)
 	renderTest(

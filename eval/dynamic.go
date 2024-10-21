@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
-	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/parser"
@@ -16,27 +15,22 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
+	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 	"github.com/blackstork-io/fabric/plugin/dataspec/deferred"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type Dynamic struct {
-	block     *hclsyntax.Block
-	condition *dataspec.Attr
-	items     *dataspec.Attr
-	children  []*Content
-}
-
-var dynamicBlockCond = &dataspec.AttrSpec{
-	Name: "condition",
-	Type: cty.Bool,
-	Doc:  "Condition indicating whether dynamic block should be rendered",
+	block    *hclsyntax.Block
+	items    *dataspec.Attr
+	children []*Content
 }
 
 var dynamicBlockItems = &dataspec.AttrSpec{
-	Name: "items",
-	Type: plugindata.Encapsulated.CtyType(),
-	Doc:  "Items to be iterated over (list or map)",
+	Name:        "items",
+	Type:        plugindata.Encapsulated.CtyType(),
+	Doc:         "Items to be iterated over (list or map)",
+	Constraints: constraint.Required,
 }
 
 func LoadDynamic(ctx context.Context, providers ContentProviders, node *definitions.ParsedDynamic) (_ *Dynamic, diags diagnostics.Diag) {
@@ -46,12 +40,8 @@ func LoadDynamic(ctx context.Context, providers ContentProviders, node *definiti
 		children: make([]*Content, 0, len(node.Content)),
 	}
 	evalCtx := fabctx.GetEvalContext(deferred.WithQueryFuncs(ctx))
-	block.condition, diag = dataspec.DecodeAttr(evalCtx, node.Condition, dynamicBlockCond)
+	block.items, diag = dataspec.DecodeAttr(evalCtx, node.Items, dynamicBlockItems)
 	diags.Extend(diag)
-	if node.Items != nil {
-		block.items, diag = dataspec.DecodeAttr(evalCtx, node.Items, dynamicBlockItems)
-		diags.Extend(diag)
-	}
 
 	for _, child := range node.Content {
 		decoded, diag := LoadContent(ctx, providers, child)
@@ -76,17 +66,7 @@ func applyDynamicContentVars(ctx context.Context, children []*Content, dataCtx p
 			section.vars = section.vars.MergeWithBaseVars(dynVarVals)
 			res = append(res, &Content{Section: section})
 		case child.Dynamic != nil:
-			dynamic := child.Dynamic
-			if child.Dynamic.items == nil {
-				// propagate parent's dynamic values
-				dynamic = utils.Clone(dynamic)
-				var diag diagnostics.Diag
-				dynamic.children, diag = applyDynamicContentVars(ctx, dynamic.children, dataCtx, dynVarVals)
-				if diags.Extend(diag) {
-					continue
-				}
-			}
-			nonDynamicContent, diag := unwrapDynamicItem(ctx, dynamic, dataCtx)
+			nonDynamicContent, diag := unwrapDynamicItem(ctx, child.Dynamic, dataCtx)
 			diags.Extend(diag)
 			res = append(res, nonDynamicContent...)
 		default:
@@ -121,23 +101,7 @@ func unwrapDynamicContent(ctx context.Context, children []*Content, dataCtx plug
 }
 
 func unwrapDynamicItem(ctx context.Context, dynamic *Dynamic, dataCtx plugindata.Map) (res []*Content, diags diagnostics.Diag) {
-	// Evaluate dynamic condition
-	val, diag := dataspec.EvalAttr(ctx, dynamic.condition, dataCtx)
-	if diags.Extend(diag) {
-		return
-	}
-	if val.IsNull() || val.False() {
-		return
-	}
-
-	// iterate over dynamic items
-	if dynamic.items == nil {
-		res, diag = unwrapDynamicContent(ctx, dynamic.children, dataCtx)
-		diags.Extend(diag)
-		return
-	}
-
-	val, diag = dataspec.EvalAttr(ctx, dynamic.items, dataCtx)
+	val, diag := dataspec.EvalAttr(ctx, dynamic.items, dataCtx)
 	if diags.Extend(diag) || val.IsNull() {
 		return
 	}
