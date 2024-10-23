@@ -13,13 +13,9 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-// Evaluates `variables` and stores the results in `dataCtx` under the key "vars".
-func ApplyVars(ctx context.Context, variables *definitions.ParsedVars, dataCtx plugindata.Map) (diags diagnostics.Diag) {
-	if variables.Empty() {
-		return
-	}
-	var vars plugindata.Map
-
+// getVarsCopy creates a new vars key in the data context if it doesn't exist,
+// or clones the existing one.
+func getVarsCopy(dataCtx plugindata.Map) (vars plugindata.Map) {
 	varsData := dataCtx["vars"]
 	if varsData == nil {
 		vars = plugindata.Map{}
@@ -28,6 +24,15 @@ func ApplyVars(ctx context.Context, variables *definitions.ParsedVars, dataCtx p
 		vars = maps.Clone(varsData.(plugindata.Map))
 	}
 	dataCtx["vars"] = vars
+	return vars
+}
+
+// Evaluates `variables` and stores the results in `dataCtx` under the key "vars".
+func ApplyVars(ctx context.Context, variables *definitions.ParsedVars, dataCtx plugindata.Map) (diags diagnostics.Diag) {
+	if variables.Empty() {
+		return
+	}
+	vars := getVarsCopy(dataCtx)
 	var diag diagnostics.Diag
 	for _, variable := range variables.Variables {
 		vars[variable.Name], diag = evalVar(ctx, dataCtx, variable)

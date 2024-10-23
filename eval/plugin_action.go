@@ -12,4 +12,5 @@ type PluginAction struct {
 	Meta       *definitions.MetaBlock
 	Config     *dataspec.Block
 	Args       *dataspec.Block
+	IsIncluded *dataspec.Attr
 }

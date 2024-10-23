@@ -17,7 +17,10 @@ func (db *DefinedBlocks) ParseDocument(ctx context.Context, d *definitions.Docum
 	doc.Source = d
 
 	if title := d.Block.Body.Attributes[definitions.AttrTitle]; title != nil {
-		doc.Content = append(doc.Content, definitions.NewTitle(title, db.DefaultConfig))
+		titleContent, diag := db.ParseTitle(ctx, title)
+		if !diag.Extend(diags) {
+			doc.Content = append(doc.Content, titleContent)
+		}
 	}
 
 	var origMeta *hcl.Range
@@ -93,6 +96,15 @@ func (db *DefinedBlocks) ParseDocument(ctx context.Context, d *definitions.Docum
 			doc.Content = append(doc.Content, &definitions.ParsedContent{
 				Section: parsedSection,
 			})
+		case definitions.BlockKindDynamic:
+			dynamic, diag := db.ParseDynamic(ctx, block)
+			if diags.Extend(diag) {
+				continue
+			}
+			doc.Content = append(doc.Content, &definitions.ParsedContent{
+				Dynamic: dynamic,
+			})
+
 		default:
 			diags.Append(definitions.NewNestingDiag(
 				d.Block.Type,
@@ -105,6 +117,7 @@ func (db *DefinedBlocks) ParseDocument(ctx context.Context, d *definitions.Docum
 					definitions.BlockKindVars,
 					definitions.BlockKindSection,
 					definitions.BlockKindPublish,
+					definitions.BlockKindDynamic,
 				},
 			))
 			continue

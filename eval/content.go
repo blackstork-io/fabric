@@ -14,6 +14,7 @@ import (
 type Content struct {
 	Section *Section
 	Plugin  *PluginContentAction
+	Dynamic *Dynamic
 }
 
 func (action *Content) InvocationOrder() plugin.InvocationOrder {
@@ -23,14 +24,14 @@ func (action *Content) InvocationOrder() plugin.InvocationOrder {
 	return plugin.InvocationOrderUnspecified
 }
 
-func (action *Content) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (*plugin.ContentResult, diagnostics.Diag) {
+func (action *Content) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) diagnostics.Diag {
 	if action.Section != nil {
 		return action.Section.RenderContent(ctx, dataCtx, doc, parent, contentID)
 	}
 	if action.Plugin != nil {
 		return action.Plugin.RenderContent(ctx, dataCtx, doc, parent, contentID)
 	}
-	return nil, diagnostics.Diag{{
+	return diagnostics.Diag{{
 		Severity: hcl.DiagError,
 		Summary:  "Content block not found",
 	}}
@@ -43,11 +44,13 @@ func LoadContent(ctx context.Context, providers ContentProviders, node *definiti
 		block.Plugin, diags = LoadPluginContentAction(ctx, providers, node.Plugin)
 	case node.Section != nil:
 		block.Section, diags = LoadSection(ctx, providers, node.Section)
+	case node.Dynamic != nil:
+		block.Dynamic, diags = LoadDynamic(ctx, providers, node.Dynamic)
 	default:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Unsupported content block",
-			Detail:   "Content block must be either 'content' or 'section'",
+			Detail:   "Content block must be either 'content', 'section' or 'dynamic'",
 		})
 	}
 	if diags.HasErrors() {
