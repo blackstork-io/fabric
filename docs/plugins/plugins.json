@@ -166,6 +166,21 @@
         ]
       },
       {
+        "name": "falcon_intel_indicators",
+        "type": "data-source",
+        "config_params": [
+          "client_cloud",
+          "client_id",
+          "client_secret",
+          "member_cid"
+        ],
+        "arguments": [
+          "filter",
+          "limit",
+          "sort"
+        ]
+      },
+      {
         "name": "falcon_vulnerabilities",
         "type": "data-source",
         "config_params": [

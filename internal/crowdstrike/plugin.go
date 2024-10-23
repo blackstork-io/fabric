@@ -9,6 +9,7 @@ import (
 	"github.com/crowdstrike/gofalcon/falcon/client"
 	"github.com/crowdstrike/gofalcon/falcon/client/cspm_registration"
 	"github.com/crowdstrike/gofalcon/falcon/client/detects"
+	"github.com/crowdstrike/gofalcon/falcon/client/intel"
 	"github.com/crowdstrike/gofalcon/falcon/client/spotlight_vulnerabilities"
 	"github.com/zclconf/go-cty/cty"
 
@@ -31,10 +32,15 @@ type SpotVulnerabilitiesClient interface {
 	CombinedQueryVulnerabilities(params *spotlight_vulnerabilities.CombinedQueryVulnerabilitiesParams, opts ...spotlight_vulnerabilities.ClientOption) (*spotlight_vulnerabilities.CombinedQueryVulnerabilitiesOK, error)
 }
 
+type IntelClient interface {
+	QueryIntelIndicatorEntities(params *intel.QueryIntelIndicatorEntitiesParams, opts ...intel.ClientOption) (*intel.QueryIntelIndicatorEntitiesOK, error)
+}
+
 type Client interface {
 	CspmRegistration() CspmRegistrationClient
 	Detects() DetectsClient
 	SpotlightVulnerabilities() SpotVulnerabilitiesClient
+	Intel() IntelClient
 }
 
 type ClientAdapter struct {
@@ -51,6 +57,10 @@ func (c *ClientAdapter) Detects() DetectsClient {
 
 func (c *ClientAdapter) SpotlightVulnerabilities() SpotVulnerabilitiesClient {
 	return c.client.SpotlightVulnerabilities
+}
+
+func (c *ClientAdapter) Intel() IntelClient {
+	return c.client.Intel
 }
 
 type ClientLoaderFn func(cfg *falcon.ApiConfig) (client Client, err error)
@@ -74,6 +84,7 @@ func Plugin(version string, loader ClientLoaderFn) *plugin.Schema {
 			"falcon_cspm_ioms":         makeFalconCspmIomsDataSource(loader),
 			"falcon_detection_details": makeFalconDetectionDetailsDataSource(loader),
 			"falcon_vulnerabilities":   makeFalconVulnerabilitiesDataSource(loader),
+			"falcon_intel_indicators":  makeFalconIntelIndicatorsDataSource(loader),
 		},
 	}
 }

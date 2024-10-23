@@ -9,7 +9,7 @@ document "detection_details" {
         client_secret = "7X1M6lI4PtU9v5ObmJ8HCSB2jnLqzfacpGx30NWD"
         client_cloud = "eu-1"
     }
-    size = 100
+    limit = 100
   }
   
   title = "List of Detections"
