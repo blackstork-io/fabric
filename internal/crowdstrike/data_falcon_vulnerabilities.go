@@ -23,9 +23,10 @@ func makeFalconVulnerabilitiesDataSource(loader ClientLoaderFn) *plugin.DataSour
 		Args: &dataspec.RootSpec{
 			Attrs: []*dataspec.AttrSpec{
 				{
-					Name:        "size",
+					Name:        "limit",
 					Type:        cty.Number,
-					Constraints: constraint.Integer | constraint.RequiredNonNull,
+					Constraints: constraint.Integer,
+					DefaultVal:  cty.NumberIntVal(10),
 					Doc:         "limit the number of queried items",
 				},
 				{
@@ -53,7 +54,7 @@ func fetchFalconVulnerabilitiesData(loader ClientLoaderFn) plugin.RetrieveDataFu
 				Detail:   err.Error(),
 			}}
 		}
-		size, _ := params.Args.GetAttrVal("size").AsBigFloat().Int64()
+		size, _ := params.Args.GetAttrVal("limit").AsBigFloat().Int64()
 		apiParams := spotlight_vulnerabilities.NewCombinedQueryVulnerabilitiesParams().WithDefaults()
 		apiParams.SetLimit(&size)
 		apiParams.SetContext(ctx)

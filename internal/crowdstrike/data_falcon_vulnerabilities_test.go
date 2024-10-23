@@ -93,7 +93,7 @@ func (s *CrowdstrikeVulnerabilitiesTestSuite) TestBasic() {
 			SetAttr("client_secret", cty.StringVal("test")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.Datasource().Args).
-			SetAttr("size", cty.NumberIntVal(10)).
+			SetAttr("limit", cty.NumberIntVal(10)).
 			Decode(),
 	})
 	s.Require().Nil(diags)
@@ -129,7 +129,7 @@ func (s *CrowdstrikeVulnerabilitiesTestSuite) TestPayloadErrors() {
 			SetAttr("client_secret", cty.StringVal("test")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.Datasource().Args).
-			SetAttr("size", cty.NumberIntVal(10)).
+			SetAttr("limit", cty.NumberIntVal(10)).
 			Decode(),
 	})
 	diagtest.Asserts{{
@@ -151,7 +151,7 @@ func (s *CrowdstrikeVulnerabilitiesTestSuite) TestError() {
 			SetAttr("client_secret", cty.StringVal("test")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.Datasource().Args).
-			SetAttr("size", cty.NumberIntVal(10)).
+			SetAttr("limit", cty.NumberIntVal(10)).
 			Decode(),
 	})
 	diagtest.Asserts{{
@@ -159,15 +159,4 @@ func (s *CrowdstrikeVulnerabilitiesTestSuite) TestError() {
 		diagtest.SummaryContains("Failed to fetch Falcon Spotlight vulnerabilities"),
 		diagtest.DetailContains("something went wrong"),
 	}}.AssertMatch(s.T(), diags, nil)
-}
-
-func (s *CrowdstrikeVulnerabilitiesTestSuite) TestMissingArgs() {
-	plugintest.NewTestDecoder(
-		s.T(),
-		s.Datasource().Args,
-	).Decode([]diagtest.Assert{
-		diagtest.IsError,
-		diagtest.SummaryEquals("Missing required attribute"),
-		diagtest.DetailContains("size"),
-	})
 }

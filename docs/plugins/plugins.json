@@ -176,7 +176,7 @@
         ],
         "arguments": [
           "filter",
-          "size",
+          "limit",
           "sort"
         ]
       }
