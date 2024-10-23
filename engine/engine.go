@@ -81,6 +81,10 @@ func (e *Engine) FileMap() map[string]*hcl.File {
 	return e.fileMap
 }
 
+func (e *Engine) Blocks() *parser.DefinedBlocks {
+	return e.blocks
+}
+
 func (e *Engine) Install(ctx context.Context, upgrade bool) (diags diagnostics.Diag) {
 	ctx, span := e.tracer.Start(ctx, "Engine.Install", trace.WithAttributes(
 		attribute.Bool("upgrade", upgrade),
