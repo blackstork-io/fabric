@@ -1,8 +1,8 @@
 ---
-title: "`falcon_detection_details` data source"
+title: "`falcon_vulnerabilities` data source"
 plugin:
   name: blackstork/crowdstrike
-  description: "The `falcon_detection_details` data source fetches detection details from Falcon API"
+  description: "The `falcon_vulnerabilities` data source fetches environment vulnerabilities from Falcon Spotlight API"
   tags: []
   version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/crowdstrike/"
@@ -13,14 +13,14 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/crowdstrike" "crowdstrike" "v0.4.2" "falcon_detection_details" "data source" >}}
+{{< plugin-resource-header "blackstork/crowdstrike" "crowdstrike" "v0.4.2" "falcon_vulnerabilities" "data source" >}}
 
 ## Description
-The `falcon_detection_details` data source fetches detection details from Falcon API.
+The `falcon_vulnerabilities` data source fetches environment vulnerabilities from Falcon Spotlight API.
 
 ## Installation
 
-To use `falcon_detection_details` data source, you must install the plugin `blackstork/crowdstrike`.
+To use `falcon_vulnerabilities` data source, you must install the plugin `blackstork/crowdstrike`.
 
 To install the plugin, add the full plugin name to the `plugin_versions` map in the Fabric global configuration block (see [Global configuration]({{< ref "configs.md#global-configuration" >}}) for more details), as shown below:
 
@@ -39,7 +39,7 @@ Note the version constraint set for the plugin.
 The data source supports the following configuration arguments:
 
 ```hcl
-config data falcon_detection_details {
+config data falcon_vulnerabilities {
   # Client ID for accessing CrowdStrike Falcon Platform
   #
   # Required string.
@@ -77,17 +77,23 @@ config data falcon_detection_details {
 The data source supports the following execution arguments:
 
 ```hcl
-data falcon_detection_details {
-  # Host search expression using Falcon Query Language (FQL)
+data falcon_vulnerabilities {
+  # limit the number of queried items
+  #
+  # Required integer.
+  # For example:
+  size = 42
+
+  # Vulnerability search expression using Falcon Query Language (FQL)
   #
   # Optional string.
   # Default value:
   filter = null
 
-  # limit the number of queried items
+  # Vulnerability sort expression using Falcon Query Language (FQL)
   #
-  # Optional integer.
+  # Optional string.
   # Default value:
-  limit = 10
+  sort = null
 }
 ```

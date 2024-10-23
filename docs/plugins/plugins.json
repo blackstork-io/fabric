@@ -162,7 +162,22 @@
         ],
         "arguments": [
           "filter",
-          "size"
+          "limit"
+        ]
+      },
+      {
+        "name": "falcon_vulnerabilities",
+        "type": "data-source",
+        "config_params": [
+          "client_cloud",
+          "client_id",
+          "client_secret",
+          "member_cid"
+        ],
+        "arguments": [
+          "filter",
+          "size",
+          "sort"
         ]
       }
     ]
