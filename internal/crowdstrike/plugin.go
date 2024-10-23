@@ -9,6 +9,7 @@ import (
 	"github.com/crowdstrike/gofalcon/falcon/client"
 	"github.com/crowdstrike/gofalcon/falcon/client/cspm_registration"
 	"github.com/crowdstrike/gofalcon/falcon/client/detects"
+	"github.com/crowdstrike/gofalcon/falcon/client/discover"
 	"github.com/crowdstrike/gofalcon/falcon/client/intel"
 	"github.com/crowdstrike/gofalcon/falcon/client/spotlight_vulnerabilities"
 	"github.com/zclconf/go-cty/cty"
@@ -36,11 +37,17 @@ type IntelClient interface {
 	QueryIntelIndicatorEntities(params *intel.QueryIntelIndicatorEntitiesParams, opts ...intel.ClientOption) (*intel.QueryIntelIndicatorEntitiesOK, error)
 }
 
+type DiscoverClient interface {
+	QueryHosts(params *discover.QueryHostsParams, opts ...discover.ClientOption) (*discover.QueryHostsOK, error)
+	GetHosts(params *discover.GetHostsParams, opts ...discover.ClientOption) (*discover.GetHostsOK, error)
+}
+
 type Client interface {
 	CspmRegistration() CspmRegistrationClient
 	Detects() DetectsClient
 	SpotlightVulnerabilities() SpotVulnerabilitiesClient
 	Intel() IntelClient
+	Discover() DiscoverClient
 }
 
 type ClientAdapter struct {
@@ -63,6 +70,10 @@ func (c *ClientAdapter) Intel() IntelClient {
 	return c.client.Intel
 }
 
+func (c *ClientAdapter) Discover() DiscoverClient {
+	return c.client.Discover
+}
+
 type ClientLoaderFn func(cfg *falcon.ApiConfig) (client Client, err error)
 
 var DefaultClientLoader = func(cfg *falcon.ApiConfig) (Client, error) {
@@ -81,10 +92,11 @@ func Plugin(version string, loader ClientLoaderFn) *plugin.Schema {
 		Name:    "blackstork/crowdstrike",
 		Version: version,
 		DataSources: plugin.DataSources{
-			"falcon_cspm_ioms":         makeFalconCspmIomsDataSource(loader),
-			"falcon_detection_details": makeFalconDetectionDetailsDataSource(loader),
-			"falcon_vulnerabilities":   makeFalconVulnerabilitiesDataSource(loader),
-			"falcon_intel_indicators":  makeFalconIntelIndicatorsDataSource(loader),
+			"falcon_cspm_ioms":             makeFalconCspmIomsDataSource(loader),
+			"falcon_detection_details":     makeFalconDetectionDetailsDataSource(loader),
+			"falcon_vulnerabilities":       makeFalconVulnerabilitiesDataSource(loader),
+			"falcon_intel_indicators":      makeFalconIntelIndicatorsDataSource(loader),
+			"falcon_discover_host_details": makeFalconDiscoverHostDetailsDataSource(loader),
 		},
 	}
 }

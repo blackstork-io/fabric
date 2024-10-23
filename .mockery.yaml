@@ -60,6 +60,7 @@ packages:
       DetectsClient:
       SpotVulnerabilitiesClient:
       IntelClient:
+      DiscoverClient:
   github.com/blackstork-io/fabric/plugin/resolver:
     config:
       inpackage: true
