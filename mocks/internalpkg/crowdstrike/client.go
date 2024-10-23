@@ -67,6 +67,53 @@ func (_c *Client_CspmRegistration_Call) RunAndReturn(run func() crowdstrike.Cspm
 	return _c
 }
 
+// Detects provides a mock function with given fields:
+func (_m *Client) Detects() crowdstrike.DetectsClient {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for Detects")
+	}
+
+	var r0 crowdstrike.DetectsClient
+	if rf, ok := ret.Get(0).(func() crowdstrike.DetectsClient); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(crowdstrike.DetectsClient)
+		}
+	}
+
+	return r0
+}
+
+// Client_Detects_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Detects'
+type Client_Detects_Call struct {
+	*mock.Call
+}
+
+// Detects is a helper method to define mock.On call
+func (_e *Client_Expecter) Detects() *Client_Detects_Call {
+	return &Client_Detects_Call{Call: _e.mock.On("Detects")}
+}
+
+func (_c *Client_Detects_Call) Run(run func()) *Client_Detects_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Client_Detects_Call) Return(_a0 crowdstrike.DetectsClient) *Client_Detects_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Client_Detects_Call) RunAndReturn(run func() crowdstrike.DetectsClient) *Client_Detects_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewClient creates a new instance of Client. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewClient(t interface {
