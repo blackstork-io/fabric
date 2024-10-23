@@ -98,7 +98,7 @@ func (s *CrowdstrikeDiscoverHostDetailsTestSuite) TestBasic() {
 			SetAttr("client_secret", cty.StringVal("test")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.Datasource().Args).
-			SetAttr("size", cty.NumberIntVal(10)).
+			SetAttr("limit", cty.NumberIntVal(10)).
 			Decode(),
 	})
 	s.Require().Nil(diags)
@@ -132,7 +132,7 @@ func (s *CrowdstrikeDiscoverHostDetailsTestSuite) TestPayloadErrors() {
 			SetAttr("client_secret", cty.StringVal("test")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.Datasource().Args).
-			SetAttr("size", cty.NumberIntVal(10)).
+			SetAttr("limit", cty.NumberIntVal(10)).
 			Decode(),
 	})
 	diagtest.Asserts{{
@@ -154,7 +154,7 @@ func (s *CrowdstrikeDiscoverHostDetailsTestSuite) TestError() {
 			SetAttr("client_secret", cty.StringVal("test")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.Datasource().Args).
-			SetAttr("size", cty.NumberIntVal(10)).
+			SetAttr("limit", cty.NumberIntVal(10)).
 			Decode(),
 	})
 	diagtest.Asserts{{
@@ -171,6 +171,6 @@ func (s *CrowdstrikeDiscoverHostDetailsTestSuite) TestMissingArgs() {
 	).Decode([]diagtest.Assert{
 		diagtest.IsError,
 		diagtest.SummaryEquals("Missing required attribute"),
-		diagtest.DetailContains("size"),
+		diagtest.DetailContains("limit"),
 	})
 }

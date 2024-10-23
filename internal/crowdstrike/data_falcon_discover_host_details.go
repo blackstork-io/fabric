@@ -23,9 +23,10 @@ func makeFalconDiscoverHostDetailsDataSource(loader ClientLoaderFn) *plugin.Data
 		Args: &dataspec.RootSpec{
 			Attrs: []*dataspec.AttrSpec{
 				{
-					Name:        "size",
+					Name:        "limit",
 					Type:        cty.Number,
-					Constraints: constraint.Integer | constraint.RequiredNonNull,
+					Constraints: constraint.Integer,
+					DefaultVal:  cty.NumberIntVal(10),
 					Doc:         "limit the number of queried items",
 				},
 				{
@@ -48,9 +49,9 @@ func fetchFalconDiscoverHostDetails(loader ClientLoaderFn) plugin.RetrieveDataFu
 				Detail:   err.Error(),
 			}}
 		}
-		size, _ := params.Args.GetAttrVal("size").AsBigFloat().Int64()
+		limit, _ := params.Args.GetAttrVal("limit").AsBigFloat().Int64()
 		queryHostParams := discover.NewQueryHostsParams().WithDefaults()
-		queryHostParams.SetLimit(&size)
+		queryHostParams.SetLimit(&limit)
 		queryHostParams.SetContext(ctx)
 		queryHostsResponse, err := cli.Discover().QueryHosts(queryHostParams)
 		if err != nil {
