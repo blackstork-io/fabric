@@ -80,9 +80,9 @@ The data source supports the following execution arguments:
 data falcon_intel_indicators {
   # limit the number of queried items
   #
-  # Required integer.
-  # For example:
-  size = 42
+  # Optional integer.
+  # Default value:
+  limit = 10
 
   # Indicators filter expression using Falcon Query Language (FQL)
   #

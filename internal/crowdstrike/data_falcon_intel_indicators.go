@@ -23,9 +23,10 @@ func makeFalconIntelIndicatorsDataSource(loader ClientLoaderFn) *plugin.DataSour
 		Args: &dataspec.RootSpec{
 			Attrs: []*dataspec.AttrSpec{
 				{
-					Name:        "size",
+					Name:        "limit",
 					Type:        cty.Number,
-					Constraints: constraint.Integer | constraint.RequiredNonNull,
+					Constraints: constraint.Integer,
+					DefaultVal:  cty.NumberIntVal(10),
 					Doc:         "limit the number of queried items",
 				},
 				{
@@ -53,9 +54,9 @@ func fetchFalconIntelIndicatorsData(loader ClientLoaderFn) plugin.RetrieveDataFu
 				Detail:   err.Error(),
 			}}
 		}
-		size, _ := params.Args.GetAttrVal("size").AsBigFloat().Int64()
+		limit, _ := params.Args.GetAttrVal("limit").AsBigFloat().Int64()
 		apiParams := intel.NewQueryIntelIndicatorEntitiesParams().WithDefaults()
-		apiParams.SetLimit(&size)
+		apiParams.SetLimit(&limit)
 		apiParams.SetContext(ctx)
 		if filter := params.Args.GetAttrVal("filter"); !filter.IsNull() {
 			filterStr := filter.AsString()
