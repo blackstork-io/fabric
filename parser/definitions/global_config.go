@@ -65,10 +65,10 @@ func (g *GlobalConfigDefinition) parseEnvVarPattern(ctx context.Context) (pat gl
 	if diags.Extend(diag) {
 		return
 	}
-	if attrVal.Value.IsNull() {
+	if attrVal.IsNull() {
 		return
 	}
-	strVal := attrVal.Value.AsString()
+	strVal := attrVal.AsString()
 
 	trimmedStr := strings.TrimSpace(strVal)
 	if trimmedStr != strVal {

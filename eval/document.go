@@ -54,7 +54,23 @@ func (doc *Document) FetchData(ctx context.Context) (plugindata.Data, diagnostic
 	return result, diags
 }
 
-func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Map) (plugin.Content, plugindata.Data, diagnostics.Diag) {
+func filterChildrenByTags(children []*Content, requiredTags []string) []*Content {
+	return slices.DeleteFunc(children, func(child *Content) bool {
+		switch {
+		case child.Plugin != nil:
+			return !child.Plugin.Meta.MatchesTags(requiredTags)
+		case child.Section != nil:
+			if child.Section.meta.MatchesTags(requiredTags) {
+				return false
+			}
+			child.Section.children = filterChildrenByTags(child.Section.children, requiredTags)
+			return len(child.Section.children) == 0
+		}
+		return false
+	})
+}
+
+func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Map, requiredTags []string) (*plugin.ContentSection, plugindata.Data, diagnostics.Diag) {
 	logger := *slog.Default()
 	logger.DebugContext(ctx, "Fetching data for the document template")
 	data, diags := doc.FetchData(ctx)
@@ -78,28 +94,38 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 
 	// verify required vars
 	if len(doc.RequiredVars) > 0 {
-		diag := verifyRequiredVars(docDataCtx, doc.RequiredVars, doc.Source.Block)
+		diag = verifyRequiredVars(docDataCtx, doc.RequiredVars, doc.Source.Block)
 		if diags.Extend(diag) {
 			return nil, nil, diags
 		}
 	}
 
+	// evaluate/expand dynamic blocks
+	children, diag := UnwrapDynamicContent(ctx, doc.ContentBlocks, docDataCtx)
+	if diags.Extend(diag) {
+		return nil, nil, diags
+	}
+	// filter out content blocks that do not match tags
+	if !doc.Meta.MatchesTags(requiredTags) {
+		children = filterChildrenByTags(children, requiredTags)
+	}
+
 	result := plugin.NewSection(0)
 	// create a position map for content blocks
-	posMap := make(map[int]uint32)
-	for i := range doc.ContentBlocks {
+	posMap := make(map[int]uint32, len(children))
+	for i := range children {
 		empty := new(plugin.ContentEmpty)
 		result.Add(empty, nil)
 		posMap[i] = empty.ID()
 	}
 	// sort content blocks by invocation order
-	invokeList := make([]int, 0, len(doc.ContentBlocks))
-	for i := range doc.ContentBlocks {
+	invokeList := make([]int, 0, len(children))
+	for i := range children {
 		invokeList = append(invokeList, i)
 	}
 	slices.SortStableFunc(invokeList, func(a, b int) int {
-		ao := doc.ContentBlocks[a].InvocationOrder()
-		bo := doc.ContentBlocks[b].InvocationOrder()
+		ao := children[a].InvocationOrder()
+		bo := children[b].InvocationOrder()
 		return ao.Weight() - bo.Weight()
 	})
 	// execute content blocks based on the invocation order
@@ -111,7 +137,7 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 		// TODO: if section, set section
 
 		// execute the content block
-		_, diag := doc.ContentBlocks[idx].RenderContent(ctx, dataCtx, result, result, posMap[idx])
+		diag := children[idx].RenderContent(ctx, dataCtx, result, result, posMap[idx])
 		if diags.Extend(diag) {
 			return nil, nil, diags
 		}

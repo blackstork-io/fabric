@@ -13,14 +13,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23"
+      - id: golangci-rev
+        name: Get the rev to compare against
+        run: |
+          git fetch origin main
+          echo "SHA=$(git merge-base origin/main @)" >> $GITHUB_OUTPUT
+
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.60.2
-          only-new-issues: true
+          only-new-issues: false
+          args: "--new-from-rev ${{ steps.golangci-rev.outputs.SHA }}"
 
   codegen-check:
     runs-on: ubuntu-latest

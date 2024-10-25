@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 
+	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
@@ -21,7 +23,7 @@ type PluginContentAction struct {
 	RequiredVars []string
 }
 
-func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (res *plugin.ContentResult, diags diagnostics.Diag) {
+func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (diags diagnostics.Diag) {
 	contentMap := plugindata.Map{}
 	if action.PluginAction.Meta != nil {
 		contentMap[definitions.BlockKindMeta] = action.PluginAction.Meta.AsPluginData()
@@ -34,22 +36,29 @@ func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx pl
 	if diags.Extend(diag) {
 		return
 	}
+	isIncluded, diag := dataspec.EvalAttr(ctx, action.IsIncluded, dataCtx)
+	if diags.Extend(diag) {
+		return
+	}
 
+	if isIncluded.IsNull() || !plugindata.IsTruthy(*plugindata.Encapsulated.MustFromCty(isIncluded)) {
+		return
+	}
 	if len(action.RequiredVars) > 0 {
-		diag := verifyRequiredVars(dataCtx, action.RequiredVars, action.Source.Block)
+		diag = verifyRequiredVars(dataCtx, action.RequiredVars, action.Source.Block)
 		if diags.Extend(diag) {
 			return
 		}
 	}
 
-	diags.Extend(dataspec.EvalBlock(ctx, action.Args, dataCtx))
-	if diags.HasErrors() {
+	evaluatedBlock, diag := dataspec.EvalBlockCopy(ctx, action.Args, dataCtx)
+	if diags.Extend(diag) {
 		return
 	}
 
-	res, diag = action.Provider.Execute(ctx, &plugin.ProvideContentParams{
+	res, diag := action.Provider.Execute(ctx, &plugin.ProvideContentParams{
 		Config:      action.Config,
-		Args:        action.Args,
+		Args:        evaluatedBlock,
 		DataContext: dataCtx,
 		ContentID:   contentID,
 	})
@@ -62,7 +71,7 @@ func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx pl
 		}
 	}
 	parent.Add(res.Content, res.Location)
-	return res, diags
+	return
 }
 
 func LoadPluginContentAction(ctx context.Context, providers ContentProviders, node *definitions.ParsedPlugin) (_ *PluginContentAction, diags diagnostics.Diag) {
@@ -100,6 +109,19 @@ func LoadPluginContentAction(ctx context.Context, providers ContentProviders, no
 	if diags.Extend(diag) {
 		return nil, diags
 	}
+	isIncluded := node.IsIncluded
+	if isIncluded == nil {
+		isIncluded = defaultIsIncluded(node.Source.Block.DefRange())
+	}
+
+	isIncludedAttr, diag := dataspec.DecodeAttr(
+		fabctx.GetEvalContext(deferred.WithQueryFuncs(ctx)),
+		isIncluded,
+		isIncludedSpec,
+	)
+	if diags.Extend(diag) {
+		return nil, diags
+	}
 	return &PluginContentAction{
 		PluginAction: &PluginAction{
 			Source:     node.Source,
@@ -108,9 +130,29 @@ func LoadPluginContentAction(ctx context.Context, providers ContentProviders, no
 			Meta:       node.Meta,
 			Config:     cfg,
 			Args:       args,
+			IsIncluded: isIncludedAttr,
 		},
 		Provider:     cp,
 		Vars:         node.Vars,
 		RequiredVars: node.RequiredVars,
 	}, diags
+}
+
+var isIncludedSpec = &dataspec.AttrSpec{
+	Name: "is_included",
+	Type: plugindata.Encapsulated.CtyType(),
+	Doc:  "Condition indicating whether content should be rendered",
+}
+
+func defaultIsIncluded(rng hcl.Range) *hclsyntax.Attribute {
+	return &hclsyntax.Attribute{
+		Name: definitions.AttrIsIncluded,
+		Expr: &hclsyntax.LiteralValueExpr{
+			Val:      plugindata.Encapsulated.ValToCty(plugindata.Bool(true)),
+			SrcRange: rng,
+		},
+		SrcRange:    rng,
+		NameRange:   rng,
+		EqualsRange: rng,
+	}
 }

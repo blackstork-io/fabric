@@ -24,6 +24,7 @@ type ParsedSection struct {
 	Content      []*ParsedContent
 	Vars         *ParsedVars
 	RequiredVars []string
+	IsIncluded   *hclsyntax.Attribute
 }
 
 func (s ParsedSection) Name() string {

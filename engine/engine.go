@@ -427,7 +427,7 @@ func (e *Engine) initialDataCtx(ctx context.Context) (data plugindata.Map, diags
 	return
 }
 
-func (e *Engine) RenderContent(ctx context.Context, target string) (doc *eval.Document, content plugin.Content, data plugindata.Data, diags diagnostics.Diag) {
+func (e *Engine) RenderContent(ctx context.Context, target string, requiredTags []string) (doc *eval.Document, content *plugin.ContentSection, data plugindata.Data, diags diagnostics.Diag) {
 	ctx, span := e.tracer.Start(ctx, "Engine.RenderContent", trace.WithAttributes(
 		attribute.String("target", target),
 	))
@@ -447,18 +447,23 @@ func (e *Engine) RenderContent(ctx context.Context, target string) (doc *eval.Do
 	if diags.Extend(diag) {
 		return
 	}
-	content, data, diag = doc.RenderContent(ctx, dataCtx)
+	content, data, diag = doc.RenderContent(ctx, dataCtx, requiredTags)
 	if diags.Extend(diag) {
 		return nil, nil, nil, diags
+	}
+
+	if content.IsEmpty() {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagWarning,
+			Summary:  "No content to render",
+			Detail:   "Document did not produce any content, perhaps it's empty or '--with-meta-tags' filter is too strict?",
+			Subject:  doc.Source.Block.DefRange().Ptr(),
+		})
 	}
 	return doc, content, data, diags
 }
 
-func (e *Engine) RenderAndPublishContent(ctx context.Context, target string) (content plugin.Content, diags diagnostics.Diag) {
-	doc, content, dataCtx, diag := e.RenderContent(ctx, target)
-	if diags.Extend(diag) {
-		return nil, diags
-	}
+func (e *Engine) PublishContent(ctx context.Context, target string, doc *eval.Document, content *plugin.ContentSection, dataCtx plugindata.Data) (diags diagnostics.Diag) {
 	ctx, span := e.tracer.Start(ctx, "Engine.Publish", trace.WithAttributes(
 		attribute.String("target", target),
 	))
@@ -470,11 +475,9 @@ func (e *Engine) RenderAndPublishContent(ctx context.Context, target string) (co
 		span.End()
 	}()
 	e.logger.InfoContext(ctx, "Publishing the content", "target", target)
-	diag = doc.Publish(ctx, content, dataCtx, target)
-	if diags.Extend(diag) {
-		return nil, diags
-	}
-	return content, diags
+	diag := doc.Publish(ctx, content, dataCtx, target)
+	diags.Extend(diag)
+	return
 }
 
 func (e *Engine) loadDocument(ctx context.Context, name string) (_ *eval.Document, diags diagnostics.Diag) {

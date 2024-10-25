@@ -206,11 +206,9 @@ func TestEnvPrefix(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		[]string{
 			"<no value>\nFABRIC_VAR\nFABRIC_TEST_VAR",
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "Custom",
@@ -226,11 +224,9 @@ func TestEnvPrefix(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		[]string{
 			"<no value>\n<no value>\nFABRIC_TEST_VAR",
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "Empty",
@@ -246,11 +242,9 @@ func TestEnvPrefix(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		[]string{
 			"<no value>\n<no value>\n<no value>",
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "Empty",
@@ -266,7 +260,6 @@ func TestEnvPrefix(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		[]string{
 			"<no value>\n<no value>\nFABRIC_TEST_VAR",
 		},
@@ -289,7 +282,6 @@ func TestEnvPrefix(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		nil,
 		diagtest.Asserts{{
 			diagtest.IsError,
@@ -310,11 +302,9 @@ func TestEnvPrefix(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		[]string{
 			"<no value>\n<no value>\n<no value>",
 		},
-		diagtest.Asserts{},
 	)
 }
 
@@ -342,12 +332,11 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"hello",
 		[]string{
 			"# Welcome",
 			"Hello from fabric",
 		},
-		diagtest.Asserts{},
+		optDocName("hello"),
 	)
 	renderTest(
 		t, "Ref",
@@ -365,12 +354,10 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		[]string{
 			"# Welcome",
 			"Hello from ref",
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "Ref across files",
@@ -389,12 +376,10 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		[]string{
 			"# Welcome",
 			"Hello from ref",
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "Ref chain",
@@ -416,11 +401,9 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		[]string{
 			"> Hello from ref chain",
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "Ref loop untouched",
@@ -450,11 +433,9 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		[]string{
 			"Near refloop",
 		},
-		diagtest.Asserts{},
 	)
 
 	renderTest(
@@ -485,7 +466,6 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		[]string{},
 		diagtest.Asserts{
 			{diagtest.IsError, diagtest.SummaryContains("Circular reference detected")},
@@ -547,7 +527,6 @@ func TestEngineRenderContent(t *testing.T) {
 
 			`,
 		},
-		"test-doc",
 		[]string{
 			"## sect1",
 			"s1",
@@ -561,7 +540,6 @@ func TestEngineRenderContent(t *testing.T) {
 			"s3 extra",
 			"final section",
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "Templating support",
@@ -574,11 +552,9 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		[]string{
 			"4",
 		},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "Data ref name warning missing",
@@ -594,9 +570,10 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		[]string{},
-		diagtest.Asserts{},
+		diagtest.Asserts{
+			{diagtest.IsWarning, diagtest.SummaryContains("No content")},
+		},
 	)
 	renderTest(
 		t, "Data ref name warning",
@@ -615,10 +592,10 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		[]string{},
 		diagtest.Asserts{
 			{diagtest.IsWarning, diagtest.SummaryContains("Data conflict")},
+			{diagtest.IsWarning, diagtest.SummaryContains("No content")},
 		},
 	)
 	renderTest(
@@ -635,14 +612,11 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		[]string{"txt"},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "No fabric files",
 		[]string{},
-		"test-doc",
 		[]string{},
 		diagtest.Asserts{
 			{diagtest.IsError, diagtest.SummaryContains("No valid fabric files found")},
@@ -662,9 +636,7 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"test-doc",
 		[]string{"From data block: a.json"},
-		diagtest.Asserts{},
 	)
 	renderTest(
 		t, "Data with jq interaction",
@@ -683,9 +655,8 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"test",
 		[]string{"There are 3 items"},
-		diagtest.Asserts{},
+		optDocName("test"),
 	)
 	renderTest(
 		t, "Document meta",
@@ -708,9 +679,8 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"test",
 		[]string{"authors=foo,bar,\nversion=0.1.2,\ntag=xxx"},
-		diagtest.Asserts{},
+		optDocName("test"),
 	)
 	renderTest(
 		t, "Document and content meta",
@@ -735,9 +705,8 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"test",
 		[]string{"author = foobarbaz"},
-		diagtest.Asserts{},
+		optDocName("test"),
 	)
 	renderTest(
 		t, "Meta scoping and nesting",
@@ -780,7 +749,6 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"test",
 		[]string{
 			"author = unknown",
 			"author = unknown",
@@ -788,7 +756,7 @@ func TestEngineRenderContent(t *testing.T) {
 			"author = unknown",
 			"author = bar",
 		},
-		diagtest.Asserts{},
+		optDocName("test"),
 	)
 	renderTest(
 		t, "Reference rendered blocks",
@@ -809,12 +777,11 @@ func TestEngineRenderContent(t *testing.T) {
 			}
 			`,
 		},
-		"test",
 		[]string{
 			"first result",
 			"content[0] = first result",
 			"content[1] = content[0] = first result",
 		},
-		diagtest.Asserts{},
+		optDocName("test"),
 	)
 }

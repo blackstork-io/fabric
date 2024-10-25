@@ -69,10 +69,12 @@ func FuzzEngine(f *testing.F) {
 		if diags.HasErrors() {
 			return
 		}
+		doc, renderedContent, dataCtx, diags := eng.RenderContent(ctx, string(target), []string{})
+		if diags.HasErrors() {
+			return
+		}
 		if publish {
-			eng.RenderAndPublishContent(ctx, string(target))
-		} else {
-			eng.RenderContent(ctx, string(target))
+			eng.PublishContent(ctx, string(target), doc, renderedContent, dataCtx)
 		}
 	})
 }

@@ -1,6 +1,8 @@
 package definitions
 
 import (
+	"github.com/hashicorp/hcl/v2/hclsyntax"
+
 	"github.com/blackstork-io/fabric/parser/evaluation"
 )
 
@@ -13,9 +15,11 @@ type ParsedPlugin struct {
 	Invocation   *evaluation.BlockInvocation
 	Vars         *ParsedVars
 	RequiredVars []string
+	IsIncluded   *hclsyntax.Attribute
 }
 
 type ParsedContent struct {
 	Section *ParsedSection
 	Plugin  *ParsedPlugin
+	Dynamic *ParsedDynamic
 }

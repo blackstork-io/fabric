@@ -1,6 +1,10 @@
 package definitions
 
-import "github.com/blackstork-io/fabric/plugin/plugindata"
+import (
+	"slices"
+
+	"github.com/blackstork-io/fabric/plugin/plugindata"
+)
 
 type MetaBlock struct {
 	Name        string   `hcl:"name,optional"`
@@ -13,6 +17,22 @@ type MetaBlock struct {
 	Version     string   `hcl:"version,optional"`
 
 	// TODO: ?store def range defRange hcl.Range
+}
+
+func (m *MetaBlock) MatchesTags(requiredTags []string) bool {
+	var tags []string
+	if m != nil {
+		tags = m.Tags
+	}
+	if len(tags) < len(requiredTags) {
+		return false
+	}
+	for _, tag := range requiredTags {
+		if !slices.Contains(tags, tag) {
+			return false
+		}
+	}
+	return true
 }
 
 func (m *MetaBlock) AsPluginData() plugindata.Data {

@@ -51,6 +51,8 @@ func (db *DefinedBlocks) ParsePlugin(ctx context.Context, plugin *definitions.Pl
 }
 
 func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Plugin) (parsed *definitions.ParsedPlugin, diags diagnostics.Diag) {
+	var diag diagnostics.Diag
+
 	res := definitions.ParsedPlugin{
 		Source:     plugin,
 		PluginName: plugin.Name(),
@@ -60,6 +62,10 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 
 	// Parsing body
 	body := plugin.Block.Body
+
+	if plugin.Kind() == definitions.BlockKindContent {
+		res.IsIncluded, _ = utils.Pop(body.Attributes, definitions.AttrIsIncluded)
+	}
 
 	configAttr, _ := utils.Pop(body.Attributes, definitions.BlockKindConfig)
 	var configBlock, varsBlock *hclsyntax.Block
@@ -125,7 +131,6 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 	)
 
 	localVar, _ := utils.Pop(body.Attributes, definitions.AttrLocalVar)
-	var diag diagnostics.Diag
 	res.Vars, diag = ParseVars(ctx, varsBlock, localVar)
 	diags.Extend(diag)
 
@@ -143,11 +148,11 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 	// Parsing the ref
 	var refBaseConfig evaluation.Configuration
 
-	refBase, refFound := utils.Pop(body.Attributes, definitions.AttrRefBase)
+	refBase, refBaseFound := utils.Pop(body.Attributes, definitions.AttrRefBase)
 	pluginIsRef := plugin.IsRef()
 	switch {
-	case !pluginIsRef && !refFound: // happy path, no ref
-	case pluginIsRef && refFound: // happy path, ref present
+	case !pluginIsRef && !refBaseFound: // happy path, no ref
+	case pluginIsRef && refBaseFound: // happy path, ref present
 		baseEval, diag := db.parseRefBase(ctx, plugin, refBase.Expr)
 		if diags.Extend(diag) {
 			return
@@ -163,10 +168,13 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 
 		res.Vars = res.Vars.MergeWithBaseVars(baseEval.Vars)
 		res.RequiredVars = append(res.RequiredVars, baseEval.RequiredVars...)
+		if res.IsIncluded == nil {
+			res.IsIncluded = baseEval.IsIncluded
+		}
 
 		updateRefBody(invocation.Body, baseEval.Invocation.Body)
 
-	case pluginIsRef && !refFound:
+	case pluginIsRef && !refBaseFound:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Ref block missing 'base' argument",
@@ -175,7 +183,7 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 			Context:  &body.SrcRange,
 		})
 		return
-	case !pluginIsRef && refFound:
+	case !pluginIsRef && refBaseFound:
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
 			Summary:  "Non-ref block contains 'base' argument",
@@ -187,7 +195,8 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 
 	var dgs diagnostics.Diag
 	res.Config, dgs = db.parsePluginConfig(plugin, configAttr, configBlock, refBaseConfig)
-	if diags.Extend(dgs) {
+	diags.Extend(dgs)
+	if diags.HasErrors() {
 		return
 	}
 

@@ -51,7 +51,10 @@ func (db *DefinedBlocks) parseSection(ctx context.Context, section *definitions.
 	res := definitions.ParsedSection{}
 	res.Source = section
 	if title := section.Block.Body.Attributes["title"]; title != nil {
-		res.Title = definitions.NewTitle(title, db.DefaultConfig)
+		titleContent, diag := db.ParseTitle(ctx, title)
+		if !diag.Extend(diags) {
+			res.Title = titleContent
+		}
 	}
 
 	var origMeta *hcl.Range
@@ -81,6 +84,7 @@ func (db *DefinedBlocks) parseSection(ctx context.Context, section *definitions.
 			definitions.BlockKindMeta,
 			definitions.BlockKindSection,
 			definitions.BlockKindVars,
+			definitions.BlockKindDynamic,
 		}
 	}
 	validChildrenSet := utils.SliceToSet(validChildren)
@@ -158,6 +162,14 @@ func (db *DefinedBlocks) parseSection(ctx context.Context, section *definitions.
 			res.Content = append(res.Content, &definitions.ParsedContent{
 				Section: parsedSubSection,
 			})
+		case definitions.BlockKindDynamic:
+			dynamic, diag := db.ParseDynamic(ctx, block)
+			if diags.Extend(diag) {
+				continue
+			}
+			res.Content = append(res.Content, &definitions.ParsedContent{
+				Dynamic: dynamic,
+			})
 		}
 	}
 
@@ -173,6 +185,8 @@ func (db *DefinedBlocks) parseSection(ctx context.Context, section *definitions.
 		diag := gohcl.DecodeExpression(requiredVarsAttr.Expr, nil, &res.RequiredVars)
 		diags.Extend(diag)
 	}
+
+	res.IsIncluded = section.Block.Body.Attributes[definitions.AttrIsIncluded]
 
 	if refBase == nil {
 		parsed = &res
@@ -206,6 +220,9 @@ func (db *DefinedBlocks) parseSection(ctx context.Context, section *definitions.
 	}
 	if res.Meta == nil {
 		res.Meta = baseEval.Meta
+	}
+	if res.IsIncluded == nil {
+		res.IsIncluded = baseEval.IsIncluded
 	}
 	res.Vars = res.Vars.MergeWithBaseVars(baseEval.Vars)
 	res.RequiredVars = append(res.RequiredVars, baseEval.RequiredVars...)
