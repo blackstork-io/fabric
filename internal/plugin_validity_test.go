@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/github"
 	"github.com/blackstork-io/fabric/internal/graphql"
 	"github.com/blackstork-io/fabric/internal/hackerone"
+	"github.com/blackstork-io/fabric/internal/iris"
 	"github.com/blackstork-io/fabric/internal/microsoft"
 	"github.com/blackstork-io/fabric/internal/nistnvd"
 	"github.com/blackstork-io/fabric/internal/openai"
@@ -46,6 +47,7 @@ func TestAllPluginSchemaValidity(t *testing.T) {
 		nistnvd.Plugin(ver, nil),
 		snyk.Plugin(ver, nil),
 		microsoft.Plugin(ver, nil, nil, nil),
+		iris.Plugin(ver, nil),
 	}
 	for _, p := range plugins {
 		p := p

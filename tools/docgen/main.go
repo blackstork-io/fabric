@@ -21,6 +21,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/github"
 	"github.com/blackstork-io/fabric/internal/graphql"
 	"github.com/blackstork-io/fabric/internal/hackerone"
+	"github.com/blackstork-io/fabric/internal/iris"
 	"github.com/blackstork-io/fabric/internal/microsoft"
 	"github.com/blackstork-io/fabric/internal/nistnvd"
 	"github.com/blackstork-io/fabric/internal/openai"
@@ -280,6 +281,7 @@ func main() {
 		snyk.Plugin(version, nil),
 		microsoft.Plugin(version, nil, nil, nil),
 		crowdstrike.Plugin(version, nil),
+		iris.Plugin(version, nil),
 	}
 	// generate markdown for each plugin
 	for _, p := range plugins {
