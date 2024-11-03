@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/blackstork-io/fabric/internal/atlassian"
 	"github.com/blackstork-io/fabric/internal/builtin"
 	"github.com/blackstork-io/fabric/internal/elastic"
 	"github.com/blackstork-io/fabric/internal/github"
@@ -48,6 +49,7 @@ func TestAllPluginSchemaValidity(t *testing.T) {
 		snyk.Plugin(ver, nil),
 		microsoft.Plugin(ver, nil, nil, nil, nil),
 		iris.Plugin(ver, nil),
+		atlassian.Plugin(ver, nil),
 	}
 	for _, p := range plugins {
 		p := p

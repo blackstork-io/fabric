@@ -166,3 +166,12 @@ builds:
     no_unique_dist_dir: true
     tags:
       - fabricplugin
+
+  - id: atlassian
+    main: ./internal/atlassian/cmd
+    binary: "plugins/blackstork/atlassian@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
