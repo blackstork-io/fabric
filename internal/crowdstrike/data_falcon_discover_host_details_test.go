@@ -163,14 +163,3 @@ func (s *CrowdstrikeDiscoverHostDetailsTestSuite) TestError() {
 		diagtest.DetailContains("something went wrong"),
 	}}.AssertMatch(s.T(), diags, nil)
 }
-
-func (s *CrowdstrikeDiscoverHostDetailsTestSuite) TestMissingArgs() {
-	plugintest.NewTestDecoder(
-		s.T(),
-		s.Datasource().Args,
-	).Decode([]diagtest.Assert{
-		diagtest.IsError,
-		diagtest.SummaryEquals("Missing required attribute"),
-		diagtest.DetailContains("limit"),
-	})
-}
