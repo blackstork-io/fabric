@@ -91,7 +91,7 @@ func (s *CrowdstrikeCspmIomsTestSuite) TestBasic() {
 			SetAttr("client_secret", cty.StringVal("test")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.plugin.DataSources["falcon_cspm_ioms"].Args).
-			SetAttr("size", cty.NumberIntVal(10)).
+			SetAttr("limit", cty.NumberIntVal(10)).
 			Decode(),
 	})
 	s.Require().Nil(diags)
@@ -131,7 +131,7 @@ func (s *CrowdstrikeCspmIomsTestSuite) TestPayloadErrors() {
 			SetAttr("client_secret", cty.StringVal("test")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.plugin.DataSources["falcon_cspm_ioms"].Args).
-			SetAttr("size", cty.NumberIntVal(10)).
+			SetAttr("limit", cty.NumberIntVal(10)).
 			Decode(),
 	})
 	diagtest.Asserts{{
@@ -153,7 +153,7 @@ func (s *CrowdstrikeCspmIomsTestSuite) TestError() {
 			SetAttr("client_secret", cty.StringVal("test")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.plugin.DataSources["falcon_cspm_ioms"].Args).
-			SetAttr("size", cty.NumberIntVal(10)).
+			SetAttr("limit", cty.NumberIntVal(10)).
 			Decode(),
 	})
 	diagtest.Asserts{{
@@ -161,15 +161,4 @@ func (s *CrowdstrikeCspmIomsTestSuite) TestError() {
 		diagtest.SummaryContains("Failed to fetch Falcon CSPM IOMs"),
 		diagtest.DetailContains("something went wrong"),
 	}}.AssertMatch(s.T(), diags, nil)
-}
-
-func (s *CrowdstrikeCspmIomsTestSuite) TestMissingArgs() {
-	plugintest.NewTestDecoder(
-		s.T(),
-		s.plugin.DataSources["falcon_cspm_ioms"].Args,
-	).Decode([]diagtest.Assert{
-		diagtest.IsError,
-		diagtest.SummaryEquals("Missing required attribute"),
-		diagtest.DetailContains("size"),
-	})
 }

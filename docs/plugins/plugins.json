@@ -148,7 +148,7 @@
           "member_cid"
         ],
         "arguments": [
-          "size"
+          "limit"
         ]
       },
       {

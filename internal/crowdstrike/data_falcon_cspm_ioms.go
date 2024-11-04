@@ -23,9 +23,10 @@ func makeFalconCspmIomsDataSource(loader ClientLoaderFn) *plugin.DataSource {
 		Args: &dataspec.RootSpec{
 			Attrs: []*dataspec.AttrSpec{
 				{
-					Name:        "size",
+					Name:        "limit",
 					Type:        cty.Number,
-					Constraints: constraint.Integer | constraint.RequiredNonNull,
+					Constraints: constraint.Integer,
+					DefaultVal:  cty.NumberIntVal(10),
 					Doc:         "limit the number of queried items",
 				},
 			},
@@ -43,7 +44,7 @@ func fetchFalconCspmIomsData(loader ClientLoaderFn) plugin.RetrieveDataFunc {
 				Detail:   err.Error(),
 			}}
 		}
-		size, _ := params.Args.GetAttrVal("size").AsBigFloat().Int64()
+		size, _ := params.Args.GetAttrVal("limit").AsBigFloat().Int64()
 		apiParams := cspm_registration.NewGetConfigurationDetectionsParams().WithDefaults()
 		apiParams.SetLimit(&size)
 		apiParams.Context = ctx

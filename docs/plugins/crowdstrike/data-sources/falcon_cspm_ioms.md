@@ -80,8 +80,8 @@ The data source supports the following execution arguments:
 data falcon_cspm_ioms {
   # limit the number of queried items
   #
-  # Required integer.
-  # For example:
-  size = 42
+  # Optional integer.
+  # Default value:
+  limit = 10
 }
 ```
