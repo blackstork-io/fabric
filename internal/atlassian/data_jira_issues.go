@@ -2,7 +2,6 @@ package atlassian
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
@@ -76,6 +75,7 @@ func makeJiraIssuesDataSource(loader ClientLoadFn) *plugin.DataSource {
 					Type:         cty.List(cty.String),
 					Doc:          "A list of up to 5 issue properties to include in the results.",
 					MaxInclusive: cty.NumberIntVal(5),
+					DefaultVal:   cty.ListValEmpty(cty.String),
 				},
 				{
 					Name:         "size",
@@ -106,11 +106,10 @@ func searchJiraIssuesData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 				Summary:  "Failed to parse arguments",
 			}}
 		}
-		size := 0
-		if attr := params.Args.GetAttrVal("size"); !attr.IsNull() {
-			num, _ := attr.AsBigFloat().Int64()
-			size = int(num)
-		}
+
+		num, _ := params.Args.GetAttrVal("size").AsBigFloat().Int64()
+		size := int(num)
+
 		var issues plugindata.List
 		for {
 			res, err := cli.SearchIssues(ctx, req)
@@ -140,9 +139,6 @@ func searchJiraIssuesData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 }
 
 func parseSearchIssuesReq(args *dataspec.Block) (*client.SearchIssuesReq, error) {
-	if args == nil {
-		return nil, fmt.Errorf("arguments are required")
-	}
 	req := &client.SearchIssuesReq{}
 	if attr := args.GetAttrVal("expand"); !attr.IsNull() {
 		req.Expand = client.String(attr.AsString())
@@ -158,13 +154,11 @@ func parseSearchIssuesReq(args *dataspec.Block) (*client.SearchIssuesReq, error)
 			req.Fields = append(req.Fields, field.AsString())
 		}
 	}
-	if attr := args.GetAttrVal("properties"); !attr.IsNull() {
-		for _, property := range attr.AsValueSlice() {
-			if property.IsNull() {
-				continue
-			}
-			req.Properties = append(req.Properties, property.AsString())
+	for _, property := range args.GetAttrVal("properties").AsValueSlice() {
+		if property.IsNull() {
+			continue
 		}
+		req.Properties = append(req.Properties, property.AsString())
 	}
 	return req, nil
 }

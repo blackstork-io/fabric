@@ -102,7 +102,7 @@ data jira_issues {
   # Optional list of string.
   # Must have a length of at most 5
   # Default value:
-  properties = null
+  properties = []
 
   # Size limit to retrieve.
   #
