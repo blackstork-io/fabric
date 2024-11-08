@@ -390,6 +390,58 @@
     ]
   },
   {
+    "name": "blackstork/iris",
+    "version": "v0.4.2",
+    "shortname": "iris",
+    "resources": [
+      {
+        "name": "iris_alerts",
+        "type": "data-source",
+        "config_params": [
+          "api_key",
+          "api_url",
+          "insecure"
+        ],
+        "arguments": [
+          "alert_end_date",
+          "alert_ids",
+          "alert_source",
+          "alert_start_date",
+          "case_id",
+          "classification_id",
+          "customer_id",
+          "owner_id",
+          "severity_id",
+          "size",
+          "sort",
+          "status_id",
+          "tags"
+        ]
+      },
+      {
+        "name": "iris_cases",
+        "type": "data-source",
+        "config_params": [
+          "api_key",
+          "api_url",
+          "insecure"
+        ],
+        "arguments": [
+          "case_ids",
+          "customer_id",
+          "end_open_date",
+          "owner_id",
+          "severity_id",
+          "size",
+          "soc_id",
+          "sort",
+          "start_open_date",
+          "state_id"
+        ]
+      }
+    ]
+  },
+  {
     "name": "blackstork/microsoft",
     "version": "v0.4.2",
     "shortname": "microsoft",

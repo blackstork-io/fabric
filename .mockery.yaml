@@ -35,6 +35,10 @@ packages:
     config:
     interfaces:
       Client:
+  github.com/blackstork-io/fabric/internal/iris/client:
+    config:
+    interfaces:
+      Client:
   github.com/blackstork-io/fabric/internal/elastic/kbclient:
     config:
     interfaces:

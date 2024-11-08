@@ -157,3 +157,12 @@ builds:
   #   no_unique_dist_dir: true
   #   tags:
   #     - fabricplugin
+
+  # - id: iris
+  #   main: ./internal/iris/cmd
+  #   binary: "plugins/blackstork/iris@{{ .Version }}"
+  #   ldflags: "-X main.version={{.Version}}"
+  #   gcflags: all=-N -l
+  #   no_unique_dist_dir: true
+  #   tags:
+  #     - fabricplugin
