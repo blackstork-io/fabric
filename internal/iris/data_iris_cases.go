@@ -123,11 +123,8 @@ func fetchIrisCasesData(loader ClientLoadFn) plugin.RetrieveDataFunc {
 				Summary:  "Failed to parse arguments",
 			}}
 		}
-		size := 0
-		if attr := params.Args.GetAttrVal("size"); !attr.IsNull() {
-			num, _ := attr.AsBigFloat().Int64()
-			size = int(num)
-		}
+		num, _ := params.Args.GetAttrVal("size").AsBigFloat().Int64()
+		size := int(num)
 		req.Page = 1
 		var cases plugindata.List
 		for {
