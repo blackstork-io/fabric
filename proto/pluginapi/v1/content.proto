@@ -30,11 +30,13 @@ message Content {
 
 message ContentSection {
     repeated Content children = 1;
+    ast.v1.Metadata  meta     = 2;
 }
 
 message ContentElement {
     bytes markdown = 1;
     optional ast.v1.FabricContentNode ast = 2;
+    ast.v1.Metadata  meta     = 3;
 }
 
 message ContentEmpty {}

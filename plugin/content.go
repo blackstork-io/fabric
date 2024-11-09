@@ -52,7 +52,7 @@ type ContentResult struct {
 
 type Content interface {
 	setID(id uint32)
-	setMeta(meta *nodes.ContentMeta)
+	SetMeta(meta *nodes.ContentMeta)
 	AsData() plugindata.Data
 	ID() uint32
 	AsPluginData() plugindata.Data
@@ -68,7 +68,7 @@ func (n *ContentEmpty) setID(id uint32) {
 	n.id = id
 }
 
-func (n *ContentEmpty) setMeta(meta *nodes.ContentMeta) {
+func (n *ContentEmpty) SetMeta(meta *nodes.ContentMeta) {
 	n.meta = meta
 }
 
@@ -163,10 +163,10 @@ func (c *ContentSection) setID(id uint32) {
 	c.id = id
 }
 
-func (c *ContentSection) setMeta(meta *nodes.ContentMeta) {
+func (c *ContentSection) SetMeta(meta *nodes.ContentMeta) {
 	c.meta = meta
 	for _, child := range c.Children {
-		child.setMeta(meta)
+		child.SetMeta(meta)
 	}
 }
 
@@ -262,10 +262,11 @@ func NewElementFromMarkdown(source string) *ContentElement {
 // NewElementFromMarkdownAndAST creates a new content element from a markdown string and an AST.
 // This is a temporary method to allow for a smooth transition to the new AST.
 // Should only be used for deserialization purposes during the transition.
-func NewElementFromMarkdownAndAST(source []byte, ast *astv1.FabricContentNode) *ContentElement {
+func NewElementFromMarkdownAndAST(source []byte, ast *astv1.FabricContentNode, meta *astv1.Metadata) *ContentElement {
 	return &ContentElement{
 		mdString:       source,
 		serializedNode: ast,
+		meta:           astv1.DecodeMetadata(meta),
 	}
 }
 
@@ -356,7 +357,7 @@ func (c *ContentElement) Meta() *nodes.ContentMeta {
 	return c.meta
 }
 
-func (c *ContentElement) setMeta(meta *nodes.ContentMeta) {
+func (c *ContentElement) SetMeta(meta *nodes.ContentMeta) {
 	c.meta = meta
 }
 

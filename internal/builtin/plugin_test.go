@@ -26,4 +26,5 @@ func TestPluginSchema(t *testing.T) {
 	assert.NotNil(t, schema.ContentProviders["frontmatter"])
 	// Publishers
 	assert.NotNil(t, schema.Publishers["local_file"])
+	assert.NotNil(t, schema.Publishers["hub"])
 }

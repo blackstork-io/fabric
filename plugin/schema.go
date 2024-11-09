@@ -104,7 +104,7 @@ func (p *Schema) ProvideContent(ctx context.Context, name string, params *Provid
 		return nil, diags
 	}
 	// TODO: set metadata in content provider
-	result.Content.setMeta(&nodes.ContentMeta{
+	result.Content.SetMeta(&nodes.ContentMeta{
 		Provider: name,
 		Plugin:   p.Name,
 		Version:  p.Version,

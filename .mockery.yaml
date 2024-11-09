@@ -47,6 +47,14 @@ packages:
     config:
     interfaces:
       Client:
+  github.com/blackstork-io/fabric/internal/microsoft/client:
+    config:
+    interfaces:
+      Client:
+  github.com/blackstork-io/fabric/internal/builtin/hubapi:
+    config:
+    interfaces:
+      Client:
   github.com/blackstork-io/fabric/internal/microsoft:
     config:
     interfaces:

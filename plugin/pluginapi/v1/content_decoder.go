@@ -6,6 +6,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
+	astv1 "github.com/blackstork-io/fabric/plugin/ast/v1"
 )
 
 func decodeContentResult(src *ContentResult) *plugin.ContentResult {
@@ -13,19 +14,21 @@ func decodeContentResult(src *ContentResult) *plugin.ContentResult {
 		return nil
 	}
 	return &plugin.ContentResult{
-		Content:  decodeContent(src.Content),
+		Content:  DecodeContent(src.Content),
 		Location: decodeLocation(src.Location),
 	}
 }
 
-func decodeContent(src *Content) plugin.Content {
+func DecodeContent(src *Content) plugin.Content {
 	switch val := src.GetValue().(type) {
 	case *Content_Element:
-		return plugin.NewElementFromMarkdownAndAST(val.Element.GetMarkdown(), val.Element.GetAst())
+		return plugin.NewElementFromMarkdownAndAST(val.Element.GetMarkdown(), val.Element.GetAst(), val.Element.GetMeta())
 	case *Content_Section:
-		return &plugin.ContentSection{
-			Children: utils.FnMap(val.Section.GetChildren(), decodeContent),
+		section := &plugin.ContentSection{
+			Children: utils.FnMap(val.Section.GetChildren(), DecodeContent),
 		}
+		section.SetMeta(astv1.DecodeMetadata(val.Section.GetMeta()))
+		return section
 	case *Content_Empty:
 		return &plugin.ContentEmpty{}
 	case nil:
