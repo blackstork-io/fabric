@@ -46,7 +46,7 @@ func TestAllPluginSchemaValidity(t *testing.T) {
 		splunk.Plugin(ver, nil),
 		nistnvd.Plugin(ver, nil),
 		snyk.Plugin(ver, nil),
-		microsoft.Plugin(ver, nil, nil, nil),
+		microsoft.Plugin(ver, nil, nil, nil, nil),
 		iris.Plugin(ver, nil),
 	}
 	for _, p := range plugins {

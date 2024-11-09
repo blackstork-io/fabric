@@ -20,23 +20,24 @@ import (
 )
 
 func TestPlugin_Schema(t *testing.T) {
-	schema := Plugin("1.2.3", nil, nil, nil)
+	schema := Plugin("1.2.3", nil, nil, nil, nil)
 	assert.Equal(t, "blackstork/microsoft", schema.Name)
 	assert.Equal(t, "1.2.3", schema.Version)
 	assert.NotNil(t, schema.DataSources["microsoft_sentinel_incidents"])
-	assert.NotNil(t, schema.ContentProviders["azure_openai_text"])
 	assert.NotNil(t, schema.DataSources["microsoft_graph"])
+	assert.NotNil(t, schema.DataSources["microsoft_security"])
+	assert.NotNil(t, schema.ContentProviders["azure_openai_text"])
 }
 
 func TestMakeDefaultGraphClientLoader(t *testing.T) {
-	loader := MakeDefaultMicrosoftGraphClientLoader(func(ctx context.Context, tenantId, clientId string, cred confidential.Credential) (string, error) {
+	loader := MakeDefaultMicrosoftGraphClientLoader(func(ctx context.Context, tenantId, clientId string, cred confidential.Credential, scopes []string) (string, error) {
 		return "test-token", nil
 	})
 	assert.NotNil(t, loader)
 
 	plugin := Plugin("1.0.0", nil, nil, (func(ctx context.Context, apiVersion string, cfg *dataspec.Block) (client MicrosoftGraphClient, err error) {
 		return nil, nil
-	}))
+	}), nil)
 	t.Run("with client secret", func(t *testing.T) {
 		result := plugintest.NewTestDecoder(t, plugin.DataSources["microsoft_graph"].Config).
 			SetAttr("client_id", cty.StringVal("cid")).
@@ -66,7 +67,7 @@ func TestMakeDefaultGraphClientLoader(t *testing.T) {
 			Decode()
 		_, err := loader(context.Background(), "2023-11-01", result)
 		assert.NotNil(t, err)
-		assert.EqualError(t, err, "missing credentials to authenticate. client_secret or private_key is required")
+		assert.EqualError(t, err, "Either `client_secret` or `private_key` / `private_key_file` arguments must be provided")
 	})
 
 	t.Run("should use private key contents if specified", func(t *testing.T) {

@@ -10,6 +10,12 @@ var version string
 
 func main() {
 	pluginapiv1.Serve(
-		microsoft.Plugin(version, microsoft.DefaultClientLoader, microsoft.DefaultAzureOpenAIClientLoader, microsoft.MakeDefaultMicrosoftGraphClientLoader(client.AcquireToken)),
+		microsoft.Plugin(
+			version,
+			microsoft.MakeDefaultAzureClientLoader(client.AcquireAzureToken),
+			client.MakeAzureOpenAIClientLoader(),
+			microsoft.MakeDefaultMicrosoftGraphClientLoader(client.AcquireAzureToken),
+			microsoft.MakeDefaultMicrosoftSecurityClientLoader(client.AcquireAzureToken),
+		),
 	)
 }

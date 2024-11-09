@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"github.com/blackstork-io/fabric/internal/microsoft/client"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -20,7 +21,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-func makeAzureOpenAITextContentSchema(loader AzureOpenaiClientLoadFn) *plugin.ContentProvider {
+func makeAzureOpenAITextContentSchema(loader client.AzureOpenAIClientLoadFn) *plugin.ContentProvider {
 	return &plugin.ContentProvider{
 		Config: &dataspec.RootSpec{
 			Attrs: []*dataspec.AttrSpec{
@@ -80,11 +81,11 @@ func makeAzureOpenAITextContentSchema(loader AzureOpenaiClientLoadFn) *plugin.Co
 	}
 }
 
-func genOpenAIText(loader AzureOpenaiClientLoadFn) plugin.ProvideContentFunc {
+func genOpenAIText(clientLoader client.AzureOpenAIClientLoadFn) plugin.ProvideContentFunc {
 	return func(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
 		apiKey := params.Config.GetAttrVal("api_key").AsString()
 		resourceEndpoint := params.Config.GetAttrVal("resource_endpoint").AsString()
-		client, err := loader(apiKey, resourceEndpoint)
+		client, err := clientLoader(apiKey, resourceEndpoint)
 		if err != nil {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
@@ -106,7 +107,7 @@ func genOpenAIText(loader AzureOpenaiClientLoadFn) plugin.ProvideContentFunc {
 	}
 }
 
-func renderText(ctx context.Context, cli AzureOpenaiClient, cfg, args *dataspec.Block, dataCtx plugindata.Map) (string, error) {
+func renderText(ctx context.Context, cli client.AzureOpenAIClient, cfg, args *dataspec.Block, dataCtx plugindata.Map) (string, error) {
 	params := azopenai.CompletionsOptions{}
 	params.DeploymentName = to.Ptr(cfg.GetAttrVal("deployment_name").AsString())
 

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/go-querystring/query"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/internal/microsoft/client"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
@@ -15,10 +15,27 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-func makeMicrosoftSentinelIncidentsDataSource(loader ClientLoadFn) *plugin.DataSource {
+type GetIncidentsReq struct {
+	SubscriptionID    string  `url:"-"`
+	ResourceGroupName string  `url:"-"`
+	WorkspaceName     string  `url:"-"`
+	Size              int     `url:"-"`
+	Filter            *string `url:"$filter,omitempty"`
+	OrderBy           *string `url:"$orderby,omitempty"`
+}
+
+func StringRef(val string) *string {
+	return &val
+}
+
+// func IntRef(val int) *int {
+// 	return &val
+// }
+
+func makeMicrosoftSentinelIncidentsDataSource(clientLoader AzureClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
 		Doc:      "The `microsoft_sentinel_incidents` data source fetches incidents from Microsoft Sentinel.",
-		DataFunc: fetchMicrosoftSentinelIncidents(loader),
+		DataFunc: fetchMicrosoftSentinelIncidents(clientLoader),
 		Config: &dataspec.RootSpec{
 			Attrs: []*dataspec.AttrSpec{
 				{
@@ -68,9 +85,12 @@ func makeMicrosoftSentinelIncidentsDataSource(loader ClientLoadFn) *plugin.DataS
 					Type: cty.String,
 				},
 				{
-					Doc:  "The maximum number of incidents to return",
-					Name: "limit",
-					Type: cty.Number,
+					Name:         "size",
+					Doc:          "Number of objects to be returned",
+					Type:         cty.Number,
+					Constraints:  constraint.NonNull,
+					DefaultVal:   cty.NumberIntVal(50),
+					MinInclusive: cty.NumberIntVal(1),
 				},
 				{
 					Doc:  "The order by expression",
@@ -82,17 +102,17 @@ func makeMicrosoftSentinelIncidentsDataSource(loader ClientLoadFn) *plugin.DataS
 	}
 }
 
-func fetchMicrosoftSentinelIncidents(loader ClientLoadFn) plugin.RetrieveDataFunc {
+func fetchMicrosoftSentinelIncidents(clientLoader AzureClientLoadFn) plugin.RetrieveDataFunc {
 	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
-		client, err := makeClient(ctx, loader, params.Config)
+		client, err := clientLoader(ctx, params.Config)
 		if err != nil {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
-				Summary:  "Unable to create Microsoft Sentinel client",
+				Summary:  "Unable to create Microsoft Azure client",
 				Detail:   err.Error(),
 			}}
 		}
-		req, err := parseMicrosoftSentinelIncidentsArgs(params.Config, params.Args)
+		req, err := prepareIncidentRequestParams(params.Config, params.Args)
 		if err != nil {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
@@ -100,50 +120,47 @@ func fetchMicrosoftSentinelIncidents(loader ClientLoadFn) plugin.RetrieveDataFun
 				Detail:   err.Error(),
 			}}
 		}
-		res, err := client.ListIncidents(ctx, req)
+		incidents, err := GetIncidents(ctx, client, req)
 		if err != nil {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
-				Summary:  "Unable to list Microsoft Sentinel incidents",
+				Summary:  "Unable to get Microsoft Sentinel incidents",
 				Detail:   err.Error(),
 			}}
 		}
-
-		var data plugindata.List
-		for _, incident := range res.Value {
-			item, err := plugindata.ParseAny(incident)
-			if err != nil {
-				return nil, diagnostics.Diag{{
-					Severity: hcl.DiagError,
-					Summary:  "Unable to parse Microsoft Sentinel incident",
-					Detail:   err.Error(),
-				}}
-			}
-			data = append(data, item)
-		}
-		return data, nil
+		return incidents, nil
 	}
 }
 
-func parseMicrosoftSentinelIncidentsArgs(cfg, args *dataspec.Block) (*client.ListIncidentsReq, error) {
-	var req client.ListIncidentsReq
+func prepareIncidentRequestParams(cfg, args *dataspec.Block) (*GetIncidentsReq, error) {
+	var req GetIncidentsReq
 
 	req.SubscriptionID = cfg.GetAttrVal("subscription_id").AsString()
 	req.ResourceGroupName = cfg.GetAttrVal("resource_group_name").AsString()
 	req.WorkspaceName = cfg.GetAttrVal("workspace_name").AsString()
 
 	if param := args.GetAttrVal("filter"); !param.IsNull() {
-		req.Filter = client.String(param.AsString())
+		req.Filter = StringRef(param.AsString())
 	}
-	if param := args.GetAttrVal("limit"); !param.IsNull() {
-		n, _ := param.AsBigFloat().Int64()
-		if n <= 0 {
-			return nil, fmt.Errorf("limit must be a positive number")
-		}
-		req.Top = client.Int(int(n))
-	}
+
+	size64, _ := args.GetAttrVal("size").AsBigFloat().Int64()
+	req.Size = int(size64)
+
 	if param := args.GetAttrVal("order_by"); !param.IsNull() {
-		req.OrderBy = client.String(param.AsString())
+		req.OrderBy = StringRef(param.AsString())
 	}
 	return &req, nil
+}
+
+func GetIncidents(ctx context.Context, client AzureClient, req *GetIncidentsReq) (incidents plugindata.List, err error) {
+	endpointTmpl := "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.OperationalInsights/workspaces/%s/providers/Microsoft.SecurityInsights/incidents"
+	endpoint := fmt.Sprintf(endpointTmpl, req.SubscriptionID, req.ResourceGroupName, req.WorkspaceName)
+
+	queryParams, err := query.Values(req)
+	if err != nil {
+		return nil, err
+	}
+
+	incidents, err = client.QueryObjects(ctx, endpoint, queryParams, req.Size)
+	return incidents, err
 }

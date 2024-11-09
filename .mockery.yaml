@@ -47,15 +47,13 @@ packages:
     config:
     interfaces:
       Client:
-  github.com/blackstork-io/fabric/internal/microsoft/client:
-    config:
-    interfaces:
-      Client:
   github.com/blackstork-io/fabric/internal/microsoft:
     config:
     interfaces:
-      AzureOpenaiClient:
+      AzureClient:
+      AzureOpenAIClient:
       MicrosoftGraphClient:
+      MicrosoftSecurityClient:
   github.com/blackstork-io/fabric/internal/crowdstrike:
     config:
     interfaces:

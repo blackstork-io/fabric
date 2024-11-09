@@ -38,6 +38,7 @@ func (s *MicrosoftGraphDataSourceTestSuite) SetupSuite() {
 		(func(ctx context.Context, apiVersion string, cfg *dataspec.Block) (client microsoft.MicrosoftGraphClient, err error) {
 			return s.cli, nil
 		}),
+		nil,
 	)
 	s.schema = s.plugin.DataSources["microsoft_graph"]
 }
@@ -65,7 +66,7 @@ func (s *MicrosoftGraphDataSourceTestSuite) TestBasic() {
 			"displayName": plugindata.String("Incident 1"),
 		},
 	}
-	s.cli.On("QueryGraph", mock.Anything, "/security/incidents", url.Values{"$top": []string{"10"}}, 1, true).
+	s.cli.On("QueryObjects", mock.Anything, "/security/incidents", url.Values{"$top": []string{"10"}}, 1).
 		Return(expectedData, nil)
 	ctx := context.Background()
 	result, diags := s.schema.DataFunc(ctx, &plugin.RetrieveDataParams{
@@ -77,7 +78,7 @@ func (s *MicrosoftGraphDataSourceTestSuite) TestBasic() {
 		Args: plugintest.NewTestDecoder(s.T(), s.schema.Args).
 			SetAttr("endpoint", cty.StringVal("/security/incidents")).
 			SetAttr("api_version", cty.StringVal("v1")).
-			SetAttr("objects_size", cty.NumberIntVal(1)).
+			SetAttr("size", cty.NumberIntVal(1)).
 			SetAttr("query_params", cty.MapVal(map[string]cty.Value{"$top": cty.StringVal("10")})).
 			Decode(),
 	})
@@ -92,7 +93,7 @@ func (s *MicrosoftGraphDataSourceTestSuite) TestBasicObject() {
 			"displayName": plugindata.String("Incident 1"),
 		},
 	}
-	s.cli.On("QueryGraphObject", mock.Anything, "/security/incidents/123").Return(expectedData, nil)
+	s.cli.On("QueryObject", mock.Anything, "/security/incidents/123").Return(expectedData, nil)
 	ctx := context.Background()
 	result, diags := s.schema.DataFunc(ctx, &plugin.RetrieveDataParams{
 		Config: plugintest.NewTestDecoder(s.T(), s.schema.Config).
@@ -109,37 +110,8 @@ func (s *MicrosoftGraphDataSourceTestSuite) TestBasicObject() {
 	s.Equal(expectedData, result.AsPluginData())
 }
 
-func (s *MicrosoftGraphDataSourceTestSuite) TestBasicWithMeta() {
-	expectedData := plugindata.Map{
-		"objects": plugindata.List{
-			plugindata.Map{
-				"severity":    plugindata.String("High"),
-				"displayName": plugindata.String("Incident 1"),
-			},
-		},
-	}
-	// 50 is the default response size for the data source
-	s.cli.On("QueryGraph", mock.Anything, "/security/incidents", url.Values(nil), 50, false).
-		Return(expectedData, nil)
-	ctx := context.Background()
-	result, diags := s.schema.DataFunc(ctx, &plugin.RetrieveDataParams{
-		Config: plugintest.NewTestDecoder(s.T(), s.schema.Config).
-			SetAttr("client_id", cty.StringVal("cid")).
-			SetAttr("tenant_id", cty.StringVal("tid")).
-			SetAttr("client_secret", cty.StringVal("csecret")).
-			Decode(),
-		Args: plugintest.NewTestDecoder(s.T(), s.schema.Args).
-			SetAttr("endpoint", cty.StringVal("/security/incidents")).
-			SetAttr("api_version", cty.StringVal("v1")).
-			SetAttr("only_objects", cty.StringVal("false")).
-			Decode(),
-	})
-	s.Nil(diags)
-	s.Equal(expectedData, result.AsPluginData())
-}
-
 func (s *MicrosoftGraphDataSourceTestSuite) TestClientError() {
-	s.cli.On("QueryGraph", mock.Anything, "/security/incidents", url.Values{"$top": []string{"10"}}, 1, true).
+	s.cli.On("QueryObjects", mock.Anything, "/security/incidents", url.Values{"$top": []string{"10"}}, 1).
 		Return(nil, errors.New("microsoft graph client returned status code: 400"))
 	ctx := context.Background()
 	result, diags := s.schema.DataFunc(ctx, &plugin.RetrieveDataParams{
@@ -151,7 +123,7 @@ func (s *MicrosoftGraphDataSourceTestSuite) TestClientError() {
 		Args: plugintest.NewTestDecoder(s.T(), s.schema.Args).
 			SetAttr("endpoint", cty.StringVal("/security/incidents")).
 			SetAttr("api_version", cty.StringVal("v1")).
-			SetAttr("objects_size", cty.NumberIntVal(1)).
+			SetAttr("size", cty.NumberIntVal(1)).
 			SetAttr("query_params", cty.MapVal(map[string]cty.Value{"$top": cty.StringVal("10")})).
 			Decode(),
 	})
@@ -195,7 +167,7 @@ func (s *MicrosoftGraphDataSourceTestSuite) TestMissingCredentials() {
 			"displayName": plugindata.String("Incident 1"),
 		},
 	}
-	s.cli.On("QueryGraph", mock.Anything, "/security/incidents", url.Values{"$top": []string{"10"}}, 1, true).
+	s.cli.On("QueryObjects", mock.Anything, "/security/incidents", url.Values{"$top": []string{"10"}}, 1).
 		Return(expectedData, nil)
 	ctx := context.Background()
 	result, diags := s.schema.DataFunc(ctx, &plugin.RetrieveDataParams{
@@ -207,7 +179,7 @@ func (s *MicrosoftGraphDataSourceTestSuite) TestMissingCredentials() {
 			SetAttr("endpoint", cty.StringVal("/security/incidents")).
 			SetAttr("api_version", cty.StringVal("v1")).
 			SetAttr("query_params", cty.MapVal(map[string]cty.Value{"$top": cty.StringVal("10")})).
-			SetAttr("objects_size", cty.NumberIntVal(1)).
+			SetAttr("size", cty.NumberIntVal(1)).
 			Decode(),
 	})
 	s.Nil(diags)

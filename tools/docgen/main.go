@@ -279,7 +279,7 @@ func main() {
 		stixview.Plugin(version),
 		nistnvd.Plugin(version, nil),
 		snyk.Plugin(version, nil),
-		microsoft.Plugin(version, nil, nil, nil),
+		microsoft.Plugin(version, nil, nil, nil, nil),
 		crowdstrike.Plugin(version, nil),
 		iris.Plugin(version, nil),
 	}

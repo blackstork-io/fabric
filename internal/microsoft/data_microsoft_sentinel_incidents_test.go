@@ -3,14 +3,14 @@ package microsoft
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/internal/microsoft/client"
-	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/microsoft/client"
+	client_mocks "github.com/blackstork-io/fabric/mocks/internalpkg/microsoft"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
@@ -20,8 +20,7 @@ type SentinelIncidentsDataSourceTestSuite struct {
 	suite.Suite
 	schema    *plugin.DataSource
 	ctx       context.Context
-	cli       *client_mocks.Client
-	storedTkn string
+	cli       *client_mocks.AzureClient
 }
 
 func TestSentinelIncidentsDataSourceTestSuite(t *testing.T) {
@@ -29,14 +28,14 @@ func TestSentinelIncidentsDataSourceTestSuite(t *testing.T) {
 }
 
 func (s *SentinelIncidentsDataSourceTestSuite) SetupSuite() {
-	s.schema = makeMicrosoftSentinelIncidentsDataSource(func() client.Client {
-		return s.cli
+	s.schema = makeMicrosoftSentinelIncidentsDataSource(func(ctx context.Context, cfg *dataspec.Block) (AzureClient, error) {
+		return s.cli, nil
 	})
 	s.ctx = context.Background()
 }
 
 func (s *SentinelIncidentsDataSourceTestSuite) SetupTest() {
-	s.cli = &client_mocks.Client{}
+	s.cli = &client_mocks.AzureClient{}
 }
 
 func (s *SentinelIncidentsDataSourceTestSuite) TearDownTest() {
@@ -50,27 +49,18 @@ func (s *SentinelIncidentsDataSourceTestSuite) TestSchema() {
 	s.NotNil(s.schema.DataFunc)
 }
 
-func (s *SentinelIncidentsDataSourceTestSuite) Testlimit() {
-	s.cli.On("GetClientCredentialsToken", mock.Anything, &client.GetClientCredentialsTokenReq{
-		TenantID:     "test_tenant_id",
-		ClientID:     "test_client_id",
-		ClientSecret: "test_client_secret",
-	}).Return(&client.GetClientCredentialsTokenRes{
-		AccessToken: "test_token",
-	}, nil)
-	s.cli.On("UseAuth", "test_token").Run(func(args mock.Arguments) {
-		s.storedTkn = args.Get(0).(string)
-	}).Return()
-	s.cli.On("ListIncidents", mock.Anything, &client.ListIncidentsReq{
-		SubscriptionID:    "test_subscription_id",
-		ResourceGroupName: "test_resource_group_name",
-		WorkspaceName:     "test_workspace_name",
-		Top:               client.Int(123),
-	}).Return(&client.ListIncidentsRes{
-		Value: []any{
-			map[string]any{
-				"any": "data",
-			},
+func (s *SentinelIncidentsDataSourceTestSuite) TestSize() {
+	endpoint := fmt.Sprintf(
+		"/subscriptions/%s/resourceGroups/%s/providers/Microsoft.OperationalInsights/workspaces/%s/providers/Microsoft.SecurityInsights/incidents",
+		"test_subscription_id",
+		"test_resource_group_name",
+		"test_workspace_name",
+	)
+	size := 123
+
+	s.cli.On("QueryObjects", mock.Anything, endpoint, url.Values{}, size).Return(plugindata.List{
+		plugindata.Map{
+			"any": plugindata.String("data"),
 		},
 	}, nil)
 	res, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
@@ -83,10 +73,9 @@ func (s *SentinelIncidentsDataSourceTestSuite) Testlimit() {
 			"workspace_name":      cty.StringVal("test_workspace_name"),
 		}),
 		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
-			"limit": cty.NumberIntVal(123),
+			"size": cty.NumberIntVal(int64(size)),
 		}),
 	})
-	s.Equal("test_token", s.storedTkn)
 	s.Len(diags, 0)
 	s.Equal(plugindata.List{
 		plugindata.Map{
@@ -96,30 +85,22 @@ func (s *SentinelIncidentsDataSourceTestSuite) Testlimit() {
 }
 
 func (s *SentinelIncidentsDataSourceTestSuite) TestFull() {
-	s.cli.On("GetClientCredentialsToken", mock.Anything, &client.GetClientCredentialsTokenReq{
-		TenantID:     "test_tenant_id",
-		ClientID:     "test_client_id",
-		ClientSecret: "test_client_secret",
-	}).Return(&client.GetClientCredentialsTokenRes{
-		AccessToken: "test_token",
-	}, nil)
-	s.cli.On("UseAuth", "test_token").Run(func(args mock.Arguments) {
-		s.storedTkn = args.Get(0).(string)
-	}).Return()
-	s.cli.On("ListIncidents", mock.Anything, &client.ListIncidentsReq{
-		SubscriptionID:    "test_subscription_id",
-		ResourceGroupName: "test_resource_group_name",
-		WorkspaceName:     "test_workspace_name",
-		Filter:            client.String("test_filter"),
-		OrderBy:           client.String("test_order_by"),
-		Top:               client.Int(10),
-	}).Return(&client.ListIncidentsRes{
-		Value: []any{
-			map[string]any{
-				"any": "data",
-			},
+	endpoint := fmt.Sprintf(
+		"/subscriptions/%s/resourceGroups/%s/providers/Microsoft.OperationalInsights/workspaces/%s/providers/Microsoft.SecurityInsights/incidents",
+		"test_subscription_id",
+		"test_resource_group_name",
+		"test_workspace_name",
+	)
+	query := url.Values{}
+	query.Set("$filter", "test_filter")
+	query.Set("$orderby", "test_order_by")
+
+	s.cli.On("QueryObjects", mock.Anything, endpoint, query, 10).Return(plugindata.List{
+		plugindata.Map{
+			"any": plugindata.String("data"),
 		},
 	}, nil)
+
 	res, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"tenant_id":           cty.StringVal("test_tenant_id"),
@@ -132,10 +113,9 @@ func (s *SentinelIncidentsDataSourceTestSuite) TestFull() {
 		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
 			"filter":   cty.StringVal("test_filter"),
 			"order_by": cty.StringVal("test_order_by"),
-			"limit":    cty.NumberIntVal(10),
+			"size":     cty.NumberIntVal(int64(10)),
 		}),
 	})
-	s.Equal("test_token", s.storedTkn)
 	s.Len(diags, 0)
 	s.Equal(plugindata.List{
 		plugindata.Map{
@@ -146,22 +126,9 @@ func (s *SentinelIncidentsDataSourceTestSuite) TestFull() {
 
 func (s *SentinelIncidentsDataSourceTestSuite) TestError() {
 	errTest := fmt.Errorf("test_error")
-	s.cli.On("GetClientCredentialsToken", mock.Anything, &client.GetClientCredentialsTokenReq{
-		TenantID:     "test_tenant_id",
-		ClientID:     "test_client_id",
-		ClientSecret: "test_client_secret",
-	}).Return(&client.GetClientCredentialsTokenRes{
-		AccessToken: "test_token",
-	}, nil)
-	s.cli.On("UseAuth", "test_token").Run(func(args mock.Arguments) {
-		s.storedTkn = args.Get(0).(string)
-	}).Return()
-	s.cli.On("ListIncidents", mock.Anything, &client.ListIncidentsReq{
-		SubscriptionID:    "test_subscription_id",
-		ResourceGroupName: "test_resource_group_name",
-		WorkspaceName:     "test_workspace_name",
-		Top:               client.Int(10),
-	}).Return(nil, errTest)
+
+	s.cli.On("QueryObjects", mock.Anything, mock.Anything, mock.Anything, 10).Return(nil, errTest)
+
 	_, diags := s.schema.DataFunc(s.ctx, &plugin.RetrieveDataParams{
 		Config: dataspec.NewBlock([]string{"config"}, map[string]cty.Value{
 			"tenant_id":           cty.StringVal("test_tenant_id"),
@@ -172,11 +139,10 @@ func (s *SentinelIncidentsDataSourceTestSuite) TestError() {
 			"workspace_name":      cty.StringVal("test_workspace_name"),
 		}),
 		Args: dataspec.NewBlock([]string{"args"}, map[string]cty.Value{
-			"limit": cty.NumberIntVal(10),
+			"size": cty.NumberIntVal(10),
 		}),
 	})
-	s.Equal("test_token", s.storedTkn)
 	s.Len(diags, 1)
-	s.Equal("Unable to list Microsoft Sentinel incidents", diags[0].Summary)
+	s.Equal("Unable to get Microsoft Sentinel incidents", diags[0].Summary)
 	s.Equal(errTest.Error(), diags[0].Detail)
 }

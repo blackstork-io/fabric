@@ -13,30 +13,27 @@ import (
 )
 
 const (
-	baseURLGraph         = "https://graph.microsoft.com"
-	defaultPageSizeGraph = 200
+	baseURLSecurity         = "https://api.securitycenter.microsoft.com/api"
+	defaultPageSizeSecurity = 200
 )
 
-type graphClient struct {
+type securityClient struct {
 	accessToken string
-	apiVersion  string
 	client      *http.Client
 }
 
-func NewGraphClient(accessToken string, apiVersion string) *graphClient {
-	return &graphClient{
+func NewSecurityClient(accessToken string) *securityClient {
+	return &securityClient{
 		accessToken: accessToken,
-		apiVersion:  apiVersion,
 		client:      &http.Client{},
 	}
 }
 
-func (client *graphClient) prepare(r *http.Request) {
+func (client *securityClient) prepare(r *http.Request) {
 	r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", client.accessToken))
-	r.Header.Set("ConsistencyLevel", "eventual")
 }
 
-func (client *graphClient) fetchURL(ctx context.Context, requestUrl *url.URL) (result plugindata.Data, err error) {
+func (client *securityClient) fetchURL(ctx context.Context, requestUrl *url.URL) (result plugindata.Data, err error) {
 	r, err := http.NewRequestWithContext(ctx, http.MethodGet, requestUrl.String(), nil)
 	if err != nil {
 		return
@@ -53,7 +50,14 @@ func (client *graphClient) fetchURL(ctx context.Context, requestUrl *url.URL) (r
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		slog.ErrorContext(ctx, "Error received from Microsoft Graph API", "status_code", res.StatusCode, "body", string(raw))
+		slog.ErrorContext(
+			ctx,
+			"Error received from Microsoft Graph API",
+			"status_code",
+			res.StatusCode,
+			"body",
+			string(raw),
+		)
 		err = fmt.Errorf("Microsoft Graph client returned status code: %d", res.StatusCode)
 		return
 	}
@@ -64,7 +68,7 @@ func (client *graphClient) fetchURL(ctx context.Context, requestUrl *url.URL) (r
 	return
 }
 
-func (client *graphClient) QueryObjects(
+func (client *securityClient) QueryObjects(
 	ctx context.Context,
 	endpoint string,
 	queryParams url.Values,
@@ -72,7 +76,7 @@ func (client *graphClient) QueryObjects(
 ) (result plugindata.List, err error) {
 	objects := make(plugindata.List, 0)
 
-	urlStr := baseURLGraph + fmt.Sprintf("/%s%s", client.apiVersion, endpoint)
+	urlStr := baseURLSecurity + endpoint
 	requestUrl, err := url.Parse(urlStr)
 	if err != nil {
 		return
@@ -82,7 +86,7 @@ func (client *graphClient) QueryObjects(
 		queryParams = url.Values{}
 	}
 
-	limit := min(size, defaultPageSizeGraph)
+	limit := min(size, defaultPageSizeSecurity)
 	queryParams.Set("$top", strconv.Itoa(limit))
 
 	requestUrl.RawQuery = queryParams.Encode()
@@ -154,11 +158,8 @@ func (client *graphClient) QueryObjects(
 	return objectsToReturn, nil
 }
 
-func (client *graphClient) QueryObject(
-	ctx context.Context,
-	endpoint string,
-) (result plugindata.Data, err error) {
-	urlStr := baseURLGraph + fmt.Sprintf("/%s%s", client.apiVersion, endpoint)
+func (client *securityClient) QueryObject(ctx context.Context, endpoint string) (result plugindata.Data, err error) {
+	urlStr := baseURLSecurity + endpoint
 	requestUrl, err := url.Parse(urlStr)
 	if err != nil {
 		return

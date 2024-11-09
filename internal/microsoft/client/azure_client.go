@@ -13,30 +13,33 @@ import (
 )
 
 const (
-	baseURLGraph         = "https://graph.microsoft.com"
-	defaultPageSizeGraph = 200
+	baseURLAzure         = "https://management.azure.com"
+	apiVersionAzure      = "2023-11-01"
+	defaultPageSizeAzure = 200
 )
 
-type graphClient struct {
+type azureClient struct {
 	accessToken string
-	apiVersion  string
+	baseURL     string
 	client      *http.Client
 }
 
-func NewGraphClient(accessToken string, apiVersion string) *graphClient {
-	return &graphClient{
+func NewAzureClient(accessToken string) *azureClient {
+	return &azureClient{
 		accessToken: accessToken,
-		apiVersion:  apiVersion,
 		client:      &http.Client{},
+		baseURL:     baseURLAzure,
 	}
 }
 
-func (client *graphClient) prepare(r *http.Request) {
+func (client *azureClient) prepare(r *http.Request) {
 	r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", client.accessToken))
-	r.Header.Set("ConsistencyLevel", "eventual")
+	q := r.URL.Query()
+	q.Add("api-version", apiVersionAzure)
+	r.URL.RawQuery = q.Encode()
 }
 
-func (client *graphClient) fetchURL(ctx context.Context, requestUrl *url.URL) (result plugindata.Data, err error) {
+func (client *azureClient) fetchURL(ctx context.Context, requestUrl *url.URL) (result plugindata.Data, err error) {
 	r, err := http.NewRequestWithContext(ctx, http.MethodGet, requestUrl.String(), nil)
 	if err != nil {
 		return
@@ -53,8 +56,8 @@ func (client *graphClient) fetchURL(ctx context.Context, requestUrl *url.URL) (r
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		slog.ErrorContext(ctx, "Error received from Microsoft Graph API", "status_code", res.StatusCode, "body", string(raw))
-		err = fmt.Errorf("Microsoft Graph client returned status code: %d", res.StatusCode)
+		slog.ErrorContext(ctx, "Error received from Azure API", "status_code", res.StatusCode, "body", string(raw))
+		err = fmt.Errorf("Microsoft Azure API returned status code: %d", res.StatusCode)
 		return
 	}
 	result, err = plugindata.UnmarshalJSON(raw)
@@ -64,15 +67,13 @@ func (client *graphClient) fetchURL(ctx context.Context, requestUrl *url.URL) (r
 	return
 }
 
-func (client *graphClient) QueryObjects(
+func (client *azureClient) QueryObjects(
 	ctx context.Context,
 	endpoint string,
 	queryParams url.Values,
 	size int,
 ) (result plugindata.List, err error) {
-	objects := make(plugindata.List, 0)
-
-	urlStr := baseURLGraph + fmt.Sprintf("/%s%s", client.apiVersion, endpoint)
+	urlStr := client.baseURL + endpoint
 	requestUrl, err := url.Parse(urlStr)
 	if err != nil {
 		return
@@ -82,7 +83,7 @@ func (client *graphClient) QueryObjects(
 		queryParams = url.Values{}
 	}
 
-	limit := min(size, defaultPageSizeGraph)
+	limit := min(size, defaultPageSizeAzure)
 	queryParams.Set("$top", strconv.Itoa(limit))
 
 	requestUrl.RawQuery = queryParams.Encode()
@@ -90,8 +91,10 @@ func (client *graphClient) QueryObjects(
 	var totalCount int = -1
 	var response plugindata.Data
 
+	objects := make(plugindata.List, 0)
+
 	for {
-		slog.DebugContext(ctx, "Fetching a page from Microsoft Graph API", "url", requestUrl.String())
+		slog.DebugContext(ctx, "Fetching a page from Azure API", "url", requestUrl.String())
 		response, err = client.fetchURL(ctx, requestUrl)
 		if err != nil {
 			slog.ErrorContext(ctx, "Error while fetching objects", "url", requestUrl.String(), "error", err)
@@ -101,11 +104,6 @@ func (client *graphClient) QueryObjects(
 		resultMap, ok := response.(plugindata.Map)
 		if !ok {
 			return nil, fmt.Errorf("unexpected result type: %T", response)
-		}
-
-		countRaw, ok := resultMap["@odata.count"]
-		if ok {
-			totalCount = int(countRaw.(plugindata.Number))
 		}
 
 		objectsPageRaw, ok := resultMap["value"]
@@ -123,7 +121,7 @@ func (client *graphClient) QueryObjects(
 		}
 
 		slog.DebugContext(
-			ctx, "Objects fetched from Microsoft Graph API",
+			ctx, "Objects fetched from Azure API",
 			"fetched_overall", len(objects),
 			"fetched", len(objectsPage),
 			"total_available", totalCount,
@@ -135,13 +133,13 @@ func (client *graphClient) QueryObjects(
 			break
 		}
 
-		nextLink, ok := resultMap["@odata.nextLink"]
+		nextLink, ok := resultMap["nextLink"]
 		if !ok && nextLink == nil {
 			break
 		}
 		requestUrlRaw, ok := nextLink.(plugindata.String)
 		if !ok {
-			return nil, fmt.Errorf("unexpected value type for `@odata.nextLink`: %T", requestUrlRaw)
+			return nil, fmt.Errorf("unexpected value type for `nextLink`: %T", requestUrlRaw)
 		}
 		requestUrl, err = url.Parse(string(requestUrlRaw))
 		if err != nil {
@@ -152,22 +150,4 @@ func (client *graphClient) QueryObjects(
 
 	objectsToReturn := objects[:min(len(objects), size)]
 	return objectsToReturn, nil
-}
-
-func (client *graphClient) QueryObject(
-	ctx context.Context,
-	endpoint string,
-) (result plugindata.Data, err error) {
-	urlStr := baseURLGraph + fmt.Sprintf("/%s%s", client.apiVersion, endpoint)
-	requestUrl, err := url.Parse(urlStr)
-	if err != nil {
-		return
-	}
-	response, err := client.fetchURL(ctx, requestUrl)
-	if err != nil {
-		slog.ErrorContext(ctx, "Error while fetching an object", "url", requestUrl.String(), "error", err)
-		return nil, err
-	}
-
-	return response, nil
 }
