@@ -90,11 +90,12 @@ data microsoft_sentinel_incidents {
   # Default value:
   filter = null
 
-  # The maximum number of incidents to return
+  # Number of objects to be returned
   #
   # Optional number.
+  # Must be >= 1
   # Default value:
-  limit = null
+  size = 50
 
   # The order by expression
   #

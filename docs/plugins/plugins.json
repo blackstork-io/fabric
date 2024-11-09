@@ -478,9 +478,26 @@
           "api_version",
           "endpoint",
           "is_object_endpoint",
-          "objects_size",
-          "only_objects",
-          "query_params"
+          "query_params",
+          "size"
+        ]
+      },
+      {
+        "name": "microsoft_security",
+        "type": "data-source",
+        "config_params": [
+          "client_id",
+          "client_secret",
+          "key_passphrase",
+          "private_key",
+          "private_key_file",
+          "tenant_id"
+        ],
+        "arguments": [
+          "endpoint",
+          "is_object_endpoint",
+          "query_params",
+          "size"
         ]
       },
       {
@@ -496,8 +513,8 @@
         ],
         "arguments": [
           "filter",
-          "limit",
-          "order_by"
+          "order_by",
+          "size"
         ]
       }
     ]

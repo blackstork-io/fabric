@@ -1,8 +1,8 @@
 ---
-title: "`microsoft_graph` data source"
+title: "`microsoft_security` data source"
 plugin:
   name: blackstork/microsoft
-  description: "The `microsoft_graph` data source queries Microsoft Graph API"
+  description: "The `microsoft_security` data source queries Microsoft Security API"
   tags: []
   version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/microsoft/"
@@ -13,14 +13,14 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/microsoft" "microsoft" "v0.4.2" "microsoft_graph" "data source" >}}
+{{< plugin-resource-header "blackstork/microsoft" "microsoft" "v0.4.2" "microsoft_security" "data source" >}}
 
 ## Description
-The `microsoft_graph` data source queries Microsoft Graph API.
+The `microsoft_security` data source queries Microsoft Security API.
 
 ## Installation
 
-To use `microsoft_graph` data source, you must install the plugin `blackstork/microsoft`.
+To use `microsoft_security` data source, you must install the plugin `blackstork/microsoft`.
 
 To install the plugin, add the full plugin name to the `plugin_versions` map in the Fabric global configuration block (see [Global configuration]({{< ref "configs.md#global-configuration" >}}) for more details), as shown below:
 
@@ -39,7 +39,7 @@ Note the version constraint set for the plugin.
 The data source supports the following configuration arguments:
 
 ```hcl
-config data microsoft_graph {
+config data microsoft_security {
   # The Azure client ID
   #
   # Required string.
@@ -83,20 +83,14 @@ config data microsoft_graph {
 The data source supports the following execution arguments:
 
 ```hcl
-data microsoft_graph {
-  # The API version
-  #
-  # Optional string.
-  # Default value:
-  api_version = "beta"
-
+data microsoft_security {
   # The endpoint to query
   #
   # Required string.
   # For example:
   endpoint = "/users"
 
-  # HTTP GET query parameters
+  # The query parameters
   #
   # Optional map of string.
   # Default value:

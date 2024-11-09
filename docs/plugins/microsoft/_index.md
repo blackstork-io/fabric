@@ -3,7 +3,7 @@ title: blackstork/microsoft
 weight: 20
 plugin:
   name: blackstork/microsoft
-  description: "The `microsoft` plugin for Microsoft services."
+  description: "Plugin for Microsoft services."
   tags: []
   version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/microsoft/"
@@ -14,7 +14,7 @@ hideInMenu: true
 {{< plugin-header "blackstork/microsoft" "microsoft" "v0.4.2" >}}
 
 ## Description
-The `microsoft` plugin for Microsoft services.
+Plugin for Microsoft services.
 
 ## Installation
 
