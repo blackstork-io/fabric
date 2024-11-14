@@ -110,7 +110,6 @@ func fetchMicrosoftGraph(loader MicrosoftGraphClientLoadFn) plugin.RetrieveDataF
 
 		var response plugindata.Data
 
-
 		queryParamsAttr := params.Args.GetAttrVal("query_params")
 		queryParams := url.Values{}
 

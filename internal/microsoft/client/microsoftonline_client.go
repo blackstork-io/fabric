@@ -14,52 +14,6 @@ const (
 	authURL = "https://login.microsoftonline.com"
 )
 
-// type MicrosoftCredentials struct {
-// 	TenantID     string `url:"-"`
-// 	ClientID     string `url:"-"`
-// 	ClientSecret string `url:"-"`
-// }
-
-// type GetClientCredentialsTokenRes struct {
-// 	AccessToken string `json:"access_token"`
-// }
-
-// func AuthorizeClient(ctx context.Context, req *MicrosoftCredentials) (*GetClientCredentialsTokenRes, error) {
-// 	format := "/%s/oauth2/token"
-// 	u, err := url.Parse(authURL + fmt.Sprintf(format, req.TenantID))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	payload := url.Values{
-// 		"grant_type":    {"client_credentials"},
-// 		"client_id":     {req.ClientID},
-// 		"client_secret": {req.ClientSecret},
-// 		"resource":      {baseURLAzure},
-// 	}
-// 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), strings.NewReader(payload.Encode()))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	c.prepare(r)
-// 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-// 	client := http.Client{
-// 		Timeout: 15 * time.Second,
-// 	}
-// 	res, err := client.Do(r)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	if res.StatusCode != http.StatusOK {
-// 		return nil, fmt.Errorf("Microsoft OAuth2 endpoint returned status code: %d", res.StatusCode)
-// 	}
-// 	defer res.Body.Close()
-// 	var data GetClientCredentialsTokenRes
-// 	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
-// 		return nil, err
-// 	}
-// 	return &data, nil
-// }
-
 type AcquireTokenFn func(ctx context.Context, tenantId string, clientId string, cred confidential.Credential, scopes []string) (string, error)
 
 var AcquireAzureToken AcquireTokenFn = func(ctx context.Context, tenantId string, clientId string, cred confidential.Credential, scopes []string) (accessToken string, err error) {
