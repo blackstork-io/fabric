@@ -85,7 +85,7 @@ func makeMicrosoftGraphDataSource(loader MicrosoftGraphClientLoadFn) *plugin.Dat
 				},
 				{
 					Name:       "is_object_endpoint",
-					Doc:        "Indicates if API endpoint serves a single object. If set to `true`, `query_params` and `size` arguments are ignored.",
+					Doc:        "Indicates if API endpoint serves a single object.",
 					Type:       cty.Bool,
 					DefaultVal: cty.BoolVal(false),
 				},
@@ -110,21 +110,20 @@ func fetchMicrosoftGraph(loader MicrosoftGraphClientLoadFn) plugin.RetrieveDataF
 
 		var response plugindata.Data
 
-		if isObjectEndpoint.True() {
-			response, err = cli.QueryObject(ctx, endPoint)
-		} else {
 
-			queryParamsAttr := params.Args.GetAttrVal("query_params")
-			var queryParams url.Values
+		queryParamsAttr := params.Args.GetAttrVal("query_params")
+		queryParams := url.Values{}
 
-			if !queryParamsAttr.IsNull() {
-				queryParams = url.Values{}
-				queryMap := queryParamsAttr.AsValueMap()
-				for k, v := range queryMap {
-					queryParams.Add(k, v.AsString())
-				}
+		if !queryParamsAttr.IsNull() {
+			queryMap := queryParamsAttr.AsValueMap()
+			for k, v := range queryMap {
+				queryParams.Add(k, v.AsString())
 			}
+		}
 
+		if isObjectEndpoint.True() {
+			response, err = cli.QueryObject(ctx, endPoint, queryParams)
+		} else {
 			size64, _ := params.Args.GetAttrVal("size").AsBigFloat().Int64()
 			size := int(size64)
 

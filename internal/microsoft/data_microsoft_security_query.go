@@ -2,7 +2,8 @@ package microsoft
 
 import (
 	"context"
-	"net/url"
+	"fmt"
+	"log/slog"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
@@ -14,10 +15,10 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-func makeMicrosoftSecurityDataSource(loader MicrosoftSecurityClientLoadFn) *plugin.DataSource {
+func makeMicrosoftSecurityQueryDataSource(loader MicrosoftSecurityClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
-		Doc:      "The `microsoft_security` data source queries Microsoft Security API.",
-		DataFunc: fetchMicrosoftSecurity(loader),
+		Doc:      "The `microsoft_defender_query` data source queries Microsoft Security API.",
+		DataFunc: fetchMicrosoftSecurityQuery(loader),
 		Config: &dataspec.RootSpec{
 			Attrs: []*dataspec.AttrSpec{
 				{
@@ -58,37 +59,17 @@ func makeMicrosoftSecurityDataSource(loader MicrosoftSecurityClientLoadFn) *plug
 		Args: &dataspec.RootSpec{
 			Attrs: []*dataspec.AttrSpec{
 				{
-					Name:        "endpoint",
-					Doc:         "API endpoint to query",
+					Name:        "query",
+					Doc:         "Advanced hunting query to run",
 					Type:        cty.String,
 					Constraints: constraint.RequiredNonNull,
-					ExampleVal:  cty.StringVal("/users"),
-				},
-				{
-					Name: "query_params",
-					Doc:  "HTTP query parameters",
-					Type: cty.Map(cty.String),
-				},
-				{
-					Name:         "size",
-					Doc:          "Number of objects to be returned",
-					Type:         cty.Number,
-					Constraints:  constraint.NonNull,
-					DefaultVal:   cty.NumberIntVal(50),
-					MinInclusive: cty.NumberIntVal(1),
-				},
-				{
-					Name:       "is_object_endpoint",
-					Doc:        "Indicates if API endpoint serves a single object. If set to `true`, `query_params` and `size` arguments are ignored.",
-					Type:       cty.Bool,
-					DefaultVal: cty.BoolVal(false),
 				},
 			},
 		},
 	}
 }
 
-func fetchMicrosoftSecurity(loader MicrosoftSecurityClientLoadFn) plugin.RetrieveDataFunc {
+func fetchMicrosoftSecurityQuery(loader MicrosoftSecurityClientLoadFn) plugin.RetrieveDataFunc {
 	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 		cli, err := loader(ctx, params.Config)
 		if err != nil {
@@ -98,29 +79,11 @@ func fetchMicrosoftSecurity(loader MicrosoftSecurityClientLoadFn) plugin.Retriev
 				Detail:   err.Error(),
 			}}
 		}
-		endPoint := params.Args.GetAttrVal("endpoint").AsString()
-		isObjectEndpoint := params.Args.GetAttrVal("is_object_endpoint")
+		query := params.Args.GetAttrVal("query").AsString()
 
-		queryParamsAttr := params.Args.GetAttrVal("query_params")
-		var queryParams url.Values
+		slog.DebugContext(ctx, "Submitting an advanced hunting query", "query", query)
 
-		if !queryParamsAttr.IsNull() {
-			queryParams = url.Values{}
-			queryMap := queryParamsAttr.AsValueMap()
-			for k, v := range queryMap {
-				queryParams.Add(k, v.AsString())
-			}
-		}
-
-		var response plugindata.Data
-
-		if isObjectEndpoint.True() {
-			response, err = cli.QueryObject(ctx, endPoint, queryParams)
-		} else {
-			size64, _ := params.Args.GetAttrVal("size").AsBigFloat().Int64()
-			size := int(size64)
-			response, err = cli.QueryObjects(ctx, endPoint, queryParams, size)
-		}
+		response, err := cli.RunAdvancedQuery(ctx, query)
 		if err != nil {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
@@ -128,6 +91,21 @@ func fetchMicrosoftSecurity(loader MicrosoftSecurityClientLoadFn) plugin.Retriev
 				Detail:   err.Error(),
 			}}
 		}
-		return response, nil
+		responseMap, ok := response.(plugindata.Map)
+		if !ok {
+			return nil, diagnostics.Diag{{
+				Severity: hcl.DiagError,
+				Summary:  "Unexpected response type received",
+				Detail:   fmt.Sprintf("Unexpected object type received in the response: %T", response),
+			}}
+		}
+
+		results, ok := responseMap["Results"]
+		if !ok {
+			slog.WarnContext(ctx, "The field `Results` is not found in the response")
+			return plugindata.List{}, nil
+		}
+
+		return results, nil
 	}
 }

@@ -93,7 +93,7 @@ func (s *MicrosoftGraphDataSourceTestSuite) TestBasicObject() {
 			"displayName": plugindata.String("Incident 1"),
 		},
 	}
-	s.cli.On("QueryObject", mock.Anything, "/security/incidents/123").Return(expectedData, nil)
+	s.cli.On("QueryObject", mock.Anything, "/security/incidents/123", url.Values{}).Return(expectedData, nil)
 	ctx := context.Background()
 	result, diags := s.schema.DataFunc(ctx, &plugin.RetrieveDataParams{
 		Config: plugintest.NewTestDecoder(s.T(), s.schema.Config).

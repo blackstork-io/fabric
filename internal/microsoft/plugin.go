@@ -43,6 +43,7 @@ type MicrosoftGraphClient interface {
 	QueryObject(
 		ctx context.Context,
 		endpoint string,
+		queryParams url.Values,
 	) (object plugindata.Data, err error)
 }
 
@@ -57,6 +58,12 @@ type MicrosoftSecurityClient interface {
 	QueryObject(
 		ctx context.Context,
 		endpoint string,
+		queryParams url.Values,
+	) (object plugindata.Data, err error)
+
+	RunAdvancedQuery(
+		ctx context.Context,
+		query string,
 	) (object plugindata.Data, err error)
 }
 
@@ -101,6 +108,7 @@ func Plugin(
 			"microsoft_sentinel_incidents": makeMicrosoftSentinelIncidentsDataSource(azureClientLoader),
 			"microsoft_graph":              makeMicrosoftGraphDataSource(graphClientLoader),
 			"microsoft_security":           makeMicrosoftSecurityDataSource(securityClientLoader),
+			"microsoft_security_query":     makeMicrosoftSecurityQueryDataSource(securityClientLoader),
 		},
 		ContentProviders: plugin.ContentProviders{
 			"azure_openai_text": makeAzureOpenAITextContentSchema(openAIClientLoader),

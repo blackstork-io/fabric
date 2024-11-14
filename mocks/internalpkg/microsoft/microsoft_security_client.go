@@ -25,9 +25,9 @@ func (_m *MicrosoftSecurityClient) EXPECT() *MicrosoftSecurityClient_Expecter {
 	return &MicrosoftSecurityClient_Expecter{mock: &_m.Mock}
 }
 
-// QueryObject provides a mock function with given fields: ctx, endpoint
-func (_m *MicrosoftSecurityClient) QueryObject(ctx context.Context, endpoint string) (plugindata.Data, error) {
-	ret := _m.Called(ctx, endpoint)
+// QueryObject provides a mock function with given fields: ctx, endpoint, queryParams
+func (_m *MicrosoftSecurityClient) QueryObject(ctx context.Context, endpoint string, queryParams url.Values) (plugindata.Data, error) {
+	ret := _m.Called(ctx, endpoint, queryParams)
 
 	if len(ret) == 0 {
 		panic("no return value specified for QueryObject")
@@ -35,19 +35,19 @@ func (_m *MicrosoftSecurityClient) QueryObject(ctx context.Context, endpoint str
 
 	var r0 plugindata.Data
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (plugindata.Data, error)); ok {
-		return rf(ctx, endpoint)
+	if rf, ok := ret.Get(0).(func(context.Context, string, url.Values) (plugindata.Data, error)); ok {
+		return rf(ctx, endpoint, queryParams)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) plugindata.Data); ok {
-		r0 = rf(ctx, endpoint)
+	if rf, ok := ret.Get(0).(func(context.Context, string, url.Values) plugindata.Data); ok {
+		r0 = rf(ctx, endpoint, queryParams)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(plugindata.Data)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, endpoint)
+	if rf, ok := ret.Get(1).(func(context.Context, string, url.Values) error); ok {
+		r1 = rf(ctx, endpoint, queryParams)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -63,13 +63,14 @@ type MicrosoftSecurityClient_QueryObject_Call struct {
 // QueryObject is a helper method to define mock.On call
 //   - ctx context.Context
 //   - endpoint string
-func (_e *MicrosoftSecurityClient_Expecter) QueryObject(ctx interface{}, endpoint interface{}) *MicrosoftSecurityClient_QueryObject_Call {
-	return &MicrosoftSecurityClient_QueryObject_Call{Call: _e.mock.On("QueryObject", ctx, endpoint)}
+//   - queryParams url.Values
+func (_e *MicrosoftSecurityClient_Expecter) QueryObject(ctx interface{}, endpoint interface{}, queryParams interface{}) *MicrosoftSecurityClient_QueryObject_Call {
+	return &MicrosoftSecurityClient_QueryObject_Call{Call: _e.mock.On("QueryObject", ctx, endpoint, queryParams)}
 }
 
-func (_c *MicrosoftSecurityClient_QueryObject_Call) Run(run func(ctx context.Context, endpoint string)) *MicrosoftSecurityClient_QueryObject_Call {
+func (_c *MicrosoftSecurityClient_QueryObject_Call) Run(run func(ctx context.Context, endpoint string, queryParams url.Values)) *MicrosoftSecurityClient_QueryObject_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(url.Values))
 	})
 	return _c
 }
@@ -79,7 +80,7 @@ func (_c *MicrosoftSecurityClient_QueryObject_Call) Return(object plugindata.Dat
 	return _c
 }
 
-func (_c *MicrosoftSecurityClient_QueryObject_Call) RunAndReturn(run func(context.Context, string) (plugindata.Data, error)) *MicrosoftSecurityClient_QueryObject_Call {
+func (_c *MicrosoftSecurityClient_QueryObject_Call) RunAndReturn(run func(context.Context, string, url.Values) (plugindata.Data, error)) *MicrosoftSecurityClient_QueryObject_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -141,6 +142,65 @@ func (_c *MicrosoftSecurityClient_QueryObjects_Call) Return(objects plugindata.L
 }
 
 func (_c *MicrosoftSecurityClient_QueryObjects_Call) RunAndReturn(run func(context.Context, string, url.Values, int) (plugindata.List, error)) *MicrosoftSecurityClient_QueryObjects_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RunAdvancedQuery provides a mock function with given fields: ctx, query
+func (_m *MicrosoftSecurityClient) RunAdvancedQuery(ctx context.Context, query string) (plugindata.Data, error) {
+	ret := _m.Called(ctx, query)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RunAdvancedQuery")
+	}
+
+	var r0 plugindata.Data
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (plugindata.Data, error)); ok {
+		return rf(ctx, query)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) plugindata.Data); ok {
+		r0 = rf(ctx, query)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(plugindata.Data)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, query)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MicrosoftSecurityClient_RunAdvancedQuery_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RunAdvancedQuery'
+type MicrosoftSecurityClient_RunAdvancedQuery_Call struct {
+	*mock.Call
+}
+
+// RunAdvancedQuery is a helper method to define mock.On call
+//   - ctx context.Context
+//   - query string
+func (_e *MicrosoftSecurityClient_Expecter) RunAdvancedQuery(ctx interface{}, query interface{}) *MicrosoftSecurityClient_RunAdvancedQuery_Call {
+	return &MicrosoftSecurityClient_RunAdvancedQuery_Call{Call: _e.mock.On("RunAdvancedQuery", ctx, query)}
+}
+
+func (_c *MicrosoftSecurityClient_RunAdvancedQuery_Call) Run(run func(ctx context.Context, query string)) *MicrosoftSecurityClient_RunAdvancedQuery_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *MicrosoftSecurityClient_RunAdvancedQuery_Call) Return(object plugindata.Data, err error) *MicrosoftSecurityClient_RunAdvancedQuery_Call {
+	_c.Call.Return(object, err)
+	return _c
+}
+
+func (_c *MicrosoftSecurityClient_RunAdvancedQuery_Call) RunAndReturn(run func(context.Context, string) (plugindata.Data, error)) *MicrosoftSecurityClient_RunAdvancedQuery_Call {
 	_c.Call.Return(run)
 	return _c
 }

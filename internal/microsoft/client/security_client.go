@@ -1,7 +1,9 @@
 package client
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -33,13 +35,13 @@ func (client *securityClient) prepare(r *http.Request) {
 	r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", client.accessToken))
 }
 
-func (client *securityClient) fetchURL(ctx context.Context, requestUrl *url.URL) (result plugindata.Data, err error) {
+func (client *securityClient) getURL(ctx context.Context, requestUrl *url.URL) (result plugindata.Data, err error) {
+	slog.DebugContext(ctx, "Sending GET request to an API endpoint", "url", requestUrl.String())
 	r, err := http.NewRequestWithContext(ctx, http.MethodGet, requestUrl.String(), nil)
 	if err != nil {
 		return
 	}
 	client.prepare(r)
-	slog.DebugContext(ctx, "Fetching an URL from API", "url", requestUrl.String())
 	res, err := client.client.Do(r)
 	if err != nil {
 		return
@@ -66,6 +68,49 @@ func (client *securityClient) fetchURL(ctx context.Context, requestUrl *url.URL)
 		return nil, fmt.Errorf("failed to unmarshal results: %s", err)
 	}
 	return
+}
+
+func (client *securityClient) postURL(
+	ctx context.Context,
+	requestUrl *url.URL,
+	data plugindata.Data,
+) (result plugindata.Data, err error) {
+	buff := new(bytes.Buffer)
+	err = json.NewEncoder(buff).Encode(data)
+	if err != nil {
+		return
+	}
+	slog.DebugContext(ctx, "Sending POST request to an API endpoint", "url", requestUrl.String())
+
+	r, err := http.NewRequestWithContext(ctx, http.MethodPost, requestUrl.String(), buff)
+	r.Header.Set("Content-Type", "application/json")
+	if err != nil {
+		return
+	}
+	client.prepare(r)
+	res, err := client.client.Do(r)
+	if err != nil {
+		return
+	}
+	raw, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read the results: %s", err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		slog.ErrorContext(ctx, "Error received from API", "status_code", res.StatusCode, "body", string(raw))
+		if res.StatusCode == http.StatusNotFound {
+			return nil, nil
+		}
+		err = fmt.Errorf("API returned status code %d", res.StatusCode)
+		return
+	}
+
+	result, err = plugindata.UnmarshalJSON(raw)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal results: %s", err)
+	}
+	return result, nil
 }
 
 func (client *securityClient) QueryObjects(
@@ -96,7 +141,7 @@ func (client *securityClient) QueryObjects(
 
 	for {
 		slog.DebugContext(ctx, "Fetching a page from Microsoft Graph API", "url", requestUrl.String())
-		response, err = client.fetchURL(ctx, requestUrl)
+		response, err = client.getURL(ctx, requestUrl)
 		if err != nil {
 			slog.ErrorContext(ctx, "Error while fetching objects", "url", requestUrl.String(), "error", err)
 			return nil, err
@@ -158,15 +203,45 @@ func (client *securityClient) QueryObjects(
 	return objectsToReturn, nil
 }
 
-func (client *securityClient) QueryObject(ctx context.Context, endpoint string) (result plugindata.Data, err error) {
+func (client *securityClient) QueryObject(
+	ctx context.Context,
+	endpoint string,
+	queryParams url.Values,
+) (result plugindata.Data, err error) {
 	urlStr := baseURLSecurity + endpoint
 	requestUrl, err := url.Parse(urlStr)
 	if err != nil {
 		return
 	}
-	response, err := client.fetchURL(ctx, requestUrl)
+
+	if queryParams == nil {
+		queryParams = url.Values{}
+	}
+	requestUrl.RawQuery = queryParams.Encode()
+
+	response, err := client.getURL(ctx, requestUrl)
 	if err != nil {
 		slog.ErrorContext(ctx, "Error while fetching an object", "url", requestUrl.String(), "error", err)
+		return nil, err
+	}
+
+	return response, nil
+}
+
+func (client *securityClient) RunAdvancedQuery(ctx context.Context, query string) (result plugindata.Data, err error) {
+	urlStr := baseURLSecurity + "/advancedqueries/run"
+	requestUrl, err := url.Parse(urlStr)
+	if err != nil {
+		return
+	}
+
+	body := plugindata.Map{
+		"Query": plugindata.String(query),
+	}
+
+	response, err := client.postURL(ctx, requestUrl, body)
+	if err != nil {
+		slog.ErrorContext(ctx, "Error while submitting an advanced query", "url", requestUrl.String(), "error", err, "query", query)
 		return nil, err
 	}
 

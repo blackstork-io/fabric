@@ -157,12 +157,19 @@ func (client *graphClient) QueryObjects(
 func (client *graphClient) QueryObject(
 	ctx context.Context,
 	endpoint string,
+	queryParams url.Values,
 ) (result plugindata.Data, err error) {
 	urlStr := baseURLGraph + fmt.Sprintf("/%s%s", client.apiVersion, endpoint)
 	requestUrl, err := url.Parse(urlStr)
 	if err != nil {
 		return
 	}
+
+	if queryParams == nil {
+		queryParams = url.Values{}
+	}
+	requestUrl.RawQuery = queryParams.Encode()
+
 	response, err := client.fetchURL(ctx, requestUrl)
 	if err != nil {
 		slog.ErrorContext(ctx, "Error while fetching an object", "url", requestUrl.String(), "error", err)

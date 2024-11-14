@@ -25,9 +25,9 @@ func (_m *MicrosoftGraphClient) EXPECT() *MicrosoftGraphClient_Expecter {
 	return &MicrosoftGraphClient_Expecter{mock: &_m.Mock}
 }
 
-// QueryObject provides a mock function with given fields: ctx, endpoint
-func (_m *MicrosoftGraphClient) QueryObject(ctx context.Context, endpoint string) (plugindata.Data, error) {
-	ret := _m.Called(ctx, endpoint)
+// QueryObject provides a mock function with given fields: ctx, endpoint, queryParams
+func (_m *MicrosoftGraphClient) QueryObject(ctx context.Context, endpoint string, queryParams url.Values) (plugindata.Data, error) {
+	ret := _m.Called(ctx, endpoint, queryParams)
 
 	if len(ret) == 0 {
 		panic("no return value specified for QueryObject")
@@ -35,19 +35,19 @@ func (_m *MicrosoftGraphClient) QueryObject(ctx context.Context, endpoint string
 
 	var r0 plugindata.Data
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (plugindata.Data, error)); ok {
-		return rf(ctx, endpoint)
+	if rf, ok := ret.Get(0).(func(context.Context, string, url.Values) (plugindata.Data, error)); ok {
+		return rf(ctx, endpoint, queryParams)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) plugindata.Data); ok {
-		r0 = rf(ctx, endpoint)
+	if rf, ok := ret.Get(0).(func(context.Context, string, url.Values) plugindata.Data); ok {
+		r0 = rf(ctx, endpoint, queryParams)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(plugindata.Data)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, endpoint)
+	if rf, ok := ret.Get(1).(func(context.Context, string, url.Values) error); ok {
+		r1 = rf(ctx, endpoint, queryParams)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -63,13 +63,14 @@ type MicrosoftGraphClient_QueryObject_Call struct {
 // QueryObject is a helper method to define mock.On call
 //   - ctx context.Context
 //   - endpoint string
-func (_e *MicrosoftGraphClient_Expecter) QueryObject(ctx interface{}, endpoint interface{}) *MicrosoftGraphClient_QueryObject_Call {
-	return &MicrosoftGraphClient_QueryObject_Call{Call: _e.mock.On("QueryObject", ctx, endpoint)}
+//   - queryParams url.Values
+func (_e *MicrosoftGraphClient_Expecter) QueryObject(ctx interface{}, endpoint interface{}, queryParams interface{}) *MicrosoftGraphClient_QueryObject_Call {
+	return &MicrosoftGraphClient_QueryObject_Call{Call: _e.mock.On("QueryObject", ctx, endpoint, queryParams)}
 }
 
-func (_c *MicrosoftGraphClient_QueryObject_Call) Run(run func(ctx context.Context, endpoint string)) *MicrosoftGraphClient_QueryObject_Call {
+func (_c *MicrosoftGraphClient_QueryObject_Call) Run(run func(ctx context.Context, endpoint string, queryParams url.Values)) *MicrosoftGraphClient_QueryObject_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(url.Values))
 	})
 	return _c
 }
@@ -79,7 +80,7 @@ func (_c *MicrosoftGraphClient_QueryObject_Call) Return(object plugindata.Data, 
 	return _c
 }
 
-func (_c *MicrosoftGraphClient_QueryObject_Call) RunAndReturn(run func(context.Context, string) (plugindata.Data, error)) *MicrosoftGraphClient_QueryObject_Call {
+func (_c *MicrosoftGraphClient_QueryObject_Call) RunAndReturn(run func(context.Context, string, url.Values) (plugindata.Data, error)) *MicrosoftGraphClient_QueryObject_Call {
 	_c.Call.Return(run)
 	return _c
 }
