@@ -501,6 +501,21 @@
         ]
       },
       {
+        "name": "microsoft_security_query",
+        "type": "data-source",
+        "config_params": [
+          "client_id",
+          "client_secret",
+          "key_passphrase",
+          "private_key",
+          "private_key_file",
+          "tenant_id"
+        ],
+        "arguments": [
+          "query"
+        ]
+      },
+      {
         "name": "microsoft_sentinel_incidents",
         "type": "data-source",
         "config_params": [

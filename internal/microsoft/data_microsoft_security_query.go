@@ -59,9 +59,12 @@ func makeMicrosoftSecurityQueryDataSource(loader MicrosoftSecurityClientLoadFn) 
 		Args: &dataspec.RootSpec{
 			Attrs: []*dataspec.AttrSpec{
 				{
-					Name:        "query",
-					Doc:         "Advanced hunting query to run",
-					Type:        cty.String,
+					Name: "query",
+					Doc:  "Advanced hunting query to run",
+					Type: cty.String,
+					ExampleVal: cty.StringVal(
+						"DeviceRegistryEvents | where Timestamp >= ago(30d) | where isnotempty(RegistryKey) and isnotempty(RegistryValueName) | limit 5",
+					),
 					Constraints: constraint.RequiredNonNull,
 				},
 			},

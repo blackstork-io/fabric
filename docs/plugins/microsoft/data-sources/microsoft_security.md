@@ -84,13 +84,13 @@ The data source supports the following execution arguments:
 
 ```hcl
 data microsoft_security {
-  # The endpoint to query
+  # API endpoint to query
   #
   # Required string.
   # For example:
   endpoint = "/users"
 
-  # The query parameters
+  # HTTP query parameters
   #
   # Optional map of string.
   # Default value:
