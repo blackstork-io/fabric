@@ -3,8 +3,8 @@ package microsoft_test
 import (
 	"context"
 	"errors"
-	"testing"
 	"net/url"
+	"testing"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -126,9 +126,7 @@ func (s *MicrosoftSecurityDataSourceTestSuite) TestBasicObject() {
 	s.Equal(expectedData, result.AsPluginData())
 }
 
-
 func (s *MicrosoftSecurityDataSourceTestSuite) TestClientError() {
-
 	endpoint := "/users"
 	size := 1
 
@@ -214,4 +212,3 @@ func (s *MicrosoftSecurityDataSourceTestSuite) TestMissingCredentials() {
 		diagtest.DetailContains("Either `client_secret` or `private_key` / `private_key_file` arguments must be provide"),
 	}}.AssertMatch(s.T(), diags, nil)
 }
-

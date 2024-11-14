@@ -18,9 +18,9 @@ import (
 
 type SentinelIncidentsDataSourceTestSuite struct {
 	suite.Suite
-	schema    *plugin.DataSource
-	ctx       context.Context
-	cli       *client_mocks.AzureClient
+	schema *plugin.DataSource
+	ctx    context.Context
+	cli    *client_mocks.AzureClient
 }
 
 func TestSentinelIncidentsDataSourceTestSuite(t *testing.T) {
