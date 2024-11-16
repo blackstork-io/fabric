@@ -8,6 +8,9 @@ import (
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 )
 
 type AzureClient interface {
@@ -93,10 +96,28 @@ func MakeDefaultMicrosoftSecurityClientLoader(tokenFn client.AcquireTokenFn) Mic
 	}
 }
 
+type AzureOpenAIClientLoadFn func(azureOpenAIKey string, azureOpenAIEndpoint string) (client AzureOpenAIClient, err error)
+
+type AzureOpenAIClient interface {
+	GetCompletions(
+		ctx context.Context,
+		body azopenai.CompletionsOptions,
+		options *azopenai.GetCompletionsOptions,
+	) (azopenai.GetCompletionsResponse, error)
+}
+
+func MakeAzureOpenAIClientLoader() AzureOpenAIClientLoadFn {
+	return func(azureOpenAIKey string, azureOpenAIEndpoint string) (client AzureOpenAIClient, err error) {
+		keyCredential := azcore.NewKeyCredential(azureOpenAIKey)
+		client, err = azopenai.NewClientWithKeyCredential(azureOpenAIEndpoint, keyCredential, nil)
+		return
+	}
+}
+
 func Plugin(
 	version string,
 	azureClientLoader AzureClientLoadFn,
-	openAIClientLoader client.AzureOpenAIClientLoadFn,
+	openAIClientLoader AzureOpenAIClientLoadFn,
 	graphClientLoader MicrosoftGraphClientLoadFn,
 	securityClientLoader MicrosoftSecurityClientLoadFn,
 ) *plugin.Schema {

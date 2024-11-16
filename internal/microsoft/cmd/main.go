@@ -13,7 +13,7 @@ func main() {
 		microsoft.Plugin(
 			version,
 			microsoft.MakeDefaultAzureClientLoader(client.AcquireAzureToken),
-			client.MakeAzureOpenAIClientLoader(),
+			microsoft.MakeAzureOpenAIClientLoader(),
 			microsoft.MakeDefaultMicrosoftGraphClientLoader(client.AcquireAzureToken),
 			microsoft.MakeDefaultMicrosoftSecurityClientLoader(client.AcquireAzureToken),
 		),
