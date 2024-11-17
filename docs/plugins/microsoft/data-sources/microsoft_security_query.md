@@ -1,8 +1,8 @@
 ---
-title: "`microsoft_graph` data source"
+title: "`microsoft_security_query` data source"
 plugin:
   name: blackstork/microsoft
-  description: "The `microsoft_graph` data source queries Microsoft Graph API"
+  description: "The `microsoft_defender_query` data source queries Microsoft Security API"
   tags: []
   version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/microsoft/"
@@ -13,14 +13,14 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/microsoft" "microsoft" "v0.4.2" "microsoft_graph" "data source" >}}
+{{< plugin-resource-header "blackstork/microsoft" "microsoft" "v0.4.2" "microsoft_security_query" "data source" >}}
 
 ## Description
-The `microsoft_graph` data source queries Microsoft Graph API.
+The `microsoft_defender_query` data source queries Microsoft Security API.
 
 ## Installation
 
-To use `microsoft_graph` data source, you must install the plugin `blackstork/microsoft`.
+To use `microsoft_security_query` data source, you must install the plugin `blackstork/microsoft`.
 
 To install the plugin, add the full plugin name to the `plugin_versions` map in the Fabric global configuration block (see [Global configuration]({{< ref "configs.md#global-configuration" >}}) for more details), as shown below:
 
@@ -39,7 +39,7 @@ Note the version constraint set for the plugin.
 The data source supports the following configuration arguments:
 
 ```hcl
-config data microsoft_graph {
+config data microsoft_security_query {
   # The Azure client ID
   #
   # Required string.
@@ -83,36 +83,11 @@ config data microsoft_graph {
 The data source supports the following execution arguments:
 
 ```hcl
-data microsoft_graph {
-  # The API version
-  #
-  # Optional string.
-  # Default value:
-  api_version = "beta"
-
-  # The endpoint to query
+data microsoft_security_query {
+  # Advanced hunting query to run
   #
   # Required string.
   # For example:
-  endpoint = "/users"
-
-  # HTTP GET query parameters
-  #
-  # Optional map of string.
-  # Default value:
-  query_params = null
-
-  # Number of objects to be returned
-  #
-  # Optional number.
-  # Must be >= 1
-  # Default value:
-  size = 50
-
-  # Indicates if API endpoint serves a single object.
-  #
-  # Optional bool.
-  # Default value:
-  is_object_endpoint = false
+  query = "DeviceRegistryEvents | where Timestamp >= ago(30d) | where isnotempty(RegistryKey) and isnotempty(RegistryValueName) | limit 5"
 }
 ```

@@ -8,7 +8,7 @@ env:
   - CGO_ENABLED=0
 
 snapshot:
-  name_template: "{{ .Version }}-dev+{{if .IsGitDirty}}dirty.{{end}}rev.{{.FullCommit}}"
+  version_template: "{{ .Version }}-dev+{{if .IsGitDirty}}dirty.{{end}}rev.{{.FullCommit}}"
 
 builds:
   # CLI
@@ -23,146 +23,146 @@ builds:
 
   # Plugins
 
-  # - id: elastic
-  #   main: ./internal/elastic/cmd
-  #   binary: "plugins/blackstork/elastic@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: elastic
+    main: ./internal/elastic/cmd
+    binary: "plugins/blackstork/elastic@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
-  # - id: github
-  #   main: ./internal/github/cmd
-  #   binary: "plugins/blackstork/github@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: github
+    main: ./internal/github/cmd
+    binary: "plugins/blackstork/github@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
-  # - id: graphql
-  #   main: ./internal/graphql/cmd
-  #   binary: "plugins/blackstork/graphql@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: graphql
+    main: ./internal/graphql/cmd
+    binary: "plugins/blackstork/graphql@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
-  # - id: openai
-  #   main: ./internal/openai/cmd
-  #   binary: "plugins/blackstork/openai@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: openai
+    main: ./internal/openai/cmd
+    binary: "plugins/blackstork/openai@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
-  # - id: opencti
-  #   main: ./internal/opencti/cmd
-  #   binary: "plugins/blackstork/opencti@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: opencti
+    main: ./internal/opencti/cmd
+    binary: "plugins/blackstork/opencti@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
-  # - id: nistnvd
-  #   main: ./internal/nistnvd/cmd
-  #   binary: "plugins/blackstork/nist_nvd@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: nistnvd
+    main: ./internal/nistnvd/cmd
+    binary: "plugins/blackstork/nist_nvd@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
-  # - id: postgresql
-  #   main: ./internal/postgresql/cmd
-  #   binary: "plugins/blackstork/postgresql@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: postgresql
+    main: ./internal/postgresql/cmd
+    binary: "plugins/blackstork/postgresql@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
-  # - id: sqlite
-  #   main: ./internal/sqlite/cmd
-  #   binary: "plugins/blackstork/sqlite@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: sqlite
+    main: ./internal/sqlite/cmd
+    binary: "plugins/blackstork/sqlite@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
-  # - id: terraform
-  #   main: ./internal/terraform/cmd
-  #   binary: "plugins/blackstork/terraform@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: terraform
+    main: ./internal/terraform/cmd
+    binary: "plugins/blackstork/terraform@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
-  # - id: hackerone
-  #   main: ./internal/hackerone/cmd
-  #   binary: "plugins/blackstork/hackerone@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: hackerone
+    main: ./internal/hackerone/cmd
+    binary: "plugins/blackstork/hackerone@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
-  # - id: virustotal
-  #   main: ./internal/virustotal/cmd
-  #   binary: "plugins/blackstork/virustotal@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: virustotal
+    main: ./internal/virustotal/cmd
+    binary: "plugins/blackstork/virustotal@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
-  # - id: splunk
-  #   main: ./internal/splunk/cmd
-  #   binary: "plugins/blackstork/splunk@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: splunk
+    main: ./internal/splunk/cmd
+    binary: "plugins/blackstork/splunk@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
-  # - id: stixview
-  #   main: ./internal/stixview/cmd
-  #   binary: "plugins/blackstork/stixview@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: stixview
+    main: ./internal/stixview/cmd
+    binary: "plugins/blackstork/stixview@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
-  # - id: snyk
-  #   main: ./internal/snyk/cmd
-  #   binary: "plugins/blackstork/snyk@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: snyk
+    main: ./internal/snyk/cmd
+    binary: "plugins/blackstork/snyk@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
-  # - id: microsoft
-  #   main: ./internal/microsoft/cmd
-  #   binary: "plugins/blackstork/microsoft@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: microsoft
+    main: ./internal/microsoft/cmd
+    binary: "plugins/blackstork/microsoft@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin
 
-  # - id: iris
-  #   main: ./internal/iris/cmd
-  #   binary: "plugins/blackstork/iris@{{ .Version }}"
-  #   ldflags: "-X main.version={{.Version}}"
-  #   gcflags: all=-N -l
-  #   no_unique_dist_dir: true
-  #   tags:
-  #     - fabricplugin
+  - id: iris
+    main: ./internal/iris/cmd
+    binary: "plugins/blackstork/iris@{{ .Version }}"
+    ldflags: "-X main.version={{.Version}}"
+    gcflags: all=-N -l
+    no_unique_dist_dir: true
+    tags:
+      - fabricplugin

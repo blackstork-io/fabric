@@ -20,39 +20,39 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
-type MicrosoftGraphDataSourceTestSuite struct {
+type MicrosoftSecurityDataSourceTestSuite struct {
 	suite.Suite
 	plugin *plugin.Schema
 	schema *plugin.DataSource
-	cli    *client_mocks.MicrosoftGraphClient
+	cli    *client_mocks.MicrosoftSecurityClient
 }
 
-func TestMicrosoftGraphDataSourceTestSuite(t *testing.T) {
-	suite.Run(t, &MicrosoftGraphDataSourceTestSuite{})
+func TestMicrosoftSecurityDataSourceTestSuite(t *testing.T) {
+	suite.Run(t, &MicrosoftSecurityDataSourceTestSuite{})
 }
 
-func (s *MicrosoftGraphDataSourceTestSuite) SetupSuite() {
+func (s *MicrosoftSecurityDataSourceTestSuite) SetupSuite() {
 	s.plugin = microsoft.Plugin(
 		"1.0.0",
 		nil,
 		nil,
-		(func(ctx context.Context, apiVersion string, cfg *dataspec.Block) (client microsoft.MicrosoftGraphClient, err error) {
+		nil,
+		(func(ctx context.Context, cfg *dataspec.Block) (client microsoft.MicrosoftSecurityClient, err error) {
 			return s.cli, nil
 		}),
-		nil,
 	)
-	s.schema = s.plugin.DataSources["microsoft_graph"]
+	s.schema = s.plugin.DataSources["microsoft_security"]
 }
 
-func (s *MicrosoftGraphDataSourceTestSuite) SetupTest() {
-	s.cli = &client_mocks.MicrosoftGraphClient{}
+func (s *MicrosoftSecurityDataSourceTestSuite) SetupTest() {
+	s.cli = &client_mocks.MicrosoftSecurityClient{}
 }
 
-func (s *MicrosoftGraphDataSourceTestSuite) TearDownTest() {
+func (s *MicrosoftSecurityDataSourceTestSuite) TearDownTest() {
 	s.cli.AssertExpectations(s.T())
 }
 
-func (s *MicrosoftGraphDataSourceTestSuite) TestSchema() {
+func (s *MicrosoftSecurityDataSourceTestSuite) TestSchema() {
 	s.Require().NotNil(s.plugin)
 	s.Require().NotNil(s.schema)
 	s.NotNil(s.schema.Args)
@@ -60,15 +60,22 @@ func (s *MicrosoftGraphDataSourceTestSuite) TestSchema() {
 	s.NotNil(s.schema.Config)
 }
 
-func (s *MicrosoftGraphDataSourceTestSuite) TestBasic() {
+func (s *MicrosoftSecurityDataSourceTestSuite) TestBasicObjects() {
+	queryParams := url.Values{}
+	queryParams.Set("$top", "10")
+
+	size := 1
+	endpoint := "/users"
+
 	expectedData := plugindata.List{
 		plugindata.Map{
-			"severity":    plugindata.String("High"),
-			"displayName": plugindata.String("Incident 1"),
+			"foo": plugindata.String("bar"),
 		},
 	}
-	s.cli.On("QueryObjects", mock.Anything, "/security/incidents", url.Values{"$top": []string{"10"}}, 1).
+
+	s.cli.On("QueryObjects", mock.Anything, endpoint, queryParams, size).
 		Return(expectedData, nil)
+
 	ctx := context.Background()
 	result, diags := s.schema.DataFunc(ctx, &plugin.RetrieveDataParams{
 		Config: plugintest.NewTestDecoder(s.T(), s.schema.Config).
@@ -77,24 +84,29 @@ func (s *MicrosoftGraphDataSourceTestSuite) TestBasic() {
 			SetAttr("client_secret", cty.StringVal("csecret")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.schema.Args).
-			SetAttr("endpoint", cty.StringVal("/security/incidents")).
-			SetAttr("api_version", cty.StringVal("v1")).
-			SetAttr("size", cty.NumberIntVal(1)).
+			SetAttr("endpoint", cty.StringVal(endpoint)).
+			SetAttr("size", cty.NumberIntVal(int64(size))).
+			SetAttr("is_object_endpoint", cty.BoolVal(false)).
 			SetAttr("query_params", cty.MapVal(map[string]cty.Value{"$top": cty.StringVal("10")})).
 			Decode(),
 	})
 	s.Nil(diags)
+	s.NotNil(result)
 	s.Equal(expectedData, result.AsPluginData())
 }
 
-func (s *MicrosoftGraphDataSourceTestSuite) TestBasicObject() {
+func (s *MicrosoftSecurityDataSourceTestSuite) TestBasicObject() {
+	queryParams := url.Values{}
+	queryParams.Set("aaa", "bbb")
+
+	endpoint := "/users"
 	expectedData := plugindata.Map{
-		"value": plugindata.Map{
-			"severity":    plugindata.String("High"),
-			"displayName": plugindata.String("Incident 1"),
-		},
+		"foo": plugindata.String("bar"),
 	}
-	s.cli.On("QueryObject", mock.Anything, "/security/incidents/123", url.Values{}).Return(expectedData, nil)
+
+	s.cli.On("QueryObject", mock.Anything, endpoint, queryParams).
+		Return(expectedData, nil)
+
 	ctx := context.Background()
 	result, diags := s.schema.DataFunc(ctx, &plugin.RetrieveDataParams{
 		Config: plugintest.NewTestDecoder(s.T(), s.schema.Config).
@@ -103,17 +115,27 @@ func (s *MicrosoftGraphDataSourceTestSuite) TestBasicObject() {
 			SetAttr("client_secret", cty.StringVal("csecret")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.schema.Args).
-			SetAttr("endpoint", cty.StringVal("/security/incidents/123")).
-			SetAttr("is_object_endpoint", cty.StringVal("true")).
+			SetAttr("endpoint", cty.StringVal(endpoint)).
+			SetAttr("size", cty.NumberIntVal(int64(999))).
+			SetAttr("is_object_endpoint", cty.BoolVal(true)).
+			SetAttr("query_params", cty.MapVal(map[string]cty.Value{"aaa": cty.StringVal("bbb")})).
 			Decode(),
 	})
 	s.Nil(diags)
+	s.NotNil(result)
 	s.Equal(expectedData, result.AsPluginData())
 }
 
-func (s *MicrosoftGraphDataSourceTestSuite) TestClientError() {
-	s.cli.On("QueryObjects", mock.Anything, "/security/incidents", url.Values{"$top": []string{"10"}}, 1).
-		Return(nil, errors.New("microsoft graph client returned status code: 400"))
+func (s *MicrosoftSecurityDataSourceTestSuite) TestClientError() {
+	endpoint := "/users"
+	size := 1
+
+	queryParams := url.Values{}
+	queryParams.Set("$top", "10")
+
+	s.cli.On("QueryObjects", mock.Anything, endpoint, queryParams, size).
+		Return(nil, errors.New("dummy error"))
+
 	ctx := context.Background()
 	result, diags := s.schema.DataFunc(ctx, &plugin.RetrieveDataParams{
 		Config: plugintest.NewTestDecoder(s.T(), s.schema.Config).
@@ -122,20 +144,20 @@ func (s *MicrosoftGraphDataSourceTestSuite) TestClientError() {
 			SetAttr("client_secret", cty.StringVal("csecret")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.schema.Args).
-			SetAttr("endpoint", cty.StringVal("/security/incidents")).
-			SetAttr("api_version", cty.StringVal("v1")).
-			SetAttr("size", cty.NumberIntVal(1)).
+			SetAttr("endpoint", cty.StringVal(endpoint)).
+			SetAttr("size", cty.NumberIntVal(int64(size))).
+			SetAttr("is_object_endpoint", cty.BoolVal(false)).
 			SetAttr("query_params", cty.MapVal(map[string]cty.Value{"$top": cty.StringVal("10")})).
 			Decode(),
 	})
 	s.Nil(result)
 	diagtest.Asserts{{
 		diagtest.IsError,
-		diagtest.DetailContains("microsoft graph client returned status code: 400"),
+		diagtest.DetailContains("dummy error"),
 	}}.AssertMatch(s.T(), diags, nil)
 }
 
-func (s *MicrosoftGraphDataSourceTestSuite) TestMissingArgs() {
+func (s *MicrosoftSecurityDataSourceTestSuite) TestMissingArgs() {
 	plugintest.NewTestDecoder(
 		s.T(),
 		s.schema.Args,
@@ -146,7 +168,7 @@ func (s *MicrosoftGraphDataSourceTestSuite) TestMissingArgs() {
 	})
 }
 
-func (s *MicrosoftGraphDataSourceTestSuite) TestMissingConfig() {
+func (s *MicrosoftSecurityDataSourceTestSuite) TestMissingConfig() {
 	plugintest.NewTestDecoder(
 		s.T(),
 		s.schema.Config,
@@ -161,15 +183,15 @@ func (s *MicrosoftGraphDataSourceTestSuite) TestMissingConfig() {
 	})
 }
 
-func (s *MicrosoftGraphDataSourceTestSuite) TestMissingCredentials() {
+func (s *MicrosoftSecurityDataSourceTestSuite) TestMissingCredentials() {
 	s.plugin = microsoft.Plugin(
 		"1.0.0",
 		nil,
 		nil,
-		microsoft.MakeDefaultMicrosoftGraphClientLoader(client.AcquireAzureToken),
 		nil,
+		microsoft.MakeDefaultMicrosoftSecurityClientLoader(client.AcquireAzureToken),
 	)
-	s.schema = s.plugin.DataSources["microsoft_graph"]
+	s.schema = s.plugin.DataSources["microsoft_security"]
 
 	ctx := context.Background()
 	result, diags := s.schema.DataFunc(ctx, &plugin.RetrieveDataParams{
@@ -178,10 +200,10 @@ func (s *MicrosoftGraphDataSourceTestSuite) TestMissingCredentials() {
 			SetAttr("tenant_id", cty.StringVal("tid")).
 			Decode(),
 		Args: plugintest.NewTestDecoder(s.T(), s.schema.Args).
-			SetAttr("endpoint", cty.StringVal("/security/incidents")).
-			SetAttr("api_version", cty.StringVal("v1")).
+			SetAttr("endpoint", cty.StringVal("/foo")).
+			SetAttr("size", cty.NumberIntVal(12)).
+			SetAttr("is_object_endpoint", cty.BoolVal(false)).
 			SetAttr("query_params", cty.MapVal(map[string]cty.Value{"$top": cty.StringVal("10")})).
-			SetAttr("size", cty.NumberIntVal(1)).
 			Decode(),
 	})
 	s.Nil(result)

@@ -27,7 +27,7 @@ type AzureOpenAITextContentTestSuite struct {
 	suite.Suite
 	plugin *plugin.Schema
 	schema *plugin.ContentProvider
-	cli    *client_mocks.AzureOpenaiClient
+	cli    *client_mocks.AzureOpenAIClient
 }
 
 func TestAzureOpenAITextContentSuite(t *testing.T) {
@@ -35,14 +35,14 @@ func TestAzureOpenAITextContentSuite(t *testing.T) {
 }
 
 func (s *AzureOpenAITextContentTestSuite) SetupSuite() {
-	s.plugin = microsoft.Plugin("1.0.0", nil, (func(apiKey string, endPoint string) (cli microsoft.AzureOpenaiClient, err error) {
+	s.plugin = microsoft.Plugin("1.0.0", nil, (func(apiKey string, endPoint string) (cli microsoft.AzureOpenAIClient, err error) {
 		return s.cli, nil
-	}), nil)
+	}), nil, nil)
 	s.schema = s.plugin.ContentProviders["azure_openai_text"]
 }
 
 func (s *AzureOpenAITextContentTestSuite) SetupTest() {
-	s.cli = &client_mocks.AzureOpenaiClient{}
+	s.cli = &client_mocks.AzureOpenAIClient{}
 }
 
 func (s *AzureOpenAITextContentTestSuite) TearDownTest() {

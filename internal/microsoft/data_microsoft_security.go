@@ -14,10 +14,10 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-func makeMicrosoftGraphDataSource(loader MicrosoftGraphClientLoadFn) *plugin.DataSource {
+func makeMicrosoftSecurityDataSource(loader MicrosoftSecurityClientLoadFn) *plugin.DataSource {
 	return &plugin.DataSource{
-		Doc:      "The `microsoft_graph` data source queries Microsoft Graph API.",
-		DataFunc: fetchMicrosoftGraph(loader),
+		Doc:      "The `microsoft_security` data source queries Microsoft Security API.",
+		DataFunc: fetchMicrosoftSecurity(loader),
 		Config: &dataspec.RootSpec{
 			Attrs: []*dataspec.AttrSpec{
 				{
@@ -58,21 +58,15 @@ func makeMicrosoftGraphDataSource(loader MicrosoftGraphClientLoadFn) *plugin.Dat
 		Args: &dataspec.RootSpec{
 			Attrs: []*dataspec.AttrSpec{
 				{
-					Name:       "api_version",
-					Doc:        "The API version",
-					Type:       cty.String,
-					DefaultVal: cty.StringVal("beta"),
-				},
-				{
 					Name:        "endpoint",
-					Doc:         "The endpoint to query",
+					Doc:         "API endpoint to query",
 					Type:        cty.String,
 					Constraints: constraint.RequiredNonNull,
 					ExampleVal:  cty.StringVal("/users"),
 				},
 				{
 					Name: "query_params",
-					Doc:  "HTTP GET query parameters",
+					Doc:  "HTTP query parameters",
 					Type: cty.Map(cty.String),
 				},
 				{
@@ -85,7 +79,7 @@ func makeMicrosoftGraphDataSource(loader MicrosoftGraphClientLoadFn) *plugin.Dat
 				},
 				{
 					Name:       "is_object_endpoint",
-					Doc:        "Indicates if API endpoint serves a single object.",
+					Doc:        "Indicates if API endpoint serves a single object. If set to `true`, `query_params` and `size` arguments are ignored.",
 					Type:       cty.Bool,
 					DefaultVal: cty.BoolVal(false),
 				},
@@ -94,44 +88,43 @@ func makeMicrosoftGraphDataSource(loader MicrosoftGraphClientLoadFn) *plugin.Dat
 	}
 }
 
-func fetchMicrosoftGraph(loader MicrosoftGraphClientLoadFn) plugin.RetrieveDataFunc {
+func fetchMicrosoftSecurity(loader MicrosoftSecurityClientLoadFn) plugin.RetrieveDataFunc {
 	return func(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
-		apiVersion := params.Args.GetAttrVal("api_version").AsString()
-		cli, err := loader(ctx, apiVersion, params.Config)
+		cli, err := loader(ctx, params.Config)
 		if err != nil {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
-				Summary:  "Unable to create Microsoft Graph API client",
+				Summary:  "Unable to create Microsoft Security API client",
 				Detail:   err.Error(),
 			}}
 		}
 		endPoint := params.Args.GetAttrVal("endpoint").AsString()
 		isObjectEndpoint := params.Args.GetAttrVal("is_object_endpoint")
 
-		var response plugindata.Data
-
 		queryParamsAttr := params.Args.GetAttrVal("query_params")
-		queryParams := url.Values{}
+		var queryParams url.Values
 
 		if !queryParamsAttr.IsNull() {
+			queryParams = url.Values{}
 			queryMap := queryParamsAttr.AsValueMap()
 			for k, v := range queryMap {
 				queryParams.Add(k, v.AsString())
 			}
 		}
 
+		var response plugindata.Data
+
 		if isObjectEndpoint.True() {
 			response, err = cli.QueryObject(ctx, endPoint, queryParams)
 		} else {
 			size64, _ := params.Args.GetAttrVal("size").AsBigFloat().Int64()
 			size := int(size64)
-
 			response, err = cli.QueryObjects(ctx, endPoint, queryParams, size)
 		}
 		if err != nil {
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
-				Summary:  "Failed to query Microsoft Graph API",
+				Summary:  "Failed to query Microsoft Security API",
 				Detail:   err.Error(),
 			}}
 		}
