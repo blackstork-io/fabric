@@ -24,6 +24,7 @@ import (
 	"github.com/blackstork-io/fabric/internal/hackerone"
 	"github.com/blackstork-io/fabric/internal/iris"
 	"github.com/blackstork-io/fabric/internal/microsoft"
+	"github.com/blackstork-io/fabric/internal/misp"
 	"github.com/blackstork-io/fabric/internal/nistnvd"
 	"github.com/blackstork-io/fabric/internal/openai"
 	"github.com/blackstork-io/fabric/internal/opencti"
@@ -284,6 +285,7 @@ func main() {
 		crowdstrike.Plugin(version, nil),
 		iris.Plugin(version, nil),
 		atlassian.Plugin(version, nil),
+		misp.Plugin(version, nil),
 	}
 	// generate markdown for each plugin
 	for _, p := range plugins {

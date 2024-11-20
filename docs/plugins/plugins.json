@@ -569,6 +569,42 @@
     ]
   },
   {
+    "name": "blackstork/misp",
+    "version": "v0.4.2",
+    "shortname": "misp",
+    "resources": [
+      {
+        "name": "misp_events",
+        "type": "data-source",
+        "config_params": [
+          "api_key",
+          "base_url",
+          "skip_ssl"
+        ],
+        "arguments": [
+          "category",
+          "event_id",
+          "event_tags",
+          "from",
+          "include_sightings",
+          "last",
+          "limit",
+          "only_metadata",
+          "org",
+          "searchall",
+          "sharing_groups",
+          "tags",
+          "threat_level_id",
+          "to",
+          "type",
+          "uuid",
+          "value",
+          "with_attachments"
+        ]
+      }
+    ]
+  },
+  {
     "name": "blackstork/nist_nvd",
     "version": "v0.4.2",
     "shortname": "nist_nvd",
