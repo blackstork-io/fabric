@@ -15,6 +15,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/spf13/pflag"
 
+	"github.com/blackstork-io/fabric/internal/atlassian"
 	"github.com/blackstork-io/fabric/internal/builtin"
 	"github.com/blackstork-io/fabric/internal/crowdstrike"
 	"github.com/blackstork-io/fabric/internal/elastic"
@@ -282,6 +283,7 @@ func main() {
 		microsoft.Plugin(version, nil, nil, nil, nil),
 		crowdstrike.Plugin(version, nil),
 		iris.Plugin(version, nil),
+		atlassian.Plugin(version, nil),
 	}
 	// generate markdown for each plugin
 	for _, p := range plugins {

@@ -1,5 +1,28 @@
 [
   {
+    "name": "blackstork/atlassian",
+    "version": "v0.4.2",
+    "shortname": "atlassian",
+    "resources": [
+      {
+        "name": "jira_issues",
+        "type": "data-source",
+        "config_params": [
+          "account_email",
+          "api_token",
+          "domain"
+        ],
+        "arguments": [
+          "expand",
+          "fields",
+          "jql",
+          "properties",
+          "size"
+        ]
+      }
+    ]
+  },
+  {
     "name": "blackstork/builtin",
     "version": "v0.4.2",
     "shortname": "builtin",

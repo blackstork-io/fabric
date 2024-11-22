@@ -261,6 +261,20 @@ builds:
     tags:
       - fabricplugin
 
+  - id: plugin_atlassian
+    main: ./internal/atlassian/cmd
+    binary: "atlassian@{{ .Version }}"
+    flags: "-trimpath"
+    hooks:
+      post:
+        - go run ./tools/pluginmeta --namespace blackstork --version {{.Version}} patch --plugin {{.Path}} --os {{.Os}} --arch {{.Arch}}
+    goos:
+      - linux
+      - windows
+      - darwin
+    tags:
+      - fabricplugin
+
 archives:
   - id: fabric
     format: tar.gz
@@ -457,12 +471,25 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
+
   - id: plugin_iris
     format: tar.gz
     builds:
       - plugin_iris
     name_template: >-
       plugin_iris_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+  - id: plugin_atlassian
+    format: tar.gz
+    builds:
+      - plugin_atlassian
+    name_template: >-
+      plugin_atlassian_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
