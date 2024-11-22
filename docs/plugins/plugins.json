@@ -74,6 +74,17 @@
         ]
       },
       {
+        "name": "hub",
+        "type": "publisher",
+        "config_params": [
+          "api_token",
+          "api_url"
+        ],
+        "arguments": [
+          "title"
+        ]
+      },
+      {
         "name": "image",
         "type": "content-provider",
         "arguments": [

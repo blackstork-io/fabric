@@ -6,6 +6,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
+	astv1 "github.com/blackstork-io/fabric/plugin/ast/v1"
 )
 
 func encodeContentResult(src *plugin.ContentResult) *ContentResult {
@@ -13,12 +14,12 @@ func encodeContentResult(src *plugin.ContentResult) *ContentResult {
 		return nil
 	}
 	return &ContentResult{
-		Content:  encodeContent(src.Content),
+		Content:  EncodeContent(src.Content),
 		Location: encodeLocation(src.Location),
 	}
 }
 
-func encodeContent(src plugin.Content) *Content {
+func EncodeContent(src plugin.Content) *Content {
 	var variant isContent_Value
 	switch val := src.(type) {
 	case nil:
@@ -29,6 +30,7 @@ func encodeContent(src plugin.Content) *Content {
 		}
 		el := &ContentElement{
 			Markdown: val.AsMarkdownSrc(),
+			Meta:     astv1.EncodeMetadata(val.Meta()),
 		}
 		if val.IsAst() {
 			el.Ast = val.AsSerializedNode()
@@ -42,7 +44,8 @@ func encodeContent(src plugin.Content) *Content {
 		}
 		variant = &Content_Section{
 			Section: &ContentSection{
-				Children: utils.FnMap(val.Children, encodeContent),
+				Children: utils.FnMap(val.Children, EncodeContent),
+				Meta:     astv1.EncodeMetadata(val.Meta()),
 			},
 		}
 	case *plugin.ContentEmpty:

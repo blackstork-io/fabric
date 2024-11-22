@@ -148,7 +148,8 @@ func (p Printer) firstTitle(el plugin.Content) (string, bool) {
 		}
 	case *plugin.ContentElement:
 		meta := el.Meta()
-		if meta.Plugin == "blackstork/builtin" && meta.Provider == "title" {
+
+		if meta != nil && meta.Plugin == "blackstork/builtin" && meta.Provider == "title" {
 			return string(bytes.TrimSpace(
 				bytes.TrimPrefix(el.AsMarkdownSrc(), []byte("#")),
 			)), true

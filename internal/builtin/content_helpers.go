@@ -1,6 +1,13 @@
 package builtin
 
 import (
+	"bytes"
+	"fmt"
+	"strings"
+	"text/template"
+
+	"github.com/Masterminds/sprig/v3"
+
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
@@ -77,4 +84,37 @@ func findDepth(parent *plugin.ContentSection, id uint32, depth int) int {
 		}
 	}
 	return -1
+}
+
+func firstTitle(el plugin.Content) (string, bool) {
+	switch el := el.(type) {
+	case *plugin.ContentSection:
+		for _, c := range el.Children {
+			if title, ok := firstTitle(c); ok {
+				return title, true
+			}
+		}
+	case *plugin.ContentElement:
+		meta := el.Meta()
+		if meta.Plugin == "blackstork/builtin" && meta.Provider == "title" {
+			return string(bytes.TrimSpace(
+				bytes.TrimPrefix(el.AsMarkdownSrc(), []byte("#")),
+			)), true
+		}
+	}
+	return "", false
+}
+
+func templateString(str string, datactx plugindata.Map) (string, error) {
+	tmpl, err := template.New("pattern").Funcs(sprig.FuncMap()).Parse(str)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse a text template: %w", err)
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, datactx.Any())
+	if err != nil {
+		return "", fmt.Errorf("failed to execute a text template: %w", err)
+	}
+	return strings.TrimSpace(buf.String()), nil
 }
