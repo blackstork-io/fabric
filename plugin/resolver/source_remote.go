@@ -210,7 +210,12 @@ func (source RemoteSource) fetchVersions(ctx context.Context, name Name) (_ []re
 }
 
 // Resolve returns the binary path and checksum for the given plugin version.
-func (source RemoteSource) Resolve(ctx context.Context, name Name, version Version, checksums []Checksum) (_ *ResolvedPlugin, err error) {
+func (source RemoteSource) Resolve(
+	ctx context.Context,
+	name Name,
+	version Version,
+	checksums []Checksum,
+) (_ *ResolvedPlugin, err error) {
 	ctx, span := source.tracer.Start(ctx, "RemoteSource.Resolve",
 		trace.WithAttributes(
 			attribute.String("name", name.String()),
@@ -233,7 +238,11 @@ func (source RemoteSource) Resolve(ctx context.Context, name Name, version Versi
 }
 
 // fetchDownloadInfo resolves the download info for sthe given plugin version from the registry.
-func (source RemoteSource) fetchDownloadInfo(ctx context.Context, name Name, version Version) (_ *regDownloadInfo, err error) {
+func (source RemoteSource) fetchDownloadInfo(
+	ctx context.Context,
+	name Name,
+	version Version,
+) (_ *regDownloadInfo, err error) {
 	ctx, span := source.tracer.Start(ctx, "RemoteSource.fetchDownloadInfo",
 		trace.WithAttributes(
 			attribute.String("name", name.String()),
@@ -289,7 +298,13 @@ func (source RemoteSource) fetchChecksums(ctx context.Context, name Name, versio
 		}
 		span.End()
 	}()
-	url := fmt.Sprintf("%s/v1/plugins/%s/%s/%s/checksums", source.baseURL, name.Namespace(), name.Short(), version.String())
+	url := fmt.Sprintf(
+		"%s/v1/plugins/%s/%s/%s/checksums",
+		source.baseURL,
+		name.Namespace(),
+		name.Short(),
+		version.String(),
+	)
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -310,14 +325,20 @@ func (source RemoteSource) fetchChecksums(ctx context.Context, name Name, versio
 }
 
 // download downloads the plugin from the registry and returns the binary path and checksum.
-func (source RemoteSource) download(ctx context.Context, name Name, version Version, info *regDownloadInfo, checksums []Checksum) (_ *ResolvedPlugin, err error) {
+func (source RemoteSource) download(
+	ctx context.Context,
+	name Name,
+	version Version,
+	info *regDownloadInfo,
+	checksums []Checksum,
+) (_ *ResolvedPlugin, err error) {
 	ctx, span := source.tracer.Start(ctx, "RemoteSource.download",
 		trace.WithAttributes(
 			attribute.String("name", name.String()),
 			attribute.String("version", version.String()),
 		),
 	)
-	source.logger.InfoContext(ctx, "Downloading plugin", "name", name, "version", version)
+	source.logger.InfoContext(ctx, "Downloading a plugin", "name", name, "version", version)
 	defer func() {
 		if err != nil {
 			span.RecordError(err)
@@ -330,18 +351,18 @@ func (source RemoteSource) download(ctx context.Context, name Name, version Vers
 		var err error
 		checksums, err = source.fetchChecksums(ctx, name, version)
 		if err != nil {
-			return nil, fmt.Errorf("failed to fetch plugin checksums: %w", err)
+			return nil, fmt.Errorf("failed to fetch the plugin checksums: %w", err)
 		}
 	}
 	// make a http request to download the plugin
 	req, err := http.NewRequestWithContext(ctx, "GET", info.DownloadURL, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create download request: %w", err)
+		return nil, fmt.Errorf("failed to create a download request: %w", err)
 	}
 	req.Header.Set("Accept", "application/octet-stream")
 	resp, err := source.call(req, downloadTimeout)
 	if err != nil {
-		return nil, fmt.Errorf("failed to download plugin: %w", err)
+		return nil, fmt.Errorf("failed to download a plugin: %w", err)
 	}
 	defer resp.Body.Close()
 	// verify download response headers
@@ -356,6 +377,13 @@ func (source RemoteSource) download(ctx context.Context, name Name, version Vers
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract plugin: %w", err)
 	}
+	source.logger.DebugContext(
+		ctx,
+		"Plugin downloaded, verified and stored in a local cache",
+		"name", name,
+		"version", version,
+		"path", string(binaryPath),
+	)
 	// cleanup extracted files if there is an error during checksum verification
 	defer func() {
 		if err == nil {
@@ -394,7 +422,11 @@ func (source RemoteSource) download(ctx context.Context, name Name, version Vers
 func (source RemoteSource) verifyDownloadHeaders(res *http.Response) error {
 	// verify the download size
 	if res.ContentLength > maxDownloadSize {
-		return fmt.Errorf("plugin download size exceeds the limit, got = %d, expect < %d", res.ContentLength, maxDownloadSize)
+		return fmt.Errorf(
+			"plugin download size exceeds the limit, got = %d, expect < %d",
+			res.ContentLength,
+			maxDownloadSize,
+		)
 	}
 	disposition, params, err := mime.ParseMediaType(res.Header.Get("Content-Disposition"))
 	if err != nil {
@@ -414,7 +446,12 @@ func (source RemoteSource) verifyDownloadHeaders(res *http.Response) error {
 }
 
 // extract the plugin from the tar.gz file and returns the binary and checksum file path.
-func (source RemoteSource) extract(name Name, version Version, archive io.Reader, checksums []Checksum) (binPath, sumPath string, err error) {
+func (source RemoteSource) extract(
+	name Name,
+	version Version,
+	archive io.Reader,
+	checksums []Checksum,
+) (binPath, sumPath string, err error) {
 	read, err := gzip.NewReader(archive)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create gzip reader: %w", err)

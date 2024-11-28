@@ -172,7 +172,6 @@ func (e *Engine) LoadPluginResolver(ctx context.Context, includeRemote bool) (di
 	ctx, span := e.tracer.Start(ctx, "Engine.LoadPluginResolver", trace.WithAttributes(
 		attribute.String("includeRemote", fmt.Sprint(includeRemote)),
 	))
-	e.logger.DebugContext(ctx, "Loading plugin resolver", "includeRemote", includeRemote)
 	defer func() {
 		if diags.HasErrors() {
 			span.RecordError(diags)
@@ -185,6 +184,9 @@ func (e *Engine) LoadPluginResolver(ctx context.Context, includeRemote bool) (di
 	sources := []resolver.Source{
 		resolver.NewLocal(pluginDir, e.logger, e.tracer),
 	}
+
+	e.logger.DebugContext(ctx, "Loading plugin resolver", "include_remote", includeRemote, "plugins_dir", string(pluginDir))
+
 	if e.config.PluginRegistry != nil {
 		if e.config.PluginRegistry.MirrorDir != "" {
 			mirrorDirInfo, err := os.Stat(e.config.PluginRegistry.MirrorDir)
