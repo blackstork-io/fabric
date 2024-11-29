@@ -158,7 +158,6 @@ func Test_fetchYAMLData(t *testing.T) {
 				slog.Info("WHAT1", "data", data)
 				slog.Info("WHAT2", "diag", diag)
 
-
 				diags.Extend(diag)
 			}
 			assert.Equal(t, tc.expectedData, data)
@@ -174,4 +173,3 @@ func Test_readYAMLFilesCancellation(t *testing.T) {
 	assert.Nil(t, data)
 	assert.Error(t, context.Canceled, err)
 }
-
