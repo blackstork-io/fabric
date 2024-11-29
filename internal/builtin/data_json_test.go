@@ -47,7 +47,7 @@ func Test_fetchJSONData(t *testing.T) {
 			path: filepath.Join("testdata", "json", "invalid.txt"),
 			expectedDiags: diagtest.Asserts{{
 				diagtest.IsError,
-				diagtest.SummaryEquals("Failed to read a file"),
+				diagtest.SummaryEquals("Failed to read the file"),
 				diagtest.DetailEquals("invalid character 'i' looking for beginning of object key string"),
 			}},
 		},
@@ -69,7 +69,7 @@ func Test_fetchJSONData(t *testing.T) {
 			path: filepath.Join("testdata", "json", "unknown_dir", "does-not-exist.json"),
 			expectedDiags: diagtest.Asserts{{
 				diagtest.IsError,
-				diagtest.SummaryEquals("Failed to read a file"),
+				diagtest.SummaryEquals("Failed to read the file"),
 				diagtest.DetailContains("open", "does-not-exist.json"),
 			}},
 		},

@@ -37,7 +37,7 @@ func makeJSONDataSource() *plugin.DataSource {
 			},
 		},
 		Doc: `
-		Loads JSON files with the names that match a provided ` + "`glob`" + ` pattern or a single file from a provided ` + "`path`" + `value.
+		Loads JSON files with the names that match provided ` + "`glob`" + ` pattern or a single file from provided ` + "`path`" + `value.
 
 		Either ` + "`glob`" + ` or ` + "`path`" + ` argument must be set.
 
@@ -80,13 +80,13 @@ func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plug
 			)
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
-				Summary:  "Failed to read a file",
+				Summary:  "Failed to read the file",
 				Detail:   err.Error(),
 			}}
 		}
 		return data, nil
 	} else if !glob.IsNull() && glob.AsString() != "" {
-		slog.Debug("Reading the files that match a glob pattern", "glob", glob.AsString())
+		slog.Debug("Reading the files that match the glob pattern", "glob", glob.AsString())
 		data, err := readJSONFiles(ctx, glob.AsString())
 		if err != nil {
 			slog.Error(

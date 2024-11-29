@@ -36,7 +36,7 @@ func makeTXTDataSource() *plugin.DataSource {
 			},
 		},
 		Doc: `
-		Loads TXT files with the names that match a provided ` + "`glob`" + ` pattern or a single file from a provided path.
+		Loads TXT files with the names that match provided ` + "`glob`" + ` pattern or a single file from a provided path.
 
 		Either ` + "`glob`" + ` or ` + "`path`" + ` argument must be set.
 

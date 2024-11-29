@@ -50,7 +50,7 @@ func makeCSVDataSource() *plugin.DataSource {
 			},
 		},
 		Doc: `
-		Loads CSV files with the names that match a provided ` + "`glob`" + ` pattern or a single file from a provided path.
+		Loads CSV files with the names that match provided ` + "`glob`" + ` pattern or a single file from a provided path.
 
 		Either ` + "`glob` or `path` argument must be set." + `
 
