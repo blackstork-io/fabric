@@ -30,6 +30,7 @@ func DefaultClientLoader(cfg *dataspec.Block) Client {
 	if skipSsl {
 		cli := &http.Client{
 			Transport: &http.Transport{
+				//nolint: gosec
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			},
 		}
