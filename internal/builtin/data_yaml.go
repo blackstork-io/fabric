@@ -48,7 +48,7 @@ func makeYAMLDataSource() *plugin.DataSource {
 		When ` + "`path`" + ` argument is specified, the data source returns only the content of a file.
 		When ` + "`glob`" + ` argument is specified, the data source returns a list of dicts that contain the content of a file and file's metadata. For example:
 
-		` + "```yaml" + `
+		` + "```json" + `
 		[
 		  {
 			"file_path": "path/file-a.yaml",
@@ -73,7 +73,13 @@ func fetchYAMLData(ctx context.Context, params *plugin.RetrieveDataParams) (plug
 	glob := params.Args.GetAttrVal("glob")
 	path := params.Args.GetAttrVal("path")
 
-	if !path.IsNull() && path.AsString() != "" {
+	if !path.IsNull() && path.AsString() != "" && !glob.IsNull() && glob.AsString() != "" {
+		return nil, diagnostics.Diag{{
+			Severity: hcl.DiagError,
+			Summary:  "Failed to parse provided arguments",
+			Detail:   "Either \"glob\" or \"path\" must be provided, not both",
+		}}
+	} else if !path.IsNull() && path.AsString() != "" {
 		slog.Debug("Reading a file from a path", "path", path.AsString())
 		data, err := readAndDecodeYAMLFile(path.AsString())
 		if err != nil {

@@ -23,7 +23,7 @@ Either `glob` or `path` argument must be set.
 When `path` argument is specified, the data source returns only the content of a file.
 When `glob` argument is specified, the data source returns a list of dicts that contain the content of a file and file's metadata. For example:
 
-```yaml
+```json
 [
   {
     "file_path": "path/file-a.yaml",
