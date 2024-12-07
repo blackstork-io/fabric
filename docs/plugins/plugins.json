@@ -164,6 +164,14 @@
           "glob",
           "path"
         ]
+      },
+      {
+        "name": "yaml",
+        "type": "data-source",
+        "arguments": [
+          "glob",
+          "path"
+        ]
       }
     ]
   },

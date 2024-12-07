@@ -1,8 +1,8 @@
 ---
-title: "`txt` data source"
+title: "`yaml` data source"
 plugin:
   name: blackstork/builtin
-  description: "Loads TXT files with the names that match provided `glob` pattern or a single file from a provided path"
+  description: "Loads YAML files with the names that match provided `glob` pattern or a single file from provided `path`value"
   tags: []
   version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -13,26 +13,31 @@ type: docs
 
 {{< breadcrumbs 2 >}}
 
-{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "txt" "data source" >}}
+{{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "yaml" "data source" >}}
 
 ## Description
-Loads TXT files with the names that match provided `glob` pattern or a single file from a provided path.
+Loads YAML files with the names that match provided `glob` pattern or a single file from provided `path`value.
 
 Either `glob` or `path` argument must be set.
 
 When `path` argument is specified, the data source returns only the content of a file.
 When `glob` argument is specified, the data source returns a list of dicts that contain the content of a file and file's metadata. For example:
+
 ```json
 [
   {
-    "file_path": "path/file-a.txt",
-    "file_name": "file-a.txt",
-    "content": "foobar"
+    "file_path": "path/file-a.yaml",
+    "file_name": "file-a.yaml",
+    "content": {
+      "foo": "bar"
+    }
   },
   {
-    "file_path": "path/file-b.txt",
-    "file_name": "file-b.txt",
-    "content": "x\\ny\\nz"
+    "file_path": "path/file-b.yaml",
+    "file_name": "file-b.yaml",
+    "content": [
+      {"x": "y"}
+    ]
   }
 ]
 ```
@@ -48,21 +53,21 @@ The data source doesn't support any configuration arguments.
 The data source supports the following execution arguments:
 
 ```hcl
-data txt {
-  # A glob pattern to select TXT files to read
+data yaml {
+  # A glob pattern to select YAML files to read
   #
   # Optional string.
   # For example:
-  # glob = "path/to/file*.txt"
+  # glob = "path/to/file*.yaml"
   # 
   # Default value:
   glob = null
 
-  # A file path to a TXT file to read
+  # A file path to a YAML file to read
   #
   # Optional string.
   # For example:
-  # path = "path/to/file.txt"
+  # path = "path/to/file.yaml"
   # 
   # Default value:
   path = null

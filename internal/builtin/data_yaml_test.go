@@ -16,14 +16,14 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugintest"
 )
 
-func Test_makeJSONDataSchema(t *testing.T) {
-	schema := makeJSONDataSource()
+func Test_makeYAMLDataSchema(t *testing.T) {
+	schema := makeYAMLDataSource()
 	assert.Nil(t, schema.Config)
 	assert.NotNil(t, schema.Args)
 	assert.NotNil(t, schema.DataFunc)
 }
 
-func Test_fetchJSONData(t *testing.T) {
+func Test_fetchYAMLData(t *testing.T) {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 
 	tt := []struct {
@@ -34,21 +34,21 @@ func Test_fetchJSONData(t *testing.T) {
 		expectedDiags diagtest.Asserts
 	}{
 		{
-			name: "invalid_json_file",
-			glob: filepath.Join("testdata", "json", "invalid.txt"),
+			name: "invalid_yaml_file",
+			glob: filepath.Join("testdata", "yaml", "invalid.*"),
 			expectedDiags: diagtest.Asserts{{
 				diagtest.IsError,
 				diagtest.SummaryEquals("Failed to read the files"),
-				diagtest.DetailEquals("invalid character 'i' looking for beginning of object key string"),
+				diagtest.DetailContains("yaml: line 2: could not find expected ':'"),
 			}},
 		},
 		{
-			name: "invalid_json_file_with_path",
-			path: filepath.Join("testdata", "json", "invalid.txt"),
+			name: "invalid_yaml_file_with_path",
+			path: filepath.Join("testdata", "yaml", "invalid.txt"),
 			expectedDiags: diagtest.Asserts{{
 				diagtest.IsError,
 				diagtest.SummaryEquals("Failed to read the file"),
-				diagtest.DetailEquals("invalid character 'i' looking for beginning of object key string"),
+				diagtest.DetailContains("yaml: line 2: could not find expected ':'"),
 			}},
 		},
 		{
@@ -61,67 +61,67 @@ func Test_fetchJSONData(t *testing.T) {
 		},
 		{
 			name:         "no_glob_matches",
-			glob:         filepath.Join("testdata", "json", "unknown_dir", "*.json"),
+			glob:         filepath.Join("testdata", "yaml", "unknown_dir", "*.yaml"),
 			expectedData: plugindata.List{},
 		},
 		{
 			name: "no_path_match",
-			path: filepath.Join("testdata", "json", "unknown_dir", "does-not-exist.json"),
+			path: filepath.Join("testdata", "yaml", "unknown_dir", "does-not-exist.yaml"),
 			expectedDiags: diagtest.Asserts{{
 				diagtest.IsError,
 				diagtest.SummaryEquals("Failed to read the file"),
-				diagtest.DetailContains("open", "does-not-exist.json"),
+				diagtest.DetailContains("open", "does-not-exist.yaml"),
 			}},
 		},
 		{
 			name: "load_one_file_with_path",
-			path: filepath.Join("testdata", "json", "a.json"),
+			path: filepath.Join("testdata", "yaml", "a.yaml"),
 			expectedData: plugindata.Map{
-				"property_for": plugindata.String("a.json"),
+				"property_for": plugindata.String("a.yaml"),
 			},
 		},
 		{
 			name: "glob_matches_one_file",
-			glob: filepath.Join("testdata", "json", "a.json"),
+			glob: filepath.Join("testdata", "yaml", "a.yaml"),
 			expectedData: plugindata.List{
 				plugindata.Map{
-					"file_name": plugindata.String("a.json"),
-					"file_path": plugindata.String(filepath.Join("testdata", "json", "a.json")),
+					"file_name": plugindata.String("a.yaml"),
+					"file_path": plugindata.String(filepath.Join("testdata", "yaml", "a.yaml")),
 					"content": plugindata.Map{
-						"property_for": plugindata.String("a.json"),
+						"property_for": plugindata.String("a.yaml"),
 					},
 				},
 			},
 		},
 		{
 			name: "glob_matches_multiple_files",
-			glob: filepath.Join("testdata", "json", "dir", "*.json"),
+			glob: filepath.Join("testdata", "yaml", "dir", "*.yaml"),
 			expectedData: plugindata.List{
 				plugindata.Map{
-					"file_name": plugindata.String("b.json"),
-					"file_path": plugindata.String(filepath.Join("testdata", "json", "dir", "b.json")),
+					"file_name": plugindata.String("b.yaml"),
+					"file_path": plugindata.String(filepath.Join("testdata", "yaml", "dir", "b.yaml")),
 					"content": plugindata.List{
 						plugindata.Map{
 							"id":           plugindata.Number(1),
-							"property_for": plugindata.String("dir/b.json"),
+							"property_for": plugindata.String("dir/b.yaml"),
 						},
 						plugindata.Map{
 							"id":           plugindata.Number(2),
-							"property_for": plugindata.String("dir/b.json"),
+							"property_for": plugindata.String("dir/b.yaml"),
 						},
 					},
 				},
 				plugindata.Map{
-					"file_name": plugindata.String("c.json"),
-					"file_path": plugindata.String(filepath.Join("testdata", "json", "dir", "c.json")),
+					"file_name": plugindata.String("c.yaml"),
+					"file_path": plugindata.String(filepath.Join("testdata", "yaml", "dir", "c.yaml")),
 					"content": plugindata.List{
 						plugindata.Map{
 							"id":           plugindata.Number(3),
-							"property_for": plugindata.String("dir/c.json"),
+							"property_for": plugindata.String("dir/c.yaml"),
 						},
 						plugindata.Map{
 							"id":           plugindata.Number(4),
-							"property_for": plugindata.String("dir/c.json"),
+							"property_for": plugindata.String("dir/c.yaml"),
 						},
 					},
 				},
@@ -133,11 +133,11 @@ func Test_fetchJSONData(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			p := &plugin.Schema{
 				DataSources: plugin.DataSources{
-					"json": makeJSONDataSource(),
+					"yaml": makeYAMLDataSource(),
 				},
 			}
 
-			args := plugintest.NewTestDecoder(t, p.DataSources["json"].Args)
+			args := plugintest.NewTestDecoder(t, p.DataSources["yaml"].Args)
 			if tc.path != "" {
 				args.SetAttr("path", cty.StringVal(tc.path))
 			}
@@ -153,7 +153,11 @@ func Test_fetchJSONData(t *testing.T) {
 			)
 			if !diags.HasErrors() {
 				ctx := context.Background()
-				data, diag = p.RetrieveData(ctx, "json", &plugin.RetrieveDataParams{Args: argVal})
+				data, diag = p.RetrieveData(ctx, "yaml", &plugin.RetrieveDataParams{Args: argVal})
+
+				slog.Info("WHAT1", "data", data)
+				slog.Info("WHAT2", "diag", diag)
+
 				diags.Extend(diag)
 			}
 			assert.Equal(t, tc.expectedData, data)
@@ -162,10 +166,10 @@ func Test_fetchJSONData(t *testing.T) {
 	}
 }
 
-func Test_readJSONFilesCancellation(t *testing.T) {
+func Test_readYAMLFilesCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	data, err := readJSONFiles(ctx, filepath.Join("testdata", "json", "a.json"))
+	data, err := readYAMLFiles(ctx, filepath.Join("testdata", "yaml", "a.yaml"))
 	assert.Nil(t, data)
 	assert.Error(t, context.Canceled, err)
 }

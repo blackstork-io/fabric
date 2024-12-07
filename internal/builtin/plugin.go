@@ -19,6 +19,7 @@ func Plugin(version string, logger *slog.Logger, tracer trace.Tracer) *plugin.Sc
 			"txt":  makeTXTDataSource(),
 			"rss":  makeRSSDataSource(),
 			"json": makeJSONDataSource(),
+			"yaml": makeYAMLDataSource(),
 			"http": makeHTTPDataSource(version),
 		},
 		ContentProviders: plugin.ContentProviders{

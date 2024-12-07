@@ -2,7 +2,6 @@ package builtin
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
+	"gopkg.in/yaml.v3"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
@@ -17,27 +17,31 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-func makeJSONDataSource() *plugin.DataSource {
+type yamlData struct {
+	data plugindata.Data
+}
+
+func makeYAMLDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
-		DataFunc: fetchJSONData,
+		DataFunc: fetchYAMLData,
 		Args: &dataspec.RootSpec{
 			Attrs: []*dataspec.AttrSpec{
 				{
 					Name:       "glob",
 					Type:       cty.String,
-					ExampleVal: cty.StringVal("path/to/file*.json"),
-					Doc:        `A glob pattern to select JSON files to read`,
+					ExampleVal: cty.StringVal("path/to/file*.yaml"),
+					Doc:        `A glob pattern to select YAML files to read`,
 				},
 				{
 					Name:       "path",
 					Type:       cty.String,
-					ExampleVal: cty.StringVal("path/to/file.json"),
-					Doc:        `A file path to a JSON file to read`,
+					ExampleVal: cty.StringVal("path/to/file.yaml"),
+					Doc:        `A file path to a YAML file to read`,
 				},
 			},
 		},
 		Doc: `
-		Loads JSON files with the names that match provided ` + "`glob`" + ` pattern or a single file from provided ` + "`path`" + `value.
+		Loads YAML files with the names that match provided ` + "`glob`" + ` pattern or a single file from provided ` + "`path`" + `value.
 
 		Either ` + "`glob`" + ` or ` + "`path`" + ` argument must be set.
 
@@ -47,15 +51,15 @@ func makeJSONDataSource() *plugin.DataSource {
 		` + "```json" + `
 		[
 		  {
-			"file_path": "path/file-a.json",
-			"file_name": "file-a.json",
+			"file_path": "path/file-a.yaml",
+			"file_name": "file-a.yaml",
 			"content": {
 			  "foo": "bar"
 			}
 		  },
 		  {
-			"file_path": "path/file-b.json",
-			"file_name": "file-b.json",
+			"file_path": "path/file-b.yaml",
+			"file_name": "file-b.yaml",
 			"content": [
 			  {"x": "y"}
 			]
@@ -65,16 +69,22 @@ func makeJSONDataSource() *plugin.DataSource {
 	}
 }
 
-func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
+func fetchYAMLData(ctx context.Context, params *plugin.RetrieveDataParams) (plugindata.Data, diagnostics.Diag) {
 	glob := params.Args.GetAttrVal("glob")
 	path := params.Args.GetAttrVal("path")
 
-	if !path.IsNull() && path.AsString() != "" {
+	if !path.IsNull() && path.AsString() != "" && !glob.IsNull() && glob.AsString() != "" {
+		return nil, diagnostics.Diag{{
+			Severity: hcl.DiagError,
+			Summary:  "Failed to parse provided arguments",
+			Detail:   "Either \"glob\" or \"path\" must be provided, not both",
+		}}
+	} else if !path.IsNull() && path.AsString() != "" {
 		slog.Debug("Reading a file from a path", "path", path.AsString())
-		data, err := readAndDecodeJSONFile(path.AsString())
+		data, err := readAndDecodeYAMLFile(path.AsString())
 		if err != nil {
 			slog.Error(
-				"Error while reading a JSON file",
+				"Error while reading a YAML file",
 				slog.String("path", path.AsString()),
 				slog.Any("error", err),
 			)
@@ -87,10 +97,10 @@ func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plug
 		return data, nil
 	} else if !glob.IsNull() && glob.AsString() != "" {
 		slog.Debug("Reading the files that match the glob pattern", "glob", glob.AsString())
-		data, err := readJSONFiles(ctx, glob.AsString())
+		data, err := readYAMLFiles(ctx, glob.AsString())
 		if err != nil {
 			slog.Error(
-				"Error while reading the JSON files",
+				"Error while reading the YAML files",
 				slog.String("glob", glob.AsString()),
 				slog.Any("error", err),
 			)
@@ -110,23 +120,20 @@ func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plug
 	}}
 }
 
-func readAndDecodeJSONFile(path string) (plugindata.Data, error) {
-	file, err := os.Open(path)
+func readAndDecodeYAMLFile(path string) (plugindata.Data, error) {
+	yamlFile, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
-
-	var content jsonData
-	err = json.NewDecoder(file).Decode(&content)
+	var content yamlData
+	err = yaml.Unmarshal(yamlFile, &content)
 	if err != nil {
-		file.Close()
 		return nil, err
 	}
 	return content.data, nil
 }
 
-func readJSONFiles(ctx context.Context, pattern string) (plugindata.List, error) {
+func readYAMLFiles(ctx context.Context, pattern string) (plugindata.List, error) {
 	paths, err := filepath.Glob(pattern)
 	if err != nil {
 		return nil, err
@@ -137,7 +144,7 @@ func readJSONFiles(ctx context.Context, pattern string) (plugindata.List, error)
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			content, err := readAndDecodeJSONFile(path)
+			content, err := readAndDecodeYAMLFile(path)
 			if err != nil {
 				return result, err
 			}
@@ -151,14 +158,12 @@ func readJSONFiles(ctx context.Context, pattern string) (plugindata.List, error)
 	return result, nil
 }
 
-type jsonData struct {
-	data plugindata.Data
-}
-
-func (d jsonData) toData(v any) (res plugindata.Data, err error) {
+func (d yamlData) toData(v any) (res plugindata.Data, err error) {
 	switch v := v.(type) {
 	case nil:
 		return nil, nil
+	case int:
+		return plugindata.Number(v), nil
 	case float64:
 		return plugindata.Number(v), nil
 	case string:
@@ -184,17 +189,13 @@ func (d jsonData) toData(v any) (res plugindata.Data, err error) {
 		}
 		return l, nil
 	default:
-		return nil, fmt.Errorf("unsupported type %T", v)
+		return nil, fmt.Errorf("can't convert type %T into `plugindata.Data`", v)
 	}
 }
 
-func (d *jsonData) UnmarshalJSON(b []byte) error {
-	if !json.Valid(b) {
-		return fmt.Errorf("invalid JSON data")
-	}
+func (d *yamlData) UnmarshalYAML(node *yaml.Node) (err error) {
 	var result any
-	err := json.Unmarshal(b, &result)
-	if err != nil {
+	if err := node.Decode(&result); err != nil {
 		return err
 	}
 	d.data, err = d.toData(result)

@@ -2,7 +2,7 @@
 title: "`json` data source"
 plugin:
   name: blackstork/builtin
-  description: "Loads JSON files with the names that match a provided `glob` pattern or a single file from a provided `path`value"
+  description: "Loads JSON files with the names that match provided `glob` pattern or a single file from provided `path`value"
   tags: []
   version: "v0.4.2"
   source_github: "https://github.com/blackstork-io/fabric/tree/main/internal/builtin/"
@@ -16,7 +16,7 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "json" "data source" >}}
 
 ## Description
-Loads JSON files with the names that match a provided `glob` pattern or a single file from a provided `path`value.
+Loads JSON files with the names that match provided `glob` pattern or a single file from provided `path`value.
 
 Either `glob` or `path` argument must be set.
 
