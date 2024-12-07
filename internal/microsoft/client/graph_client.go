@@ -58,8 +58,6 @@ func (client *graphClient) fetchURL(ctx context.Context, requestUrl *url.URL) (r
 		return
 	}
 
-	slog.DebugContext(ctx, "Raw response", "response", string(raw))
-
 	result, err = plugindata.UnmarshalJSON(raw)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal results: %s", err)
