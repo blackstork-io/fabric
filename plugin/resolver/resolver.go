@@ -42,7 +42,7 @@ func NewResolver(constraints map[string]string, opts ...Option) (*Resolver, diag
 // Install all plugins based the version constraints and return updated a lock file.
 func (r *Resolver) Install(ctx context.Context, lockFile *LockFile, upgrade bool) (_ *LockFile, diags diagnostics.Diag) {
 	ctx, span := r.tracer.Start(ctx, "Resolver.Install")
-	r.logger.InfoContext(ctx, "Installing plugins", "upgrade", upgrade)
+	r.logger.InfoContext(ctx, "Resolving and installing plugin dependencies", "upgrade", upgrade)
 	defer func() {
 		if diags.HasErrors() {
 			span.RecordError(diags)

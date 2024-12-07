@@ -14,7 +14,7 @@ import (
 
 const (
 	baseURLGraph         = "https://graph.microsoft.com"
-	defaultPageSizeGraph = 200
+	defaultPageSizeGraph = 50
 )
 
 type graphClient struct {
@@ -57,6 +57,7 @@ func (client *graphClient) fetchURL(ctx context.Context, requestUrl *url.URL) (r
 		err = fmt.Errorf("Microsoft Graph client returned status code: %d", res.StatusCode)
 		return
 	}
+
 	result, err = plugindata.UnmarshalJSON(raw)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal results: %s", err)
@@ -82,15 +83,22 @@ func (client *graphClient) QueryObjects(
 		queryParams = url.Values{}
 	}
 
-	limit := min(size, defaultPageSizeGraph)
-	queryParams.Set("$top", strconv.Itoa(limit))
-
+	// limit := min(size, defaultPageSizeGraph)
+	// $top doesn't work for managedDevices
+	// queryParams.Set("$top", strconv.Itoa(limit))
+	// queryParams.Set("$count", "true")
 	requestUrl.RawQuery = queryParams.Encode()
 
 	var totalCount int = -1
 	var response plugindata.Data
 
 	for {
+
+		if totalCount > 0 {
+			queryParams.Set("$skip", strconv.Itoa(len(objects)))
+			requestUrl.RawQuery = queryParams.Encode()
+		}
+
 		slog.DebugContext(ctx, "Fetching a page from Microsoft Graph API", "url", requestUrl.String())
 		response, err = client.fetchURL(ctx, requestUrl)
 		if err != nil {
@@ -137,16 +145,29 @@ func (client *graphClient) QueryObjects(
 
 		nextLink, ok := resultMap["@odata.nextLink"]
 		if !ok && nextLink == nil {
-			break
-		}
-		requestUrlRaw, ok := nextLink.(plugindata.String)
-		if !ok {
-			return nil, fmt.Errorf("unexpected value type for `@odata.nextLink`: %T", requestUrlRaw)
-		}
-		requestUrl, err = url.Parse(string(requestUrlRaw))
-		if err != nil {
-			slog.DebugContext(ctx, "Can't parse the next link in Microsoft Graph API response", "value", requestUrlRaw)
-			return nil, err
+			slog.DebugContext(ctx, "No `@odata.nextLink` found in the response")
+
+			if totalCount < 0 {
+				slog.DebugContext(ctx, "Total count is not known, breaking")
+				break
+			}
+
+			// Check totalCount only if there is no nextLink -- sometimes the response has
+			// the count set to the $top value and nextLink is present
+			if totalCount > 0 && len(objects) >= totalCount {
+				break
+			}
+
+		} else {
+			requestUrlRaw, ok := nextLink.(plugindata.String)
+			if !ok {
+				return nil, fmt.Errorf("unexpected value type for `@odata.nextLink`: %T", requestUrlRaw)
+			}
+			requestUrl, err = url.Parse(string(requestUrlRaw))
+			if err != nil {
+				slog.DebugContext(ctx, "Can't parse the next link in Microsoft Graph API response", "value", requestUrlRaw)
+				return nil, err
+			}
 		}
 	}
 
