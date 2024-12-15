@@ -61,6 +61,7 @@ func (client *Client) Do(ctx context.Context, method, path string, payload inter
 
 	req.Header = make(http.Header)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
 	client.auth(req)
 	resp, err = client.client.Do(req)
 	if err != nil {
@@ -76,6 +77,19 @@ func (client *Client) Do(ctx context.Context, method, path string, payload inter
 
 func (client *Client) RestSearchEvents(ctx context.Context, req RestSearchEventsRequest) (events RestSearchEventsResponse, err error) {
 	resp, err := client.Do(ctx, http.MethodPost, "/events/restSearch", req)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	err = json.NewDecoder(resp.Body).Decode(&events)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (client *Client) AddEventReport(ctx context.Context, req AddEventReportRequest) (events AddEventReportResponse, err error) {
+	resp, err := client.Do(ctx, http.MethodPost, "/event_reports/add/"+req.EventId, req)
 	if err != nil {
 		return
 	}

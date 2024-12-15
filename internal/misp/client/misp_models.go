@@ -50,3 +50,30 @@ type Event struct {
 	SightingTimestamp  string `json:"sighting_timestamp"`
 	DisableCorrelation bool   `json:"disable_correlation"`
 }
+
+type AddEventReportRequest struct {
+	Uuid           string  `json:"uuid"`
+	EventId        string  `json:"event_id"`
+	Name           string  `json:"name"`
+	Content        string  `json:"content"`
+	Distribution   string  `json:"distribution"`
+	SharingGroupId *string `json:"sharing_group_id"`
+	Timestamp      *string `json:"timestamp"`
+	Deleted        bool    `json:"deleted"`
+}
+
+type EventReport struct {
+	Id             string  `json:"id"`
+	Uuid           string  `json:"uuid"`
+	EventId        string  `json:"event_id"`
+	Name           string  `json:"name"`
+	Content        string  `json:"content"`
+	Distribution   string  `json:"distribution"`
+	SharingGroupId *string `json:"sharing_group_id"`
+	Timestamp      *string `json:"timestamp"`
+	Deleted        bool    `json:"deleted"`
+}
+
+type AddEventReportResponse struct {
+	EventReport EventReport `json:"EventReport"`
+}
