@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func encodeData(d plugindata.Data) *Data {
