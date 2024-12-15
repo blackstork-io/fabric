@@ -18,6 +18,7 @@ import (
 
 type Client interface {
 	RestSearchEvents(ctx context.Context, req client.RestSearchEventsRequest) (events client.RestSearchEventsResponse, err error)
+	AddEventReport(ctx context.Context, req client.AddEventReportRequest) (resp client.AddEventReportResponse, err error)
 }
 
 type ClientLoaderFn func(cfg *dataspec.Block) Client
@@ -48,6 +49,9 @@ func Plugin(version string, loader ClientLoaderFn) *plugin.Schema {
 		Version: version,
 		DataSources: plugin.DataSources{
 			"misp_events": makeMispEventsDataSource(loader),
+		},
+		Publishers: plugin.Publishers{
+			"misp_event_reports": makeMispEventReportsPublisher(loader),
 		},
 	}
 }
