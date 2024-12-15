@@ -2,9 +2,11 @@ package pluginapiv1
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func encodeData(d plugindata.Data) *Data {
@@ -41,6 +43,12 @@ func encodeData(d plugindata.Data) *Data {
 				ListVal: &ListData{
 					Value: utils.FnMap(v, encodeData),
 				},
+			},
+		}
+	case plugindata.Time:
+		return &Data{
+			Data: &Data_TimeVal{
+				TimeVal: timestamppb.New(time.Time(d.(plugindata.Time))),
 			},
 		}
 	default:
