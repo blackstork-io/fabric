@@ -29,3 +29,7 @@ fabric {
 ## Data sources
 
 {{< plugin-resources "misp" "data-source" >}}
+
+## Publishers
+
+{{< plugin-resources "misp" "publisher" >}}
