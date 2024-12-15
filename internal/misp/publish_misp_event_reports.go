@@ -41,9 +41,8 @@ func makeMispEventReportsPublisher(loader ClientLoaderFn) *plugin.Publisher {
 					Constraints: constraint.RequiredMeaningful,
 				},
 				{
-					Name:        "distribution",
-					Type:        cty.String,
-					Constraints: constraint.RequiredMeaningful,
+					Name: "distribution",
+					Type: cty.String,
 					OneOf: []cty.Value{
 						cty.StringVal("0"),
 						cty.StringVal("1"),
@@ -123,13 +122,17 @@ func publishEventReport(loader ClientLoaderFn) plugin.PublishFunc {
 
 		timestamp := fmt.Sprintf("%d", time.Now().Unix())
 		report := client.AddEventReportRequest{
-			Uuid:         uuid.New().String(),
-			EventId:      params.Args.GetAttrVal("event_id").AsString(),
-			Name:         params.Args.GetAttrVal("name").AsString(),
-			Content:      buff.String(),
-			Distribution: params.Args.GetAttrVal("distribution").AsString(),
-			Timestamp:    &timestamp,
-			Deleted:      false,
+			Uuid:      uuid.New().String(),
+			EventId:   params.Args.GetAttrVal("event_id").AsString(),
+			Name:      params.Args.GetAttrVal("name").AsString(),
+			Content:   buff.String(),
+			Timestamp: &timestamp,
+			Deleted:   false,
+		}
+		distribution := params.Args.GetAttrVal("distribution")
+		if !distribution.IsNull() {
+			distributionStr := distribution.AsString()
+			report.Distribution = &distributionStr
 		}
 		sharingGroupId := params.Args.GetAttrVal("sharing_group_id")
 		if !sharingGroupId.IsNull() {
