@@ -2,10 +2,11 @@ package plugindata
 
 import (
 	"encoding/json"
-	"gopkg.in/yaml.v3"
 	"fmt"
 	"log/slog"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Data interface {
