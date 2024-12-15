@@ -582,6 +582,21 @@
     "shortname": "misp",
     "resources": [
       {
+        "name": "misp_event_reports",
+        "type": "publisher",
+        "config_params": [
+          "api_key",
+          "base_url",
+          "skip_ssl"
+        ],
+        "arguments": [
+          "distribution",
+          "event_id",
+          "name",
+          "sharing_group_id"
+        ]
+      },
+      {
         "name": "misp_events",
         "type": "data-source",
         "config_params": [
