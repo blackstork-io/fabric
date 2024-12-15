@@ -56,7 +56,7 @@ type AddEventReportRequest struct {
 	EventId        string  `json:"event_id"`
 	Name           string  `json:"name"`
 	Content        string  `json:"content"`
-	Distribution   string  `json:"distribution"`
+	Distribution   *string `json:"distribution"`
 	SharingGroupId *string `json:"sharing_group_id"`
 	Timestamp      *string `json:"timestamp"`
 	Deleted        bool    `json:"deleted"`
