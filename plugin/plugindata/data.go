@@ -77,7 +77,6 @@ func (d List) Any() any {
 type Time time.Time
 
 func (d Time) Any() any {
-	// return (time.Time)(d).Format(time.RFC3339)
 	return (time.Time)(d)
 }
 
