@@ -2,8 +2,10 @@ package plugindata
 
 import (
 	"encoding/json"
+	"gopkg.in/yaml.v3"
 	"fmt"
 	"log/slog"
+	"time"
 )
 
 type Data interface {
@@ -17,12 +19,14 @@ func (String) data() {}
 func (Bool) data()   {}
 func (Map) data()    {}
 func (List) data()   {}
+func (Time) data()   {}
 
 func (d Number) AsPluginData() Data { return d }
 func (d String) AsPluginData() Data { return d }
 func (d Bool) AsPluginData() Data   { return d }
 func (d Map) AsPluginData() Data    { return d }
 func (d List) AsPluginData() Data   { return d }
+func (d Time) AsPluginData() Data   { return d }
 
 type Number float64
 
@@ -70,9 +74,24 @@ func (d List) Any() any {
 	return dst
 }
 
+type Time time.Time
+
+func (d Time) Any() any {
+	// return (time.Time)(d).Format(time.RFC3339)
+	return (time.Time)(d)
+}
+
 func UnmarshalJSON(data []byte) (Data, error) {
 	var v any
 	if err := json.Unmarshal(data, &v); err != nil {
+		return nil, err
+	}
+	return ParseAny(v)
+}
+
+func UnmarshalYAML(data []byte) (Data, error) {
+	var v any
+	if err := yaml.Unmarshal(data, &v); err != nil {
 		return nil, err
 	}
 	return ParseAny(v)
@@ -112,6 +131,8 @@ func ParseAny(v any) (Data, error) {
 		return Number(v), nil
 	case string:
 		return String(v), nil
+	case time.Time:
+		return Time(v), nil
 	case []any:
 		// TODO: potential bug:
 		// this case would trigger only for []any, not, for example, []string

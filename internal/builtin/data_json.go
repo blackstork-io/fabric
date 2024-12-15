@@ -113,19 +113,11 @@ func fetchJSONData(ctx context.Context, params *plugin.RetrieveDataParams) (plug
 }
 
 func readAndDecodeJSONFile(path string) (plugindata.Data, error) {
-	file, err := os.Open(path)
+	jsonData, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
-
-	var content jsonData
-	err = json.NewDecoder(file).Decode(&content)
-	if err != nil {
-		file.Close()
-		return nil, err
-	}
-	return content.data, nil
+	return plugindata.UnmarshalJSON(jsonData)
 }
 
 func readJSONFiles(ctx context.Context, pattern string) (plugindata.List, error) {
@@ -158,36 +150,7 @@ type jsonData struct {
 }
 
 func (d jsonData) toData(v any) (res plugindata.Data, err error) {
-	switch v := v.(type) {
-	case nil:
-		return nil, nil
-	case float64:
-		return plugindata.Number(v), nil
-	case string:
-		return plugindata.String(v), nil
-	case bool:
-		return plugindata.Bool(v), nil
-	case map[string]any:
-		m := make(plugindata.Map)
-		for k, v := range v {
-			m[k], err = d.toData(v)
-			if err != nil {
-				return nil, err
-			}
-		}
-		return m, nil
-	case []any:
-		l := make(plugindata.List, len(v))
-		for i, v := range v {
-			l[i], err = d.toData(v)
-			if err != nil {
-				return nil, err
-			}
-		}
-		return l, nil
-	default:
-		return nil, fmt.Errorf("unsupported type %T", v)
-	}
+	return plugindata.ParseAny(v)
 }
 
 func (d *jsonData) UnmarshalJSON(b []byte) error {
