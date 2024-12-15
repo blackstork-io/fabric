@@ -87,11 +87,10 @@ publish misp_event_reports {
   # For example:
   name = "some string"
 
-  # Required string.
+  # Optional string.
   # Must be one of: "0", "1", "2", "3", "4", "5"
-  # Must be non-empty
-  # For example:
-  distribution = "some string"
+  # Default value:
+  distribution = null
 
   # Optional string.
   # Default value:
