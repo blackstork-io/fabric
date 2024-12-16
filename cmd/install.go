@@ -31,26 +31,20 @@ var installCmd = &cobra.Command{
 			engine.WithBuiltIn(builtin.Plugin(version, slog.Default(), tracer)),
 		)
 		defer func() {
-			diags.Extend(eng.Cleanup())
-			if diags.HasErrors() {
-				err = diags
-				cmd.SilenceErrors = true
-				cmd.SilenceUsage = true
-			}
-			eng.PrintDiagnostics(os.Stderr, diags, cliArgs.colorize)
+			err = exitCommand(eng, cmd, diags)
 		}()
 		diag := eng.ParseDir(ctx, os.DirFS(cliArgs.sourceDir))
 		if diags.Extend(diag) {
-			return diags
+			return
 		}
 		diag = eng.LoadPluginResolver(ctx, true)
 		if diags.Extend(diag) {
-			return diags
+			return
 		}
 		diag = eng.Install(ctx, installUpgrade)
 		if diags.Extend(diag) {
-			return diags
+			return
 		}
-		return nil
+		return
 	},
 }

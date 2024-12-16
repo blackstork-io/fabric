@@ -24,6 +24,8 @@ import (
 	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/cmd/internal/multilog"
 	"github.com/blackstork-io/fabric/cmd/internal/telemetry"
+	"github.com/blackstork-io/fabric/engine"
+	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/utils/slogutil"
 )
 
@@ -205,4 +207,17 @@ func recoverExecute(ctx context.Context, cmd *cobra.Command) (err error) {
 		}
 	}()
 	return cmd.ExecuteContext(ctx)
+}
+
+func exitCommand(eng *engine.Engine, cmd *cobra.Command, diags diagnostics.Diag) (err error) {
+	diags.Extend(eng.Cleanup())
+	if diags.HasErrors() {
+		err = diags
+		cmd.SilenceErrors = true
+		cmd.SilenceUsage = true
+	} else {
+		err = nil
+	}
+	eng.PrintDiagnostics(os.Stderr, diags, cliArgs.colorize)
+	return err
 }
