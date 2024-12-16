@@ -68,35 +68,31 @@ var renderCmd = &cobra.Command{
 			engine.WithBuiltIn(builtin.Plugin(version, slog.Default(), tracer)),
 		)
 		defer func() {
-			diags.Extend(eng.Cleanup())
-			if diags.HasErrors() {
-				err = diags
-				cmd.SilenceErrors = true
-				cmd.SilenceUsage = true
-			}
-			eng.PrintDiagnostics(os.Stderr, diags, cliArgs.colorize)
+			err = exitCommand(eng, cmd, diags)
 		}()
 		diag := eng.ParseDir(ctx, os.DirFS(cliArgs.sourceDir))
 		if diags.Extend(diag) {
-			return diags
+			return
 		}
 		diag = eng.LoadPluginResolver(ctx, false)
 		if diags.Extend(diag) {
-			return diags
+			return
 		}
 		diag = eng.LoadPluginRunner(ctx)
 		if diags.Extend(diag) {
-			return diags
+			return
 		}
 
 		doc, content, dataCtx, diag := eng.RenderContent(ctx, target, requiredTags)
 		if diags.Extend(diag) {
-			return diags
+			return
 		}
 
 		if publish {
-			diags.Extend(eng.PublishContent(ctx, target, doc, content, dataCtx))
-			return diags
+			diag = eng.PublishContent(ctx, target, doc, content, dataCtx)
+			if diags.Extend(diag) {
+				return
+			}
 		}
 
 		logger.InfoContext(ctx, "Printing to stdout", "format", format)
