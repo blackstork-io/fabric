@@ -23,6 +23,63 @@ func (_m *Client) EXPECT() *Client_Expecter {
 	return &Client_Expecter{mock: &_m.Mock}
 }
 
+// AddEventReport provides a mock function with given fields: ctx, req
+func (_m *Client) AddEventReport(ctx context.Context, req client.AddEventReportRequest) (client.AddEventReportResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddEventReport")
+	}
+
+	var r0 client.AddEventReportResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, client.AddEventReportRequest) (client.AddEventReportResponse, error)); ok {
+		return rf(ctx, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, client.AddEventReportRequest) client.AddEventReportResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(client.AddEventReportResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, client.AddEventReportRequest) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Client_AddEventReport_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddEventReport'
+type Client_AddEventReport_Call struct {
+	*mock.Call
+}
+
+// AddEventReport is a helper method to define mock.On call
+//   - ctx context.Context
+//   - req client.AddEventReportRequest
+func (_e *Client_Expecter) AddEventReport(ctx interface{}, req interface{}) *Client_AddEventReport_Call {
+	return &Client_AddEventReport_Call{Call: _e.mock.On("AddEventReport", ctx, req)}
+}
+
+func (_c *Client_AddEventReport_Call) Run(run func(ctx context.Context, req client.AddEventReportRequest)) *Client_AddEventReport_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(client.AddEventReportRequest))
+	})
+	return _c
+}
+
+func (_c *Client_AddEventReport_Call) Return(resp client.AddEventReportResponse, err error) *Client_AddEventReport_Call {
+	_c.Call.Return(resp, err)
+	return _c
+}
+
+func (_c *Client_AddEventReport_Call) RunAndReturn(run func(context.Context, client.AddEventReportRequest) (client.AddEventReportResponse, error)) *Client_AddEventReport_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // RestSearchEvents provides a mock function with given fields: ctx, req
 func (_m *Client) RestSearchEvents(ctx context.Context, req client.RestSearchEventsRequest) (client.RestSearchEventsResponse, error) {
 	ret := _m.Called(ctx, req)
