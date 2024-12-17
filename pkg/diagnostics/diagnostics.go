@@ -12,7 +12,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/utils/slogutil"
 )
 
-type Diag hcl.Diagnostics // Diagnostics does implement error interface, but not, itself, an error.
+type Diag hcl.Diagnostics // Diagnostics does implement error interface, but is not, itself, an error.
 
 func (d Diag) Error() string {
 	slog.Debug("Treated diagnostic.Diag as error", slogutil.SourceOverride(1))

@@ -2,24 +2,18 @@ package builtin
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
-	"gopkg.in/yaml.v3"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
-
-type yamlData struct {
-	data plugindata.Data
-}
 
 func makeYAMLDataSource() *plugin.DataSource {
 	return &plugin.DataSource{
@@ -121,16 +115,11 @@ func fetchYAMLData(ctx context.Context, params *plugin.RetrieveDataParams) (plug
 }
 
 func readAndDecodeYAMLFile(path string) (plugindata.Data, error) {
-	yamlFile, err := os.ReadFile(path)
+	yamlData, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	var content yamlData
-	err = yaml.Unmarshal(yamlFile, &content)
-	if err != nil {
-		return nil, err
-	}
-	return content.data, nil
+	return plugindata.UnmarshalYAML(yamlData)
 }
 
 func readYAMLFiles(ctx context.Context, pattern string) (plugindata.List, error) {
@@ -156,48 +145,4 @@ func readYAMLFiles(ctx context.Context, pattern string) (plugindata.List, error)
 		}
 	}
 	return result, nil
-}
-
-func (d yamlData) toData(v any) (res plugindata.Data, err error) {
-	switch v := v.(type) {
-	case nil:
-		return nil, nil
-	case int:
-		return plugindata.Number(v), nil
-	case float64:
-		return plugindata.Number(v), nil
-	case string:
-		return plugindata.String(v), nil
-	case bool:
-		return plugindata.Bool(v), nil
-	case map[string]any:
-		m := make(plugindata.Map)
-		for k, v := range v {
-			m[k], err = d.toData(v)
-			if err != nil {
-				return nil, err
-			}
-		}
-		return m, nil
-	case []any:
-		l := make(plugindata.List, len(v))
-		for i, v := range v {
-			l[i], err = d.toData(v)
-			if err != nil {
-				return nil, err
-			}
-		}
-		return l, nil
-	default:
-		return nil, fmt.Errorf("can't convert type %T into `plugindata.Data`", v)
-	}
-}
-
-func (d *yamlData) UnmarshalYAML(node *yaml.Node) (err error) {
-	var result any
-	if err := node.Decode(&result); err != nil {
-		return err
-	}
-	d.data, err = d.toData(result)
-	return err
 }
