@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"cmp"
 	"reflect"
 )
 
@@ -37,4 +38,9 @@ func Clone[T any](val *T) *T {
 	}
 	valC := *val
 	return &valC
+}
+
+// Clamps the value between minV and maxV
+func Clamp[T cmp.Ordered](minV, val, maxV T) T {
+	return min(max(minV, val), maxV)
 }

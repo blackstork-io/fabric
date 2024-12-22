@@ -36,7 +36,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/elasticsearch v0.32.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.32.0
 	github.com/wundergraph/graphql-go-tools/v2 v2.0.0-rc.46
-	github.com/yuin/goldmark v1.7.4
+	github.com/yuin/goldmark v1.7.8
 	github.com/zclconf/go-cty v1.14.4
 	go.opentelemetry.io/contrib/bridges/otelslog v0.4.0
 	go.opentelemetry.io/contrib/instrumentation/host v0.51.0
