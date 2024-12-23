@@ -7,21 +7,21 @@ import (
 	"github.com/blackstork-io/fabric/plugin/ast/nodes"
 )
 
-func (r *Renderer) renderList(c *nodes.List) (lines linesSlice) {
+func (r *Renderer) renderList(c *nodes.List, children []*nodes.Node) (lines linesSlice) {
 	var spacer, marker []byte
 	isOrdered := c.Marker == '.' || c.Marker == ')'
 	if isOrdered {
 		// generate a spacer that is the same length as the longest(last) marker
 		spacer = bytes.Repeat(
 			space,
-			intLen(int(c.Start)+len(c.Items)-1)+2,
+			intLen(int(c.Start)+len(children)-1)+2,
 		)
 	} else {
 		spacer = []byte("  ")
 		marker = []byte{c.Marker, ' '}
 	}
-	for lineNo, item := range c.Items {
-		itemLines := r.renderNodes(item)
+	for lineNo, item := range children {
+		itemLines := r.renderNodes(item.GetChildren())
 		if isOrdered {
 			marker = fmt.Appendf(nil, "%d%c ", int(c.Start)+lineNo, c.Marker)
 		}

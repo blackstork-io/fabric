@@ -58,22 +58,18 @@ func (e *encoder) encode(n ast.Node) *nodes.Node {
 	switch n := n.(type) {
 	case *ast.Document:
 		node.Content = &nodes.Document{}
-		node.AppendChildren(e.encodeChildren(n)...)
 	case *ast.TextBlock:
 		node.Content = &nodes.Paragraph{
 			IsTextBlock: true,
 		}
-		node.AppendChildren(e.encodeChildren(n)...)
 	case *ast.Paragraph:
 		node.Content = &nodes.Paragraph{
 			IsTextBlock: false,
 		}
-		node.AppendChildren(e.encodeChildren(n)...)
 	case *ast.Heading:
 		node.Content = &nodes.Heading{
 			Level: n.Level,
 		}
-		node.AppendChildren(e.encodeChildren(n)...)
 	case *ast.ThematicBreak:
 		node.Content = &nodes.ThematicBreak{}
 	case *ast.CodeBlock:
@@ -93,27 +89,14 @@ func (e *encoder) encode(n ast.Node) *nodes.Node {
 		node.Content = content
 	case *ast.Blockquote:
 		node.Content = &nodes.Blockquote{}
-		node.AppendChildren(e.encodeChildren(n)...)
 	case *ast.List:
-		content := &nodes.List{
+		node.Content = &nodes.List{
 			// https://spec.commonmark.org/0.31.2/#ordered-list-marker
-			Start:  uint32(utils.Clamp(0, n.Start, 1_000_000_000 - n.ChildCount())),
+			Start:  uint32(utils.Clamp(0, n.Start, 1_000_000_000-n.ChildCount())),
 			Marker: n.Marker,
-			Items:  make([][]*nodes.Node, 0, n.ChildCount()),
 		}
-		for item := n.FirstChild(); item != nil; item = item.NextSibling() {
-			if item, ok := item.(*ast.ListItem); ok {
-				itemContent := make([]*nodes.Node, 0, item.ChildCount())
-				for i := item.FirstChild(); i != nil; i = i.NextSibling() {
-					itemContent = append(itemContent, e.encode(i))
-				}
-				content.Items = append(content.Items, itemContent)
-			} else {
-				// should not happen in a well-formed AST
-				content.Items = append(content.Items, []*nodes.Node{e.encode(item)})
-			}
-		}
-		node.Content = content
+	case *ast.ListItem:
+		node.Content = &nodes.ListItem{}
 	case *ast.HTMLBlock:
 		content := &nodes.HTMLBlock{
 			HTML: e.encodeSegments(n.Lines()),
@@ -154,19 +137,16 @@ func (e *encoder) encode(n ast.Node) *nodes.Node {
 		node.Content = &nodes.Emphasis{
 			Level: n.Level,
 		}
-		node.AppendChildren(e.encodeChildren(n)...)
 	case *ast.Link:
 		node.Content = &nodes.Link{
 			Destination: n.Destination,
 			Title:       n.Title,
 		}
-		node.AppendChildren(e.encodeChildren(n)...)
 	case *ast.Image:
 		node.Content = &nodes.Image{
 			Source: n.Destination,
 			Alt:    n.Title,
 		}
-		node.AppendChildren(e.encodeChildren(n)...)
 	case *ast.AutoLink:
 		content := &nodes.AutoLink{
 			Value: n.URL(e.source),
@@ -178,55 +158,37 @@ func (e *encoder) encode(n ast.Node) *nodes.Node {
 			HTML: e.encodeSegments(n.Segments),
 		}
 	case *east.Table:
-		content := &nodes.Table{
-			Alignments: make([]nodes.Alignment, 0, len(n.Alignments)),
-		}
-		for _, a := range n.Alignments {
-			var alignment nodes.Alignment
-			switch a {
-			case east.AlignLeft:
-				alignment = nodes.AlignmentLeft
-			case east.AlignRight:
-				alignment = nodes.AlignmentRight
-			case east.AlignCenter:
-				alignment = nodes.AlignmentCenter
-			case east.AlignNone:
-				alignment = nodes.AlignmentNone
-			default:
-				slog.Warn("unexpected table alignment", "alignment", a)
-				alignment = nodes.AlignmentNone
-			}
-			content.Alignments = append(content.Alignments, alignment)
-		}
-		content.Cells = make([][][]*nodes.Node, 0, n.ChildCount())
-		for c := n.FirstChild(); c != nil; c = c.NextSibling() {
-			if c.Kind() != east.KindTableRow && c.Kind() != east.KindTableHeader {
-				slog.Warn("unexpected child of table", "kind", c.Kind().String())
-				continue
-			}
-			row := make([][]*nodes.Node, 0, c.ChildCount())
-			for cell := c.FirstChild(); cell != nil; cell = cell.NextSibling() {
-				if cell.Kind() != east.KindTableCell {
-					slog.Warn("unexpected child of table row", "kind", cell.Kind().String())
-					continue
+		node.Content = &nodes.Table{
+			Alignments: utils.FnMap(n.Alignments, func(a east.Alignment) nodes.Alignment {
+				var alignment nodes.Alignment
+				switch a {
+				case east.AlignLeft:
+					alignment = nodes.AlignmentLeft
+				case east.AlignRight:
+					alignment = nodes.AlignmentRight
+				case east.AlignCenter:
+					alignment = nodes.AlignmentCenter
+				case east.AlignNone:
+					alignment = nodes.AlignmentNone
+				default:
+					slog.Warn("unexpected table alignment", "alignment", a)
+					alignment = nodes.AlignmentNone
 				}
-				cellContent := make([]*nodes.Node, 0, cell.ChildCount())
-				for i := cell.FirstChild(); i != nil; i = i.NextSibling() {
-					cellContent = append(cellContent, e.encode(i))
-				}
-				row = append(row, cellContent)
-			}
-			content.Cells = append(content.Cells, row)
+				return alignment
+			}),
 		}
-		node.Content = content
-		return node
+	case *east.TableRow:
+		node.Content = &nodes.TableRow{}
+	case *east.TableCell:
+		node.Content = &nodes.TableCell{}
+
 	case *east.Strikethrough:
 		node.Content = &nodes.Strikethrough{}
-		node.AppendChildren(e.encodeChildren(n)...)
 	case *east.TaskCheckBox:
 		node.Content = &nodes.TaskCheckbox{
 			Checked: n.IsChecked,
 		}
 	}
+	node.AppendChildren(e.encodeChildren(n)...)
 	return node
 }

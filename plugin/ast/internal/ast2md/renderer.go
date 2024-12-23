@@ -37,7 +37,7 @@ func (r *Renderer) renderChildren(n *nodes.Node) (lines linesSlice) {
 	if n == nil {
 		return
 	}
-	return r.renderNodes(n.Children)
+	return r.renderNodes(n.GetChildren())
 }
 
 var (
@@ -124,7 +124,9 @@ func (r *Renderer) Render(n *nodes.Node) (lines linesSlice) {
 		lines = r.renderChildren(n)
 		lines.PrependPrefix(blockquotePrefix)
 	case *nodes.List:
-		lines = r.renderList(c)
+		lines = r.renderList(c, n.GetChildren())
+	case *nodes.ListItem:
+		lines = r.renderChildren(n)
 	case *nodes.TaskCheckbox:
 		if c.Checked {
 			lines.Append(checkboxFilled)
@@ -141,10 +143,10 @@ func (r *Renderer) Render(n *nodes.Node) (lines linesSlice) {
 		lines = r.renderCodeSpan(c)
 
 	case *nodes.Link:
-		lines = r.renderLinkOrImage(c, n.Children)
+		lines = r.renderLinkOrImage(c, n.GetChildren())
 
 	case *nodes.Image:
-		lines = r.renderLinkOrImage(c, n.Children)
+		lines = r.renderLinkOrImage(c, n.GetChildren())
 
 	case *nodes.AutoLink:
 		lines.Append(
@@ -156,7 +158,7 @@ func (r *Renderer) Render(n *nodes.Node) (lines linesSlice) {
 		)
 
 	case *nodes.Table:
-		lines = r.renderTable(c)
+		lines = r.renderTable(c, n.GetChildren())
 	case *nodes.Custom:
 		lines.Append(fmt.Appendf(nil, "<!-- custom node %q not rendered -->", c.Data.GetTypeUrl()))
 	}

@@ -8,18 +8,19 @@ import (
 
 var nestedTablesError = []byte("nested tables are not supported")
 
-func (r *Renderer) renderTable(c *nodes.Table) (lines linesSlice) {
-	if len(c.Cells) == 0 {
+func (r *Renderer) renderTable(c *nodes.Table, rows []*nodes.Node) (lines linesSlice) {
+	if len(rows) == 0 {
 		return
 	}
 
-	table := make([][]linesSlice, 0, len(c.Cells))
+	table := make([][]linesSlice, 0, len(rows))
 	columnCount := 0
-	for _, cellRow := range c.Cells {
+	for _, cellRowN := range rows {
+		cellRow := cellRowN.GetChildren()
 		row := make([]linesSlice, 0, len(cellRow))
 		columnCount = max(columnCount, len(cellRow))
 		for _, cell := range cellRow {
-			lns := r.renderNodes(cell)
+			lns := r.Render(cell)
 			lns.JoinLines(space)
 			row = append(row, lns)
 		}

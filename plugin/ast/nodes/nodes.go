@@ -9,7 +9,7 @@ import (
 // Node is a node in the fabric AST.
 type Node struct {
 	Content  NodeContent
-	Children []*Node
+	children []*Node
 	Parent   *Node
 }
 
@@ -19,7 +19,7 @@ type Node struct {
 func NewNode(content NodeContent, children ...any) *Node {
 	n := &Node{
 		Content:  content,
-		Children: make([]*Node, 0, len(children)),
+		children: make([]*Node, 0, len(children)),
 	}
 	for _, c := range children {
 		var child *Node
@@ -48,29 +48,46 @@ func NewNode(content NodeContent, children ...any) *Node {
 }
 
 func (n *Node) GetChildren() []*Node {
-	return n.Children
+	return n.children
 }
 
 func (n *Node) SetChildren(children []*Node) {
-	for _, c := range children {
-		c.Parent = n
-	}
-	n.Children = children
+	clear(n.children)
+	n.children = n.children[:0]
+	n.AppendChildren(children...)
 }
 
-func (n *Node) AppendChildren(children ...*Node) {
+func (n *Node) AppendChildren(children ...*Node) *Node {
 	for _, c := range children {
-		c.Parent = n
+		if n.validate(c) {
+			c.Parent = n
+			n.children = append(n.children, c)
+		}
 	}
-	n.Children = append(n.Children, children...)
+	return n
 }
 
 func (n *Node) RemoveFromTree() *Node {
 	if n.Parent != nil {
-		n.Parent.Children = slices.DeleteFunc(n.Parent.Children, func(c *Node) bool {
-			return c == n
-		})
+		idx := slices.Index(n.Parent.children, n)
+		if idx >= 0 {
+			n.Parent.children = slices.Delete(n.Parent.children, idx, idx+1)
+		}
 		n.Parent = nil
 	}
 	return n
+}
+
+func (n *Node) validate(child *Node) bool {
+	if v, ok := n.Content.(ChildValidator); ok {
+		if !v.ValidateChild(child) {
+			return false
+		}
+	}
+	if v, ok := child.Content.(ParentValidator); ok {
+		if !v.ValidateParent(n) {
+			return false
+		}
+	}
+	return true
 }
