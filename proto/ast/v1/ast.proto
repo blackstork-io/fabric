@@ -4,229 +4,142 @@ package ast.v1;
 
 import "google/protobuf/any.proto";
 
-message Attribute {
-  bytes name = 1;
-  oneof value {
-    bytes bytes = 2;
-    string str = 3;
-  }
-}
-
-message BaseNode {
-  repeated Node children = 1;
-  repeated Attribute attributes = 2;
-  // value meaningful only for blocks
-  bool blank_previous_lines = 3;
-}
-
 message Node {
-  oneof kind {
+  repeated Node children = 1;
+  oneof content {
     // Blocks
-    Document document = 1;
-    TextBlock text_block = 5;
-    Paragraph paragraph = 6;
-    Heading heading = 7;
-    ThematicBreak thematic_break = 8;
-    CodeBlock code_block = 9;
-    FencedCodeBlock fenced_code_block = 10;
-    Blockquote blockquote = 11;
-    List list = 12;
-    ListItem list_item = 13;
-    HTMLBlock html_block = 14;
+    Document document = 2;
+    Paragraph paragraph = 3;
+    Heading heading = 4;
+    ThematicBreak thematic_break = 5;
+    CodeBlock code_block = 6;
+    Blockquote blockquote = 7;
+    List list = 8;
+    ListItem list_item = 9;
+    HTMLBlock html_block = 10;
 
     // inlines
-    Text text = 15;
-    String string = 16;
-    CodeSpan code_span = 17;
-    Emphasis emphasis = 18;
-    LinkOrImage link_or_image = 19;
-    AutoLink auto_link = 20;
-    RawHTML raw_html = 21;
+    Text text = 11;
+    CodeSpan code_span = 12;
+    Emphasis emphasis = 13;
+    Link link = 14;
+    Image image = 15;
+    AutoLink auto_link = 16;
+    HTMLInline html_inline = 17;
 
     // Github Flavored Markdown
     // blocks
-    Table table = 22;
-    TableRow table_row = 23;
-    TableCell table_cell = 24;
+    Table table = 18;
+    TableRow table_row = 19;
+    TableCell table_cell = 20;
     // inline
-    TaskCheckbox task_checkbox = 25;
-    Strikethrough strikethrough = 26;
+    TaskCheckbox task_checkbox = 21;
+    Strikethrough strikethrough = 22;
 
-
-    // Root of the plugin-rendered data
+    // Root of the plugin-rendered data (?)
     FabricContentNode content_node = 254;
     // Custom node types can be serialized using this
-    CustomNode custom = 255;
+    Custom custom = 255;
   }
 }
 
 // Node kinds
 
-message Document {
-  BaseNode base = 1;
-}
-
-message TextBlock {
-  BaseNode base = 1;
-}
+message Document {}
 
 message Paragraph {
-  BaseNode base = 1;
+  bool is_text_block = 1;
 }
 
 message Heading {
-  BaseNode base = 1;
-  uint32 level = 2;
+  uint32 level = 1;
 }
 
-message ThematicBreak {
-  BaseNode base = 1;
-}
+message ThematicBreak {}
 
 message CodeBlock {
-  BaseNode base = 1;
-  repeated bytes lines = 2;
+  optional bytes language = 1;
+  bytes code = 2;
 }
 
-message FencedCodeBlock {
-  BaseNode base = 1;
-  Text info = 2;
-  repeated bytes lines = 3;
-}
-
-message Blockquote {
-  BaseNode base = 1;
-}
+message Blockquote {}
 
 message List {
-  BaseNode base = 1;
-  uint32 marker = 2;
-  bool is_tight = 3;
-  uint32 start = 4;
+  uint32 marker = 1;
+  uint32 start = 2;
 }
 
-message ListItem {
-  BaseNode base = 1;
-  int64 offset = 2;
-}
-
-enum HTMLBlockType {
-  HTML_BLOCK_TYPE_UNSPECIFIED = 0;
-  HTML_BLOCK_TYPE_1 = 1;
-  HTML_BLOCK_TYPE_2 = 2;
-  HTML_BLOCK_TYPE_3 = 3;
-  HTML_BLOCK_TYPE_4 = 4;
-  HTML_BLOCK_TYPE_5 = 5;
-  HTML_BLOCK_TYPE_6 = 6;
-  HTML_BLOCK_TYPE_7 = 7;
-}
+message ListItem {}
 
 message HTMLBlock {
-  BaseNode base = 1;
-  HTMLBlockType type = 2;
-  repeated bytes lines = 3;
-  bytes closure_line = 4;
+  bytes html = 1;
 }
 
 message Text {
-  BaseNode base = 1;
-  bytes segment = 2;
-  bool soft_line_break = 3;
-  bool hard_line_break = 4;
-  bool raw = 5;
-}
-
-message String {
-  BaseNode base = 1;
-  bytes value = 2;
-  bool raw = 3;
-  bool code = 4;
+  bytes text = 1;
+  bool hard_line_break = 2;
 }
 
 message CodeSpan {
-  BaseNode base = 1;
+  bytes code = 1;
 }
 
 message Emphasis {
-  BaseNode base = 1;
-  int64 level = 2;
+  int64 level = 1;
 }
 
-message LinkOrImage {
-  BaseNode base = 1;
-  bytes destination = 2;
-  bytes title = 3;
-  bool is_image = 4;
+message Link {
+  bytes destination = 1;
+  bytes title = 2;
 }
 
-enum AutoLinkType {
-  AUTO_LINK_TYPE_UNSPECIFIED = 0;
-  AUTO_LINK_TYPE_EMAIL = 1;
-  AUTO_LINK_TYPE_URL = 2;
+message Image {
+  bytes source = 1;
+  bytes alt = 2;
 }
 
 message AutoLink {
-  BaseNode base = 1;
-  AutoLinkType type = 2;
-  bytes protocol = 3;
-  bytes value = 4;
+  bytes value = 1;
 }
 
-message RawHTML {
-  BaseNode base = 1;
-  repeated bytes segments = 2;
+message HTMLInline {
+  bytes html = 1;
 }
 
 enum CellAlignment {
   CELL_ALIGNMENT_UNSPECIFIED = 0;
   CELL_ALIGNMENT_LEFT = 1;
-  CELL_ALIGNMENT_RIGHT = 2;
-  CELL_ALIGNMENT_CENTER = 3;
-  CELL_ALIGNMENT_NONE = 4;
+  CELL_ALIGNMENT_CENTER = 2;
+  CELL_ALIGNMENT_RIGHT = 3;
 }
 
 message Table {
-  BaseNode base = 1;
   repeated CellAlignment alignments = 2;
 }
+message TableRow {}
 
-message TableRow {
-  BaseNode base = 1;
-  repeated CellAlignment alignments = 2;
-  bool is_header = 4;
-}
-
-message TableCell {
-  BaseNode base = 1;
-  CellAlignment alignment = 2;
-}
+message TableCell {}
 
 message TaskCheckbox {
-  BaseNode base = 1;
-  bool is_checked = 2;
+  bool checked = 1;
 }
 
-message Strikethrough {
-  BaseNode base = 1;
-}
+message Strikethrough {}
 
-message CustomNode {
-  // Indicates that this block is an inline element
-  bool is_inline = 1;
-  google.protobuf.Any data = 2;
-  bool blank_previous_lines = 3;
+message Custom {
+  google.protobuf.Any data = 1;
 }
 
 message Metadata {
   // ie "blackstork/builtin"
   string provider = 1;
   // ie "title"
-	string plugin   = 2;
-	string version  = 3;
+  string plugin = 2;
+  string version = 3;
 }
 
 // Root of the plugin-rendered data
 message FabricContentNode {
   Metadata metadata = 1;
-  BaseNode root = 2; // direct content, no document node
+  Node root = 2; // direct content, no document node
 }
