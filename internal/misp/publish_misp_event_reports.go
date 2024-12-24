@@ -102,7 +102,7 @@ func publishEventReport(loader ClientLoaderFn) plugin.PublishFunc {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Unsupported format",
-				Detail:   "Only md and html formats are supported",
+				Detail:   "Only md format is supported",
 			}}
 		}
 		printer = print.WithLogging(printer, logger, slog.String("format", params.Format.String()))
