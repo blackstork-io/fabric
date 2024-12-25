@@ -113,7 +113,7 @@ func publishEventReport(loader ClientLoaderFn) plugin.PublishFunc {
 		if err != nil {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,
-				Summary:  "Failed to write to a file",
+				Summary:  "Failed to render the report",
 				Detail:   err.Error(),
 			}}
 		}
