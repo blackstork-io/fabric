@@ -30,6 +30,7 @@ type Data struct {
 	//	*Data_BoolVal
 	//	*Data_ListVal
 	//	*Data_MapVal
+	//	*Data_TimeVal
 	Data          isData_Data `protobuf_oneof:"data"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -118,8 +119,10 @@ func (x *Data) GetMapVal() *MapData {
 }
 
 func (x *Data) GetTimeVal() *timestamppb.Timestamp {
-	if x, ok := x.GetData().(*Data_TimeVal); ok {
-		return x.TimeVal
+	if x != nil {
+		if x, ok := x.Data.(*Data_TimeVal); ok {
+			return x.TimeVal
+		}
 	}
 	return nil
 }
