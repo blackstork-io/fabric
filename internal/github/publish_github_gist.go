@@ -85,7 +85,7 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 		if document == nil {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,
-				Summary:  "Failed to parse document",
+				Summary:  "Failed to parse the document",
 				Detail:   "document is required",
 			}}
 		}
@@ -137,7 +137,7 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 		if !descriptionAttr.IsNull() && descriptionAttr.AsString() != "" {
 			payload.Description = gh.String(descriptionAttr.AsString())
 		}
-		slog.InfoContext(ctx, "Publish to github gist", "filename", fileName)
+		slog.InfoContext(ctx, "Publishing to GitHub gist", "filename", fileName)
 		gistId := params.Args.GetAttrVal("gist_id")
 		if gistId.IsNull() || gistId.AsString() == "" {
 			slog.DebugContext(ctx, "No gist id set, creating a new gist", "is_public", payload.Public, "files", len(payload.Files))
@@ -149,14 +149,14 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 					Detail:   err.Error(),
 				}}
 			}
-			slog.InfoContext(ctx, "Created gist", "url", *gist.HTMLURL)
+			slog.InfoContext(ctx, "Created the gist", "url", *gist.HTMLURL)
 		} else {
 			slog.DebugContext(ctx, "Fetching the gist", "gist_id", gistId.AsString())
 			gist, _, err := client.Gists().Get(ctx, gistId.AsString())
 			if err != nil {
 				return diagnostics.Diag{{
 					Severity: hcl.DiagError,
-					Summary:  "Failed to retreive gist",
+					Summary:  "Failed to retreive the gist",
 					Detail:   err.Error(),
 				}}
 			}
@@ -173,11 +173,11 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 			if err != nil {
 				return diagnostics.Diag{{
 					Severity: hcl.DiagError,
-					Summary:  "Failed to update gist",
+					Summary:  "Failed to update the gist",
 					Detail:   err.Error(),
 				}}
 			}
-			slog.InfoContext(ctx, "Updated gist", "url", *gist.HTMLURL)
+			slog.InfoContext(ctx, "The gist updated successfully", "url", *gist.HTMLURL)
 		}
 		return nil
 	}
