@@ -2,6 +2,7 @@ package builtin
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/hcl/v2"
@@ -84,7 +85,7 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 	if err != nil {
 		return nil, diagnostics.Diag{&hcl.Diagnostic{
 			Severity: hcl.DiagError,
-			Summary:  "Failed to fetch the feed",
+			Summary:  fmt.Sprintf("Failed to fetch the feed `%s`", url),
 			Detail:   err.Error(),
 		}}
 	}
