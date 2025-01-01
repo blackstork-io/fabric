@@ -28,6 +28,7 @@ import (
 
 const (
 	defaultRequestTimeout = 30 * time.Second
+	defaultUserAgent      = "blackstork-rss/0.0.1"
 )
 
 // https://techblog.willshouse.com/2012/01/03/most-common-user-agents/
@@ -68,6 +69,16 @@ func makeRSSDataSource() *plugin.DataSource {
 					Doc: `
 						If the full content should be added when it's not present in the feed items.
 					`,
+				},
+				{
+					Name:        "use_browser_user_agent",
+					Type:        cty.Bool,
+					DefaultVal:  cty.BoolVal(false),
+					Constraints: constraint.NonNull,
+					Doc: fmt.Sprintf(`
+						If the data source should pretend to be a browser while fetching the feed and the feed items.
+						If set to "false", the default user-agent value "%s" will be used.
+					`, defaultUserAgent),
 				},
 				{
 					Name:         "fill_in_max_items",
@@ -150,7 +161,7 @@ func filterItems(ctx context.Context, feed *gofeed.Feed, from time.Time) *gofeed
 	return feed
 }
 
-func fetchFeedItems(ctx context.Context, feed *gofeed.Feed, itemsCap int) *gofeed.Feed {
+func fetchFeedItems(ctx context.Context, feed *gofeed.Feed, userAgent string, itemsCap int) *gofeed.Feed {
 	log := slog.Default()
 	log = log.With("feed_url", feed.Link, "items_cap", itemsCap)
 	log.InfoContext(ctx, "Fetching content for the items in the feed")
@@ -192,7 +203,7 @@ func fetchFeedItems(ctx context.Context, feed *gofeed.Feed, itemsCap int) *gofee
 				_log.ErrorContext(ctx, "Error while creating a HTTP request for a feed item link", "err", err)
 				return
 			}
-			req.Header.Set("User-Agent", getRandUserAgent())
+			req.Header.Set("User-Agent", userAgent)
 
 			resp, err := client.Do(req)
 			if err != nil {
@@ -226,13 +237,19 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 	log := slog.Default()
 
 	fp := gofeed.NewParser()
-	fp.UserAgent = getRandUserAgent()
 
 	url := params.Args.GetAttrVal("url").AsString()
 
 	fillInContent := params.Args.GetAttrVal("fill_in_content").True()
+	useBrowserUserAgent := params.Args.GetAttrVal("use_browser_user_agent").True()
 	fillInMaxItems, _ := params.Args.GetAttrVal("fill_in_max_items").AsBigFloat().Int64()
 	onlyItemsAfterTimeAttr := params.Args.GetAttrVal("only_items_after_time")
+
+	userAgent := defaultUserAgent
+	if useBrowserUserAgent {
+		userAgent = getRandUserAgent()
+	}
+	fp.UserAgent = userAgent
 
 	basicAuth := params.Args.Blocks.GetFirstMatching("basic_auth")
 	if basicAuth != nil {
@@ -283,7 +300,7 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 	}
 
 	if fillInContent {
-		feed = fetchFeedItems(ctx, feed, int(fillInMaxItems))
+		feed = fetchFeedItems(ctx, feed, userAgent, int(fillInMaxItems))
 		log.InfoContext(ctx, "The content for the feed items downloaded")
 	}
 

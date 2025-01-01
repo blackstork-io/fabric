@@ -58,6 +58,13 @@ data rss {
   # Default value:
   fill_in_content = false
 
+  # If the data source should pretend to be a browser while fetching the feed and the feed items.
+  # If set to "false", the default user-agent value "blackstork-rss/0.0.1" will be used.
+  #
+  # Optional bool.
+  # Default value:
+  use_browser_user_agent = false
+
   # Maximum number of items to fill the content in per feed.
   #
   # Optional number.
