@@ -120,7 +120,11 @@
         "name": "rss",
         "type": "data-source",
         "arguments": [
-          "url"
+          "fill_in_content",
+          "fill_in_max_items",
+          "only_items_after_time",
+          "url",
+          "use_browser_user_agent"
         ]
       },
       {

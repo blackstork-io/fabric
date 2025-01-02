@@ -13,6 +13,7 @@ require (
 	github.com/crowdstrike/gofalcon v0.8.0
 	github.com/elastic/go-elasticsearch/v8 v8.14.0
 	github.com/evanphx/go-hclog-slog v0.0.0-20240717231540-be48fc4c4df5
+	github.com/go-shiori/go-readability v0.0.0-20241012063810-92284fa8a71f
 	github.com/gobwas/glob v0.2.3
 	github.com/golang-cz/devslog v0.0.8
 	github.com/google/go-github/v58 v58.0.0
@@ -27,6 +28,7 @@ require (
 	github.com/lmittmann/tint v1.0.4
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mattn/go-sqlite3 v1.14.22
+	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/spf13/cobra v1.8.0
@@ -71,9 +73,11 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.0 // indirect
 	github.com/agext/levenshtein v1.2.1 // indirect
 	github.com/alecthomas/chroma/v2 v2.10.0 // indirect
-	github.com/andybalholm/cascadia v1.3.1 // indirect
+	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
+	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -103,11 +107,14 @@ require (
 	github.com/go-openapi/strfmt v0.22.2 // indirect
 	github.com/go-openapi/swag v0.22.9 // indirect
 	github.com/go-openapi/validate v0.23.1 // indirect
+	github.com/go-shiori/dom v0.0.0-20230515143342-73569d674e1c // indirect
 	github.com/go-swiss/fonts v0.0.0-20221219152310-0b267088f53d // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/gorilla/css v1.0.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
@@ -163,7 +170,7 @@ require (
 	go.opentelemetry.io/proto/otlp v1.2.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/mod v0.18.0 // indirect
-	golang.org/x/net v0.26.0 // indirect
+	golang.org/x/net v0.29.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect

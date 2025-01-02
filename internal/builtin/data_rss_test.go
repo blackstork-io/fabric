@@ -3,6 +3,7 @@ package builtin
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -56,13 +57,31 @@ func makeTestRssServer() (baseAddr string, closer func()) {
 		mux.ServeHTTP(w, r)
 	})
 
+	mux.HandleFunc("/content/2", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "test-content")
+	})
+
 	path, err := filepath.Abs("./testdata/rss/")
 	if err != nil {
 		panic(err)
 	}
-	mux.Handle("/data/", http.StripPrefix("/data/", http.FileServerFS(os.DirFS(path))))
 
 	srv := httptest.NewServer(mux)
+
+	mux.HandleFunc("/data/", func(w http.ResponseWriter, r *http.Request) {
+		// http.StripPrefix("/data/", http.FileServerFS(os.DirFS(path)))
+		dataFile := strings.TrimPrefix(r.URL.Path, "/data/")
+		dataFilePath := filepath.Join(path, dataFile)
+		data, err := os.ReadFile(dataFilePath)
+		if err != nil {
+			panic(err)
+		}
+
+		renderedData := strings.NewReplacer("{address}", srv.URL).Replace(string(data))
+		fmt.Fprintln(w, renderedData)
+		slog.Info("Inserting server address in the feed data", "address", srv.URL)
+	})
+
 	close := srv.Close
 	defer func() {
 		close()
@@ -102,11 +121,70 @@ func Test_fetchRSSData(t *testing.T) {
 		"items": plugindata.List{
 			plugindata.Map{
 				"description":   plugindata.String("Here is some text containing an interesting description."),
+				"guid":          plugindata.String("4824db5b-6278-48bd-9657-46a66de3dc1a"),
+				"link":          plugindata.String(addr + "content/2"),
+				"pub_date":      plugindata.String("Tue, 8 Sep 2009 22:00:00 +0000"),
+				"title":         plugindata.String("Example entry 2"),
+				"pub_timestamp": plugindata.Number(1252447200),
+				"content":       plugindata.String(""),
+			},
+			plugindata.Map{
+				"description":   plugindata.String("Here is some text containing an interesting description."),
 				"guid":          plugindata.String("7bd204c6-1655-4c27-aeee-53f933c5395f"),
-				"link":          plugindata.String("http://www.example.com/blog/post/1"),
+				"link":          plugindata.String(addr + "content/1"),
 				"pub_date":      plugindata.String("Sun, 6 Sep 2009 16:20:23 +0000"),
-				"title":         plugindata.String("Example entry"),
+				"title":         plugindata.String("Example entry 1"),
 				"pub_timestamp": plugindata.Number(1252254023),
+				"content":       plugindata.String(""),
+			},
+		},
+	}
+
+	ValidRssDataTimeFilter := plugindata.Map{
+		"description":   plugindata.String("This is an example of an RSS feed"),
+		"link":          plugindata.String("http://www.example.com/main.html"),
+		"pub_date":      plugindata.String("Sun, 6 Sep 2009 16:20:12 +0000"),
+		"title":         plugindata.String("RSS Title"),
+		"pub_timestamp": plugindata.Number(1252254012),
+		"items": plugindata.List{
+			plugindata.Map{
+				"description":   plugindata.String("Here is some text containing an interesting description."),
+				"guid":          plugindata.String("4824db5b-6278-48bd-9657-46a66de3dc1a"),
+				"link":          plugindata.String(addr + "content/2"),
+				"pub_date":      plugindata.String("Tue, 8 Sep 2009 22:00:00 +0000"),
+				"title":         plugindata.String("Example entry 2"),
+				"pub_timestamp": plugindata.Number(1252447200),
+				"content":       plugindata.String(""),
+			},
+		},
+	}
+
+	ValidRssWithContent := plugindata.Map{
+		"description":   plugindata.String("This is an example of an RSS feed"),
+		"link":          plugindata.String("http://www.example.com/main.html"),
+		"pub_date":      plugindata.String("Sun, 6 Sep 2009 16:20:12 +0000"),
+		"title":         plugindata.String("RSS Title"),
+		"pub_timestamp": plugindata.Number(1252254012),
+		"items": plugindata.List{
+			plugindata.Map{
+				"description":   plugindata.String("Here is some text containing an interesting description."),
+				"guid":          plugindata.String("4824db5b-6278-48bd-9657-46a66de3dc1a"),
+				"link":          plugindata.String(addr + "content/2"),
+				"pub_date":      plugindata.String("Tue, 8 Sep 2009 22:00:00 +0000"),
+				"title":         plugindata.String("Example entry 2"),
+				"pub_timestamp": plugindata.Number(1252447200),
+				// Note, go-readability wraps content in a `div`. We can use `article.TextContent` if
+				// we want only the text content returned
+				"content":       plugindata.String("<div id=\"readability-page-1\">test-content\n</div>"),
+			},
+			plugindata.Map{
+				"description":   plugindata.String("Here is some text containing an interesting description."),
+				"guid":          plugindata.String("7bd204c6-1655-4c27-aeee-53f933c5395f"),
+				"link":          plugindata.String(addr + "content/1"),
+				"pub_date":      plugindata.String("Sun, 6 Sep 2009 16:20:23 +0000"),
+				"title":         plugindata.String("Example entry 1"),
+				"pub_timestamp": plugindata.Number(1252254023),
+				"content":       plugindata.String(""),
 			},
 		},
 	}
@@ -124,15 +202,19 @@ func Test_fetchRSSData(t *testing.T) {
 				"pub_date":      plugindata.String("2003-11-09T17:23:02Z"),
 				"pub_timestamp": plugindata.Number(1068398582),
 				"title":         plugindata.String("Atom-Powered Robots Run Amok"),
+				"content":       plugindata.String("\n\t\t\t\t<p>This is the entry content.</p>\n\t\t\t"),
 			},
 		},
 	}
 
 	tt := []struct {
-		name     string
-		url      string
-		auth     *gofeed.Auth
-		expected result
+		name                  string
+		url                   string
+		only_items_after_time string
+		fill_in_content       bool
+		fill_in_max_items     int
+		auth                  *gofeed.Auth
+		expected              result
 	}{
 		{
 			name: "valid_rss",
@@ -146,6 +228,23 @@ func Test_fetchRSSData(t *testing.T) {
 			url:  "data/basic.atom",
 			expected: result{
 				Data: ValidAtomData,
+			},
+		},
+		{
+			name:                  "valid_rss_with_time_filter",
+			url:                   "data/basic.rss",
+			only_items_after_time: "2009-09-07T00:00:00Z",
+			expected: result{
+				Data: ValidRssDataTimeFilter,
+			},
+		},
+		{
+			name:              "valid_rss_with_fill_in",
+			url:               "data/basic.rss",
+			fill_in_content:   true,
+			fill_in_max_items: 1,
+			expected: result{
+				Data: ValidRssWithContent,
 			},
 		},
 		{
@@ -171,7 +270,7 @@ func Test_fetchRSSData(t *testing.T) {
 			expected: result{
 				Diags: diagnostics.Diag{{
 					Severity: hcl.DiagError,
-					Summary:  "Failed to fetch the feed",
+					Summary:  fmt.Sprintf("Failed to fetch the feed `%s/basic-auth`", strings.TrimSuffix(addr, "/")),
 					Detail:   "http error: 401 Unauthorized",
 				}},
 			},
@@ -183,7 +282,7 @@ func Test_fetchRSSData(t *testing.T) {
 			expected: result{
 				Diags: diagnostics.Diag{{
 					Severity: hcl.DiagError,
-					Summary:  "Failed to fetch the feed",
+					Summary:  fmt.Sprintf("Failed to fetch the feed `%s/basic-auth`", strings.TrimSuffix(addr, "/")),
 					Detail:   "http error: 401 Unauthorized",
 				}},
 			},
@@ -197,7 +296,7 @@ func Test_fetchRSSData(t *testing.T) {
 			expected: result{
 				Diags: diagnostics.Diag{{
 					Severity: hcl.DiagError,
-					Summary:  "Failed to fetch the feed",
+					Summary:  fmt.Sprintf("Failed to fetch the feed `%s/basic-auth`", strings.TrimSuffix(addr, "/")),
 					Detail:   "http error: 401 Unauthorized",
 				}},
 			},
@@ -208,7 +307,7 @@ func Test_fetchRSSData(t *testing.T) {
 			expected: result{
 				Diags: diagnostics.Diag{{
 					Severity: hcl.DiagError,
-					Summary:  "Failed to fetch the feed",
+					Summary:  fmt.Sprintf("Failed to fetch the feed `%s/basic-auth`", strings.TrimSuffix(addr, "/")),
 					Detail:   "http error: 401 Unauthorized",
 				}},
 			},
@@ -230,8 +329,11 @@ func Test_fetchRSSData(t *testing.T) {
 			expected: result{
 				Diags: diagnostics.Diag{{
 					Severity: hcl.DiagError,
-					Summary:  "Failed to fetch the feed",
-					Detail:   "http error: 404 Not Found",
+					Summary: fmt.Sprintf(
+						"Failed to fetch the feed `%s/does_not_exist.rss`",
+						strings.TrimSuffix(addr, "/"),
+					),
+					Detail: "http error: 404 Not Found",
 				}},
 			},
 		},
@@ -239,6 +341,8 @@ func Test_fetchRSSData(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
+			slog.Info("Running test case", "name", tc.name)
+
 			assert := assert.New(t)
 
 			p := &plugin.Schema{
@@ -249,6 +353,15 @@ func Test_fetchRSSData(t *testing.T) {
 
 			dec := plugintest.NewTestDecoder(t, p.DataSources["rss"].Args).
 				SetAttr("url", cty.StringVal(addr+tc.url))
+
+			if tc.only_items_after_time != "" {
+				dec = dec.SetAttr("only_items_after_time", cty.StringVal(tc.only_items_after_time))
+			}
+			dec = dec.SetAttr("fill_in_content", cty.BoolVal(tc.fill_in_content))
+
+			if tc.fill_in_max_items != 0 {
+				dec = dec.SetAttr("fill_in_max_items", cty.NumberIntVal(int64(tc.fill_in_max_items)))
+			}
 
 			if tc.auth != nil {
 				dec.AppendBody(fmt.Sprintf(`
