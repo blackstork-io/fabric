@@ -97,6 +97,7 @@ type ContentSection struct {
 	id       uint32
 	Children []Content
 	meta     *nodes.ContentMeta
+	mtx      sync.Mutex
 }
 
 func NewSection(contentID uint32) *ContentSection {
@@ -110,6 +111,8 @@ func NewSection(contentID uint32) *ContentSection {
 
 // Add content to the content tree.
 func (c *ContentSection) Add(content Content, loc *Location) error {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
 	return addContent(c, content, loc)
 }
 

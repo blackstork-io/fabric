@@ -264,9 +264,10 @@ func main() {
 	flags.StringVar(&version, "version", "v0.0.0-dev", "version of the build")
 	flags.StringVar(&outputDir, "output", "./dist/docs", "output directory")
 	flags.Parse(os.Args[1:])
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	// load all plugins
 	plugins := []*plugin.Schema{
-		builtin.Plugin(version, nil, nil),
+		builtin.Plugin(version, logger, nil),
 		elastic.Plugin(version, nil),
 		github.Plugin(version, nil),
 		graphql.Plugin(version),

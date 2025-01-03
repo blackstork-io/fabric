@@ -21,6 +21,7 @@ type PluginContentAction struct {
 	Provider     *plugin.ContentProvider
 	Vars         *definitions.ParsedVars
 	RequiredVars []string
+	DependsOn    []string
 }
 
 func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (diags diagnostics.Diag) {
@@ -135,6 +136,7 @@ func LoadPluginContentAction(ctx context.Context, providers ContentProviders, no
 		Provider:     cp,
 		Vars:         node.Vars,
 		RequiredVars: node.RequiredVars,
+		DependsOn:    node.DependsOn,
 	}, diags
 }
 
