@@ -124,6 +124,20 @@
         ]
       },
       {
+        "name": "sleep",
+        "type": "data-source",
+        "arguments": [
+          "duration"
+        ]
+      },
+      {
+        "name": "sleep",
+        "type": "content-provider",
+        "arguments": [
+          "duration"
+        ]
+      },
+      {
         "name": "table",
         "type": "content-provider",
         "arguments": [
