@@ -25,9 +25,6 @@ test-pretty:
 test-all:
     go test -timeout 5m -race -v ./...
 
-test-e2e:
-    go test -timeout 5m -race -v ./test/e2e/...
-
 generate:
     ./codegen/gen_code.sh
 

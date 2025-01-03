@@ -26,6 +26,44 @@ type Section struct {
 	isIncluded   *dataspec.Attr
 }
 
+func (block *Section) PrepareData(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection) (diags diagnostics.Diag) {
+	sectionData := plugindata.Map{}
+	if block.meta != nil {
+		sectionData[definitions.BlockKindMeta] = block.meta.AsPluginData()
+	}
+	dataCtx[definitions.BlockKindSection] = sectionData
+	diag := ApplyVars(ctx, block.vars, dataCtx)
+	if diags.Extend(diag) {
+		return
+	}
+
+	// verify required vars
+	if len(block.requiredVars) > 0 {
+		diag := verifyRequiredVars(dataCtx, block.requiredVars, block.source.Block)
+		if diags.Extend(diag) {
+			return
+		}
+	}
+
+	return diags
+}
+
+func (block *Section) Unwrap(ctx context.Context, dataCtx plugindata.Map) (include bool, children []*Content, diags diagnostics.Diag) {
+	isIncluded, diag := dataspec.EvalAttr(ctx, block.isIncluded, dataCtx)
+	if diags.Extend(diag) {
+		return
+	}
+	if isIncluded.IsNull() || !plugindata.IsTruthy(*plugindata.Encapsulated.MustFromCty(isIncluded)) {
+		return
+	}
+
+	children, diag = UnwrapDynamicContent(ctx, block.children, dataCtx)
+	if diags.Extend(diag) {
+		return false, nil, diags
+	}
+	return true, children, diags
+}
+
 func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (diags diagnostics.Diag) {
 	sectionData := plugindata.Map{}
 	if block.meta != nil {

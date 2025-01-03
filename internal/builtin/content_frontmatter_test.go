@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
+	"log/slog"
 	"testing"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -84,7 +86,7 @@ func (s *FrontMatterGeneratorTestSuite) parseFrontmatter(contentStr string) (for
 }
 
 func (s *FrontMatterGeneratorTestSuite) SetupSuite() {
-	s.schema = Plugin("", nil, nil)
+	s.schema = Plugin("", slog.New(slog.NewTextHandler(io.Discard, nil)), nil)
 }
 
 func (s *FrontMatterGeneratorTestSuite) TestSchema() {

@@ -26,14 +26,16 @@ type Options struct {
 	tracer          trace.Tracer
 }
 
+var defaultLogger = slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{
+	Level: slog.LevelError,
+}))
+
 var defaultOptions = Options{
 	registryBaseURL: defaultRegistryBaseURL,
 	cacheDir:        defaultCacheDir,
-	logger: slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{
-		Level: slog.LevelError,
-	})),
-	tracer:  nooptrace.Tracer{},
-	builtin: builtin.Plugin("v0.0.0", nil, nil),
+	logger:          defaultLogger,
+	tracer:          nooptrace.Tracer{},
+	builtin:         builtin.Plugin("v0.0.0", defaultLogger, nil),
 }
 
 type Option func(*Options)

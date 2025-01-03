@@ -15,12 +15,13 @@ func Plugin(version string, logger *slog.Logger, tracer trace.Tracer) *plugin.Sc
 		Name:    Name,
 		Version: version,
 		DataSources: plugin.DataSources{
-			"csv":  makeCSVDataSource(),
-			"txt":  makeTXTDataSource(),
-			"rss":  makeRSSDataSource(),
-			"json": makeJSONDataSource(),
-			"yaml": makeYAMLDataSource(),
-			"http": makeHTTPDataSource(version),
+			"csv":   makeCSVDataSource(),
+			"txt":   makeTXTDataSource(),
+			"rss":   makeRSSDataSource(),
+			"json":  makeJSONDataSource(),
+			"yaml":  makeYAMLDataSource(),
+			"http":  makeHTTPDataSource(version),
+			"sleep": makeSleepDataSource(logger),
 		},
 		ContentProviders: plugin.ContentProviders{
 			"toc":         makeTOCContentProvider(),
@@ -32,6 +33,7 @@ func Plugin(version string, logger *slog.Logger, tracer trace.Tracer) *plugin.Sc
 			"list":        makeListContentProvider(),
 			"table":       makeTableContentProvider(),
 			"frontmatter": makeFrontMatterContentProvider(),
+			"sleep":       makeSleepContentProvider(logger),
 		},
 		Publishers: plugin.Publishers{
 			"local_file": makeLocalFilePublisher(logger, tracer),
