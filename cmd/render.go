@@ -93,6 +93,8 @@ var renderCmd = &cobra.Command{
 			if diags.Extend(diag) {
 				return
 			}
+			// Do not print to stdout if publishing is requested
+			return
 		}
 
 		logger.InfoContext(ctx, "Printing to stdout", "format", format)
