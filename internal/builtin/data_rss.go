@@ -27,8 +27,9 @@ import (
 )
 
 const (
-	defaultRequestTimeout = 30 * time.Second
-	defaultUserAgent      = "blackstork-rss/0.0.1"
+	defaultRequestTimeout           = 30 * time.Second
+	defaultUserAgent                = "blackstork-rss/0.0.1"
+	defaultOnlyItemsAfterTimeFormat = "2006-01-02T15:04:05Z"
 )
 
 // https://techblog.willshouse.com/2012/01/03/most-common-user-agents/
@@ -275,7 +276,7 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 
 	var fromTime time.Time
 	if !onlyItemsAfterTimeAttr.IsNull() {
-		fromTime, err = time.Parse("2006-01-02T15:04:05Z", onlyItemsAfterTimeAttr.AsString())
+		fromTime, err = time.Parse(defaultOnlyItemsAfterTimeFormat, onlyItemsAfterTimeAttr.AsString())
 		if err != nil {
 			errorMsg := "Can't parse the value in `only_items_after_time` argument"
 			log.ErrorContext(ctx, errorMsg, "err", err)
