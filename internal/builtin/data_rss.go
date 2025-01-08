@@ -27,9 +27,9 @@ import (
 )
 
 const (
-	defaultRequestTimeout           = 30 * time.Second
-	defaultUserAgent                = "blackstork-rss/0.0.1"
-	defaultOnlyItemsAfterTimeFormat = "2006-01-02T15:04:05Z"
+	defaultRequestTimeout = 30 * time.Second
+	defaultUserAgent      = "blackstork-rss/0.0.1"
+	defaultItemTimeFormat = "2006-01-02T15:04:05Z"
 )
 
 // https://techblog.willshouse.com/2012/01/03/most-common-user-agents/
@@ -82,7 +82,7 @@ func makeRSSDataSource() *plugin.DataSource {
 					`, defaultUserAgent),
 				},
 				{
-					Name:         "fill_in_max_items",
+					Name:         "max_items_to_fill",
 					Type:         cty.Number,
 					ExampleVal:   cty.BoolVal(false),
 					Constraints:  constraint.NonNull,
@@ -93,11 +93,19 @@ func makeRSSDataSource() *plugin.DataSource {
 					`,
 				},
 				{
-					Name:       "only_items_after_time",
+					Name:       "items_after",
 					Type:       cty.String,
 					ExampleVal: cty.StringVal("2024-12-23T00:00:00Z"),
 					Doc: `
-						Return only items after a specified date time, in the format "%Y-%m-%dT%H:%M:%S%Z".
+						Return only items published after a specified timestamp. The timestamp format is "%Y-%m-%dT%H:%M:%S%Z".
+					`,
+				},
+				{
+					Name:       "items_before",
+					Type:       cty.String,
+					ExampleVal: cty.StringVal("2024-12-23T00:00:00Z"),
+					Doc: `
+						Return only items published before a specified timestamp. The timestamp format is "%Y-%m-%dT%H:%M:%S%Z".
 					`,
 				},
 			},
@@ -137,7 +145,7 @@ func makeRSSDataSource() *plugin.DataSource {
 	}
 }
 
-func filterItems(ctx context.Context, feed *gofeed.Feed, from time.Time) *gofeed.Feed {
+func filterItems(feed *gofeed.Feed, after time.Time, before time.Time) *gofeed.Feed {
 	filteredItems := make([]*gofeed.Item, 0)
 
 	for i := range feed.Items {
@@ -149,10 +157,15 @@ func filterItems(ctx context.Context, feed *gofeed.Feed, from time.Time) *gofeed
 			itemTime = item.UpdatedParsed
 		} else if item.PublishedParsed != nil {
 			itemTime = item.PublishedParsed
-		}
-		if itemTime == nil {
+		} else {
 			continue
-		} else if itemTime.Before(from) {
+		}
+
+		if !after.IsZero() && itemTime.Before(after) {
+			continue
+		}
+
+		if !before.IsZero() && itemTime.After(before) {
 			continue
 		}
 
@@ -243,8 +256,10 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 
 	fillInContent := params.Args.GetAttrVal("fill_in_content").True()
 	useBrowserUserAgent := params.Args.GetAttrVal("use_browser_user_agent").True()
-	fillInMaxItems, _ := params.Args.GetAttrVal("fill_in_max_items").AsBigFloat().Int64()
-	onlyItemsAfterTimeAttr := params.Args.GetAttrVal("only_items_after_time")
+	fillInMaxItems, _ := params.Args.GetAttrVal("max_items_to_fill").AsBigFloat().Int64()
+
+	itemsAfterTimeAttr := params.Args.GetAttrVal("items_after")
+	itemsBeforeTimeAttr := params.Args.GetAttrVal("items_before")
 
 	userAgent := defaultUserAgent
 	if useBrowserUserAgent {
@@ -274,11 +289,11 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 		}}
 	}
 
-	var fromTime time.Time
-	if !onlyItemsAfterTimeAttr.IsNull() {
-		fromTime, err = time.Parse(defaultOnlyItemsAfterTimeFormat, onlyItemsAfterTimeAttr.AsString())
+	var afterTime time.Time
+	if !itemsAfterTimeAttr.IsNull() {
+		afterTime, err = time.Parse(defaultItemTimeFormat, itemsAfterTimeAttr.AsString())
 		if err != nil {
-			errorMsg := "Can't parse the value in `only_items_after_time` argument"
+			errorMsg := "Can't parse the value in `items_after` argument"
 			log.ErrorContext(ctx, errorMsg, "err", err)
 			return nil, diagnostics.Diag{&hcl.Diagnostic{
 				Severity: hcl.DiagError,
@@ -288,15 +303,30 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 		}
 	}
 
-	if !fromTime.IsZero() {
+	var beforeTime time.Time
+	if !itemsBeforeTimeAttr.IsNull() {
+		beforeTime, err = time.Parse(defaultItemTimeFormat, itemsBeforeTimeAttr.AsString())
+		if err != nil {
+			errorMsg := "Can't parse the value in `items_before` argument"
+			log.ErrorContext(ctx, errorMsg, "err", err)
+			return nil, diagnostics.Diag{&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  errorMsg,
+				Detail:   err.Error(),
+			}}
+		}
+	}
+
+	if !afterTime.IsZero() || !beforeTime.IsZero() {
 		oldItemsCount := len(feed.Items)
-		feed = filterItems(ctx, feed, fromTime)
+		feed = filterItems(feed, afterTime, beforeTime)
 		log.InfoContext(
 			ctx,
 			"Feed items filtered",
 			"old_items_count", oldItemsCount,
 			"new_items_count", len(feed.Items),
-			"only_items_after_time", fromTime,
+			"items_after", afterTime,
+			"items_before", beforeTime,
 		)
 	}
 

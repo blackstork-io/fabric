@@ -140,7 +140,16 @@ func Test_fetchRSSData(t *testing.T) {
 		},
 	}
 
-	ValidRssDataTimeFilter := plugindata.Map{
+	ValidRssDataAfterBeforeTimeFiltered := plugindata.Map{
+		"description":   plugindata.String("This is an example of an RSS feed"),
+		"link":          plugindata.String("http://www.example.com/main.html"),
+		"pub_date":      plugindata.String("Sun, 6 Sep 2009 16:20:12 +0000"),
+		"title":         plugindata.String("RSS Title"),
+		"pub_timestamp": plugindata.Number(1252254012),
+		"items":         plugindata.List{},
+	}
+
+	ValidRssDataAfterTimeFiltered := plugindata.Map{
 		"description":   plugindata.String("This is an example of an RSS feed"),
 		"link":          plugindata.String("http://www.example.com/main.html"),
 		"pub_date":      plugindata.String("Sun, 6 Sep 2009 16:20:12 +0000"),
@@ -154,6 +163,25 @@ func Test_fetchRSSData(t *testing.T) {
 				"pub_date":      plugindata.String("Tue, 8 Sep 2009 22:00:00 +0000"),
 				"title":         plugindata.String("Example entry 2"),
 				"pub_timestamp": plugindata.Number(1252447200),
+				"content":       plugindata.String(""),
+			},
+		},
+	}
+
+	ValidRssDataBeforeimeFiltered := plugindata.Map{
+		"description":   plugindata.String("This is an example of an RSS feed"),
+		"link":          plugindata.String("http://www.example.com/main.html"),
+		"pub_date":      plugindata.String("Sun, 6 Sep 2009 16:20:12 +0000"),
+		"title":         plugindata.String("RSS Title"),
+		"pub_timestamp": plugindata.Number(1252254012),
+		"items": plugindata.List{
+			plugindata.Map{
+				"description":   plugindata.String("Here is some text containing an interesting description."),
+				"guid":          plugindata.String("7bd204c6-1655-4c27-aeee-53f933c5395f"),
+				"link":          plugindata.String(addr + "content/1"),
+				"pub_date":      plugindata.String("Sun, 6 Sep 2009 16:20:23 +0000"),
+				"title":         plugindata.String("Example entry 1"),
+				"pub_timestamp": plugindata.Number(1252254023),
 				"content":       plugindata.String(""),
 			},
 		},
@@ -175,7 +203,7 @@ func Test_fetchRSSData(t *testing.T) {
 				"pub_timestamp": plugindata.Number(1252447200),
 				// Note, go-readability wraps content in a `div`. We can use `article.TextContent` if
 				// we want only the text content returned
-				"content":       plugindata.String("<div id=\"readability-page-1\">test-content\n</div>"),
+				"content": plugindata.String("<div id=\"readability-page-1\">test-content\n</div>"),
 			},
 			plugindata.Map{
 				"description":   plugindata.String("Here is some text containing an interesting description."),
@@ -208,13 +236,14 @@ func Test_fetchRSSData(t *testing.T) {
 	}
 
 	tt := []struct {
-		name                  string
-		url                   string
-		only_items_after_time string
-		fill_in_content       bool
-		fill_in_max_items     int
-		auth                  *gofeed.Auth
-		expected              result
+		name              string
+		url               string
+		items_after       string
+		items_before      string
+		fill_in_content   bool
+		max_items_to_fill int
+		auth              *gofeed.Auth
+		expected          result
 	}{
 		{
 			name: "valid_rss",
@@ -231,18 +260,35 @@ func Test_fetchRSSData(t *testing.T) {
 			},
 		},
 		{
-			name:                  "valid_rss_with_time_filter",
-			url:                   "data/basic.rss",
-			only_items_after_time: "2009-09-07T00:00:00Z",
+			name:        "valid_rss_items_after",
+			url:         "data/basic.rss",
+			items_after: "2009-09-07T00:00:00Z",
 			expected: result{
-				Data: ValidRssDataTimeFilter,
+				Data: ValidRssDataAfterTimeFiltered,
+			},
+		},
+		{
+			name:         "valid_rss_items_after_before",
+			url:          "data/basic.rss",
+			items_after:  "2009-09-07T00:00:00Z",
+			items_before: "2009-09-08T00:00:00Z",
+			expected: result{
+				Data: ValidRssDataAfterBeforeTimeFiltered,
+			},
+		},
+		{
+			name:         "valid_rss_items_before",
+			url:          "data/basic.rss",
+			items_before: "2009-09-08T00:00:00Z",
+			expected: result{
+				Data: ValidRssDataBeforeimeFiltered,
 			},
 		},
 		{
 			name:              "valid_rss_with_fill_in",
 			url:               "data/basic.rss",
 			fill_in_content:   true,
-			fill_in_max_items: 1,
+			max_items_to_fill: 1,
 			expected: result{
 				Data: ValidRssWithContent,
 			},
@@ -354,13 +400,16 @@ func Test_fetchRSSData(t *testing.T) {
 			dec := plugintest.NewTestDecoder(t, p.DataSources["rss"].Args).
 				SetAttr("url", cty.StringVal(addr+tc.url))
 
-			if tc.only_items_after_time != "" {
-				dec = dec.SetAttr("only_items_after_time", cty.StringVal(tc.only_items_after_time))
+			if tc.items_after != "" {
+				dec = dec.SetAttr("items_after", cty.StringVal(tc.items_after))
+			}
+			if tc.items_before != "" {
+				dec = dec.SetAttr("items_before", cty.StringVal(tc.items_before))
 			}
 			dec = dec.SetAttr("fill_in_content", cty.BoolVal(tc.fill_in_content))
 
-			if tc.fill_in_max_items != 0 {
-				dec = dec.SetAttr("fill_in_max_items", cty.NumberIntVal(int64(tc.fill_in_max_items)))
+			if tc.max_items_to_fill != 0 {
+				dec = dec.SetAttr("max_items_to_fill", cty.NumberIntVal(int64(tc.max_items_to_fill)))
 			}
 
 			if tc.auth != nil {
