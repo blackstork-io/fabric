@@ -121,8 +121,9 @@
         "type": "data-source",
         "arguments": [
           "fill_in_content",
-          "fill_in_max_items",
-          "only_items_after_time",
+          "items_after",
+          "items_before",
+          "max_items_to_fill",
           "url",
           "use_browser_user_agent"
         ]

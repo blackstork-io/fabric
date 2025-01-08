@@ -10,6 +10,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -47,12 +48,12 @@ func makeTOCContentProvider() *plugin.ContentProvider {
 				{
 					Name: "scope",
 					Type: cty.String,
-					Doc: `
-				Scope of the headers to evaluate.
-				  "document" – look for headers in the whole document
-				  "section" – look for headers only in the current section
-				  "auto" – behaves as "section" if the "toc" block is inside of a section; else – behaves as "document"
-				`,
+					Doc: utils.Dedent(`
+					Scope of the headers to evaluate.
+					  "document" – look for headers in the whole document
+					  "section" – look for headers only in the current section
+					  "auto" – behaves as "section" if the "toc" block is inside of a section; else – behaves as "document"
+					`),
 					OneOf: []cty.Value{
 						cty.StringVal("document"),
 						cty.StringVal("section"),
@@ -64,12 +65,12 @@ func makeTOCContentProvider() *plugin.ContentProvider {
 		},
 		InvocationOrder: plugin.InvocationOrderEnd,
 		ContentFunc:     genTOC,
-		Doc: `
+		Doc: utils.Dedent(`
 			Produces table of contents.
 
 			Inspects the rendered document for headers of a certain size and creates a linked
 			table of contents
-		`,
+		`),
 	}
 }
 

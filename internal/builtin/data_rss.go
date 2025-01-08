@@ -67,46 +67,49 @@ func makeRSSDataSource() *plugin.DataSource {
 					Type:        cty.Bool,
 					DefaultVal:  cty.BoolVal(false),
 					Constraints: constraint.NonNull,
-					Doc: `
+					Doc: utils.Dedent(`
 						If the full content should be added when it's not present in the feed items.
-					`,
+					`),
 				},
 				{
 					Name:        "use_browser_user_agent",
 					Type:        cty.Bool,
 					DefaultVal:  cty.BoolVal(false),
 					Constraints: constraint.NonNull,
-					Doc: fmt.Sprintf(`
-						If the data source should pretend to be a browser while fetching the feed and the feed items.
-						If set to "false", the default user-agent value "%s" will be used.
-					`, defaultUserAgent),
+					Doc: utils.Dedent(
+						fmt.Sprintf(`
+							If the data source should pretend to be a browser while fetching the feed and the feed items.
+							If set to "false", the default user-agent value "%s" will be used.
+						`,
+							defaultUserAgent),
+					),
 				},
 				{
 					Name:         "max_items_to_fill",
 					Type:         cty.Number,
-					ExampleVal:   cty.BoolVal(false),
+					ExampleVal:   cty.NumberIntVal(10),
 					Constraints:  constraint.NonNull,
 					MinInclusive: cty.NumberIntVal(0),
 					DefaultVal:   cty.NumberIntVal(10),
-					Doc: `
+					Doc: utils.Dedent(`
 						Maximum number of items to fill the content in per feed.
-					`,
+					`),
 				},
 				{
 					Name:       "items_after",
 					Type:       cty.String,
 					ExampleVal: cty.StringVal("2024-12-23T00:00:00Z"),
-					Doc: `
+					Doc: utils.Dedent(`
 						Return only items published after a specified timestamp. The timestamp format is "%Y-%m-%dT%H:%M:%S%Z".
-					`,
+					`),
 				},
 				{
 					Name:       "items_before",
 					Type:       cty.String,
 					ExampleVal: cty.StringVal("2024-12-23T00:00:00Z"),
-					Doc: `
+					Doc: utils.Dedent(`
 						Return only items published before a specified timestamp. The timestamp format is "%Y-%m-%dT%H:%M:%S%Z".
-					`,
+					`),
 				},
 			},
 			Blocks: []*dataspec.BlockSpec{
@@ -114,9 +117,9 @@ func makeRSSDataSource() *plugin.DataSource {
 					Header: dataspec.HeadersSpec{
 						dataspec.ExactMatcher{"basic_auth"},
 					},
-					Doc: `
+					Doc: utils.Dedent(`
 						Basic authentication credentials to be used in a HTTP request fetching RSS feed.
-					`,
+					`),
 					Attrs: []*dataspec.AttrSpec{
 						{
 							Name:        "username",
@@ -128,20 +131,20 @@ func makeRSSDataSource() *plugin.DataSource {
 							Name:       "password",
 							Type:       cty.String,
 							ExampleVal: cty.StringVal("passwd"),
-							Doc: `
+							Doc: utils.Dedent(`
 								Note: avoid storing credentials in the templates. Use environment variables instead.
-							`,
+							`),
 							Constraints: constraint.RequiredNonNull,
 						},
 					},
 				},
 			},
 		},
-		Doc: `
+		Doc: utils.Dedent(`
 		Fetches RSS / Atom / JSON feed from a provided URL.
 
 		The full content of the items can be fetched and added to the feed. The data source supports basic authentication.
-		`,
+		`),
 	}
 }
 

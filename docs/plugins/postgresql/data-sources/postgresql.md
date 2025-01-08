@@ -39,6 +39,7 @@ The data source supports the following configuration arguments:
 config data postgresql {
   # Required string.
   # Must be non-empty
+  #
   # For example:
   database_url = "some string"
 }
@@ -52,6 +53,7 @@ The data source supports the following execution arguments:
 data postgresql {
   # Required string.
   # Must be non-empty
+  #
   # For example:
   sql_query = "some string"
 

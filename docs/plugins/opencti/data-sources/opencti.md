@@ -38,6 +38,7 @@ The data source supports the following configuration arguments:
 ```hcl
 config data opencti {
   # Required string.
+  #
   # For example:
   graphql_url = "some string"
 
@@ -54,6 +55,7 @@ The data source supports the following execution arguments:
 ```hcl
 data opencti {
   # Required string.
+  #
   # For example:
   graphql_query = "some string"
 }

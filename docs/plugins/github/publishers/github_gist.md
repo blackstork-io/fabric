@@ -48,6 +48,7 @@ The publisher supports the following configuration arguments:
 ```hcl
 config publish github_gist {
   # Required string.
+  #
   # For example:
   github_token = "some string"
 }

@@ -44,6 +44,7 @@ config data falcon_intel_indicators {
   #
   # Required string.
   # Must be non-empty
+  #
   # For example:
   client_id = "some string"
 
@@ -51,6 +52,7 @@ config data falcon_intel_indicators {
   #
   # Required string.
   # Must be non-empty
+  #
   # For example:
   client_secret = "some string"
 
@@ -64,9 +66,10 @@ config data falcon_intel_indicators {
   #
   # Optional string.
   # Must be one of: "autodiscover", "us-1", "us-2", "eu-1", "us-gov-1", "gov1"
+  #
   # For example:
   # client_cloud = "us-1"
-  # 
+  #
   # Default value:
   client_cloud = null
 }

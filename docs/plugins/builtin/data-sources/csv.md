@@ -16,6 +16,7 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "csv" "data source" >}}
 
 ## Description
+
 Loads CSV files with the names that match provided `glob` pattern or a single file from a provided path.
 
 Either `glob` or `path` argument must be set.
@@ -89,18 +90,20 @@ data csv {
   # A glob pattern to select CSV files to read
   #
   # Optional string.
+  #
   # For example:
   # glob = "path/to/file*.csv"
-  # 
+  #
   # Default value:
   glob = null
 
   # A file path to a CSV file to read
   #
   # Optional string.
+  #
   # For example:
   # path = "path/to/file.csv"
-  # 
+  #
   # Default value:
   path = null
 }

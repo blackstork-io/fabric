@@ -38,6 +38,7 @@ The data source supports the following configuration arguments:
 ```hcl
 config data elastic_security_cases {
   # Required string.
+  #
   # For example:
   kibana_endpoint_url = "some string"
 

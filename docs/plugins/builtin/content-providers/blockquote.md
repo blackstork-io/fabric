@@ -32,6 +32,7 @@ The content provider supports the following execution arguments:
 ```hcl
 content blockquote {
   # Required string.
+  #
   # For example:
   value = "Text to be formatted as a quote"
 }

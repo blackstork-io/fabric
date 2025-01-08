@@ -43,36 +43,42 @@ config data microsoft_sentinel_incidents {
   # The Azure client ID
   #
   # Required string.
+  #
   # For example:
   client_id = "some string"
 
   # The Azure client secret
   #
   # Required string.
+  #
   # For example:
   client_secret = "some string"
 
   # The Azure tenant ID
   #
   # Required string.
+  #
   # For example:
   tenant_id = "some string"
 
   # The Azure subscription ID
   #
   # Required string.
+  #
   # For example:
   subscription_id = "some string"
 
   # The Azure resource group name
   #
   # Required string.
+  #
   # For example:
   resource_group_name = "some string"
 
   # The Azure workspace name
   #
   # Required string.
+  #
   # For example:
   workspace_name = "some string"
 }

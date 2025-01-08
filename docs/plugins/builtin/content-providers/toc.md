@@ -16,10 +16,12 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "toc" "content provider" >}}
 
 ## Description
+
 Produces table of contents.
 
 Inspects the rendered document for headers of a certain size and creates a linked
 table of contents
+
 
 The content provider is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 

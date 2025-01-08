@@ -390,7 +390,7 @@ func renderDataSourceDoc(pluginSchema *plugin.Schema, dataSourceName string, dat
 }
 
 func description(doc string) string {
-	return strings.Join(utils.TrimDedent(doc), "\n")
+	return utils.Dedent(doc)
 }
 
 func shortDescription(doc string) string {

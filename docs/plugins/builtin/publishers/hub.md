@@ -36,6 +36,7 @@ config publish hub {
   #
   # Required string.
   # Must be non-empty
+  #
   # For example:
   api_url = "some string"
 
@@ -43,6 +44,7 @@ config publish hub {
   #
   # Required string.
   # Must be non-empty
+  #
   # For example:
   api_token = "some string"
 }

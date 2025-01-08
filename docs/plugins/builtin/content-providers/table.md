@@ -16,6 +16,7 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "table" "content provider" >}}
 
 ## Description
+
 Produces a table.
 
 Each cell template has access to the data context and the following variables:
@@ -51,6 +52,7 @@ content table {
   #
   # Required list of object.
   # Must be non-empty
+  #
   # For example:
   columns = [{
     header = "1st column header template"
