@@ -67,8 +67,7 @@ func MemoizedKeys[M ~map[string]V, V any](m *M) func() string {
 	})
 }
 
-// Strip common whitespace from the beginnings of the lines, trim the end whitespace
-// Tab is assumed to be equal to 4 spaces
+// Strip common margin from the beginnings of the lines
 func Dedent(text string) string {
 	lines := strings.Split(text, "\n")
 	commonIndent := findCommonIndent(lines)
