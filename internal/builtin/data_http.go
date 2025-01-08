@@ -19,8 +19,8 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/internal/builtin/utils"
-	u "github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	u "github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"

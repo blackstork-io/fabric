@@ -72,7 +72,6 @@ func formatType(buf *strings.Builder, t cty.Type) {
 }
 
 func (a *AttrSpec) DocComment() hclwrite.Tokens {
-
 	docTmplFilename := path.Base(docTmplPath)
 	tmpl, err := template.New(docTmplFilename).ParseFiles(docTmplPath)
 	if err != nil {

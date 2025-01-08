@@ -11,7 +11,9 @@ import (
 	"sync"
 	"time"
 
+	readability "github.com/go-shiori/go-readability"
 	"github.com/hashicorp/hcl/v2"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/mmcdole/gofeed"
 	"github.com/zclconf/go-cty/cty"
 
@@ -21,9 +23,6 @@ import (
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
-
-	readability "github.com/go-shiori/go-readability"
-	"github.com/microcosm-cc/bluemonday"
 )
 
 const (
