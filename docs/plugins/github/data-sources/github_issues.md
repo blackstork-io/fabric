@@ -41,6 +41,7 @@ config data github_issues {
   #
   # Required string.
   # Must be non-empty
+  #
   # For example:
   github_token = "some string"
 }
@@ -56,6 +57,7 @@ data github_issues {
   #
   # Required string.
   # Must be non-empty
+  #
   # For example:
   repository = "blackstork-io/fabric"
 

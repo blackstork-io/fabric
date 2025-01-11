@@ -43,6 +43,7 @@ config data microsoft_security {
   # The Azure client ID
   #
   # Required string.
+  #
   # For example:
   client_id = "some string"
 
@@ -55,6 +56,7 @@ config data microsoft_security {
   # The Azure tenant ID
   #
   # Required string.
+  #
   # For example:
   tenant_id = "some string"
 
@@ -87,6 +89,7 @@ data microsoft_security {
   # API endpoint to query
   #
   # Required string.
+  #
   # For example:
   endpoint = "/users"
 

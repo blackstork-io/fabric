@@ -33,13 +33,15 @@ The content provider supports the following execution arguments:
 content image {
   # Required string.
   # Must be non-empty
+  #
   # For example:
   src = "https://example.com/img.png"
 
   # Optional string.
+  #
   # For example:
   # alt = "Text description of the image"
-  # 
+  #
   # Default value:
   alt = null
 }

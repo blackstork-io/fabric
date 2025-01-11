@@ -43,6 +43,7 @@ config content openai_text {
   system_prompt = null
 
   # Required string.
+  #
   # For example:
   api_key = "some string"
 
@@ -59,6 +60,7 @@ The content provider supports the following execution arguments:
 ```hcl
 content openai_text {
   # Required string.
+  #
   # For example:
   prompt = "Summarize the following text: {{.vars.text_to_summarize}}"
 

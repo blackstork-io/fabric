@@ -43,6 +43,7 @@ config data microsoft_security_query {
   # The Azure client ID
   #
   # Required string.
+  #
   # For example:
   client_id = "some string"
 
@@ -55,6 +56,7 @@ config data microsoft_security_query {
   # The Azure tenant ID
   #
   # Required string.
+  #
   # For example:
   tenant_id = "some string"
 
@@ -87,6 +89,7 @@ data microsoft_security_query {
   # Advanced hunting query to run
   #
   # Required string.
+  #
   # For example:
   query = "DeviceRegistryEvents | where Timestamp >= ago(30d) | where isnotempty(RegistryKey) and isnotempty(RegistryValueName) | limit 5"
 }

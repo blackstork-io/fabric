@@ -38,10 +38,12 @@ The data source supports the following configuration arguments:
 ```hcl
 config data hackerone_reports {
   # Required string.
+  #
   # For example:
   api_username = "some string"
 
   # Required string.
+  #
   # For example:
   api_token = "some string"
 }

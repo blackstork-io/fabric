@@ -32,12 +32,12 @@ func makeFalconIntelIndicatorsDataSource(loader ClientLoaderFn) *plugin.DataSour
 				{
 					Name: "filter",
 					Type: cty.String,
-					Doc:  " Indicators filter expression using Falcon Query Language (FQL)",
+					Doc:  "Indicators filter expression using Falcon Query Language (FQL)",
 				},
 				{
 					Name: "sort",
 					Type: cty.String,
-					Doc:  " Indicators sort expression using Falcon Query Language (FQL)",
+					Doc:  "Indicators sort expression using Falcon Query Language (FQL)",
 				},
 			},
 		},

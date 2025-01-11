@@ -34,9 +34,10 @@ content list {
   # Go template for the item of the list
   #
   # Optional string.
+  #
   # For example:
   # item_template = "[{{.Title}}]({{.URL}})"
-  # 
+  #
   # Default value:
   item_template = "{{.}}"
 
@@ -49,6 +50,7 @@ content list {
   #
   # Required list of jq queriable.
   # Must be non-empty
+  #
   # For example:
   items = ["First item", "Second item", "Third item"]
 }

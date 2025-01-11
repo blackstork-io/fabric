@@ -20,6 +20,7 @@ import (
 
 	"github.com/blackstork-io/fabric/internal/builtin/utils"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	u "github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -35,9 +36,9 @@ func makeHTTPDataSource(version string) *plugin.DataSource {
 					Header: dataspec.HeadersSpec{
 						dataspec.ExactMatcher{"basic_auth"},
 					},
-					Doc: `
+					Doc: u.Dedent(`
 						Basic authentication credentials to be used for HTTP request.
-					`,
+					`),
 					Attrs: []*dataspec.AttrSpec{
 						{
 							Name:        "username",
@@ -49,9 +50,9 @@ func makeHTTPDataSource(version string) *plugin.DataSource {
 							Name:       "password",
 							Type:       cty.String,
 							ExampleVal: cty.StringVal("passwd"),
-							Doc: `
+							Doc: u.Dedent(`
 								Note: avoid storing credentials in the templates. Use environment variables instead.
-							`,
+							`),
 							Constraints: constraint.RequiredNonNull,
 						},
 					},
@@ -102,16 +103,16 @@ func makeHTTPDataSource(version string) *plugin.DataSource {
 				},
 			},
 		},
-		Doc: `
-		Loads data from a URL.
+		Doc: u.Dedent(`
+			Loads data from a URL.
 
-		At the moment, the data source accepts only responses with UTF-8 charset and parses only responses
-		with MIME types ` + "`text/csv`" + ` or ` + "`application/json`" + `.
+			At the moment, the data source accepts only responses with UTF-8 charset and parses only responses
+			with MIME types ` + "`text/csv`" + ` or ` + "`application/json`" + `.
 
-		If MIME type of the response is ` + "`text/csv`" + ` or ` + "`application/json`" + `, the response
-		content will be parsed and returned as a JSON structure (similar to the behaviour of CSV and JSON data
-		sources). Otherwise, the response content will be returned as text
-		`,
+			If MIME type of the response is ` + "`text/csv`" + ` or ` + "`application/json`" + `, the response
+			content will be parsed and returned as a JSON structure (similar to the behaviour of CSV and JSON data
+			sources). Otherwise, the response content will be returned as text
+		`),
 	}
 }
 

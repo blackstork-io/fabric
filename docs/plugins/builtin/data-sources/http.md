@@ -16,6 +16,7 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "http" "data source" >}}
 
 ## Description
+
 Loads data from a URL.
 
 At the moment, the data source accepts only responses with UTF-8 charset and parses only responses
@@ -24,6 +25,7 @@ with MIME types `text/csv` or `application/json`.
 If MIME type of the response is `text/csv` or `application/json`, the response
 content will be parsed and returned as a JSON structure (similar to the behaviour of CSV and JSON data
 sources). Otherwise, the response content will be returned as text
+
 
 The data source is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 
@@ -42,12 +44,14 @@ data http {
   # Optional
   basic_auth {
     # Required string.
+    #
     # For example:
     username = "user@example.com"
 
     # Note: avoid storing credentials in the templates. Use environment variables instead.
     #
     # Required string.
+    #
     # For example:
     password = "passwd"
   }
@@ -57,6 +61,7 @@ data http {
   #
   # Required string.
   # Must be non-empty
+  #
   # For example:
   url = "https://example.localhost/file.json"
 

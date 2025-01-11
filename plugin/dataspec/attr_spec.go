@@ -1,9 +1,14 @@
 package dataspec
 
 import (
+	"bytes"
 	"fmt"
+	"log/slog"
 	"math/big"
+	"path"
+	"strconv"
 	"strings"
+	"text/template"
 	"unicode/utf8"
 
 	"github.com/hashicorp/hcl/v2"
@@ -12,6 +17,10 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
+)
+
+const (
+	docTmplPath = "plugin/dataspec/attr_spec_doc_comment.gotmpl"
 )
 
 type AttrSpec struct {
@@ -63,81 +72,85 @@ func formatType(buf *strings.Builder, t cty.Type) {
 }
 
 func (a *AttrSpec) DocComment() hclwrite.Tokens {
-	tokens := comment(nil, a.Doc)
-	if len(tokens) != 0 {
-		tokens = appendCommentNewLine(tokens)
+	docTmplFilename := path.Base(docTmplPath)
+	tmpl, err := template.New(docTmplFilename).ParseFiles(docTmplPath)
+	if err != nil {
+		slog.Error("Error while reading an attribute doc template file", "template_file", docTmplPath, "err", err)
+		panic("Error while reading an attribute doc template file")
 	}
 
-	var buf strings.Builder
-	if a.Constraints.Is(constraint.Required) {
-		buf.WriteString("Required ")
-	} else {
-		buf.WriteString("Optional ")
-	}
+	isRequired := a.Constraints.Is(constraint.Required)
+
+	var attrType string
 	if a.Constraints.Is(constraint.Integer) {
-		buf.WriteString("integer")
+		attrType = "integer"
 	} else {
+		var buf strings.Builder
 		formatType(&buf, a.Type)
+		attrType = buf.String()
 	}
-	buf.WriteString(".\n")
 
+	var oneOf string
 	if !a.OneOf.IsEmpty() {
-		buf.WriteString("Must be one of: ")
-		buf.WriteString(a.OneOf.String())
-		buf.WriteString("\n")
+		oneOf = a.OneOf.String()
 	}
-
 	min := a.computeMinInclusive()
 	max := a.MaxInclusive
 
-	if !min.IsNull() && !max.IsNull() {
-		if a.Type.IsPrimitiveType() && a.Type == cty.Number {
-			fmt.Fprintf(&buf, "Must be between %s and %s (inclusive)\n", min.AsBigFloat().String(), max.AsBigFloat().String())
-		} else {
-			min, _ := min.AsBigFloat().Uint64()
-			max, _ := max.AsBigFloat().Uint64()
-			if min == max {
-				fmt.Fprintf(&buf, "Must have a length of %d\n", min)
-			} else {
-				fmt.Fprintf(&buf, "Must have a length between %d and %d (inclusive)\n", min, max)
-			}
+	var minVal string
+	var maxVal string
+
+	var minLenVal string
+	var maxLenVal string
+
+	if a.Type.IsPrimitiveType() && a.Type == cty.Number {
+		if !min.IsNull() {
+			minVal = min.AsBigFloat().String()
 		}
-	} else if !min.IsNull() {
-		if a.Type.IsPrimitiveType() && a.Type == cty.Number {
-			fmt.Fprintf(&buf, "Must be >= %s\n", min.AsBigFloat().String())
-		} else {
-			min, _ := min.AsBigFloat().Uint64()
-			if min == 1 {
-				buf.WriteString("Must be non-empty\n")
-			} else {
-				fmt.Fprintf(&buf, "Must have a length of at least %d\n", min)
-			}
+		if !max.IsNull() {
+			maxVal = max.AsBigFloat().String()
 		}
-	} else if !max.IsNull() {
-		if a.Type.IsPrimitiveType() && a.Type == cty.Number {
-			fmt.Fprintf(&buf, "Must be <= %s\n", max.AsBigFloat().String())
-		} else {
-			max, _ := max.AsBigFloat().Uint64()
-			fmt.Fprintf(&buf, "Must have a length of at most %d\n", max)
+	} else {
+		if !min.IsNull() {
+			minLen, _ := min.AsBigFloat().Uint64()
+			minLenVal = strconv.FormatUint(minLen, 10)
+		}
+		if !max.IsNull() {
+			maxLen, _ := max.AsBigFloat().Uint64()
+			maxLenVal = strconv.FormatUint(maxLen, 10)
 		}
 	}
-	if a.Constraints.Is(constraint.Required) {
-		buf.WriteString("For example:")
-	} else {
+
+	var example string
+	if !isRequired {
 		if a.ExampleVal != cty.NilVal {
-			buf.WriteString("For example:\n")
 			f := hclwrite.NewEmptyFile()
 			f.Body().SetAttributeValue(a.Name, a.ExampleVal)
-			buf.Write(hclwrite.Format(f.Bytes()))
-			buf.WriteString("\n")
+			example = string(hclwrite.Format(f.Bytes()))
 		}
-		buf.WriteString("Default value:")
 	}
-	tokens = comment(
-		tokens,
-		buf.String(),
-	)
-	return tokens
+
+	trimmedDoc := strings.Trim(a.Doc, "\n ")
+
+	details := map[string]interface{}{
+		"Doc":        trimmedDoc,
+		"IsRequired": isRequired,
+		"Type":       attrType,
+		"OneOf":      oneOf,
+		"MinVal":     minVal,
+		"MaxVal":     maxVal,
+		"MinLenVal":  minLenVal,
+		"MaxLenVal":  maxLenVal,
+		"Example":    example,
+	}
+
+	var docVal bytes.Buffer
+	if err := tmpl.Execute(&docVal, details); err != nil {
+		slog.Error("Error while rendering an attribute doc template", "err", err)
+		panic("Error while rendering an attribute doc template")
+	}
+
+	return comment(nil, docVal.String())
 }
 
 func (a *AttrSpec) WriteDoc(w *hclwrite.Body) {
@@ -301,7 +314,14 @@ func (a *AttrSpec) ValidateSpec() (diags diagnostics.Diag) {
 			diags.AddWarn(fmt.Sprintf("Missing example value for a required attribute %q", a.Name), "")
 		}
 		if a.DefaultVal != cty.NilVal {
-			diags.Add(fmt.Sprintf("Default value is specified for a required attribute %q = %s", a.Name, a.DefaultVal.GoString()), "")
+			diags.Add(
+				fmt.Sprintf(
+					"Default value is specified for a required attribute %q = %s",
+					a.Name,
+					a.DefaultVal.GoString(),
+				),
+				"",
+			)
 		}
 	}
 
@@ -326,7 +346,15 @@ func (a *AttrSpec) ValidateSpec() (diags diagnostics.Diag) {
 			continue
 		}
 		if !(v.val.Type().IsPrimitiveType() && v.val.Type() == cty.Number) {
-			diags.Add(fmt.Sprintf("%s specified for %q must be a number, not %s", v.name, a.Name, v.val.Type().FriendlyName()), "")
+			diags.Add(
+				fmt.Sprintf(
+					"%s specified for %q must be a number, not %s",
+					v.name,
+					a.Name,
+					v.val.Type().FriendlyName(),
+				),
+				"",
+			)
 			skipMinMaxRelativeCheck = true
 			continue
 		}

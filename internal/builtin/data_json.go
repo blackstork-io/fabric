@@ -12,6 +12,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
@@ -36,32 +37,33 @@ func makeJSONDataSource() *plugin.DataSource {
 				},
 			},
 		},
-		Doc: `
-		Loads JSON files with the names that match provided ` + "`glob`" + ` pattern or a single file from provided ` + "`path`" + `value.
+		Doc: utils.Dedent(`
+			Loads JSON files with the names that match provided ` + "`glob`" + ` pattern or a single file from provided ` + "`path`" + `value.
 
-		Either ` + "`glob`" + ` or ` + "`path`" + ` argument must be set.
+			Either ` + "`glob`" + ` or ` + "`path`" + ` argument must be set.
 
-		When ` + "`path`" + ` argument is specified, the data source returns only the content of a file.
-		When ` + "`glob`" + ` argument is specified, the data source returns a list of dicts that contain the content of a file and file's metadata. For example:
+			When ` + "`path`" + ` argument is specified, the data source returns only the content of a file.
+			When ` + "`glob`" + ` argument is specified, the data source returns a list of dicts that contain the content of a file and file's metadata. For example:
 
-		` + "```json" + `
-		[
-		  {
-			"file_path": "path/file-a.json",
-			"file_name": "file-a.json",
-			"content": {
-			  "foo": "bar"
-			}
-		  },
-		  {
-			"file_path": "path/file-b.json",
-			"file_name": "file-b.json",
-			"content": [
-			  {"x": "y"}
+			` + "```json" + `
+			[
+			  {
+			    "file_path": "path/file-a.json",
+			    "file_name": "file-a.json",
+			    "content": {
+			      "foo": "bar"
+			  }
+			  },
+			  {
+			    "file_path": "path/file-b.json",
+			    "file_name": "file-b.json",
+			    "content": [
+			      {"x": "y"}
+			    ]
+			  }
 			]
-		  }
-		]
-		` + "```",
+			` + "```",
+		),
 	}
 }
 

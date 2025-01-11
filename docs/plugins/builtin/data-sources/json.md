@@ -16,6 +16,7 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "json" "data source" >}}
 
 ## Description
+
 Loads JSON files with the names that match provided `glob` pattern or a single file from provided `path`value.
 
 Either `glob` or `path` argument must be set.
@@ -30,7 +31,7 @@ When `glob` argument is specified, the data source returns a list of dicts that 
     "file_name": "file-a.json",
     "content": {
       "foo": "bar"
-    }
+  }
   },
   {
     "file_path": "path/file-b.json",
@@ -57,18 +58,20 @@ data json {
   # A glob pattern to select JSON files to read
   #
   # Optional string.
+  #
   # For example:
   # glob = "path/to/file*.json"
-  # 
+  #
   # Default value:
   glob = null
 
   # A file path to a JSON file to read
   #
   # Optional string.
+  #
   # For example:
   # path = "path/to/file.json"
-  # 
+  #
   # Default value:
   path = null
 }

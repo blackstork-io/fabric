@@ -38,6 +38,7 @@ The data source supports the following configuration arguments:
 ```hcl
 config data graphql {
   # Required string.
+  #
   # For example:
   url = "some string"
 
@@ -54,6 +55,7 @@ The data source supports the following execution arguments:
 ```hcl
 data graphql {
   # Required string.
+  #
   # For example:
   query = "some string"
 }
