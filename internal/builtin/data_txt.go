@@ -11,6 +11,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
@@ -35,27 +36,27 @@ func makeTXTDataSource() *plugin.DataSource {
 				},
 			},
 		},
-		Doc: `
-		Loads TXT files with the names that match provided ` + "`glob`" + ` pattern or a single file from a provided path.
+		Doc: utils.Dedent(`
+			Loads TXT files with the names that match provided ` + "`glob`" + ` pattern or a single file from a provided path.
 
-		Either ` + "`glob`" + ` or ` + "`path`" + ` argument must be set.
+			Either ` + "`glob`" + ` or ` + "`path`" + ` argument must be set.
 
-		When ` + "`path`" + ` argument is specified, the data source returns only the content of a file.
-		When ` + "`glob`" + ` argument is specified, the data source returns a list of dicts that contain the content of a file and file's metadata. For example:
-		` + "```json" + `
-		[
-		  {
-			"file_path": "path/file-a.txt",
-			"file_name": "file-a.txt",
-			"content": "foobar"
-		  },
-		  {
-			"file_path": "path/file-b.txt",
-			"file_name": "file-b.txt",
-			"content": "x\\ny\\nz"
-		  }
-		]
-		` + "```",
+			When ` + "`path`" + ` argument is specified, the data source returns only the content of a file.
+			When ` + "`glob`" + ` argument is specified, the data source returns a list of dicts that contain the content of a file and file's metadata. For example:
+			` + "```json" + `
+			[
+			  {
+			    "file_path": "path/file-a.txt",
+			    "file_name": "file-a.txt",
+			    "content": "foobar"
+			  },
+			  {
+			    "file_path": "path/file-b.txt",
+			    "file_name": "file-b.txt",
+			    "content": "x\\ny\\nz"
+			  }
+			]
+			` + "```"),
 	}
 }
 

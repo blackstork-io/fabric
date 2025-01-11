@@ -39,14 +39,17 @@ The content provider supports the following configuration arguments:
 ```hcl
 config content azure_openai_text {
   # Required string.
+  #
   # For example:
   api_key = "some string"
 
   # Required string.
+  #
   # For example:
   resource_endpoint = "some string"
 
   # Required string.
+  #
   # For example:
   deployment_name = "some string"
 
@@ -63,6 +66,7 @@ The content provider supports the following execution arguments:
 ```hcl
 content azure_openai_text {
   # Required string.
+  #
   # For example:
   prompt = "Summarize the following text: {{.vars.text_to_summarize}}"
 

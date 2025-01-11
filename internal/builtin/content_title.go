@@ -9,6 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -38,29 +39,29 @@ func makeTitleContentProvider() *plugin.ContentProvider {
 					Type:        cty.Number,
 					Constraints: constraint.Integer,
 					DefaultVal:  cty.NullVal(cty.Number),
-					Doc: `
-					Sets the absolute size of the title.
-					If ` + "`null`" + ` – absoulute title size is determined from the document structure
-				`,
+					Doc: utils.Dedent(`
+						Sets the absolute size of the title.
+						If ` + "`null`" + ` – absoulute title size is determined from the document structure
+					`),
 				},
 				{
 					Name:        "relative_size",
 					Type:        cty.Number,
 					Constraints: constraint.Integer,
 					DefaultVal:  cty.NumberIntVal(0),
-					Doc: `
-					Adjusts the absolute size of the title.
-					The value (which may be negative) is added to the ` + "`absolute_size`" + ` to produce the final title size
-				`,
+					Doc: utils.Dedent(`
+						Adjusts the absolute size of the title.
+						The value (which may be negative) is added to the ` + "`absolute_size`" + ` to produce the final title size
+					`),
 				},
 			},
 		},
-		Doc: `
+		Doc: utils.Dedent(`
 			Produces a title.
 
 			The title size after calculations must be in an interval [0; 5] inclusive, where 0
 			corresponds to the largest size (` + "`<h1>`" + `) and 5 corresponds to (` + "`<h6>`" + `)
-		`,
+		`),
 	}
 }
 

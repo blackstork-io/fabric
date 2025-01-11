@@ -1,6 +1,8 @@
 package dataspec
 
 import (
+	"strings"
+
 	"github.com/hashicorp/hcl/v2/hclwrite"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
@@ -64,7 +66,8 @@ type BlockSpec struct {
 }
 
 func (b *BlockSpec) WriteBlockDoc(w *hclwrite.Body) {
-	tokens := comment(nil, b.Doc)
+	trimmedDoc := strings.Trim(b.Doc, "\n ")
+	tokens := comment(nil, trimmedDoc)
 	if len(tokens) != 0 {
 		tokens = appendCommentNewLine(tokens)
 	}

@@ -12,6 +12,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
@@ -45,12 +46,13 @@ func makeGithubIssuesDataSchema(loader ClientLoaderFn) *plugin.DataSource {
 					Name:        "milestone",
 					Type:        cty.String,
 					Constraints: constraint.TrimSpace | constraint.NonNull,
-					Doc: `
+					Doc: utils.Dedent(`
 						Filter issues by milestone. Possible values are:
 						* a milestone number
 						* "none" for issues with no milestone
 						* "*" for issues with any milestone
-						* "" (empty string) performs no filtering`,
+						* "" (empty string) performs no filtering
+					`),
 					DefaultVal: cty.StringVal(""),
 				},
 				{
@@ -69,32 +71,35 @@ func makeGithubIssuesDataSchema(loader ClientLoaderFn) *plugin.DataSource {
 					Name:        "assignee",
 					Type:        cty.String,
 					Constraints: constraint.TrimSpace | constraint.NonNull,
-					Doc: `
-					Filter issues based on their assignee. Possible values are:
-					* a user name
-					* "none" for issues that are not assigned
-					* "*" for issues with any assigned user
-					* "" (empty string) performs no filtering.`,
+					Doc: utils.Dedent(`
+						Filter issues based on their assignee. Possible values are:
+						* a user name
+						* "none" for issues that are not assigned
+						* "*" for issues with any assigned user
+						* "" (empty string) performs no filtering.
+					`),
 					DefaultVal: cty.StringVal(""),
 				},
 				{
 					Name:        "creator",
 					Type:        cty.String,
 					Constraints: constraint.TrimSpace | constraint.NonNull,
-					Doc: `
-					Filter issues based on their creator. Possible values are:
-					* a user name
-					* "" (empty string) performs no filtering.`,
+					Doc: utils.Dedent(`
+						Filter issues based on their creator. Possible values are:
+						* a user name
+						* "" (empty string) performs no filtering.
+					`),
 					DefaultVal: cty.StringVal(""),
 				},
 				{
 					Name:        "mentioned",
 					Type:        cty.String,
 					Constraints: constraint.TrimSpace | constraint.NonNull,
-					Doc: `
-					Filter issues to once where this username is mentioned. Possible values are:
-					* a user name
-					* "" (empty string) performs no filtering.`,
+					Doc: utils.Dedent(`
+						Filter issues to once where this username is mentioned. Possible values are:
+						* a user name
+						* "" (empty string) performs no filtering.
+					`),
 					DefaultVal: cty.StringVal(""),
 				},
 				{
@@ -130,16 +135,17 @@ func makeGithubIssuesDataSchema(loader ClientLoaderFn) *plugin.DataSource {
 					Name:        "since",
 					Type:        cty.String,
 					Constraints: constraint.Meaningful,
-					Doc: `
-					Only show results that were last updated after the given time.
-					This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.`,
+					Doc: utils.Dedent(`
+						Only show results that were last updated after the given time.
+						This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.
+					`),
 				},
 				{
 					Name:         "limit",
 					Type:         cty.Number,
 					Constraints:  constraint.Integer,
 					MinInclusive: cty.NumberIntVal(-1),
-					Doc:          `Limit the number of issues to return. -1 means no limit.`,
+					Doc:          "Limit the number of issues to return. -1 means no limit.",
 					DefaultVal:   cty.NumberIntVal(-1),
 				},
 			},
@@ -237,8 +243,11 @@ func parseIssuesArgs(args *dataspec.Block) (*parsedIssuesArgs, diagnostics.Diag)
 			return nil, diagnostics.Diag{{
 				Severity: hcl.DiagError,
 				Summary:  "Invalid timestamp format",
-				Detail:   fmt.Sprintf("Timestamp must be in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ, but %s", err.Error()),
-				Subject:  &since.ValueRange,
+				Detail: fmt.Sprintf(
+					"Timestamp must be in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ, but %s",
+					err.Error(),
+				),
+				Subject: &since.ValueRange,
 			}}
 		}
 		parsed.opts.Since = ts

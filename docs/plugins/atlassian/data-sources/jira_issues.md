@@ -44,6 +44,7 @@ config data jira_issues {
   #
   # Required string.
   # Must be non-empty
+  #
   # For example:
   domain = "some string"
 
@@ -51,6 +52,7 @@ config data jira_issues {
   #
   # Required string.
   # Must be non-empty
+  #
   # For example:
   account_email = "some string"
 
@@ -58,6 +60,7 @@ config data jira_issues {
   #
   # Required string.
   # Must be non-empty
+  #
   # For example:
   api_token = "some string"
 }
@@ -73,34 +76,37 @@ data jira_issues {
   #
   # Optional string.
   # Must be one of: "renderedFields", "names", "schema", "changelog"
+  #
   # For example:
   # expand = "names"
-  # 
+  #
   # Default value:
   expand = null
 
   # A list of fields to return for each issue.
   #
   # Optional list of string.
+  #
   # For example:
   # fields = ["*all"]
-  # 
+  #
   # Default value:
   fields = null
 
   # A JQL expression. For performance reasons, this field requires a bounded query. A bounded query is a query with a search restriction.
   #
   # Optional string.
+  #
   # For example:
   # jql = "order by key desc"
-  # 
+  #
   # Default value:
   jql = null
 
   # A list of up to 5 issue properties to include in the results.
   #
   # Optional list of string.
-  # Must have a length of at most 5
+  # Must contain no more than 5 elements.
   # Default value:
   properties = []
 

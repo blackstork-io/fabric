@@ -44,6 +44,7 @@ config data misp_events {
   #
   # Required string.
   # Must be non-empty
+  #
   # For example:
   api_key = "some string"
 
@@ -51,6 +52,7 @@ config data misp_events {
   #
   # Required string.
   # Must be non-empty
+  #
   # For example:
   base_url = "some string"
 
@@ -69,6 +71,7 @@ The data source supports the following execution arguments:
 ```hcl
 data misp_events {
   # Required string.
+  #
   # For example:
   value = "some string"
 

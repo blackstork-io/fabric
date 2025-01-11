@@ -43,6 +43,7 @@ config data microsoft_graph {
   # The Azure client ID
   #
   # Required string.
+  #
   # For example:
   client_id = "some string"
 
@@ -55,6 +56,7 @@ config data microsoft_graph {
   # The Azure tenant ID
   #
   # Required string.
+  #
   # For example:
   tenant_id = "some string"
 
@@ -93,6 +95,7 @@ data microsoft_graph {
   # The endpoint to query
   #
   # Required string.
+  #
   # For example:
   endpoint = "/users"
 

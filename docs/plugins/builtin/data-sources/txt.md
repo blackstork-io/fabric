@@ -16,6 +16,7 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "txt" "data source" >}}
 
 ## Description
+
 Loads TXT files with the names that match provided `glob` pattern or a single file from a provided path.
 
 Either `glob` or `path` argument must be set.
@@ -52,18 +53,20 @@ data txt {
   # A glob pattern to select TXT files to read
   #
   # Optional string.
+  #
   # For example:
   # glob = "path/to/file*.txt"
-  # 
+  #
   # Default value:
   glob = null
 
   # A file path to a TXT file to read
   #
   # Optional string.
+  #
   # For example:
   # path = "path/to/file.txt"
-  # 
+  #
   # Default value:
   path = null
 }

@@ -38,6 +38,7 @@ The data source supports the following configuration arguments:
 ```hcl
 config data splunk_search {
   # Required string.
+  #
   # For example:
   auth_token = "some string"
 
@@ -58,6 +59,7 @@ The data source supports the following execution arguments:
 ```hcl
 data splunk_search {
   # Required string.
+  #
   # For example:
   search_query = "some string"
 

@@ -78,6 +78,7 @@ The data source supports the following execution arguments:
 ```hcl
 data elasticsearch {
   # Required string.
+  #
   # For example:
   index = "some string"
 

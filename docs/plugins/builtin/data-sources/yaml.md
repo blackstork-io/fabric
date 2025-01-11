@@ -16,6 +16,7 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "yaml" "data source" >}}
 
 ## Description
+
 Loads YAML files with the names that match provided `glob` pattern or a single file from provided `path`value.
 
 Either `glob` or `path` argument must be set.
@@ -26,18 +27,18 @@ When `glob` argument is specified, the data source returns a list of dicts that 
 ```json
 [
   {
-    "file_path": "path/file-a.yaml",
-    "file_name": "file-a.yaml",
-    "content": {
-      "foo": "bar"
-    }
+	"file_path": "path/file-a.yaml",
+	"file_name": "file-a.yaml",
+	"content": {
+	  "foo": "bar"
+	}
   },
   {
-    "file_path": "path/file-b.yaml",
-    "file_name": "file-b.yaml",
-    "content": [
-      {"x": "y"}
-    ]
+	"file_path": "path/file-b.yaml",
+	"file_name": "file-b.yaml",
+	"content": [
+	  {"x": "y"}
+	]
   }
 ]
 ```
@@ -57,18 +58,20 @@ data yaml {
   # A glob pattern to select YAML files to read
   #
   # Optional string.
+  #
   # For example:
   # glob = "path/to/file*.yaml"
-  # 
+  #
   # Default value:
   glob = null
 
   # A file path to a YAML file to read
   #
   # Optional string.
+  #
   # For example:
   # path = "path/to/file.yaml"
-  # 
+  #
   # Default value:
   path = null
 }

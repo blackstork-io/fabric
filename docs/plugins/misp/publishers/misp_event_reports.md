@@ -50,6 +50,7 @@ config publish misp_event_reports {
   #
   # Required string.
   # Must be non-empty
+  #
   # For example:
   api_key = "some string"
 
@@ -57,6 +58,7 @@ config publish misp_event_reports {
   #
   # Required string.
   # Must be non-empty
+  #
   # For example:
   base_url = "some string"
 
@@ -79,11 +81,13 @@ The publisher supports the following execution arguments:
 publish misp_event_reports {
   # Required string.
   # Must be non-empty
+  #
   # For example:
   event_id = "some string"
 
   # Required string.
   # Must be non-empty
+  #
   # For example:
   name = "some string"
 

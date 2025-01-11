@@ -42,6 +42,7 @@ content frontmatter {
   #
   # Required jq queriable.
   # Must be non-empty
+  #
   # For example:
   content = {
     key = "arbitrary value"

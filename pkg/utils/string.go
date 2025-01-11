@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bufio"
 	"slices"
 	"strings"
 	"sync"
@@ -68,71 +67,47 @@ func MemoizedKeys[M ~map[string]V, V any](m *M) func() string {
 	})
 }
 
-const defaultTabSize = 4
+// Strip common margin from the beginnings of the lines
+func Dedent(text string) string {
+	lines := strings.Split(text, "\n")
+	commonIndent := findCommonIndent(lines)
 
-// Strip common whitespace from the beginnings of the lines, trim the end whitespace
-// Tab is assumed to be equal to 4 spaces
-func TrimDedent(text string) (lines []string) {
-	return TrimDedentTabsize(text, defaultTabSize)
+	newlines := make([]string, 0)
+
+	for _, line := range lines {
+		trimmed := strings.TrimLeft(line, "\t")
+		// If the line is empty, trim it fully
+		var newline string
+		if trimmed == "" {
+			newline = trimmed
+		} else {
+			newline = strings.TrimPrefix(line, commonIndent)
+		}
+		newlines = append(newlines, newline)
+	}
+
+	return strings.Join(newlines, "\n")
 }
 
-// Strip common whitespace from the beginnings of the lines, trim the end whitespace
-func TrimDedentTabsize(text string, tabSize int) (lines []string) {
-	s := bufio.NewScanner(strings.NewReader(strings.ReplaceAll(text, "\t", "    ")))
-	var commonWhitespace string
-	lenNonempty := 0
+func findCommonIndent(lines []string) string {
+	minCommonIndent := ""
 
-	for s.Scan() {
-		line := s.Text()
-		if lenNonempty != 0 && commonWhitespace == "" {
-			lines = append(lines, line)
-			lenNonempty = len(lines)
+	for _, line := range lines {
+		trimmed := strings.TrimLeft(line, "\t")
+
+		// Ignore empty lines
+		if trimmed == "" {
 			continue
 		}
-		numTabs := 0
-		numSpaces := 0
-		firstNonSpace := strings.IndexFunc(line, func(r rune) bool {
-			switch r {
-			case '\t':
-				numTabs += 1
-				return false
-			case ' ':
-				numSpaces += 1
-				return false
-			default:
-				return true
-			}
+		nonIndentCharIndex := strings.IndexFunc(line, func(c rune) bool {
+			return c != '\t'
 		})
-		if firstNonSpace == -1 {
-			if lenNonempty != 0 {
-				lines = append(lines, commonWhitespace)
-			}
-			continue
-		}
 
-		whitespace := numSpaces + numTabs*tabSize
-		if numTabs > 0 {
-			// replace tabs for better slice-ability
-			var sb strings.Builder
-
-			for i := 0; i < whitespace; i++ {
-				sb.WriteByte(' ')
-			}
-			sb.WriteString(line[firstNonSpace:])
-			line = sb.String()
+		lineIndent := line[:nonIndentCharIndex]
+		if minCommonIndent == "" || len(lineIndent) < len(minCommonIndent) {
+			minCommonIndent = lineIndent
 		}
-
-		if lenNonempty == 0 {
-			commonWhitespace = strings.Repeat(" ", whitespace)
-		} else if whitespace < len(commonWhitespace) {
-			commonWhitespace = commonWhitespace[:whitespace]
-		}
-		lines = append(lines, line)
-		lenNonempty = len(lines)
 	}
-	lines = lines[:lenNonempty:lenNonempty]
-	for i := range lines {
-		lines[i] = strings.TrimRightFunc(lines[i][len(commonWhitespace):], unicode.IsSpace)
-	}
-	return
+
+	return minCommonIndent
 }

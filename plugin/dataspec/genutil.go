@@ -6,8 +6,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
-
-	"github.com/blackstork-io/fabric/pkg/utils"
 )
 
 func exampleValueForType(ty cty.Type) cty.Value {
@@ -57,9 +55,14 @@ func exampleValueForType(ty cty.Type) cty.Value {
 func comment(tokens hclwrite.Tokens, text string) hclwrite.Tokens {
 	var sb strings.Builder
 
-	for _, line := range utils.TrimDedent(text) {
-		sb.WriteString("# ")
-		sb.WriteString(line)
+	lines := strings.Split(text, "\n")
+	for _, line := range lines {
+		if line != "" {
+			sb.WriteString("# ")
+			sb.WriteString(line)
+		} else {
+			sb.WriteString("#")
+		}
 		sb.WriteByte('\n')
 		tokens = append(tokens, &hclwrite.Token{
 			Type:  hclsyntax.TokenComment,

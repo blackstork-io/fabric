@@ -16,9 +16,11 @@ type: docs
 {{< plugin-resource-header "blackstork/builtin" "builtin" "v0.4.2" "rss" "data source" >}}
 
 ## Description
+
 Fetches RSS / Atom / JSON feed from a provided URL.
 
 The full content of the items can be fetched and added to the feed. The data source supports basic authentication.
+
 
 The data source is built-in, which means it's a part of `fabric` binary. It's available out-of-the-box, no installation required.
 
@@ -37,18 +39,21 @@ data rss {
   # Optional
   basic_auth {
     # Required string.
+    #
     # For example:
     username = "user@example.com"
 
     # Note: avoid storing credentials in the templates. Use environment variables instead.
     #
     # Required string.
+    #
     # For example:
     password = "passwd"
   }
 
 
   # Required string.
+  #
   # For example:
   url = "https://www.elastic.co/security-labs/rss/feed.xml"
 
@@ -69,19 +74,31 @@ data rss {
   #
   # Optional number.
   # Must be >= 0
+  #
   # For example:
-  # fill_in_max_items = false
-  # 
+  # max_items_to_fill = 10
+  #
   # Default value:
-  fill_in_max_items = 10
+  max_items_to_fill = 10
 
-  # Return only items after a specified date time, in the format "%Y-%m-%dT%H:%M:%S%Z".
+  # Return only items published after a specified timestamp. The timestamp format is "%Y-%m-%dT%H:%M:%S%Z".
   #
   # Optional string.
+  #
   # For example:
-  # only_items_after_time = "2024-12-23T00:00:00Z"
-  # 
+  # items_after = "2024-12-23T00:00:00Z"
+  #
   # Default value:
-  only_items_after_time = null
+  items_after = null
+
+  # Return only items published before a specified timestamp. The timestamp format is "%Y-%m-%dT%H:%M:%S%Z".
+  #
+  # Optional string.
+  #
+  # For example:
+  # items_before = "2024-12-23T00:00:00Z"
+  #
+  # Default value:
+  items_before = null
 }
 ```

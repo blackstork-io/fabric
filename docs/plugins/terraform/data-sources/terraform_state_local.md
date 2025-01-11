@@ -42,6 +42,7 @@ The data source supports the following execution arguments:
 ```hcl
 data terraform_state_local {
   # Required string.
+  #
   # For example:
   path = "some string"
 }
