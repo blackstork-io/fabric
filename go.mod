@@ -8,7 +8,6 @@ require (
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/Masterminds/sprig/v3 v3.2.3
-	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
 	github.com/blackstork-io/goldmark-markdown v0.1.3
 	github.com/crowdstrike/gofalcon v0.8.0
 	github.com/elastic/go-elasticsearch/v8 v8.14.0
@@ -117,7 +116,6 @@ require (
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
-	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
 	github.com/huandu/xstrings v1.3.3 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
