@@ -36,7 +36,7 @@ var (
 	rootCtx     context.Context
 	cliArgs     = struct {
 		sourceDir string
-		colorize  bool
+		noColor   bool
 		debug     bool
 	}{}
 	rawArgs = struct {
@@ -44,7 +44,7 @@ var (
 		logOutput string
 		logLevel  string
 		verbose   bool
-		colorize  bool
+		noColor   bool
 		debug     bool
 	}{}
 	debugDir = ".fabric/debug"
@@ -64,7 +64,7 @@ func init() {
 		&rawArgs.logLevel, "log-level", "info",
 		fmt.Sprintf("logging level (%s)", validLogLevels.String()),
 	)
-	rootCmd.PersistentFlags().BoolVar(&rawArgs.colorize, "color", true, "enables colorizing the logs and diagnostics (if supported by the terminal and log format)")
+	rootCmd.PersistentFlags().BoolVar(&rawArgs.noColor, "no-color", false, "disable colorization of the output (logs and diagnostics), if supported by the terminal and the log format")
 	rootCmd.PersistentFlags().BoolVarP(&rawArgs.verbose, "verbose", "v", false, "a shortcut to --log-level debug")
 	rootCmd.PersistentFlags().BoolVar(&rawArgs.debug, "debug", false, "enables debug mode")
 
@@ -101,7 +101,7 @@ var rootCmd = &cobra.Command{
 			return
 		}
 		cliArgs.sourceDir = rawArgs.sourceDir
-		cliArgs.colorize = rawArgs.colorize && term.IsTerminal(int(os.Stderr.Fd()))
+		cliArgs.noColor = rawArgs.noColor && term.IsTerminal(int(os.Stderr.Fd()))
 		var level slog.Level
 		if rawArgs.verbose || rawArgs.debug {
 			level = slog.LevelDebug
@@ -119,17 +119,17 @@ var rootCmd = &cobra.Command{
 		var handler slog.Handler
 		switch strings.ToLower(strings.TrimSpace(rawArgs.logOutput)) {
 		case "plain":
-			if cliArgs.colorize && level <= slog.LevelDebug {
+			if !cliArgs.noColor && level <= slog.LevelDebug {
 				handler = devslog.NewHandler(os.Stderr, &devslog.Options{
 					HandlerOptions: opts,
 				})
 			} else {
 				var output io.Writer
-				if cliArgs.colorize {
+				if cliArgs.noColor {
+					output = os.Stderr
+				} else {
 					// only affects windows, noop on *nix
 					output = colorable.NewColorable(os.Stderr)
-				} else {
-					output = os.Stderr
 				}
 
 				handler = tint.NewHandler(
@@ -138,7 +138,7 @@ var rootCmd = &cobra.Command{
 						AddSource:   opts.AddSource,
 						Level:       opts.Level,
 						ReplaceAttr: opts.ReplaceAttr,
-						NoColor:     !cliArgs.colorize,
+						NoColor:     cliArgs.noColor,
 						TimeFormat:  time.DateTime,
 					},
 				)
@@ -218,6 +218,6 @@ func exitCommand(eng *engine.Engine, cmd *cobra.Command, diags diagnostics.Diag)
 	} else {
 		err = nil
 	}
-	eng.PrintDiagnostics(os.Stderr, diags, cliArgs.colorize)
+	eng.PrintDiagnostics(os.Stderr, diags, !cliArgs.noColor)
 	return err
 }
