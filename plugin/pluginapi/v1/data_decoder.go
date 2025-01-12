@@ -21,6 +21,8 @@ func decodeData(src *Data) plugindata.Data {
 		return decodeMapData(src.GetMapVal().GetValue())
 	case *Data_ListVal:
 		return plugindata.List(utils.FnMap(src.GetListVal().GetValue(), decodeData))
+	case *Data_TimeVal:
+		return plugindata.Time(src.GetTimeVal().AsTime())
 	}
 	panic(fmt.Sprintf("Unexpected src data type: %T", src.GetData()))
 }
