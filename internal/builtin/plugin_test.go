@@ -1,13 +1,15 @@
 package builtin
 
 import (
+	"io"
+	"log/slog"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPluginSchema(t *testing.T) {
-	schema := Plugin("1.2.3", nil, nil)
+	schema := Plugin("1.2.3", slog.New(slog.NewTextHandler(io.Discard, nil)), nil)
 	assert.Equal(t, "blackstork/builtin", schema.Name)
 	assert.Equal(t, "1.2.3", schema.Version)
 	assert.NotNil(t, schema.DataSources["csv"])

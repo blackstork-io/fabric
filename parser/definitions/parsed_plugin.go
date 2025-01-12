@@ -15,6 +15,7 @@ type ParsedPlugin struct {
 	Invocation   *evaluation.BlockInvocation
 	Vars         *ParsedVars
 	RequiredVars []string
+	DependsOn    []string
 	IsIncluded   *hclsyntax.Attribute
 }
 
