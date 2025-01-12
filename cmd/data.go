@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/TylerBrock/colorjson"
 	"github.com/spf13/cobra"
 
 	"github.com/blackstork-io/fabric/engine"
@@ -51,14 +50,7 @@ var dataCmd = &cobra.Command{
 			return
 		}
 		val := res.Any()
-		var ser []byte
-		if cliArgs.colorize {
-			fmt := colorjson.NewFormatter()
-			fmt.Indent = 4
-			ser, err = fmt.Marshal(val)
-		} else {
-			ser, err = json.MarshalIndent(val, "", "    ")
-		}
+		ser, err := json.MarshalIndent(val, "", "    ")
 		if diags.AppendErr(err, "Failed to serialize data output to json") {
 			return
 		}
