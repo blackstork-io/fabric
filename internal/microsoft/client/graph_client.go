@@ -23,7 +23,7 @@ type graphClient struct {
 	client      *http.Client
 }
 
-func NewGraphClient(accessToken string, apiVersion string) *graphClient {
+func NewGraphClient(accessToken, apiVersion string) *graphClient {
 	return &graphClient{
 		accessToken: accessToken,
 		apiVersion:  apiVersion,

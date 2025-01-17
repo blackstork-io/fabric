@@ -70,7 +70,7 @@ var renderCmd = &cobra.Command{
 		defer func() {
 			err = exitCommand(eng, cmd, diags)
 		}()
-		diag := eng.ParseDir(ctx, os.DirFS(cliArgs.sourceDir))
+		diag := eng.ParseDir(ctx, cliArgs.sourceDir)
 		if diags.Extend(diag) {
 			return
 		}

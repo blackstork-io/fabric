@@ -147,7 +147,7 @@ func makeRSSDataSource() *plugin.DataSource {
 	}
 }
 
-func filterItems(feed *gofeed.Feed, after time.Time, before time.Time) *gofeed.Feed {
+func filterItems(feed *gofeed.Feed, after, before time.Time) *gofeed.Feed {
 	filteredItems := make([]*gofeed.Item, 0)
 
 	for i := range feed.Items {

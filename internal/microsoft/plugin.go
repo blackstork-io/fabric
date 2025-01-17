@@ -96,7 +96,7 @@ func MakeDefaultMicrosoftSecurityClientLoader(tokenFn client.AcquireTokenFn) Mic
 	}
 }
 
-type AzureOpenAIClientLoadFn func(azureOpenAIKey string, azureOpenAIEndpoint string) (client AzureOpenAIClient, err error)
+type AzureOpenAIClientLoadFn func(azureOpenAIKey, azureOpenAIEndpoint string) (client AzureOpenAIClient, err error)
 
 type AzureOpenAIClient interface {
 	GetCompletions(
@@ -107,7 +107,7 @@ type AzureOpenAIClient interface {
 }
 
 func MakeAzureOpenAIClientLoader() AzureOpenAIClientLoadFn {
-	return func(azureOpenAIKey string, azureOpenAIEndpoint string) (client AzureOpenAIClient, err error) {
+	return func(azureOpenAIKey, azureOpenAIEndpoint string) (client AzureOpenAIClient, err error) {
 		keyCredential := azcore.NewKeyCredential(azureOpenAIKey)
 		client, err = azopenai.NewClientWithKeyCredential(azureOpenAIEndpoint, keyCredential, nil)
 		return

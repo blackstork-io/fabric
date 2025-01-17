@@ -57,7 +57,7 @@ func FuzzEngine(f *testing.F) {
 		}()
 
 		ctx := context.Background()
-		diags := eng.ParseDir(ctx, sourceDir)
+		diags := eng.ParseDirFS(ctx, sourceDir)
 		if diags.HasErrors() {
 			return
 		}

@@ -35,7 +35,7 @@ func TestAzureOpenAITextContentSuite(t *testing.T) {
 }
 
 func (s *AzureOpenAITextContentTestSuite) SetupSuite() {
-	s.plugin = microsoft.Plugin("1.0.0", nil, (func(apiKey string, endPoint string) (cli microsoft.AzureOpenAIClient, err error) {
+	s.plugin = microsoft.Plugin("1.0.0", nil, (func(apiKey, endPoint string) (cli microsoft.AzureOpenAIClient, err error) {
 		return s.cli, nil
 	}), nil, nil)
 	s.schema = s.plugin.ContentProviders["azure_openai_text"]
