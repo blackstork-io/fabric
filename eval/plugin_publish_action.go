@@ -5,31 +5,30 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/ast/nodes"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
-	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 type PluginPublishAction struct {
 	*PluginAction
 	Publisher *plugin.Publisher
-	Format    plugin.OutputFormat
 }
 
-func (block *PluginPublishAction) Publish(ctx context.Context, dataCtx plugindata.Map, documentName string) diagnostics.Diag {
+func (block *PluginPublishAction) Publish(ctx context.Context, dataCtx plugindata.Map, documentName string, document *nodes.Node) diagnostics.Diag {
+	nodes.WalkContent(document, func(c *nodes.Custom, n *nodes.Node, p nodes.Path) {
+		c.Data.TypeUrl
+	})
 	return block.Publisher.Execute(ctx, &plugin.PublishParams{
 		Config:       block.Config,
 		Args:         block.Args,
 		DataContext:  dataCtx,
-		Format:       block.Format,
 		DocumentName: documentName,
+		Document:     document,
 	})
 }
 
@@ -60,41 +59,6 @@ func LoadPluginPublishAction(ctx context.Context, publishers Publishers, node *d
 		return nil, diags
 	}
 
-	var format plugin.OutputFormat
-	// XXX: So format is optional? Not including format in invocation doesn't validate it
-	// anyway, this would change with the new AST
-	if attr, found := utils.Pop(node.Invocation.Body.Attributes, "format"); found {
-		val, diag := dataspec.DecodeAttr(fabctx.GetEvalContext(ctx), attr, &dataspec.AttrSpec{
-			Name:        "format",
-			Type:        cty.String,
-			Constraints: constraint.RequiredMeaningful,
-			OneOf: constraint.OneOf(utils.FnMap(p.AllowedFormats, func(f plugin.OutputFormat) cty.Value {
-				return cty.StringVal(f.String())
-			})),
-		})
-
-		if diags.Extend(diag) {
-			return
-		}
-		formatStr := val.Value.AsString()
-		switch formatStr {
-		case plugin.OutputFormatMD.String():
-			format = plugin.OutputFormatMD
-		case plugin.OutputFormatHTML.String():
-			format = plugin.OutputFormatHTML
-		case plugin.OutputFormatPDF.String():
-			format = plugin.OutputFormatPDF
-		default:
-			diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "Invalid format",
-				Detail:   fmt.Sprintf("'%s' is not a valid format", formatStr),
-				Subject:  &attr.SrcRange,
-			})
-			return
-		}
-	}
-
 	args, diag := dataspec.DecodeAndEvalBlock(ctx, node.Invocation.Block, p.Args, nil)
 	if diags.Extend(diag) {
 		return nil, diags
@@ -107,7 +71,5 @@ func LoadPluginPublishAction(ctx context.Context, publishers Publishers, node *d
 			Config:     cfg,
 			Args:       args,
 		},
-		Publisher: p,
-		Format:    format,
 	}, diags
 }

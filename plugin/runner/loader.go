@@ -141,10 +141,9 @@ func (l *loader) registerContentProvider(ctx context.Context, name string, schem
 			Args:   cp.Args,
 			Doc:    cp.Doc,
 			Tags:   cp.Tags,
-			ContentFunc: func(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
+			ContentFunc: func(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentElement, diagnostics.Diag) {
 				return schema.ProvideContent(ctx, name, params)
 			},
-			InvocationOrder: cp.InvocationOrder,
 		},
 	}
 	return nil

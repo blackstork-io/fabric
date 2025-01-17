@@ -12,193 +12,158 @@ func EncodeNode(node *nodes.Node) *Node {
 	if node == nil {
 		return nil
 	}
-	var res *Node
+	res := new(Node)
+
 	switch n := node.Content.(type) {
-	case *nodes.Document:
-		res = &Node{
-			Content: &Node_Document{},
-		}
 	case *nodes.Paragraph:
-		res = &Node{
-			Content: &Node_Paragraph{
-				Paragraph: &Paragraph{
-					IsTextBlock: n.IsTextBlock,
-				},
-			},
-		}
+		p := new(Paragraph)
+		p.SetIsTextBlock(n.IsTextBlock)
+		res.SetParagraph(p)
 	case *nodes.Heading:
-		res = &Node{
-			Content: &Node_Heading{
-				Heading: &Heading{
-					Level: uint32(n.Level),
-				},
-			},
-		}
+		h := new(Heading)
+		h.SetLevel(uint32(n.Level))
+		res.SetHeading(h)
 	case *nodes.ThematicBreak:
-		res = &Node{
-			Content: &Node_ThematicBreak{},
-		}
+		res.SetThematicBreak(new(ThematicBreak))
 	case *nodes.CodeBlock:
-		res = &Node{
-			Content: &Node_CodeBlock{
-				CodeBlock: &CodeBlock{
-					Language: n.Language,
-					Code:     n.Code,
-				},
-			},
-		}
+		res.SetCodeBlock(
+			CodeBlock_builder{
+				Code: n.Code,
+				// builder preserves nil value here
+				Language: n.Language,
+			}.Build(),
+		)
 	case *nodes.Blockquote:
-		res = &Node{
-			Content: &Node_Blockquote{},
-		}
+		res.SetBlockquote(new(Blockquote))
 	case *nodes.List:
-		res = &Node{
-			Content: &Node_List{
-				List: &List{
-					Marker: uint32(n.Marker),
-					Start:  n.Start,
-				},
-			},
-		}
+		l := new(List)
+		l.SetMarker(uint32(n.Marker))
+		l.SetStart(n.Start)
+		res.SetList(l)
 	case *nodes.ListItem:
-		res = &Node{
-			Content: &Node_ListItem{},
-		}
+		res.SetListItem(new(ListItem))
 	case *nodes.HTMLBlock:
-		res = &Node{
-			Content: &Node_HtmlBlock{
-				HtmlBlock: &HTMLBlock{
-					Html: n.HTML,
-				},
-			},
-		}
+		hb := new(HTMLBlock)
+		hb.SetHtml(n.HTML)
+		res.SetHtmlBlock(hb)
 	case *nodes.Text:
-		res = &Node{
-			Content: &Node_Text{
-				Text: &Text{
-					Text:          n.Text,
-					HardLineBreak: n.HardLineBreak,
-				},
-			},
-		}
+		t := new(Text)
+		t.SetHardLineBreak(n.HardLineBreak)
+		t.SetText(n.Text)
+		res.SetText(t)
 	case *nodes.CodeSpan:
-		res = &Node{
-			Content: &Node_CodeSpan{
-				CodeSpan: &CodeSpan{
-					Code: n.Code,
-				},
-			},
-		}
+		cs := new(CodeSpan)
+		cs.SetCode(n.Code)
+		res.SetCodeSpan(cs)
 	case *nodes.Emphasis:
-		res = &Node{
-			Content: &Node_Emphasis{
-				Emphasis: &Emphasis{
-					Level: int64(n.Level),
-				},
-			},
-		}
+		em := new(Emphasis)
+		em.SetLevel(int64(n.Level))
+		res.SetEmphasis(em)
 	case *nodes.Link:
-		res = &Node{
-			Content: &Node_Link{
-				Link: &Link{
-					Destination: n.Destination,
-					Title:       n.Title,
-				},
-			},
-		}
+		l := new(Link)
+		l.SetDestination(n.Destination)
+		l.SetTitle(n.Title)
+		res.SetLink(l)
 	case *nodes.Image:
-		res = &Node{
-			Content: &Node_Image{
-				Image: &Image{
-					Source: n.Source,
-					Alt:    n.Alt,
-				},
-			},
-		}
+		i := new(Image)
+		i.SetSource(n.Source)
+		i.SetAlt(n.Alt)
+		res.SetImage(i)
 	case *nodes.AutoLink:
-		res = &Node{
-			Content: &Node_AutoLink{
-				AutoLink: &AutoLink{
-					Value: n.Value,
-				},
-			},
-		}
+		al := new(AutoLink)
+		al.SetValue(n.Value)
+		res.SetAutoLink(al)
 	case *nodes.HTMLInline:
-		res = &Node{
-			Content: &Node_HtmlInline{
-				HtmlInline: &HTMLInline{
-					Html: n.HTML,
-				},
-			},
-		}
+		hi := new(HTMLInline)
+		hi.SetHtml(n.HTML)
+		res.SetHtmlInline(hi)
 	case *nodes.Table:
-		res = &Node{
-			Content: &Node_Table{
-				Table: &Table{
-					Alignments: utils.FnMap(n.Alignments, func(a nodes.Alignment) CellAlignment {
-						switch a {
-						case nodes.AlignmentNone:
-							return CellAlignment_CELL_ALIGNMENT_UNSPECIFIED
-						case nodes.AlignmentLeft:
-							return CellAlignment_CELL_ALIGNMENT_LEFT
-						case nodes.AlignmentCenter:
-							return CellAlignment_CELL_ALIGNMENT_CENTER
-						case nodes.AlignmentRight:
-							return CellAlignment_CELL_ALIGNMENT_RIGHT
-						default:
-							slog.Error("unsupported cell alignment", "alignment", a)
-							return CellAlignment_CELL_ALIGNMENT_UNSPECIFIED
-						}
-					}),
-				},
-			},
-		}
+		t := new(Table)
+		t.SetAlignments(utils.FnMap(n.Alignments, func(a nodes.Alignment) CellAlignment {
+			switch a {
+			case nodes.AlignmentNone:
+				return CellAlignment_CELL_ALIGNMENT_UNSPECIFIED
+			case nodes.AlignmentLeft:
+				return CellAlignment_CELL_ALIGNMENT_LEFT
+			case nodes.AlignmentCenter:
+				return CellAlignment_CELL_ALIGNMENT_CENTER
+			case nodes.AlignmentRight:
+				return CellAlignment_CELL_ALIGNMENT_RIGHT
+			default:
+				slog.Error("unsupported cell alignment", "alignment", a)
+				return CellAlignment_CELL_ALIGNMENT_UNSPECIFIED
+			}
+		}))
+		res.SetTable(t)
 	case *nodes.TableRow:
-		res = &Node{
-			Content: &Node_TableRow{},
-		}
+		res.SetTableRow(new(TableRow))
 	case *nodes.TableCell:
-		res = &Node{
-			Content: &Node_TableCell{},
-		}
+		res.SetTableCell(new(TableCell))
 	case *nodes.TaskCheckbox:
-		res = &Node{
-			Content: &Node_TaskCheckbox{
-				TaskCheckbox: &TaskCheckbox{
-					Checked: n.Checked,
-				},
-			},
-		}
+		cb := new(TaskCheckbox)
+		cb.SetChecked(n.Checked)
+		res.SetTaskCheckbox(cb)
 	case *nodes.Strikethrough:
-		res = &Node{
-			Content: &Node_Strikethrough{},
-		}
+		res.SetStrikethrough(new(Strikethrough))
+
+	case *nodes.FabricDocument:
+		res.SetFabricDocument(new(FabricDocument))
+	case *nodes.FabricSection:
+		res.SetFabricSection(new(FabricSection))
+	case *nodes.FabricContent:
+		res.SetFabricContent(
+			FabricContent_builder{
+				Meta: EncodeMetadata(n.Meta),
+			}.Build(),
+		)
 	case *nodes.Custom:
-		res = &Node{
-			Content: &Node_Custom{
-				Custom: &Custom{
-					Data: n.Data,
-				},
-			},
-		}
+		c := new(Custom)
+		c.SetData(n.Data)
+		c.SetScope(encodeScope(n.Scope))
+		res.SetCustom(c)
 	default:
-		panic(fmt.Errorf("unsupported node type: %T", n))
+		slog.Warn("unsupported node type", "type", fmt.Sprintf("%T", n))
 	}
-	res.Children = EncodeChildren(node)
+	res.SetChildren(EncodeChildren(node))
 	return res
+}
+
+func encodeScope(scope nodes.RendererScope) Custom_RenderScope {
+	switch scope {
+	case nodes.ScopeNode:
+		return Custom_SCOPE_NODE
+	case nodes.ScopeContent:
+		return Custom_SCOPE_CONTENT
+	case nodes.ScopeSection:
+		return Custom_SCOPE_SECTION
+	case nodes.ScopeDocument:
+		return Custom_SCOPE_DOCUMENT
+	default:
+		slog.Error("unsupported renderer scope", "scope", scope)
+		return Custom_SCOPE_NODE
+	}
 }
 
 func EncodeChildren(node *nodes.Node) []*Node {
 	return utils.FnMap(node.GetChildren(), EncodeNode)
 }
 
-func EncodeMetadata(meta *nodes.ContentMeta) *Metadata {
+func EncodeMetadata(meta *nodes.FabricContentMetadata) *FabricContent_Metadata {
 	if meta == nil {
 		return nil
 	}
-	return &Metadata{
-		Provider: meta.Provider,
-		Plugin:   meta.Plugin,
-		Version:  meta.Version,
+	m := new(FabricContent_Metadata)
+	m.SetProvider(meta.Provider)
+	m.SetPlugin(meta.Plugin)
+	m.SetVersion(meta.Version)
+	return m
+}
+
+func EncodePath(path nodes.Path) *Path {
+	if path == nil {
+		return nil
 	}
+	p := new(Path)
+	p.SetPath(utils.FnMap(path, func(i int) uint32 { return uint32(i) }))
+	return p
 }

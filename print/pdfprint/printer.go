@@ -88,7 +88,7 @@ func (p Printer) Print(ctx context.Context, w io.Writer, el plugin.Content) (err
 }
 
 func (p Printer) removeFrontmatter(el plugin.Content) bool {
-	section, ok := el.(*plugin.ContentSection)
+	section, ok := el.(*plugin.ContentSectionOrDoc)
 	if !ok {
 		return false
 	}

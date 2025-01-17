@@ -64,7 +64,7 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceValid() {
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
-	s.Equal("![](https://example.com/image.png)", mdprint.PrintString(result.Content))
+	s.Equal("![](https://example.com/image.png)", mdprint.PrintString(result))
 	s.Empty(diags)
 }
 
@@ -79,7 +79,7 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceValidWithAlt() {
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
-	s.Equal("![alt text](https://example.com/image.png)", mdprint.PrintString(result.Content))
+	s.Equal("![alt text](https://example.com/image.png)", mdprint.PrintString(result))
 	s.Empty(diags)
 }
 
@@ -93,7 +93,7 @@ func (s *ImageGeneratorTestSuite) TestCallImageSourceTemplateRender() {
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
-	s.Equal("![](./3.png)", mdprint.PrintString(result.Content))
+	s.Equal("![](./3.png)", mdprint.PrintString(result))
 	s.Empty(diags)
 }
 
@@ -108,6 +108,6 @@ func (s *ImageGeneratorTestSuite) TestCallImageAltTemplateRender() {
 	result, diags := s.schema.ContentFunc(ctx, &plugin.ProvideContentParams{
 		Args: args,
 	})
-	s.Equal("![5 alt text](./3.png)", mdprint.PrintString(result.Content))
+	s.Equal("![5 alt text](./3.png)", mdprint.PrintString(result))
 	s.Empty(diags)
 }

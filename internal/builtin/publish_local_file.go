@@ -46,12 +46,18 @@ func makeLocalFilePublisher(logger *slog.Logger, tracer trace.Tracer) *plugin.Pu
 					Doc:         "Path to the file",
 					Type:        cty.String,
 					ExampleVal:  cty.StringVal("dist/output.md"),
-					Constraints: constraint.Required,
+					Constraints: constraint.RequiredMeaningful,
+				},
+				{
+					Name:       "format",
+					Doc:        "Format of the file. If not provided, the format will be inferred from the file extension",
+					Type:       cty.String,
+					ExampleVal: cty.StringVal("md"),
+					OneOf:      []cty.Value{cty.StringVal("md"), cty.StringVal("html"), cty.StringVal("pdf")},
 				},
 			},
 		},
-		AllowedFormats: []plugin.OutputFormat{plugin.OutputFormatMD, plugin.OutputFormatHTML, plugin.OutputFormatPDF},
-		PublishFunc:    publishLocalFile(logger, tracer),
+		PublishFunc: publishLocalFile(logger, tracer),
 	}
 }
 
@@ -66,15 +72,31 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 			}}
 		}
 		datactx := params.DataContext
-		datactx["format"] = plugindata.String(params.Format.String())
+
+		path, err := templatePath(params.Args.GetAttrVal("path").AsString(), datactx)
+		if err != nil {
+			return diagnostics.Diag{{
+				Severity: hcl.DiagError,
+				Summary:  "Failed to render a path value",
+				Detail:   err.Error(),
+			}}
+		}
+		var format string
+		formatAttr := params.Args.GetAttrVal("format")
+		if formatAttr.IsNull() {
+			format = strings.ToLower(strings.TrimLeft(filepath.Ext(path), "."))
+		} else {
+			format = formatAttr.AsString()
+		}
+		datactx["format"] = plugindata.String(format)
 
 		var printer print.Printer
-		switch params.Format {
-		case plugin.OutputFormatMD:
+		switch format {
+		case "md":
 			printer = mdprint.New()
-		case plugin.OutputFormatHTML:
+		case "html":
 			printer = htmlprint.New()
-		case plugin.OutputFormatPDF:
+		case "pdf":
 			printer = pdfprint.New()
 		default:
 			return diagnostics.Diag{{
@@ -83,24 +105,8 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 				Detail:   "Only md, html and pdf formats are supported",
 			}}
 		}
-		printer = print.WithLogging(printer, logger, slog.String("format", params.Format.String()))
-		printer = print.WithTracing(printer, tracer, attribute.String("format", params.Format.String()))
-		pathAttr := params.Args.GetAttrVal("path")
-		if pathAttr.IsNull() || pathAttr.AsString() == "" {
-			return diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to parse arguments",
-				Detail:   "path is required",
-			}}
-		}
-		path, err := templatePath(pathAttr.AsString(), datactx)
-		if err != nil {
-			return diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to render a path value",
-				Detail:   err.Error(),
-			}}
-		}
+		printer = print.WithLogging(printer, logger, slog.String("format", format))
+		printer = print.WithTracing(printer, tracer, attribute.String("format", format))
 		logger.InfoContext(ctx, "Writing to a file", "path", path)
 		dir := filepath.Dir(path)
 		err = os.MkdirAll(dir, 0o755)

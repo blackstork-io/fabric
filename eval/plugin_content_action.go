@@ -23,14 +23,11 @@ type PluginContentAction struct {
 	RequiredVars []string
 }
 
-func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (diags diagnostics.Diag) {
+func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugindata.Map) (node plugin.Content, diags diagnostics.Diag) {
 	contentMap := plugindata.Map{}
 	if action.PluginAction.Meta != nil {
 		contentMap[definitions.BlockKindMeta] = action.PluginAction.Meta.AsPluginData()
 	}
-	docData := dataCtx[definitions.BlockKindDocument]
-	docData.(plugindata.Map)[definitions.BlockKindContent] = doc.AsData()
-	dataCtx[definitions.BlockKindDocument] = docData
 	dataCtx[definitions.BlockKindContent] = contentMap
 	diag := ApplyVars(ctx, action.Vars, dataCtx)
 	if diags.Extend(diag) {
@@ -60,17 +57,12 @@ func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx pl
 		Config:      action.Config,
 		Args:        evaluatedBlock,
 		DataContext: dataCtx,
-		ContentID:   contentID,
 	})
-	if diags.Extend(diag) {
+
+	if diags.Extend(diag.Refine(diagnostics.DefaultSubject(action.Source.DefRange()))) {
 		return
 	}
-	if res.Location == nil {
-		res.Location = &plugin.Location{
-			Index: contentID,
-		}
-	}
-	parent.Add(res.Content, res.Location)
+	node = res
 	return
 }
 

@@ -60,7 +60,7 @@ func (s *TableGeneratorTestSuite) TestNilRowVars() {
 		DataContext: dataCtx,
 	})
 	diagtest.AssertNoErrors(s.T(), diags, nil)
-	s.Equal("|User Name|User Age|\n|---|---|\n", mdprint.PrintString(result.Content))
+	s.Equal("|User Name|User Age|\n|---|---|\n", mdprint.PrintString(result))
 	s.Nil(diags)
 }
 
@@ -88,7 +88,7 @@ func (s *TableGeneratorTestSuite) TestEmptyQueryResult() {
 		Args:        args,
 		DataContext: dataCtx,
 	})
-	s.Equal("|User Name|User Age|\n|---|---|\n", mdprint.PrintString(result.Content))
+	s.Equal("|User Name|User Age|\n|---|---|\n", mdprint.PrintString(result))
 	s.Nil(diags)
 }
 
@@ -118,7 +118,7 @@ func (s *TableGeneratorTestSuite) TestBasic() {
 		Args:        args,
 		DataContext: dataCtx,
 	})
-	s.Equal("|User Name|User Age|\n|---|---|\n|John|42|\n|Jane|43|\n", mdprint.PrintString(result.Content))
+	s.Equal("|User Name|User Age|\n|---|---|\n|John|42|\n|Jane|43|\n", mdprint.PrintString(result))
 	s.Nil(diags)
 }
 
@@ -148,7 +148,7 @@ func (s *TableGeneratorTestSuite) TestSprigTemplate() {
 		Args:        args,
 		DataContext: dataCtx,
 	})
-	s.Equal("|USER Name|User Age|\n|---|---|\n|JOHN|42|\n|JANE|43|\n", mdprint.PrintString(result.Content))
+	s.Equal("|USER Name|User Age|\n|---|---|\n|JOHN|42|\n|JANE|43|\n", mdprint.PrintString(result))
 	s.Nil(diags)
 }
 

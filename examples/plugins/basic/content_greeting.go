@@ -31,11 +31,9 @@ func makeGreetingContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func renderGreetingMessage(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
+func renderGreetingMessage(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentElement, diagnostics.Diag) {
 	// We specified that the "name" attribute is RequiredMeaningful, so we can safely assume
 	// that it exists, non-null and non-empty, with whitespace trimmed
 	name := params.Args.GetAttrVal("name").AsString()
-	return &plugin.ContentResult{
-		Content: plugin.NewElementFromMarkdown(fmt.Sprintf("Hello, %s!", name)),
-	}, nil
+	return plugin.NewElementFromMarkdown(fmt.Sprintf("Hello, %s!", name)), nil
 }

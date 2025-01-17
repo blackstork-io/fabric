@@ -50,7 +50,7 @@ func (s *StixViewTestSuite) TestGistID() {
 		`<div data-stix-gist-id="123">`,
 		`</div>`,
 		``,
-	}, "\n"), mdprint.PrintString(res.Content))
+	}, "\n"), mdprint.PrintString(res))
 }
 
 func (s *StixViewTestSuite) TestStixURL() {
@@ -70,7 +70,7 @@ func (s *StixViewTestSuite) TestStixURL() {
 		`<div data-stix-url="https://example.com/stix.json">`,
 		`</div>`,
 		``,
-	}, "\n"), mdprint.PrintString(res.Content))
+	}, "\n"), mdprint.PrintString(res))
 }
 
 func (s *StixViewTestSuite) TestAllArgs() {
@@ -100,7 +100,7 @@ func (s *StixViewTestSuite) TestAllArgs() {
 		`<div data-stix-gist-id="123" data-show-sidebar="true" data-show-footer="true" data-show-tlp-as-tags="true" data-caption="test caption" data-show-marking-nodes="true" data-show-labels="true" data-show-idrefs="true" data-graph-width="400" data-graph-height="300">`,
 		`</div>`,
 		``,
-	}, "\n"), mdprint.PrintString(res.Content))
+	}, "\n"), mdprint.PrintString(res))
 }
 
 func (s *StixViewTestSuite) TestDataCtx() {
@@ -117,8 +117,8 @@ func (s *StixViewTestSuite) TestDataCtx() {
 		DataContext: dataCtx,
 	})
 	s.Empty(diags)
-	s.Contains(mdprint.PrintString(res.Content), `<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`)
-	s.Contains(mdprint.PrintString(res.Content), `<div id="graph-`)
-	s.Contains(mdprint.PrintString(res.Content), `window.stixview.init(`)
-	s.Contains(mdprint.PrintString(res.Content), `"objects": [{"key":"value"}]`)
+	s.Contains(mdprint.PrintString(res), `<script src="https://unpkg.com/stixview/dist/stixview.bundle.js" type="text/javascript"></script>`)
+	s.Contains(mdprint.PrintString(res), `<div id="graph-`)
+	s.Contains(mdprint.PrintString(res), `window.stixview.init(`)
+	s.Contains(mdprint.PrintString(res), `"objects": [{"key":"value"}]`)
 }

@@ -24,6 +24,9 @@ func (ds DefaultSummary) Refine(diags Diag) {
 type DefaultSubject hcl.Range
 
 func (ds DefaultSubject) Refine(diags Diag) {
+	if ds.Filename == "" || ds.Filename == "<empty>" {
+		return
+	}
 	for _, d := range diags {
 		if d.Subject == nil {
 			d.Subject = (*hcl.Range)(&ds)
@@ -50,5 +53,13 @@ type extraAdder struct {
 func (ae *extraAdder) Refine(diags Diag) {
 	for _, d := range diags {
 		addExtraFunc(d, ae.extra)
+	}
+}
+
+type OverrideSeverity hcl.DiagnosticSeverity
+
+func (os OverrideSeverity) Refine(diags Diag) {
+	for _, d := range diags {
+		d.Severity = hcl.DiagnosticSeverity(os)
 	}
 }

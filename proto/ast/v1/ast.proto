@@ -1,4 +1,4 @@
-syntax = "proto3";
+edition = "2023";
 
 package ast.v1;
 
@@ -7,8 +7,6 @@ import "google/protobuf/any.proto";
 message Node {
   repeated Node children = 1;
   oneof content {
-    // Blocks
-    Document document = 2;
     Paragraph paragraph = 3;
     Heading heading = 4;
     ThematicBreak thematic_break = 5;
@@ -36,8 +34,10 @@ message Node {
     TaskCheckbox task_checkbox = 21;
     Strikethrough strikethrough = 22;
 
-    // Root of the plugin-rendered data (?)
-    FabricContentNode content_node = 254;
+    FabricDocument fabric_document = 252;
+    FabricSection fabric_section = 253;
+    // Root of the plugin-authored data
+    FabricContent fabric_content = 254;
     // Custom node types can be serialized using this
     Custom custom = 255;
   }
@@ -58,7 +58,7 @@ message Heading {
 message ThematicBreak {}
 
 message CodeBlock {
-  optional bytes language = 1;
+  bytes language = 1;
   bytes code = 2;
 }
 
@@ -127,19 +127,39 @@ message TaskCheckbox {
 message Strikethrough {}
 
 message Custom {
+  enum RenderScope {
+    SCOPE_UNSPECIFIED = 0;
+    // Renderer receives only the current node
+    SCOPE_NODE = 1;
+    // Renderer receives the entire parent content node
+    SCOPE_CONTENT = 2;
+    // Renderer receives the entire parent section or a document (if not within a section)
+    SCOPE_SECTION = 3;
+    // Renderer receives the entire parent document
+    SCOPE_DOCUMENT = 4;
+  }
+  // Emit node type with a relative path, ie "mymodule/mynode"
+  // Consume node type as an absolute path, ie "types.blackstork.io/fabric/v1/custom_nodes/<plugin_name>/mymodule/mynode"
   google.protobuf.Any data = 1;
+  RenderScope scope = 2;
 }
 
-message Metadata {
-  // ie "blackstork/builtin"
-  string provider = 1;
-  // ie "title"
-  string plugin = 2;
-  string version = 3;
+message Path {
+  repeated uint32 path = 1;
 }
 
-// Root of the plugin-rendered data
-message FabricContentNode {
-  Metadata metadata = 1;
-  Node root = 2; // direct content, no document node
+// Root of the plugin-authored data
+message FabricContent {
+  message Metadata {
+    // ie "blackstork/builtin"
+    string provider = 1;
+    // ie "title"
+    string plugin = 2;
+    string version = 3;
+  }
+  Metadata meta = 1;
 }
+
+message FabricSection {}
+
+message FabricDocument {}

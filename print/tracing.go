@@ -8,7 +8,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/ast/nodes"
 )
 
 type tracing struct {
@@ -26,7 +26,7 @@ func WithTracing(next Printer, tracer trace.Tracer, attrs ...attribute.KeyValue)
 	}
 }
 
-func (p tracing) Print(ctx context.Context, w io.Writer, el plugin.Content) (err error) {
+func (p tracing) Print(ctx context.Context, w io.Writer, el *nodes.Node) (err error) {
 	ctx, span := p.tracer.Start(ctx, "Printer.Print", trace.WithAttributes(p.attrs...))
 	defer func() {
 		if err != nil {

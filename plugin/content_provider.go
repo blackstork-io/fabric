@@ -28,33 +28,13 @@ func (cp ContentProviders) Validate() diagnostics.Diag {
 	return diags
 }
 
-type InvocationOrder int
-
-const (
-	InvocationOrderUnspecified InvocationOrder = iota
-	InvocationOrderBegin
-	InvocationOrderEnd
-)
-
-func (order InvocationOrder) Weight() int {
-	switch order {
-	case InvocationOrderBegin:
-		return 0
-	case InvocationOrderEnd:
-		return 2
-	default:
-		return 1
-	}
-}
-
 type ContentProvider struct {
 	// first non-empty line is treated as a short description
-	Doc             string
-	Tags            []string
-	ContentFunc     ProvideContentFunc
-	Args            *dataspec.RootSpec
-	Config          *dataspec.RootSpec
-	InvocationOrder InvocationOrder
+	Doc         string
+	Tags        []string
+	ContentFunc ProvideContentFunc
+	Args        *dataspec.RootSpec
+	Config      *dataspec.RootSpec
 }
 
 func (cg *ContentProvider) Validate() diagnostics.Diag {
@@ -76,7 +56,7 @@ func (cg *ContentProvider) Validate() diagnostics.Diag {
 	return diags
 }
 
-func (cg *ContentProvider) Execute(ctx context.Context, params *ProvideContentParams) (_ *ContentResult, diags diagnostics.Diag) {
+func (cg *ContentProvider) Execute(ctx context.Context, params *ProvideContentParams) (_ *ContentElement, diags diagnostics.Diag) {
 	if cg == nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -100,7 +80,6 @@ type ProvideContentParams struct {
 	Config      *dataspec.Block
 	Args        *dataspec.Block
 	DataContext plugindata.Map
-	ContentID   uint32
 }
 
-type ProvideContentFunc func(ctx context.Context, params *ProvideContentParams) (*ContentResult, diagnostics.Diag)
+type ProvideContentFunc func(ctx context.Context, params *ProvideContentParams) (*ContentElement, diagnostics.Diag)

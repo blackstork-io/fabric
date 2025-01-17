@@ -8,13 +8,12 @@ import (
 
 	"github.com/yuin/goldmark/ast"
 
-	"github.com/blackstork-io/fabric/plugin"
-	"github.com/blackstork-io/fabric/plugin/ast/astsrc"
+	"github.com/blackstork-io/fabric/plugin/ast/nodes"
 )
 
 // Printer is the interface for printing content.
 type Printer interface {
-	Print(ctx context.Context, w io.Writer, el plugin.Content) error
+	Print(ctx context.Context, w io.Writer, el *nodes.Node) error
 }
 
 var (
@@ -68,28 +67,4 @@ func ReplaceNodes(n ast.Node, replacer func(n ast.Node) (repl ast.Node, err erro
 		}
 	}
 	return n, nil
-}
-
-// ReplaceNodesInContent runs ReplaceNodes on plugin.ContentAST nodes
-// Replacer is not expected to replace the top-level plugin node (ContentNode)
-func ReplaceNodesInContent(el plugin.Content, replacer func(src *astsrc.ASTSource, n ast.Node) (repl ast.Node, err error)) error {
-	switch el := el.(type) {
-	case *plugin.ContentSection:
-		for _, child := range el.Children {
-			err := ReplaceNodesInContent(child, replacer)
-			if err != nil {
-				return err
-			}
-		}
-	case *plugin.ContentElement:
-		if !el.IsAst() {
-			return nil
-		}
-		src, node := el.AsNode()
-		_, err := ReplaceNodes(node, func(n ast.Node) (repl ast.Node, err error) {
-			return replacer(src, n)
-		})
-		return err
-	}
-	return nil
 }

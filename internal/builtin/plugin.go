@@ -35,6 +35,7 @@ func Plugin(version string, logger *slog.Logger, tracer trace.Tracer) *plugin.Sc
 		},
 		Publishers: plugin.Publishers{
 			"local_file": makeLocalFilePublisher(logger, tracer),
+			"stdout":     makeStdoutPublisher(logger, tracer),
 			"hub":        makeHubPublisher(version, defaultHubClientLoader, logger, tracer),
 		},
 	}

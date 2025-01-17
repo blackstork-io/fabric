@@ -55,7 +55,6 @@ func makePublisherLogging(plugin, name string, publisher Publisher, logger *slog
 		logger.DebugContext(ctx, "Executing publisher", "params", slog.GroupValue(
 			slog.String("plugin", plugin),
 			slog.String("publisher", name),
-			slog.String("format", params.Format.String()),
 			slog.Any("config", logDataBlockValue(params.Config)),
 			slog.Any("args", logDataBlockValue(params.Args)),
 			slog.String("document_name", params.DocumentName),
@@ -66,13 +65,12 @@ func makePublisherLogging(plugin, name string, publisher Publisher, logger *slog
 
 func makeContentProviderLogging(plugin, name string, provider ContentProvider, logger *slog.Logger) ProvideContentFunc {
 	next := provider.ContentFunc
-	return func(ctx context.Context, params *ProvideContentParams) (*ContentResult, diagnostics.Diag) {
+	return func(ctx context.Context, params *ProvideContentParams) (*ContentElement, diagnostics.Diag) {
 		logger.DebugContext(ctx, "Executing content provider", "params", slog.GroupValue(
 			slog.String("plugin", plugin),
 			slog.String("provider", name),
 			slog.Any("config", logDataBlockValue(params.Config)),
 			slog.Any("args", logDataBlockValue(params.Args)),
-			slog.Uint64("content_id", uint64(params.ContentID)),
 		))
 		return next(ctx, params)
 	}

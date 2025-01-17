@@ -64,7 +64,7 @@ func makeTitleContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
+func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentElement, diagnostics.Diag) {
 	value := params.Args.GetAttrVal("value")
 	if value.IsNull() {
 		return nil, diagnostics.Diag{{
@@ -104,9 +104,7 @@ func genTitleContent(ctx context.Context, params *plugin.ProvideContentParams) (
 	// remove all newlines
 	text = strings.ReplaceAll(text, "\n", " ")
 	text = strings.Repeat("#", int(titleSize)+1) + " " + text
-	return &plugin.ContentResult{
-		Content: plugin.NewElementFromMarkdown(text),
-	}, nil
+	return plugin.NewElementFromMarkdown(text), nil
 }
 
 func findDefaultTitleSize(datactx plugindata.Map) int64 {

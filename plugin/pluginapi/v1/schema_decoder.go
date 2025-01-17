@@ -21,6 +21,7 @@ func decodeSchema(src *Schema) (*plugin.Schema, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &plugin.Schema{
 		Name:             src.GetName(),
 		Version:          src.GetVersion(),
@@ -29,6 +30,7 @@ func decodeSchema(src *Schema) (*plugin.Schema, error) {
 		Publishers:       publishers,
 		Doc:              src.GetDoc(),
 		Tags:             src.GetTags(),
+		NodeRenderers:    decodeNodeRenderers(src.GetNodeRenderers()),
 	}, nil
 }
 
@@ -90,11 +92,10 @@ func decodeContentProviderSchema(src *ContentProviderSchema) (*plugin.ContentPro
 		return nil, err
 	}
 	return &plugin.ContentProvider{
-		Args:            dataspec.RootSpecFromBlock(args),
-		Config:          dataspec.RootSpecFromBlock(config),
-		InvocationOrder: decodeInvocationOrder(src.GetInvocationOrder()),
-		Doc:             src.GetDoc(),
-		Tags:            src.GetTags(),
+		Args:   dataspec.RootSpecFromBlock(args),
+		Config: dataspec.RootSpecFromBlock(config),
+		Doc:    src.GetDoc(),
+		Tags:   src.GetTags(),
 	}, nil
 }
 
@@ -123,42 +124,17 @@ func decodePublisherSchema(src *PublisherSchema) (*plugin.Publisher, error) {
 		return nil, err
 	}
 	return &plugin.Publisher{
-		Args:           dataspec.RootSpecFromBlock(args),
-		Config:         dataspec.RootSpecFromBlock(config),
-		Doc:            src.GetDoc(),
-		Tags:           src.GetTags(),
-		AllowedFormats: decodeOutputFormats(src.GetAllowedFormats()),
+		Args:   dataspec.RootSpecFromBlock(args),
+		Config: dataspec.RootSpecFromBlock(config),
+		Doc:    src.GetDoc(),
+		Tags:   src.GetTags(),
 	}, nil
 }
 
-func decodeOutputFormats(src []OutputFormat) []plugin.OutputFormat {
-	dst := make([]plugin.OutputFormat, len(src))
-	for i, v := range src {
-		dst[i] = decodeOutputFormat(v)
+func decodeNodeRenderers(nodeRenderers []string) plugin.NodeRenderers {
+	r := make(plugin.NodeRenderers, len(nodeRenderers))
+	for _, v := range nodeRenderers {
+		r[v] = nil
 	}
-	return dst
-}
-
-func decodeInvocationOrder(src InvocationOrder) plugin.InvocationOrder {
-	switch src {
-	case InvocationOrder_INVOCATION_ORDER_BEGIN:
-		return plugin.InvocationOrderBegin
-	case InvocationOrder_INVOCATION_ORDER_END:
-		return plugin.InvocationOrderEnd
-	default:
-		return plugin.InvocationOrderUnspecified
-	}
-}
-
-func decodeOutputFormat(src OutputFormat) plugin.OutputFormat {
-	switch src {
-	case OutputFormat_OUTPUT_FORMAT_HTML:
-		return plugin.OutputFormatHTML
-	case OutputFormat_OUTPUT_FORMAT_MD:
-		return plugin.OutputFormatMD
-	case OutputFormat_OUTPUT_FORMAT_PDF:
-		return plugin.OutputFormatPDF
-	default:
-		return plugin.OutputFormatUnspecified
-	}
+	return r
 }

@@ -12,6 +12,8 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/ast/nodes"
+	astv1 "github.com/blackstork-io/fabric/plugin/ast/v1"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
@@ -64,6 +66,9 @@ func (p *grpcPlugin) GRPCClient(ctx context.Context, broker *goplugin.GRPCBroker
 		}
 		pub.PublishFunc = p.clientPublishFunc(name, client)
 	}
+	for name := range schema.NodeRenderers {
+		schema.NodeRenderers[name] = p.clientNodeRendererFunc(name, client)
+	}
 	return schema, nil
 }
 
@@ -75,7 +80,7 @@ func (p *grpcPlugin) callOptions() []grpc.CallOption {
 }
 
 func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient) plugin.ProvideContentFunc {
-	return func(ctx context.Context, params *plugin.ProvideContentParams) (result *plugin.ContentResult, diags diagnostics.Diag) {
+	return func(ctx context.Context, params *plugin.ProvideContentParams) (result *plugin.ContentElement, diags diagnostics.Diag) {
 		p.logger.DebugContext(ctx, "Calling content provider", "name", name)
 		defer func(start time.Time) {
 			p.logger.DebugContext(ctx, "Called content provider", "name", name, "took", time.Since(start))
@@ -96,12 +101,11 @@ func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient)
 			Config:      cfgEncoded,
 			Args:        argsEncoded,
 			DataContext: encodeMapData(params.DataContext),
-			ContentId:   params.ContentID,
 		}, p.callOptions()...)
 		if diags.AppendErr(err, "Failed to generate content") {
 			return
 		}
-		result = decodeContentResult(res.GetResult())
+		result = plugin.NewElementFromNode(astv1.DecodeNode(res.GetResult()))
 		diags.Extend(decodeDiagnosticList(res.GetDiagnostics()))
 		return result, diags
 	}
@@ -151,14 +155,13 @@ func (p *grpcPlugin) clientPublishFunc(name string, client PluginServiceClient) 
 		cfgEncoded, diag := encodeBlock(params.Config)
 		diags.Extend(diag)
 		datactx := encodeMapData(params.DataContext)
-		format := encodeOutputFormat(params.Format)
 		res, err := client.Publish(ctx, &PublishRequest{
 			Publisher:    name,
 			Config:       cfgEncoded,
 			Args:         argsEncoded,
 			DataContext:  datactx,
-			Format:       format,
 			DocumentName: params.DocumentName,
+			Document:     astv1.EncodeNode(params.Document),
 		}, p.callOptions()...)
 
 		if diags.AppendErr(err, "Failed to publish") {
@@ -170,5 +173,27 @@ func (p *grpcPlugin) clientPublishFunc(name string, client PluginServiceClient) 
 		}
 		diags.Extend(decodeDiagnosticList(res.GetDiagnostics()))
 		return
+	}
+}
+
+func (p *grpcPlugin) clientNodeRendererFunc(name string, client PluginServiceClient) plugin.NodeRendererFunc {
+	return func(ctx context.Context, node *plugin.RenderNodeParams) (result *nodes.Node, diags diagnostics.Diag) {
+		p.logger.DebugContext(ctx, "Calling node renderer", "name", name)
+		defer func(start time.Time) {
+			p.logger.DebugContext(ctx, "Called node renderer", "name", name, "took", time.Since(start))
+		}(time.Now())
+
+		res, err := client.RenderNode(ctx, &RenderNodeRequest{
+			Subtree:       astv1.EncodeNode(node.Subtree),
+			NodePath:      astv1.EncodePath(node.NodePath),
+			Publisher:     node.Publisher,
+			PublisherInfo: encodePublisherInfo(node.PublisherInfo),
+		}, p.callOptions()...)
+		if diags.AppendErr(err, "Failed to render node") {
+			return
+		}
+		result = astv1.DecodeNode(res.GetSubtreeReplacement())
+		diags.Extend(decodeDiagnosticList(res.GetDiagnostics()))
+		return result, diags
 	}
 }

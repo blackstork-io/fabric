@@ -73,16 +73,14 @@ func (m *Runner) Publisher(name string) (*plugin.Publisher, bool) {
 	return publisher.Publisher, true
 }
 
-func (m *Runner) Close() diagnostics.Diag {
-	var diags diagnostics.Diag
+func (m *Runner) Close() (diags diagnostics.Diag) {
 	for _, p := range m.pluginMap {
 		if err := p.closefn(); err != nil {
-			diags = append(diags, &hcl.Diagnostic{
-				Severity: hcl.DiagWarning,
-				Summary:  fmt.Sprintf("Failed to close plugin '%s'", p.Name),
-				Detail:   err.Error(),
-			})
+			diags.AppendErr(
+				err,
+				fmt.Sprintf("Failed to close plugin '%s'", p.Name),
+			)
 		}
 	}
-	return diags
+	return diags.Refine(diagnostics.OverrideSeverity(hcl.DiagWarning))
 }

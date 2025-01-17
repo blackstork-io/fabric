@@ -28,7 +28,7 @@ func makeBlockQuoteContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genBlockQuoteContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
+func genBlockQuoteContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentElement, diagnostics.Diag) {
 	value := params.Args.GetAttrVal("value")
 	text, err := genTextContentText(value.AsString(), params.DataContext)
 	if err != nil {
@@ -39,7 +39,5 @@ func genBlockQuoteContent(ctx context.Context, params *plugin.ProvideContentPara
 		}}
 	}
 	text = "> " + strings.ReplaceAll(text, "\n", "\n> ")
-	return &plugin.ContentResult{
-		Content: plugin.NewElementFromMarkdown(text),
-	}, nil
+	return plugin.NewElementFromMarkdown(text), nil
 }

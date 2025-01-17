@@ -59,7 +59,7 @@ func makeGithubGistPublisher(loader ClientLoaderFn) *plugin.Publisher {
 	}
 }
 
-func parseContent(data plugindata.Map) (document *plugin.ContentSection) {
+func parseContent(data plugindata.Map) (document *plugin.ContentSectionOrDoc) {
 	documentMap, ok := data["document"]
 	if !ok {
 		return

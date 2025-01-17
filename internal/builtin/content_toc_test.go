@@ -86,7 +86,7 @@ func (s *TOCContentTestSuite) TestSimple() {
 		"- [Header 1](#header-1)",
 		"  - [Header 2](#header-2)",
 		"    - [Header 3](#header-3)",
-	}, "\n")+"\n", mdprint.PrintString(res.Content))
+	}, "\n")+"\n", mdprint.PrintString(res))
 }
 
 func (s *TOCContentTestSuite) TestAdvanced() {
@@ -167,5 +167,5 @@ func (s *TOCContentTestSuite) TestAdvanced() {
 		"  1. [Header 3](#header-3)",
 		"2. [Header 4](#header-4)",
 		"3. [Header 5](#header-5)",
-	}, "\n")+"\n", mdprint.PrintString(res.Content))
+	}, "\n")+"\n", mdprint.PrintString(res))
 }

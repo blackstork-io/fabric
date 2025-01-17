@@ -1,0 +1,12 @@
+version: v2
+modules:
+  - path: proto
+lint:
+  use:
+    - STANDARD
+  disallow_comment_ignores: true
+breaking:
+  use:
+    - FILE
+deps:
+  - buf.build/protocolbuffers/wellknowntypes

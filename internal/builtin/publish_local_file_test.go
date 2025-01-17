@@ -20,11 +20,6 @@ func Test_makeLocalFilePublisher(t *testing.T) {
 	assert.NotNil(t, schema.Doc)
 	assert.NotNil(t, schema.Tags)
 	assert.NotNil(t, schema.Args)
-	assert.Equal(t, []plugin.OutputFormat{
-		plugin.OutputFormatMD,
-		plugin.OutputFormatHTML,
-		plugin.OutputFormatPDF,
-	}, schema.AllowedFormats)
 	assert.NotNil(t, schema.PublishFunc)
 }
 
@@ -36,9 +31,9 @@ func Test_publishLocalFileMD(t *testing.T) {
 		"plugin":   plugindata.String("blackstork/builtin"),
 	}
 	params := &plugin.PublishParams{
-		Format: plugin.OutputFormatMD,
 		Args: dataspec.NewBlock([]string{"local_file"}, map[string]cty.Value{
 			"path": cty.StringVal(filepath.Join(dir, "{{.document.meta.name}}.{{.format}}")),
+			"format": cty.StringVal("md"),
 		}),
 		DataContext: plugindata.Map{
 			"document": plugindata.Map{

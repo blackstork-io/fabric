@@ -10,6 +10,7 @@ import (
 	status "google.golang.org/grpc/status"
 
 	"github.com/blackstork-io/fabric/plugin"
+	astv1 "github.com/blackstork-io/fabric/plugin/ast/v1"
 )
 
 func Serve(schema *plugin.Schema) {
@@ -101,10 +102,9 @@ func (srv *grpcServer) ProvideContent(ctx context.Context, req *ProvideContentRe
 		Config:      cfg,
 		Args:        args,
 		DataContext: datactx,
-		ContentID:   req.GetContentId(),
 	})
 	return &ProvideContentResponse{
-		Result:      encodeContentResult(result),
+		Result:      astv1.EncodeNode(result.AsNode()),
 		Diagnostics: encodeDiagnosticList(diags),
 	}, nil
 }
@@ -129,15 +129,63 @@ func (srv *grpcServer) Publish(ctx context.Context, req *PublishRequest) (*Publi
 		return nil, status.Errorf(codes.InvalidArgument, "failed to decode args: %v", err)
 	}
 	datactx := decodeMapData(req.GetDataContext().GetValue())
-	format := decodeOutputFormat(req.GetFormat())
 	diags := srv.schema.Publish(ctx, publisher, &plugin.PublishParams{
 		Config:       cfg,
 		Args:         args,
 		DataContext:  datactx,
-		Format:       format,
 		DocumentName: req.GetDocumentName(),
+		Document:     astv1.DecodeNode(req.GetDocument()),
 	})
 	return &PublishResponse{
 		Diagnostics: encodeDiagnosticList(diags),
+	}, nil
+}
+
+func (srv *grpcServer) PublisherInfo(ctx context.Context, req *PublisherInfoRequest) (*PublisherInfoResponse, error) {
+	slog.DebugContext(ctx, "Publisher info")
+	defer func() {
+		if r := recover(); r != nil {
+			slog.ErrorContext(ctx, "Publisher info failed", "panic", r)
+			panic(r)
+		} else {
+			slog.DebugContext(ctx, "Publisher info done")
+		}
+	}()
+	publisher := req.GetPublisher()
+	cfg, err := decodeBlock(req.GetConfig())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to decode config: %v", err)
+	}
+	args, err := decodeBlock(req.GetArgs())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to decode args: %v", err)
+	}
+
+	info, diags := srv.schema.PublisherInfo(ctx, publisher, &plugin.PublisherInfoParams{
+		Config: cfg,
+		Args:   args,
+	})
+	return &PublisherInfoResponse{
+		PublisherInfo: encodePublisherInfo(info),
+		Diagnostics:   encodeDiagnosticList(diags),
+	}, nil
+}
+
+func (srv *grpcServer) RenderNode(ctx context.Context, req *RenderNodeRequest) (*RenderNodeResponse, error) {
+	slog.DebugContext(ctx, "RenderNode")
+	defer func() {
+		if r := recover(); r != nil {
+			slog.ErrorContext(ctx, "RenderNode done", "panic", r)
+			panic(r)
+		} else {
+			slog.DebugContext(ctx, "RenderNode done")
+		}
+	}()
+
+	result, diags := srv.schema.RenderNode(ctx, decodeRenderNodeParams(req))
+
+	return &RenderNodeResponse{
+		SubtreeReplacement: astv1.EncodeNode(result),
+		Diagnostics:        encodeDiagnosticList(diags),
 	}, nil
 }

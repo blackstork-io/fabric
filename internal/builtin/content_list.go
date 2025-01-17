@@ -58,7 +58,7 @@ func makeListContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
+func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentElement, diagnostics.Diag) {
 	format := params.Args.GetAttrVal("format").AsString()
 
 	tmpl, err := template.New("item").Funcs(sprig.FuncMap()).Parse(params.Args.GetAttrVal("item_template").AsString())
@@ -96,9 +96,7 @@ func genListContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 			Detail:   err.Error(),
 		}}
 	}
-	return &plugin.ContentResult{
-		Content: plugin.NewElementFromMarkdown(result),
-	}, nil
+	return plugin.NewElementFromMarkdown(result), nil
 }
 
 func renderListContent(format string, tmpl *template.Template, items plugindata.List) (string, error) {

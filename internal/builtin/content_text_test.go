@@ -60,7 +60,7 @@ func (s *TextTestSuite) TestBasic() {
 		},
 	})
 	s.Empty(diags)
-	s.Equal("Hello World!", mdprint.PrintString(result.Content))
+	s.Equal("Hello World!", mdprint.PrintString(result))
 }
 
 func (s *TextTestSuite) TestNoTemplate() {
@@ -74,7 +74,7 @@ func (s *TextTestSuite) TestNoTemplate() {
 		DataContext: nil,
 	})
 	s.Empty(diags)
-	s.Equal("Hello World!", mdprint.PrintString(result.Content))
+	s.Equal("Hello World!", mdprint.PrintString(result))
 }
 
 func (s *TextTestSuite) TestCallInvalidTemplate() {
@@ -114,5 +114,5 @@ func (s *TextTestSuite) TestSprigTemplate() {
 		},
 	})
 	s.Empty(diags)
-	s.Equal("Hello WORLD!", mdprint.PrintString(result.Content))
+	s.Equal("Hello WORLD!", mdprint.PrintString(result))
 }

@@ -36,7 +36,7 @@ func makeTextContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genTextContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
+func genTextContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentElement, diagnostics.Diag) {
 	value := params.Args.GetAttrVal("value")
 	if value.IsNull() {
 		return nil, diagnostics.Diag{{
@@ -54,9 +54,7 @@ func genTextContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 			Detail:   err.Error(),
 		}}
 	}
-	return &plugin.ContentResult{
-		Content: plugin.NewElementFromMarkdown(text),
-	}, nil
+	return plugin.NewElementFromMarkdown(text), nil
 }
 
 func genTextContentText(text string, datactx plugindata.Map) (string, error) {

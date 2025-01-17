@@ -55,7 +55,6 @@ func makeHubPublisher(version string, loader hubClientLoadFn, logger *slog.Logge
 				},
 			},
 		},
-		AllowedFormats: []plugin.OutputFormat{plugin.OutputFormatUnspecified},
 		PublishFunc:    publishHub(version, loader, logger, tracer),
 	}
 }

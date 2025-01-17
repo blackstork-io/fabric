@@ -140,7 +140,7 @@ func (p Printer) evalFrontmatter(data *Data, el plugin.Content) error {
 
 func (p Printer) firstTitle(el plugin.Content) (string, bool) {
 	switch el := el.(type) {
-	case *plugin.ContentSection:
+	case *plugin.ContentSectionOrDoc:
 		for _, c := range el.Children {
 			if title, ok := p.firstTitle(c); ok {
 				return title, true
@@ -159,7 +159,7 @@ func (p Printer) firstTitle(el plugin.Content) (string, bool) {
 }
 
 func (p Printer) extractFrontmatter(el plugin.Content) (*plugin.ContentElement, bool) {
-	section, ok := el.(*plugin.ContentSection)
+	section, ok := el.(*plugin.ContentSectionOrDoc)
 	if !ok {
 		return nil, false
 	}

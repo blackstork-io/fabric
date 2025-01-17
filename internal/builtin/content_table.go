@@ -70,7 +70,7 @@ func makeTableContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
+func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentElement, diagnostics.Diag) {
 	var rows plugindata.List
 	rowsVal := params.Args.GetAttrVal("rows")
 	if !rowsVal.IsNull() {
@@ -111,9 +111,7 @@ func genTableContent(ctx context.Context, params *plugin.ProvideContentParams) (
 			Detail:   err.Error(),
 		}}
 	}
-	return &plugin.ContentResult{
-		Content: plugin.NewElementFromMarkdown(result),
-	}, nil
+	return plugin.NewElementFromMarkdown(result), nil
 }
 
 func parseTableContentArgs(params *plugin.ProvideContentParams) (headers, values []tableCellTmpl, err error) {

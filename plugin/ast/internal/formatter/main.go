@@ -16,6 +16,7 @@ import (
 
 	"github.com/blackstork-io/fabric/plugin/ast"
 	"github.com/blackstork-io/fabric/plugin/ast/internal/ast2md"
+	"github.com/blackstork-io/fabric/plugin/ast/nodes"
 )
 
 func main() {
@@ -32,8 +33,8 @@ func main() {
 		text.NewReader(data),
 	)
 
-	fabricASTRoot := ast.Goldmark2AST(root, data)
-	lines := (&ast2md.Renderer{}).Render(fabricASTRoot)
-	lines.TrimEmptyLines().SetMarginBottom(1)
+	fabRoot := nodes.NewNode(&nodes.FabricDocument{})
+	fabRoot.SetChildren(ast.Goldmark2AST(root, data))
+	lines := (&ast2md.Renderer{}).Render(fabRoot)
 	lines.WriteTo(os.Stdout)
 }

@@ -20,6 +20,11 @@ type Plugin struct {
 }
 
 func (p *Plugin) DefRange() hcl.Range {
+	if p == nil {
+		return hcl.Range{
+			Filename: "<empty>",
+		}
+	}
 	return p.Block.DefRange()
 }
 

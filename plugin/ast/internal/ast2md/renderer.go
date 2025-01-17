@@ -69,9 +69,6 @@ var (
 
 func (r *Renderer) Render(n *nodes.Node) (lines linesSlice) {
 	switch c := n.Content.(type) {
-	case *nodes.Document:
-		lines = r.renderChildren(n)
-		lines.SetMarginBlock(1)
 	case *nodes.Paragraph:
 		lines = r.renderChildren(n)
 		lines.SetMinMarginTop(2).SetMinMarginBottom(1)
@@ -159,6 +156,14 @@ func (r *Renderer) Render(n *nodes.Node) (lines linesSlice) {
 
 	case *nodes.Table:
 		lines = r.renderTable(c, n.GetChildren())
+	case *nodes.FabricDocument:
+		lines = r.renderChildren(n)
+		lines.TrimEmptyLines().SetMarginBottom(1)
+	case *nodes.FabricSection:
+		lines = r.renderChildren(n)
+		lines.TrimEmptyLines().SetMarginBottom(2)
+	case *nodes.FabricContent:
+		lines = r.renderChildren(n)
 	case *nodes.Custom:
 		lines.Append(fmt.Appendf(nil, "<!-- custom node %q not rendered -->", c.Data.GetTypeUrl()))
 	}

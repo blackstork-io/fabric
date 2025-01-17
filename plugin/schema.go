@@ -3,7 +3,7 @@ package plugin
 import (
 	"context"
 	"fmt"
-	"slices"
+	"strings"
 
 	"github.com/hashicorp/hcl/v2"
 
@@ -20,6 +20,7 @@ type Schema struct {
 	DataSources      DataSources
 	ContentProviders ContentProviders
 	Publishers       Publishers
+	NodeRenderers    NodeRenderers
 }
 
 func (p *Schema) Validate() diagnostics.Diag {
@@ -76,7 +77,7 @@ func (p *Schema) RetrieveData(ctx context.Context, name string, params *Retrieve
 	return source.Execute(ctx, params)
 }
 
-func (p *Schema) ProvideContent(ctx context.Context, name string, params *ProvideContentParams) (_ *ContentResult, diags diagnostics.Diag) {
+func (p *Schema) ProvideContent(ctx context.Context, name string, params *ProvideContentParams) (_ *ContentElement, diags diagnostics.Diag) {
 	if p == nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -103,8 +104,7 @@ func (p *Schema) ProvideContent(ctx context.Context, name string, params *Provid
 	if diags.HasErrors() {
 		return nil, diags
 	}
-	// TODO: set metadata in content provider
-	result.Content.SetMeta(&nodes.ContentMeta{
+	result.SetPluginMeta(&nodes.FabricContentMetadata{
 		Provider: name,
 		Plugin:   p.Name,
 		Version:  p.Version,
@@ -112,35 +112,108 @@ func (p *Schema) ProvideContent(ctx context.Context, name string, params *Provid
 	return result, diags
 }
 
-func (p *Schema) Publish(ctx context.Context, name string, params *PublishParams) (diags diagnostics.Diag) {
+func (p *Schema) getPublisher(name string) (publisher *Publisher, diags diagnostics.Diag) {
 	if p == nil {
-		return diagnostics.Diag{{
+		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "No schema",
 			Detail:   "No schema defined",
-		}}
+		})
+		return
 	}
 	if p.Publishers == nil {
-		return diagnostics.Diag{{
+		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "No publishers",
 			Detail:   "No publishers defined in schema",
-		}}
+		})
+		return
 	}
 	publisher, ok := p.Publishers[name]
 	if !ok || publisher == nil {
-		return diagnostics.Diag{{
+		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Publisher not found",
 			Detail:   fmt.Sprintf("Publisher '%s' not found in schema", name),
-		}}
+		})
+		return
 	}
-	if !slices.Contains(publisher.AllowedFormats, params.Format) {
-		return diagnostics.Diag{{
+	return
+}
+
+func (p *Schema) PublisherInfo(ctx context.Context, name string, params *PublisherInfoParams) (info PublisherInfo, diags diagnostics.Diag) {
+	publisher, diag := p.getPublisher(name)
+	if diags.Extend(diag) {
+		return
+	}
+	info, diag = publisher.Info(ctx, params)
+	diags.Extend(diag)
+	return
+}
+
+func (p *Schema) Publish(ctx context.Context, name string, params *PublishParams) (diags diagnostics.Diag) {
+	publisher, diag := p.getPublisher(name)
+	if diags.Extend(diag) {
+		return
+	}
+	diags.Extend(publisher.Execute(ctx, params))
+	return
+}
+
+func (p *Schema) RenderNode(ctx context.Context, params *RenderNodeParams) (repl *nodes.Node, diags diagnostics.Diag) {
+	if p == nil {
+		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
-			Summary:  "Invalid format",
-			Detail:   fmt.Sprintf("Publisher '%s' does not support format '%s'", name, params.Format),
-		}}
+			Summary:  "No schema",
+			Detail:   "No schema defined",
+		})
+		return
 	}
-	return publisher.Execute(ctx, params)
+	if p.NodeRenderers == nil {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "No node renderers",
+			Detail:   "No node renderers defined in schema",
+		})
+		return
+	}
+	if params == nil {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "No parameters",
+			Detail:   "No parameters provided",
+		})
+		return
+	}
+	custom_node := params.Subtree.TraversePath(params.NodePath)
+	if custom_node == nil {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Node not found",
+			Detail:   "Node not found in the subtree",
+		})
+		return
+	}
+	custom, ok := custom_node.Content.(*nodes.Custom)
+	if !ok {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Invalid node type",
+			Detail:   fmt.Sprintf("Expected custom node, got %T", custom_node.Content),
+		})
+		return
+	}
+	// types.blackstork.io/fabric/v1/custom_nodes/<plugin_name>/<node_type>
+	split := strings.SplitAfterN(custom.Data.GetTypeUrl(), "/", 6)
+	nodeType := split[len(split)-1]
+	renderer, found := p.NodeRenderers[custom.GetStrippedNodeType()]
+	if !found {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Node renderer not found",
+			Detail:   fmt.Sprintf("Node renderer for type '%s' (%s) not found in schema", nodeType, custom.Data.GetTypeUrl()),
+		})
+		return
+	}
+	return renderer(ctx, params)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/ast/nodes"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
@@ -70,7 +71,7 @@ func filterChildrenByTags(children []*Content, requiredTags []string) []*Content
 	})
 }
 
-func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Map, requiredTags []string) (*plugin.ContentSection, plugindata.Data, diagnostics.Diag) {
+func (doc *Document) RenderContent(ctx context.Context, dataCtx plugindata.Map, requiredTags []string) (*nodes.Node, plugindata.Data, diagnostics.Diag) {
 	logger := *slog.Default()
 	logger.DebugContext(ctx, "Fetching data for the document template")
 	data, diags := doc.FetchData(ctx)
@@ -83,10 +84,10 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 	}
 	// static portion of the data context for this document
 	// will never change, all changes are made to the clone of this map
-	docDataCtx[definitions.BlockKindData] = data
-	docDataCtx[definitions.BlockKindDocument] = docData
+	dataCtx[definitions.BlockKindData] = data
+	dataCtx[definitions.BlockKindDocument] = docData
 
-	diag := ApplyVars(ctx, doc.Vars, docDataCtx)
+	diag := ApplyVars(ctx, doc.Vars, dataCtx)
 
 	if diags.Extend(diag) {
 		return nil, nil, diags
@@ -94,14 +95,14 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 
 	// verify required vars
 	if len(doc.RequiredVars) > 0 {
-		diag = verifyRequiredVars(docDataCtx, doc.RequiredVars, doc.Source.Block)
+		diag = verifyRequiredVars(dataCtx, doc.RequiredVars, doc.Source.Block)
 		if diags.Extend(diag) {
 			return nil, nil, diags
 		}
 	}
 
 	// evaluate/expand dynamic blocks
-	children, diag := UnwrapDynamicContent(ctx, doc.ContentBlocks, docDataCtx)
+	children, diag := UnwrapDynamicContent(ctx, doc.ContentBlocks, dataCtx)
 	if diags.Extend(diag) {
 		return nil, nil, diags
 	}
@@ -110,49 +111,24 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 		children = filterChildrenByTags(children, requiredTags)
 	}
 
-	result := plugin.NewSection(0)
-	// create a position map for content blocks
-	posMap := make(map[int]uint32, len(children))
-	for i := range children {
-		empty := new(plugin.ContentEmpty)
-		result.Add(empty, nil)
-		posMap[i] = empty.ID()
-	}
-	// sort content blocks by invocation order
-	invokeList := make([]int, 0, len(children))
-	for i := range children {
-		invokeList = append(invokeList, i)
-	}
-	slices.SortStableFunc(invokeList, func(a, b int) int {
-		ao := children[a].InvocationOrder()
-		bo := children[b].InvocationOrder()
-		return ao.Weight() - bo.Weight()
-	})
-	// execute content blocks based on the invocation order
-	for _, idx := range invokeList {
-		// clone the data context for each content block
-		dataCtx := maps.Clone(docDataCtx)
-		// set the current content to the data context
-		dataCtx[definitions.BlockKindDocument].(plugindata.Map)[definitions.BlockKindContent] = result.AsData()
-		// TODO: if section, set section
+	document := plugin.NewDocument(len(children))
+	dataCtx[definitions.BlockKindDocument] = document.AsPluginData()
 
+	// execute content blocks based on the invocation order
+	for _, child := range children {
 		// execute the content block
-		diag := children[idx].RenderContent(ctx, dataCtx, result, result, posMap[idx])
+		n, diag := child.RenderContent(ctx, maps.Clone(dataCtx))
 		if diags.Extend(diag) {
-			return nil, nil, diags
+			continue
 		}
+		document.AppendChild(n)
 	}
-	// compact the content tree to remove empty content nodes
-	result.Compact()
-	return result, docDataCtx, diags
+	return document.AsNode(), dataCtx, diags
 }
 
-func (doc *Document) Publish(ctx context.Context, content plugin.Content, data plugindata.Data, documentName string) diagnostics.Diag {
-	logger := *slog.Default()
-	logger.DebugContext(ctx, "Fetching data for the document template")
-	docData := plugindata.Map{
-		definitions.BlockKindContent: content.AsData(),
-	}
+func (doc *Document) Publish(ctx context.Context, document *nodes.Node, data plugindata.Data, documentName string) diagnostics.Diag {
+	slog.DebugContext(ctx, "Fetching data for the document template")
+	docData := plugindata.Map{}
 	if doc.Meta != nil {
 		docData[definitions.BlockKindMeta] = doc.Meta.AsPluginData()
 	}
@@ -162,7 +138,7 @@ func (doc *Document) Publish(ctx context.Context, content plugin.Content, data p
 	}
 	var diags diagnostics.Diag
 	for _, block := range doc.PublishBlocks {
-		diag := block.Publish(ctx, dataCtx, documentName)
+		diag := block.Publish(ctx, dataCtx, documentName, document)
 		if diag != nil {
 			diags.Extend(diag)
 		}

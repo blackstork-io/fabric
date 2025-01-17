@@ -41,7 +41,7 @@ func makeImageContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
+func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentElement, diagnostics.Diag) {
 	src := params.Args.GetAttrVal("src").AsString()
 	alt := params.Args.GetAttrVal("alt")
 	if alt.IsNull() {
@@ -69,9 +69,7 @@ func genImageContent(ctx context.Context, params *plugin.ProvideContentParams) (
 	// Make sure there are no line breaks in the values
 	srcStr = strings.TrimSpace(strings.ReplaceAll(srcStr, "\n", ""))
 	altStr = strings.TrimSpace(strings.ReplaceAll(altStr, "\n", ""))
-	return &plugin.ContentResult{
-		Content: plugin.NewElementFromMarkdown(fmt.Sprintf("![%s](%s)", altStr, srcStr)),
-	}, nil
+	return plugin.NewElementFromMarkdown(fmt.Sprintf("![%s](%s)", altStr, srcStr)), nil
 }
 
 func renderAsTemplate(name, value string, datactx plugindata.Map) (string, error) {

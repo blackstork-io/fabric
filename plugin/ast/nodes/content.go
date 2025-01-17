@@ -3,8 +3,11 @@ package nodes
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 // nodeContentSigil marks a struct as an AST node's content.
@@ -15,22 +18,19 @@ func (s *nodeContentSigil) isNodeContent() nodeContentSigil {
 	return *s
 }
 
+func (s *nodeContentSigil) ValidateParent(parent *Node) bool {
+	return true
+}
+
+func (s *nodeContentSigil) ValidateChild(child *Node) bool {
+	return true
+}
+
 // NodeContent is implemented by all possible node types in the fabric AST.
 type NodeContent interface {
 	isNodeContent() nodeContentSigil
-}
-
-type ParentValidator interface {
 	ValidateParent(parent *Node) bool
-}
-
-type ChildValidator interface {
 	ValidateChild(child *Node) bool
-}
-
-type Document struct {
-	nodeContentSigil
-	// TODO: add metadata for plugin-generated documents
 }
 
 type Paragraph struct {
@@ -319,9 +319,139 @@ type Strikethrough struct {
 	nodeContentSigil
 }
 
+type RendererScope int
+
+const (
+	// Renderer receives only the current node
+	ScopeNode RendererScope = iota
+	// Renderer receives the entire parent content node
+	ScopeContent
+	// Renderer receives the entire parent section or document (if not within a section)
+	ScopeSection
+	// Renderer receives the entire parent document
+	ScopeDocument
+)
+
 // Custom content node.
 // Should be converted to normal AST nodes by the plugin prior to rendering.
 type Custom struct {
 	nodeContentSigil
-	Data *anypb.Any
+	Data  *anypb.Any
+	Scope RendererScope
+}
+
+// Prefix format: types.blackstork.io/fabric/v1/custom_nodes/<plugin_name>/<node_type>
+const CustomNodeTypeURLPrefix = "types.blackstork.io/fabric/v1/custom_nodes/"
+
+// GetStrippedNodeType returns local component of the custom node type url
+func (c *Custom) GetStrippedNodeType() string {
+	if c == nil {
+		return ""
+	}
+	typeUrl := c.Data.GetTypeUrl()
+	if strings.HasPrefix(typeUrl, CustomNodeTypeURLPrefix) {
+		_, typeUrl, _ = strings.Cut(typeUrl[len(CustomNodeTypeURLPrefix):], "/")
+	}
+	return strings.Trim(typeUrl, "/")
+}
+
+// GetPluginName returns the plugin name from the custom node type url
+func (c *Custom) GetPluginName() string {
+	if c == nil {
+		return ""
+	}
+	typeUrl := c.Data.GetTypeUrl()
+	if strings.HasPrefix(typeUrl, CustomNodeTypeURLPrefix) {
+		pluginName, _, _ := strings.Cut(typeUrl[len(CustomNodeTypeURLPrefix):], "/")
+		return strings.Trim(pluginName, "/")
+	}
+	return ""
+}
+
+type FabricDocument struct {
+	nodeContentSigil
+}
+
+func (s *FabricDocument) ValidateParent(parent *Node) bool {
+	slog.Warn(
+		"FabricDocument should not be nested, attempted to add to",
+		"parent", fmt.Sprintf("%T", parent),
+	)
+	return true
+}
+
+func (s *FabricDocument) ValidateChild(child *Node) bool {
+	switch child.Content.(type) {
+	case *FabricSection, *FabricContent:
+	default:
+		slog.Warn(
+			"FabricDocument can only contain FabricSections and FabricContent, attempted to add",
+			"child", fmt.Sprintf("%T", child.Content),
+		)
+	}
+	return true
+}
+
+type FabricSection struct {
+	nodeContentSigil
+}
+
+func (s *FabricSection) ValidateParent(parent *Node) bool {
+	switch parent.Content.(type) {
+	case *FabricDocument, *FabricSection:
+	default:
+		slog.Warn("FabricSection can only be contained by FabricDocument or FabricSection, attempted to add to",
+			"parent", fmt.Sprintf("%T", parent.Content),
+		)
+	}
+	return true
+}
+
+func (s *FabricSection) ValidateChild(child *Node) bool {
+	switch child.Content.(type) {
+	case *FabricSection, *FabricContent:
+	default:
+		slog.Warn(
+			"FabricSection can only contain FabricSections and FabricContent, attempted to add",
+			"child", fmt.Sprintf("%T", child.Content),
+		)
+	}
+	return true
+}
+
+type FabricContent struct {
+	nodeContentSigil
+	Meta *FabricContentMetadata
+}
+
+type FabricContentMetadata struct {
+	// ie "blackstork/builtin"
+	Provider string
+	// ie "title"
+	Plugin  string
+	Version string
+}
+
+var _ plugindata.Convertible = (*FabricContentMetadata)(nil)
+
+func (m *FabricContentMetadata) AsPluginData() plugindata.Data {
+	if m == nil {
+		return nil
+	}
+	return plugindata.Map{
+		"provider": plugindata.String(m.Provider),
+		"plugin":   plugindata.String(m.Plugin),
+		"version":  plugindata.String(m.Version),
+	}
+}
+
+func (c *FabricContent) ValidateParent(parent *Node) bool {
+	switch parent.Content.(type) {
+	case *FabricDocument, *FabricSection:
+	default:
+		slog.Warn("FabricContent can only be contained by FabricDocument or FabricSection, attempted to add to",
+			"parent", fmt.Sprintf("%T", parent.Content),
+		)
+	}
+	return true
 }

@@ -94,7 +94,7 @@ func parseTOCArgs(args *dataspec.Block) (*tocArgs, error) {
 	}, nil
 }
 
-func genTOC(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
+func genTOC(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentElement, diagnostics.Diag) {
 	args, err := parseTOCArgs(params.Args)
 	if err != nil {
 		return nil, diagnostics.Diag{{
@@ -164,11 +164,11 @@ func anchorize(s string) string {
 	return strings.ToLower(strings.ReplaceAll(s, " ", "-"))
 }
 
-func extractTitles(section *plugin.ContentSection) []string {
+func extractTitles(section *plugin.ContentSectionOrDoc) []string {
 	var titles []string
 	for _, content := range section.Children {
 		switch content := content.(type) {
-		case *plugin.ContentSection:
+		case *plugin.ContentSectionOrDoc:
 			titles = append(titles, extractTitles(content)...)
 		case *plugin.ContentElement:
 			meta := content.Meta()

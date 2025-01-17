@@ -23,6 +23,7 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/ast/nodes"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/plugin/resolver"
 	"github.com/blackstork-io/fabric/plugin/runner"
@@ -433,7 +434,7 @@ func (e *Engine) initialDataCtx(ctx context.Context) (data plugindata.Map, diags
 	return
 }
 
-func (e *Engine) RenderContent(ctx context.Context, target string, requiredTags []string) (doc *eval.Document, content *plugin.ContentSection, data plugindata.Data, diags diagnostics.Diag) {
+func (e *Engine) RenderContent(ctx context.Context, target string, requiredTags []string) (doc *eval.Document, document *nodes.Node, data plugindata.Data, diags diagnostics.Diag) {
 	ctx, span := e.tracer.Start(ctx, "Engine.RenderContent", trace.WithAttributes(
 		attribute.String("target", target),
 	))
@@ -453,12 +454,12 @@ func (e *Engine) RenderContent(ctx context.Context, target string, requiredTags 
 	if diags.Extend(diag) {
 		return
 	}
-	content, data, diag = doc.RenderContent(ctx, dataCtx, requiredTags)
+	document, data, diag = doc.RenderContent(ctx, dataCtx, requiredTags)
 	if diags.Extend(diag) {
 		return nil, nil, nil, diags
 	}
 
-	if content.IsEmpty() {
+	if document.IsEmpty() {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
 			Summary:  "No content to render",
@@ -466,10 +467,10 @@ func (e *Engine) RenderContent(ctx context.Context, target string, requiredTags 
 			Subject:  doc.Source.Block.DefRange().Ptr(),
 		})
 	}
-	return doc, content, data, diags
+	return doc, document, data, diags
 }
 
-func (e *Engine) PublishContent(ctx context.Context, target string, doc *eval.Document, content *plugin.ContentSection, dataCtx plugindata.Data) (diags diagnostics.Diag) {
+func (e *Engine) PublishContent(ctx context.Context, target string, doc *eval.Document, document *nodes.Node, dataCtx plugindata.Data) (diags diagnostics.Diag) {
 	ctx, span := e.tracer.Start(ctx, "Engine.Publish", trace.WithAttributes(
 		attribute.String("target", target),
 	))
@@ -481,7 +482,7 @@ func (e *Engine) PublishContent(ctx context.Context, target string, doc *eval.Do
 		span.End()
 	}()
 	e.logger.InfoContext(ctx, "Publishing the content", "target", target)
-	diag := doc.Publish(ctx, content, dataCtx, target)
+	diag := doc.Publish(ctx, document, dataCtx, target)
 	diags.Extend(diag)
 	return
 }

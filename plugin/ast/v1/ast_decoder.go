@@ -1,7 +1,6 @@
 package astv1
 
 import (
-	"fmt"
 	"log/slog"
 
 	"github.com/blackstork-io/fabric/pkg/utils"
@@ -13,106 +12,107 @@ func DecodeNode(node *Node) *nodes.Node {
 		return nil
 	}
 	var res *nodes.Node
-	switch n := node.GetContent().(type) {
-	case *Node_Document:
-		res = nodes.NewNode(
-			&nodes.Document{},
-		)
-	case *Node_Paragraph:
+	switch node.WhichContent() {
+	case Node_Paragraph_case:
 		res = nodes.NewNode(
 			&nodes.Paragraph{
-				IsTextBlock: n.Paragraph.GetIsTextBlock(),
+				IsTextBlock: node.GetParagraph().GetIsTextBlock(),
 			},
 		)
-	case *Node_Heading:
+	case Node_Heading_case:
 		res = nodes.NewNode(
 			&nodes.Heading{
 				Level: int(
-					utils.Clamp(1, n.Heading.GetLevel(), 6),
+					utils.Clamp(1, node.GetHeading().GetLevel(), 6),
 				),
 			},
 		)
-	case *Node_ThematicBreak:
+	case Node_ThematicBreak_case:
 		res = nodes.NewNode(
 			&nodes.ThematicBreak{},
 		)
-	case *Node_CodeBlock:
+	case Node_CodeBlock_case:
+		n := node.GetCodeBlock()
 		res = nodes.NewNode(
 			&nodes.CodeBlock{
-				Language: n.CodeBlock.GetLanguage(),
-				Code:     n.CodeBlock.GetCode(),
+				Language: n.GetLanguage(),
+				Code:     n.GetCode(),
 			},
 		)
-	case *Node_Blockquote:
+	case Node_Blockquote_case:
 		res = nodes.NewNode(
 			&nodes.Blockquote{},
 		)
-	case *Node_List:
+	case Node_List_case:
+		n := node.GetList()
 		res = nodes.NewNode(
 			&nodes.List{
-				Marker: byte(n.List.GetMarker()),
-				Start:  n.List.GetStart(),
+				Marker: byte(n.GetMarker()),
+				Start:  n.GetStart(),
 			},
 		)
-	case *Node_ListItem:
+	case Node_ListItem_case:
 		res = nodes.NewNode(
 			&nodes.ListItem{},
 		)
-	case *Node_HtmlBlock:
+	case Node_HtmlBlock_case:
 		res = nodes.NewNode(
 			&nodes.HTMLBlock{
-				HTML: n.HtmlBlock.GetHtml(),
+				HTML: node.GetHtmlBlock().GetHtml(),
 			},
 		)
-	case *Node_Text:
+	case Node_Text_case:
+		n := node.GetText()
 		res = nodes.NewNode(
 			&nodes.Text{
-				Text:          n.Text.GetText(),
-				HardLineBreak: n.Text.GetHardLineBreak(),
+				Text:          n.GetText(),
+				HardLineBreak: n.GetHardLineBreak(),
 			},
 		)
-	case *Node_CodeSpan:
+	case Node_CodeSpan_case:
 		res = nodes.NewNode(
 			&nodes.CodeSpan{
-				Code: n.CodeSpan.GetCode(),
+				Code: node.GetCodeSpan().GetCode(),
 			},
 		)
-	case *Node_Emphasis:
+	case Node_Emphasis_case:
 		res = nodes.NewNode(
 			&nodes.Emphasis{
-				Level: int(n.Emphasis.GetLevel()),
+				Level: int(node.GetEmphasis().GetLevel()),
 			},
 		)
-	case *Node_Link:
+	case Node_Link_case:
+		n := node.GetLink()
 		res = nodes.NewNode(
 			&nodes.Link{
-				Destination: n.Link.GetDestination(),
-				Title:       n.Link.GetTitle(),
+				Destination: n.GetDestination(),
+				Title:       n.GetTitle(),
 			},
 		)
-	case *Node_Image:
+	case Node_Image_case:
+		n := node.GetImage()
 		res = nodes.NewNode(
 			&nodes.Image{
-				Source: n.Image.GetSource(),
-				Alt:    n.Image.GetAlt(),
+				Source: n.GetSource(),
+				Alt:    n.GetAlt(),
 			},
 		)
-	case *Node_AutoLink:
+	case Node_AutoLink_case:
 		res = nodes.NewNode(
 			&nodes.AutoLink{
-				Value: n.AutoLink.GetValue(),
+				Value: node.GetAutoLink().GetValue(),
 			},
 		)
-	case *Node_HtmlInline:
+	case Node_HtmlInline_case:
 		res = nodes.NewNode(
 			&nodes.HTMLInline{
-				HTML: n.HtmlInline.GetHtml(),
+				HTML: node.GetHtmlInline().GetHtml(),
 			},
 		)
-	case *Node_Table:
+	case Node_Table_case:
 		res = nodes.NewNode(
 			&nodes.Table{
-				Alignments: utils.FnMap(n.Table.GetAlignments(), func(a CellAlignment) nodes.Alignment {
+				Alignments: utils.FnMap(node.GetTable().GetAlignments(), func(a CellAlignment) nodes.Alignment {
 					switch a {
 					case CellAlignment_CELL_ALIGNMENT_UNSPECIFIED:
 						return nodes.AlignmentNone
@@ -129,48 +129,90 @@ func DecodeNode(node *Node) *nodes.Node {
 				}),
 			},
 		)
-	case *Node_TableRow:
+	case Node_TableRow_case:
 		res = nodes.NewNode(
 			&nodes.TableRow{},
 		)
-	case *Node_TableCell:
+	case Node_TableCell_case:
 		res = nodes.NewNode(
 			&nodes.TableCell{},
 		)
-	case *Node_TaskCheckbox:
+	case Node_TaskCheckbox_case:
 		res = nodes.NewNode(
 			&nodes.TaskCheckbox{
-				Checked: n.TaskCheckbox.GetChecked(),
+				Checked: node.GetTaskCheckbox().GetChecked(),
 			},
 		)
-	case *Node_Strikethrough:
+	case Node_Strikethrough_case:
 		res = nodes.NewNode(
 			&nodes.Strikethrough{},
 		)
-	case *Node_Custom:
+	case Node_FabricDocument_case:
+		res = nodes.NewNode(
+			&nodes.FabricDocument{},
+		)
+	case Node_FabricSection_case:
+		res = nodes.NewNode(
+			&nodes.FabricSection{},
+		)
+	case Node_FabricContent_case:
+		fc := node.GetFabricContent()
+		res = nodes.NewNode(
+			&nodes.FabricContent{
+				Meta: DecodeMetadata(fc.GetMeta()),
+			},
+		)
+	case Node_Custom_case:
+		c := node.GetCustom()
+		c.GetScope()
 		res = nodes.NewNode(
 			&nodes.Custom{
-				Data: n.Custom.GetData(),
+				Data:  c.GetData(),
+				Scope: decodeScope(c.GetScope()),
 			},
 		)
 	default:
-		panic(fmt.Errorf("unsupported node type: %T", n))
+		slog.Warn("unsupported AST node type", "type", node.WhichContent().String())
 	}
 	res.AppendChildren(DecodeChildren(node)...)
 	return res
+}
+
+func decodeScope(s Custom_RenderScope) nodes.RendererScope {
+	switch s {
+	case Custom_SCOPE_UNSPECIFIED, Custom_SCOPE_NODE:
+		return nodes.ScopeNode
+	case Custom_SCOPE_CONTENT:
+		return nodes.ScopeContent
+	case Custom_SCOPE_SECTION:
+		return nodes.ScopeSection
+	case Custom_SCOPE_DOCUMENT:
+		return nodes.ScopeDocument
+	default:
+		slog.Error("unsupported scope", "scope", s)
+		return nodes.ScopeNode
+	}
 }
 
 func DecodeChildren(node *Node) []*nodes.Node {
 	return utils.FnMap(node.GetChildren(), DecodeNode)
 }
 
-func DecodeMetadata(meta *Metadata) *nodes.ContentMeta {
+func DecodeMetadata(meta *FabricContent_Metadata) *nodes.FabricContentMetadata {
 	if meta == nil {
 		return nil
 	}
-	return &nodes.ContentMeta{
+	return &nodes.FabricContentMetadata{
 		Provider: meta.GetProvider(),
 		Plugin:   meta.GetPlugin(),
 		Version:  meta.GetVersion(),
 	}
+}
+
+func DecodePath(path *Path) nodes.Path {
+	p := path.GetPath()
+	if p == nil {
+		return nil
+	}
+	return nodes.Path(utils.FnMap(p, func(i uint32) int { return int(i) }))
 }

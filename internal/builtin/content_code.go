@@ -37,7 +37,7 @@ func makeCodeContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genCodeContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
+func genCodeContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentElement, diagnostics.Diag) {
 	value := params.Args.GetAttrVal("value")
 	lang := params.Args.GetAttrVal("language")
 	text, err := genTextContentText(value.AsString(), params.DataContext)
@@ -49,7 +49,5 @@ func genCodeContent(ctx context.Context, params *plugin.ProvideContentParams) (*
 		}}
 	}
 	text = fmt.Sprintf("```%s\n%s\n```", lang.AsString(), text)
-	return &plugin.ContentResult{
-		Content: plugin.NewElementFromMarkdown(text),
-	}, nil
+	return plugin.NewElementFromMarkdown(text), nil
 }

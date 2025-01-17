@@ -22,6 +22,8 @@ const (
 	PluginService_GetSchema_FullMethodName      = "/pluginapi.v1.PluginService/GetSchema"
 	PluginService_RetrieveData_FullMethodName   = "/pluginapi.v1.PluginService/RetrieveData"
 	PluginService_ProvideContent_FullMethodName = "/pluginapi.v1.PluginService/ProvideContent"
+	PluginService_PublisherInfo_FullMethodName  = "/pluginapi.v1.PluginService/PublisherInfo"
+	PluginService_RenderNode_FullMethodName     = "/pluginapi.v1.PluginService/RenderNode"
 	PluginService_Publish_FullMethodName        = "/pluginapi.v1.PluginService/Publish"
 )
 
@@ -32,6 +34,8 @@ type PluginServiceClient interface {
 	GetSchema(ctx context.Context, in *GetSchemaRequest, opts ...grpc.CallOption) (*GetSchemaResponse, error)
 	RetrieveData(ctx context.Context, in *RetrieveDataRequest, opts ...grpc.CallOption) (*RetrieveDataResponse, error)
 	ProvideContent(ctx context.Context, in *ProvideContentRequest, opts ...grpc.CallOption) (*ProvideContentResponse, error)
+	PublisherInfo(ctx context.Context, in *PublisherInfoRequest, opts ...grpc.CallOption) (*PublisherInfoResponse, error)
+	RenderNode(ctx context.Context, in *RenderNodeRequest, opts ...grpc.CallOption) (*RenderNodeResponse, error)
 	Publish(ctx context.Context, in *PublishRequest, opts ...grpc.CallOption) (*PublishResponse, error)
 }
 
@@ -73,6 +77,26 @@ func (c *pluginServiceClient) ProvideContent(ctx context.Context, in *ProvideCon
 	return out, nil
 }
 
+func (c *pluginServiceClient) PublisherInfo(ctx context.Context, in *PublisherInfoRequest, opts ...grpc.CallOption) (*PublisherInfoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PublisherInfoResponse)
+	err := c.cc.Invoke(ctx, PluginService_PublisherInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *pluginServiceClient) RenderNode(ctx context.Context, in *RenderNodeRequest, opts ...grpc.CallOption) (*RenderNodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RenderNodeResponse)
+	err := c.cc.Invoke(ctx, PluginService_RenderNode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *pluginServiceClient) Publish(ctx context.Context, in *PublishRequest, opts ...grpc.CallOption) (*PublishResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(PublishResponse)
@@ -90,6 +114,8 @@ type PluginServiceServer interface {
 	GetSchema(context.Context, *GetSchemaRequest) (*GetSchemaResponse, error)
 	RetrieveData(context.Context, *RetrieveDataRequest) (*RetrieveDataResponse, error)
 	ProvideContent(context.Context, *ProvideContentRequest) (*ProvideContentResponse, error)
+	PublisherInfo(context.Context, *PublisherInfoRequest) (*PublisherInfoResponse, error)
+	RenderNode(context.Context, *RenderNodeRequest) (*RenderNodeResponse, error)
 	Publish(context.Context, *PublishRequest) (*PublishResponse, error)
 	mustEmbedUnimplementedPluginServiceServer()
 }
@@ -109,6 +135,12 @@ func (UnimplementedPluginServiceServer) RetrieveData(context.Context, *RetrieveD
 }
 func (UnimplementedPluginServiceServer) ProvideContent(context.Context, *ProvideContentRequest) (*ProvideContentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProvideContent not implemented")
+}
+func (UnimplementedPluginServiceServer) PublisherInfo(context.Context, *PublisherInfoRequest) (*PublisherInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PublisherInfo not implemented")
+}
+func (UnimplementedPluginServiceServer) RenderNode(context.Context, *RenderNodeRequest) (*RenderNodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RenderNode not implemented")
 }
 func (UnimplementedPluginServiceServer) Publish(context.Context, *PublishRequest) (*PublishResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
@@ -188,6 +220,42 @@ func _PluginService_ProvideContent_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PluginService_PublisherInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PublisherInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PluginServiceServer).PublisherInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PluginService_PublisherInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PluginServiceServer).PublisherInfo(ctx, req.(*PublisherInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PluginService_RenderNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RenderNodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PluginServiceServer).RenderNode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PluginService_RenderNode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PluginServiceServer).RenderNode(ctx, req.(*RenderNodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PluginService_Publish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PublishRequest)
 	if err := dec(in); err != nil {
@@ -224,6 +292,14 @@ var PluginService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ProvideContent",
 			Handler:    _PluginService_ProvideContent_Handler,
+		},
+		{
+			MethodName: "PublisherInfo",
+			Handler:    _PluginService_PublisherInfo_Handler,
+		},
+		{
+			MethodName: "RenderNode",
+			Handler:    _PluginService_RenderNode_Handler,
 		},
 		{
 			MethodName: "Publish",

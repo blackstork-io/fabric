@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package pluginapi.v1;
 
-import "pluginapi/v1/content.proto";
+import "ast/v1/ast.proto";
 import "pluginapi/v1/data.proto";
 import "pluginapi/v1/hcl.proto";
 import "pluginapi/v1/schema.proto";
@@ -13,6 +13,8 @@ service PluginService {
     rpc GetSchema(GetSchemaRequest) returns (GetSchemaResponse) {}
     rpc RetrieveData(RetrieveDataRequest) returns (RetrieveDataResponse) {}
     rpc ProvideContent(ProvideContentRequest) returns (ProvideContentResponse) {}
+    rpc PublisherInfo(PublisherInfoRequest) returns (PublisherInfoResponse) {}
+    rpc RenderNode(RenderNodeRequest) returns (RenderNodeResponse) {}
     rpc Publish(PublishRequest) returns (PublishResponse) {}
 }
 
@@ -38,22 +40,52 @@ message ProvideContentRequest {
     Block    args         = 2;
     Block    config       = 3;
     MapData  data_context = 4;
-    uint32   content_id   = 5;
 }
 
 message ProvideContentResponse {
-    ContentResult       result      = 1;
+    ast.v1.Node result = 1;
     repeated Diagnostic diagnostics = 2;
 }
 
+message PublisherInfoRequest {
+    string publisher = 1;
+    Block args = 2;
+    Block config = 3;
+}
+
+message NodeSupportInfo {
+    // Custom nodes that are natively supported by the publisher
+    repeated string supported_custom_nodes = 1;
+    // Regular nodes that are not supported by the publisher
+    repeated string unsupported_nodes = 2;
+}
+
+message PublisherInfoResponse {
+    NodeSupportInfo publisher_info = 1;
+    repeated Diagnostic diagnostics = 2;
+}
+
+message RenderNodeRequest {
+    ast.v1.Node subtree = 1;
+    ast.v1.Path node_path = 2;
+    string publisher = 3;
+    NodeSupportInfo publisher_info = 4;
+    // All registered custom node renderers
+    repeated string custom_node_renderers = 5;
+}
+
+message RenderNodeResponse {
+    ast.v1.Node subtree_replacement = 1;
+    repeated Diagnostic diagnostics = 2;
+}
 
 message PublishRequest {
-    string         publisher     = 1;
-    Block          args          = 2;
-    Block          config        = 3;
-    MapData        data_context  = 4;
-    OutputFormat   format        = 5;
-    string         document_name = 6;
+    string publisher = 1;
+    Block args = 2;
+    Block config = 3;
+    MapData data_context = 4;
+    ast.v1.Node document = 5;
+    string document_name = 6;
 }
 
 message PublishResponse {

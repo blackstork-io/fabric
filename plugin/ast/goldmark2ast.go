@@ -3,7 +3,9 @@ package ast
 import (
 	"log/slog"
 
+	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/extension"
 	east "github.com/yuin/goldmark/extension/ast"
 	"github.com/yuin/goldmark/text"
 
@@ -11,11 +13,31 @@ import (
 	"github.com/blackstork-io/fabric/plugin/ast/nodes"
 )
 
+var baseMarkdownOptions = goldmark.WithExtensions(
+	extension.Table,
+	extension.Strikethrough,
+	extension.TaskList,
+)
+
+// Markdown2AST converts a markdown string to fabric AST.
+func Markdown2AST(source []byte) []*nodes.Node {
+	markdown := []byte(source)
+	root := goldmark.New(baseMarkdownOptions).Parser().Parse(
+		text.NewReader(markdown),
+	)
+	return Goldmark2AST(root, markdown)
+}
+
 // Goldmark2AST converts a goldmark AST to fabric AST.
-func Goldmark2AST(root ast.Node, source []byte) (node *nodes.Node) {
-	return (&encoder{
+func Goldmark2AST(root ast.Node, source []byte) []*nodes.Node {
+	e := &encoder{
 		source: source,
-	}).encode(root)
+	}
+	if root.Kind() == ast.KindDocument {
+		return e.encodeChildren(root)
+	} else {
+		return []*nodes.Node{e.encode(root)}
+	}
 }
 
 type encoder struct {
@@ -57,7 +79,8 @@ func (e *encoder) encode(n ast.Node) *nodes.Node {
 
 	switch n := n.(type) {
 	case *ast.Document:
-		node.Content = &nodes.Document{}
+		slog.Warn("Attempted to encode a Document node. This should not happen.")
+		node.Content = &nodes.FabricDocument{}
 	case *ast.TextBlock:
 		node.Content = &nodes.Paragraph{
 			IsTextBlock: true,

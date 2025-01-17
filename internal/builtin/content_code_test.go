@@ -58,7 +58,7 @@ func (s *CodeTestSuite) TestCallCodeDefault() {
 	s.Empty(diags)
 	s.Equal(
 		plugindata.String("```\nHello World!\n```"),
-		content.Content.AsData().(plugindata.Map)["markdown"],
+		content.AsPluginData().(plugindata.Map)["markdown"],
 	)
 }
 
@@ -79,6 +79,6 @@ func (s *CodeTestSuite) TestCallCodeWithLanguage() {
 	s.Empty(diags)
 	s.Equal(
 		plugindata.String("```json\n{\"hello\": \"world\"}\n```"),
-		content.Content.AsData().(plugindata.Map)["markdown"],
+		content.AsPluginData().(plugindata.Map)["markdown"],
 	)
 }

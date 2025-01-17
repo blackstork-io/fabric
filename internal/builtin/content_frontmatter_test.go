@@ -124,10 +124,10 @@ func (s *FrontMatterGeneratorTestSuite) TestInvalidQueryResult() {
 	val := `
 		content = "invalid_type"
 	`
-	document := plugin.ContentSection{}
+	document := plugin.ContentSectionOrDoc{}
 	dataCtx := plugindata.Map{
 		"document": plugindata.Map{
-			"content": document.AsData(),
+			"content": document.AsPluginData(),
 		},
 	}
 
@@ -159,10 +159,10 @@ func (s *FrontMatterGeneratorTestSuite) TestWithContent() {
 	f.Body().SetAttributeValue("content", testValCty)
 	body := string(f.Bytes())
 
-	document := plugin.ContentSection{}
+	document := plugin.ContentSectionOrDoc{}
 	dataCtx := plugindata.Map{
 		"document": plugindata.Map{
-			"content": document.AsData(),
+			"content": document.AsPluginData(),
 		},
 	}
 
@@ -176,12 +176,12 @@ func (s *FrontMatterGeneratorTestSuite) TestWithContent() {
 		Args: args,
 		DataContext: plugindata.Map{
 			"document": plugindata.Map{
-				"content": document.AsData(),
+				"content": document.AsPluginData(),
 			},
 		},
 	})
 	s.Require().Nil(diags)
-	format := s.parseFrontmatter(mdprint.PrintString(result.Content))
+	format := s.parseFrontmatter(mdprint.PrintString(result))
 	s.Equal("yaml", format)
 }
 
@@ -192,10 +192,10 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatYaml() {
 	hclBody.SetAttributeValue("format", cty.StringVal("yaml"))
 	body := string(f.Bytes())
 
-	document := plugin.ContentSection{}
+	document := plugin.ContentSectionOrDoc{}
 	dataCtx := plugindata.Map{
 		"document": plugindata.Map{
-			"content": document.AsData(),
+			"content": document.AsPluginData(),
 		},
 	}
 
@@ -209,12 +209,12 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatYaml() {
 		Args: args,
 		DataContext: plugindata.Map{
 			"document": plugindata.Map{
-				"content": document.AsData(),
+				"content": document.AsPluginData(),
 			},
 		},
 	})
 	s.Require().Nil(diags)
-	format := s.parseFrontmatter(mdprint.PrintString(result.Content))
+	format := s.parseFrontmatter(mdprint.PrintString(result))
 	s.Equal("yaml", format)
 }
 
@@ -225,10 +225,10 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatTOML() {
 	hclBody.SetAttributeValue("format", cty.StringVal("toml"))
 	body := string(f.Bytes())
 
-	document := plugin.ContentSection{}
+	document := plugin.ContentSectionOrDoc{}
 	dataCtx := plugindata.Map{
 		"document": plugindata.Map{
-			"content": document.AsData(),
+			"content": document.AsPluginData(),
 		},
 	}
 
@@ -242,12 +242,12 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatTOML() {
 		Args: args,
 		DataContext: plugindata.Map{
 			"document": plugindata.Map{
-				"content": document.AsData(),
+				"content": document.AsPluginData(),
 			},
 		},
 	})
 	s.Require().Nil(diags)
-	format := s.parseFrontmatter(mdprint.PrintString(result.Content))
+	format := s.parseFrontmatter(mdprint.PrintString(result))
 	s.Equal("toml", format)
 }
 
@@ -258,10 +258,10 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatJSON() {
 	hclBody.SetAttributeValue("format", cty.StringVal("json"))
 	body := string(f.Bytes())
 
-	document := plugin.ContentSection{}
+	document := plugin.ContentSectionOrDoc{}
 	dataCtx := plugindata.Map{
 		"document": plugindata.Map{
-			"content": document.AsData(),
+			"content": document.AsPluginData(),
 		},
 	}
 
@@ -275,11 +275,11 @@ func (s *FrontMatterGeneratorTestSuite) TestFormatJSON() {
 		Args: args,
 		DataContext: plugindata.Map{
 			"document": plugindata.Map{
-				"content": document.AsData(),
+				"content": document.AsPluginData(),
 			},
 		},
 	})
 	s.Require().Nil(diags)
-	format := s.parseFrontmatter(mdprint.PrintString(result.Content))
+	format := s.parseFrontmatter(mdprint.PrintString(result))
 	s.Equal("json", format)
 }

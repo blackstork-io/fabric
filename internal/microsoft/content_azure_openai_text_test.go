@@ -92,7 +92,7 @@ func (s *AzureOpenAITextContentTestSuite) TestBasic() {
 	})
 	fmt.Println(diags)
 	s.Nil(diags)
-	s.Equal("Once upon a time.", mdprint.PrintString(result.Content))
+	s.Equal("Once upon a time.", mdprint.PrintString(result))
 }
 
 func (s *AzureOpenAITextContentTestSuite) TestAdvanced() {
@@ -134,7 +134,7 @@ func (s *AzureOpenAITextContentTestSuite) TestAdvanced() {
 		DataContext: dataCtx,
 	})
 	s.Empty(diags)
-	s.Equal("Once upon a time.", mdprint.PrintString(result.Content))
+	s.Equal("Once upon a time.", mdprint.PrintString(result))
 }
 
 func (s *AzureOpenAITextContentTestSuite) TestMissingPrompt() {

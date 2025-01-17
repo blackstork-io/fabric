@@ -12,10 +12,10 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-func countDeclarations(data *plugin.ContentSection, name string) int {
+func countDeclarations(data *plugin.ContentSectionOrDoc, name string) int {
 	count := 0
 	for _, child := range data.Children {
-		if section, ok := child.(*plugin.ContentSection); ok {
+		if section, ok := child.(*plugin.ContentSectionOrDoc); ok {
 			count += countDeclarations(section, name)
 			continue
 		}
@@ -29,7 +29,7 @@ func countDeclarations(data *plugin.ContentSection, name string) int {
 	return count
 }
 
-func parseScope(datactx plugindata.Map) (document, section *plugin.ContentSection) {
+func parseScope(datactx plugindata.Map) (document, section *plugin.ContentSectionOrDoc) {
 	documentMap, ok := datactx["document"]
 	if !ok {
 		return
@@ -69,7 +69,7 @@ func parseScope(datactx plugindata.Map) (document, section *plugin.ContentSectio
 	return document, section
 }
 
-func findDepth(parent *plugin.ContentSection, id uint32, depth int) int {
+func findDepth(parent *plugin.ContentSectionOrDoc, id uint32, depth int) int {
 	if parent.ID() == id {
 		return depth
 	}
@@ -77,7 +77,7 @@ func findDepth(parent *plugin.ContentSection, id uint32, depth int) int {
 		if child.ID() == id {
 			return depth
 		}
-		if child, ok := child.(*plugin.ContentSection); ok {
+		if child, ok := child.(*plugin.ContentSectionOrDoc); ok {
 			if d := findDepth(child, id, depth+1); d > -1 {
 				return d
 			}
@@ -88,7 +88,7 @@ func findDepth(parent *plugin.ContentSection, id uint32, depth int) int {
 
 func firstTitle(el plugin.Content) (string, bool) {
 	switch el := el.(type) {
-	case *plugin.ContentSection:
+	case *plugin.ContentSectionOrDoc:
 		for _, c := range el.Children {
 			if title, ok := firstTitle(c); ok {
 				return title, true

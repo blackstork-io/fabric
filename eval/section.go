@@ -2,11 +2,7 @@ package eval
 
 import (
 	"context"
-	"fmt"
 	"maps"
-	"slices"
-
-	"github.com/hashicorp/hcl/v2"
 
 	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/parser/definitions"
@@ -26,26 +22,7 @@ type Section struct {
 	isIncluded   *dataspec.Attr
 }
 
-func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (diags diagnostics.Diag) {
-	sectionData := plugindata.Map{}
-	if block.meta != nil {
-		sectionData[definitions.BlockKindMeta] = block.meta.AsPluginData()
-	}
-	dataCtx[definitions.BlockKindSection] = sectionData
-	section := new(plugin.ContentSection)
-	if parent != nil {
-		err := parent.Add(section, &plugin.Location{
-			Index: contentID,
-		})
-		if err != nil {
-			return diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Failed to place content",
-				Detail:   fmt.Sprintf("Failed to place content: %s", err),
-			}}
-		}
-	}
-
+func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map) (res plugin.Content, diags diagnostics.Diag) {
 	diag := ApplyVars(ctx, block.vars, dataCtx)
 	if diags.Extend(diag) {
 		return
@@ -59,29 +36,6 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map,
 		return
 	}
 
-	children, diag := UnwrapDynamicContent(ctx, block.children, dataCtx)
-	if diags.Extend(diag) {
-		return
-	}
-
-	// create a position map for content blocks
-	posMap := make(map[int]uint32)
-	for i := range children {
-		empty := new(plugin.ContentEmpty)
-		section.Add(empty, nil)
-		posMap[i] = empty.ID()
-	}
-	// sort content blocks by invocation order
-	invokeList := make([]int, 0, len(children))
-	for i := range children {
-		invokeList = append(invokeList, i)
-	}
-	slices.SortStableFunc(invokeList, func(a, b int) int {
-		ao := children[a].InvocationOrder()
-		bo := children[b].InvocationOrder()
-		return ao.Weight() - bo.Weight()
-	})
-
 	// verify required vars
 	if len(block.requiredVars) > 0 {
 		diag := verifyRequiredVars(dataCtx, block.requiredVars, block.source.Block)
@@ -90,19 +44,24 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map,
 		}
 	}
 
-	// execute content blocks based on the invocation order
-	for _, idx := range invokeList {
-		// update the session data (is propagated to dataCtx, maps are by-ref structures)
-		sectionData[definitions.BlockKindContent] = section.AsData()
-
-		// execute the content block
-		diag := children[idx].RenderContent(ctx, maps.Clone(dataCtx), doc, section, posMap[idx])
-		if diags.Extend(diag) {
-			return
-		}
+	children, diag := UnwrapDynamicContent(ctx, block.children, dataCtx)
+	if diags.Extend(diag) {
+		return
 	}
-	// compact the content tree to remove empty content nodes
-	section.Compact()
+
+	section := plugin.NewSection(block.meta, len(children))
+	dataCtx[definitions.BlockKindSection] = section.AsPluginData()
+
+	// execute content blocks
+	for _, child := range children {
+		// execute the content block
+		n, diag := child.RenderContent(ctx, maps.Clone(dataCtx))
+		if diags.Extend(diag) {
+			continue
+		}
+		section.AppendChild(n)
+	}
+	res = section
 	return
 }
 

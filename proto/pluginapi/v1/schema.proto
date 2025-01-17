@@ -5,14 +5,17 @@ package pluginapi.v1;
 import "pluginapi/v1/dataspec.proto";
 
 message Schema {
-    string name    = 1;
+    string name = 1;
     string version = 2;
     // Plugin components
-    map<string, DataSourceSchema>       data_sources      = 3;
-    map<string, ContentProviderSchema>  content_providers = 4;
-    map<string, PublisherSchema>        publishers        = 7;
-    string                              doc               = 5;
-    repeated string                     tags              = 6;
+    map<string, DataSourceSchema> data_sources = 3;
+    map<string, ContentProviderSchema> content_providers = 4;
+    map<string, PublisherSchema> publishers = 5;
+    string doc = 6;
+    repeated string tags = 7;
+    // List of node type names that can be rendered by the plugin.
+    // All custom nodes that are emitted by the content provider must be in this list.
+    repeated string node_renderers = 8;
 }
 
 message DataSourceSchema {
@@ -22,32 +25,16 @@ message DataSourceSchema {
     repeated string      tags   = 6;
 }
 
-enum InvocationOrder {
-    INVOCATION_ORDER_UNSPECIFIED = 0;
-    INVOCATION_ORDER_BEGIN       = 2;
-    INVOCATION_ORDER_END         = 3;
-}
-
 message ContentProviderSchema {
-    BlockSpec       args             = 4;
-    BlockSpec       config           = 5;
-    InvocationOrder invocation_order = 3;
-    string          doc              = 6;
-    repeated string tags             = 7;
-}
-
-
-enum OutputFormat {
-    OUTPUT_FORMAT_UNSPECIFIED = 0;
-    OUTPUT_FORMAT_MD          = 1;
-    OUTPUT_FORMAT_HTML        = 2;
-    OUTPUT_FORMAT_PDF         = 3;
+    BlockSpec args = 4;
+    BlockSpec config = 5;
+    string doc = 6;
+    repeated string tags = 7;
 }
 
 message PublisherSchema {
-    BlockSpec             args            = 1;
-    BlockSpec             config          = 2;
-    string                doc             = 3;
-    repeated string       tags            = 4;
-    repeated OutputFormat allowed_formats = 5;
+    BlockSpec args = 1;
+    BlockSpec config = 2;
+    string doc = 3;
+    repeated string tags = 4;
 }

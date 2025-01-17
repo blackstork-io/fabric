@@ -52,7 +52,7 @@ func makeFrontMatterContentProvider() *plugin.ContentProvider {
 	}
 }
 
-func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentResult, diagnostics.Diag) {
+func genFrontMatterContent(ctx context.Context, params *plugin.ProvideContentParams) (*plugin.ContentElement, diagnostics.Diag) {
 	if err := validateFrontMatterContentTree(params.DataContext, params.ContentID); err != nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,

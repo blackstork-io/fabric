@@ -6,53 +6,42 @@ import (
 	"github.com/hashicorp/hcl/v2"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/plugin/ast/nodes"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-type OutputFormat int
-
-const (
-	OutputFormatUnspecified OutputFormat = iota
-	OutputFormatMD
-	OutputFormatHTML
-	OutputFormatPDF
+type (
+	PublisherInfoFunc func(ctx context.Context, params *PublisherInfoParams) (PublisherInfo, diagnostics.Diag)
+	PublishFunc       func(ctx context.Context, params *PublishParams) diagnostics.Diag
 )
-
-func (f OutputFormat) String() string {
-	switch f {
-	case OutputFormatMD:
-		return "md"
-	case OutputFormatHTML:
-		return "html"
-	case OutputFormatPDF:
-		return "pdf"
-	default:
-		return "unknown"
-	}
-}
-
-func (f OutputFormat) Ext() string {
-	return "." + f.String()
-}
-
-type PublishFunc func(ctx context.Context, params *PublishParams) diagnostics.Diag
 
 type PublishParams struct {
 	DocumentName string
 	Config       *dataspec.Block
 	Args         *dataspec.Block
 	DataContext  plugindata.Map
-	Format       OutputFormat
+	Document     *nodes.Node
+}
+
+type PublisherInfoParams struct {
+	Config *dataspec.Block
+	Args   *dataspec.Block
+}
+
+type PublisherInfo struct {
+	SupportedCustomNodes []string
+	UnsupportedNodes     []string
 }
 
 type Publisher struct {
-	Doc            string
-	Tags           []string
-	PublishFunc    PublishFunc
-	Args           *dataspec.RootSpec
-	Config         *dataspec.RootSpec
-	AllowedFormats []OutputFormat
+	Doc         string
+	Tags        []string
+	PublishFunc PublishFunc
+	// optional function to provide additional information about the publisher
+	PublisherInfoFunc PublisherInfoFunc
+	Args              *dataspec.RootSpec
+	Config            *dataspec.RootSpec
 }
 
 func (pub *Publisher) Validate() diagnostics.Diag {
@@ -72,6 +61,20 @@ func (pub *Publisher) Validate() diagnostics.Diag {
 		})
 	}
 	return diags
+}
+
+func (pub *Publisher) Info(ctx context.Context, params *PublisherInfoParams) (info PublisherInfo, diags diagnostics.Diag) {
+	if pub == nil {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Missing Publisher schema",
+		})
+		return
+	}
+	if pub.PublisherInfoFunc == nil {
+		return
+	}
+	return pub.PublisherInfoFunc(ctx, params)
 }
 
 func (pub *Publisher) Execute(ctx context.Context, params *PublishParams) (diags diagnostics.Diag) {

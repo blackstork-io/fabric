@@ -60,7 +60,7 @@ func (s *TitleTestSuite) TestTDefault() {
 		},
 	})
 	s.Empty(diags)
-	s.Equal("## Hello World!", mdprint.PrintString(result.Content))
+	s.Equal("## Hello World!", mdprint.PrintString(result))
 }
 
 func (s *TitleTestSuite) TestWithTextMultiline() {
@@ -76,7 +76,7 @@ func (s *TitleTestSuite) TestWithTextMultiline() {
 		},
 	})
 	s.Empty(diags)
-	s.Equal("## Hello World for you!", mdprint.PrintString(result.Content))
+	s.Equal("## Hello World for you!", mdprint.PrintString(result))
 }
 
 func (s *TitleTestSuite) TestWithSize() {
@@ -93,7 +93,7 @@ func (s *TitleTestSuite) TestWithSize() {
 		},
 	})
 	s.Empty(diags)
-	s.Equal("### Hello World!", mdprint.PrintString(result.Content))
+	s.Equal("### Hello World!", mdprint.PrintString(result))
 }
 
 func (s *TitleTestSuite) TestWithSizeTooBig() {
