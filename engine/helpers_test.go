@@ -21,7 +21,7 @@ type (
 	optRequiredTags []string
 )
 
-func renderTest(t *testing.T, testName string, files []string, expectedResult []string, opts ...any) {
+func renderTest(t *testing.T, testName string, files, expectedResult []string, opts ...any) {
 	t.Helper()
 	sourceDir := fstest.MapFS{}
 	for i, content := range files {
@@ -54,7 +54,7 @@ func renderTest(t *testing.T, testName string, files []string, expectedResult []
 		defer eng.Cleanup()
 
 		var res string
-		diags := eng.ParseDir(ctx, sourceDir)
+		diags := eng.ParseDirFS(ctx, sourceDir)
 		if !diags.HasErrors() {
 			if !diags.Extend(eng.LoadPluginResolver(ctx, false)) && !diags.Extend(eng.LoadPluginRunner(ctx)) {
 				_, content, _, diag := eng.RenderContent(ctx, target, requiredTags)
@@ -98,7 +98,7 @@ func fetchDataTest(t *testing.T, testName string, files []string, target string,
 		}()
 		var res plugindata.Data
 		ctx := context.Background()
-		diags := eng.ParseDir(ctx, sourceDir)
+		diags := eng.ParseDirFS(ctx, sourceDir)
 		if !diags.HasErrors() {
 			if !diags.Extend(eng.LoadPluginResolver(ctx, false)) && !diags.Extend(eng.LoadPluginRunner(ctx)) {
 				var diag diagnostics.Diag
@@ -130,7 +130,7 @@ func lintTest(t *testing.T, fullLint bool, testName string, files []string, diag
 			eng.Cleanup()
 		}()
 		diag := []diagnostics.Diag{
-			eng.ParseDir(ctx, sourceDir),
+			eng.ParseDirFS(ctx, sourceDir),
 			eng.LoadPluginResolver(ctx, false),
 			eng.LoadPluginRunner(ctx),
 		}

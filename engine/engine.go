@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -32,16 +33,17 @@ import (
 // loading and evaluating fabric files, installing plugins, and fetching data.
 // It is also responsible for managing the plugin resolver and runner.
 type Engine struct {
-	builtin  *plugin.Schema
-	logger   *slog.Logger
-	tracer   trace.Tracer
-	config   *definitions.GlobalConfig
-	blocks   *parser.DefinedBlocks
-	runner   *runner.Runner
-	lockFile *resolver.LockFile
-	resolver *resolver.Resolver
-	fileMap  map[string]*hcl.File
-	env      plugindata.Map
+	builtin   *plugin.Schema
+	logger    *slog.Logger
+	tracer    trace.Tracer
+	config    *definitions.GlobalConfig
+	blocks    *parser.DefinedBlocks
+	runner    *runner.Runner
+	lockFile  *resolver.LockFile
+	resolver  *resolver.Resolver
+	fileMap   map[string]*hcl.File
+	env       plugindata.Map
+	sourceDir string
 }
 
 // New creates a new Engine instance with the provided options.
@@ -110,7 +112,7 @@ func (e *Engine) Install(ctx context.Context, upgrade bool) (diags diagnostics.D
 		return
 	}
 	e.lockFile = lockFile
-	err := resolver.SaveLockFileTo(defaultLockFile, lockFile)
+	err := resolver.SaveLockFileTo(path.Join(e.sourceDir, defaultLockFile), lockFile)
 	if err != nil {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
@@ -118,12 +120,19 @@ func (e *Engine) Install(ctx context.Context, upgrade bool) (diags diagnostics.D
 			Detail:   err.Error(),
 		})
 	}
+
 	return
 }
 
-func (e *Engine) ParseDir(ctx context.Context, sourceDir fs.FS) (diags diagnostics.Diag) {
+func (e *Engine) ParseDir(ctx context.Context, sourceDir string) (diags diagnostics.Diag) {
+	e.sourceDir = sourceDir
+
+	return e.ParseDirFS(ctx, os.DirFS(sourceDir))
+}
+
+func (e *Engine) ParseDirFS(ctx context.Context, sourceDir fs.FS) (diags diagnostics.Diag) {
 	ctx, span := e.tracer.Start(ctx, "Engine.ParseDir")
-	e.logger.InfoContext(ctx, "Parsing fabric files", "directory", fmt.Sprint(sourceDir))
+	e.logger.InfoContext(ctx, "Parsing fabric files", "directory", sourceDir)
 	defer func() {
 		if diags.HasErrors() {
 			span.RecordError(diags)
@@ -141,6 +150,7 @@ func (e *Engine) ParseDir(ctx context.Context, sourceDir fs.FS) (diags diagnosti
 			e.config.Merge(cfg)
 		}
 	}
+
 	return
 }
 
@@ -208,7 +218,7 @@ func (e *Engine) LoadPluginResolver(ctx context.Context, includeRemote bool) (di
 		}
 	}
 	var err error
-	e.lockFile, err = resolver.ReadLockFileFrom(defaultLockFile)
+	e.lockFile, err = resolver.ReadLockFileFrom(path.Join(e.sourceDir, defaultLockFile))
 	if err != nil {
 		return diagnostics.Diag{{
 			Severity: hcl.DiagError,

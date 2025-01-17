@@ -24,7 +24,7 @@ func WithHTTPClient(httpClient *http.Client) ClientOption {
 	}
 }
 
-func NewClient(baseUrl string, apiKey string, opts ...ClientOption) *Client {
+func NewClient(baseUrl, apiKey string, opts ...ClientOption) *Client {
 	c := &Client{
 		baseUrl: baseUrl,
 		apiKey:  apiKey,
