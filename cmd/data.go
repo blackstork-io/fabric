@@ -15,14 +15,17 @@ import (
 func init() {
 	rootCmd.AddCommand(dataCmd)
 	dataCmd.SetUsageTemplate(UsageTemplate(
-		[2]string{"TARGET", "a path to the data block to be executed. Data block must be inside of a document, so the path would look lile 'document.<doc-name>.data.<plugin-name>.<data-name>'"},
+		[2]string{
+			"PATH",
+			"a path to data blocks to be executed. The path format is 'document.<doc-name>.data[.<plugin-name>[.<data-name>]]'.",
+		},
 	))
 }
 
 var dataCmd = &cobra.Command{
 	Use:   "data TARGET",
-	Short: "Execute a single data block",
-	Long:  `Execute the data block and print out prettified JSON to stdout`,
+	Short: "Execute the data blocks that match the path",
+	Long:  `Execute the data blocks that match the path and print out prettified JSON to stdout`,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		ctx := cmd.Context()
