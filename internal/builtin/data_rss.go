@@ -280,7 +280,8 @@ func fetchRSSData(ctx context.Context, params *plugin.RetrieveDataParams) (plugi
 	ctx, cancel := context.WithTimeout(ctx, defaultRequestTimeout)
 	defer cancel()
 
-	log.InfoContext(ctx, "Downloading the feed", "feed_url", url)
+	log = log.With("feed_url", url)
+	log.InfoContext(ctx, "Downloading the feed")
 
 	feed, err := fp.ParseURLWithContext(url, ctx)
 	if err != nil {
