@@ -14,9 +14,9 @@ const (
 	authURL = "https://login.microsoftonline.com"
 )
 
-type AcquireTokenFn func(ctx context.Context, tenantId string, clientId string, cred confidential.Credential, scopes []string) (string, error)
+type AcquireTokenFn func(ctx context.Context, tenantId, clientId string, cred confidential.Credential, scopes []string) (string, error)
 
-var AcquireAzureToken AcquireTokenFn = func(ctx context.Context, tenantId string, clientId string, cred confidential.Credential, scopes []string) (accessToken string, err error) {
+var AcquireAzureToken AcquireTokenFn = func(ctx context.Context, tenantId, clientId string, cred confidential.Credential, scopes []string) (accessToken string, err error) {
 	confidentialClient, err := confidential.New(authURL+"/"+tenantId, clientId, cred)
 	if err != nil {
 		return

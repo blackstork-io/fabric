@@ -49,6 +49,22 @@ func Load(
 	}, nil
 }
 
+func (m *Runner) Plugins() []*plugin.Schema {
+	var plugins []*plugin.Schema
+	for _, p := range m.pluginMap {
+		plugins = append(plugins, p.Schema)
+	}
+	return plugins
+}
+
+func (m *Runner) Schema(name string) (*plugin.Schema, bool) {
+	p, ok := m.pluginMap[name]
+	if !ok {
+		return nil, false
+	}
+	return p.Schema, true
+}
+
 func (m *Runner) DataSource(name string) (*plugin.DataSource, bool) {
 	source, ok := m.dataMap[name]
 	if !ok {
