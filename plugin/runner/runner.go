@@ -14,10 +14,11 @@ import (
 )
 
 type Runner struct {
-	pluginMap    map[string]loadedPlugin
-	dataMap      map[string]loadedDataSource
-	contentMap   map[string]loadedContentProvider
-	publisherMap map[string]loadedPublisher
+	pluginMap       map[string]loadedPlugin
+	dataMap         map[string]loadedDataSource
+	contentMap      map[string]loadedContentProvider
+	publisherMap    map[string]loadedPublisher
+	nodeRendererMap map[string]loadedNodeRenderer
 }
 
 func Load(
@@ -42,10 +43,11 @@ func Load(
 		return nil, diags
 	}
 	return &Runner{
-		pluginMap:    loader.pluginMap,
-		dataMap:      loader.dataMap,
-		contentMap:   loader.contentMap,
-		publisherMap: loader.publisherMap,
+		pluginMap:       loader.pluginMap,
+		dataMap:         loader.dataMap,
+		contentMap:      loader.contentMap,
+		publisherMap:    loader.publisherMap,
+		nodeRendererMap: loader.nodeRendererMap,
 	}, nil
 }
 
@@ -71,6 +73,22 @@ func (m *Runner) Publisher(name string) (*plugin.Publisher, bool) {
 		return nil, false
 	}
 	return publisher.Publisher, true
+}
+
+func (m *Runner) NodeRenderer(customNodeType string) (plugin.NodeRendererFunc, bool) {
+	nodeRenderer, ok := m.nodeRendererMap[customNodeType]
+	if !ok {
+		return nil, false
+	}
+	return nodeRenderer.renderer, true
+}
+
+func (m *Runner) AllNodeRenderers() map[string]struct{} {
+	renderers := make(map[string]struct{}, len(m.nodeRendererMap))
+	for name := range m.nodeRendererMap {
+		renderers[name] = struct{}{}
+	}
+	return renderers
 }
 
 func (m *Runner) Close() (diags diagnostics.Diag) {

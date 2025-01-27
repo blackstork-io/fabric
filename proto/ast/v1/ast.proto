@@ -128,15 +128,15 @@ message Strikethrough {}
 
 message Custom {
   enum RenderScope {
-    SCOPE_UNSPECIFIED = 0;
+    RENDER_SCOPE_UNSPECIFIED = 0;
     // Renderer receives only the current node
-    SCOPE_NODE = 1;
+    RENDER_SCOPE_NODE = 1;
     // Renderer receives the entire parent content node
-    SCOPE_CONTENT = 2;
+    RENDER_SCOPE_CONTENT = 2;
     // Renderer receives the entire parent section or a document (if not within a section)
-    SCOPE_SECTION = 3;
+    RENDER_SCOPE_SECTION = 3;
     // Renderer receives the entire parent document
-    SCOPE_DOCUMENT = 4;
+    RENDER_SCOPE_DOCUMENT = 4;
   }
   // Emit node type with a relative path, ie "mymodule/mynode"
   // Consume node type as an absolute path, ie "types.blackstork.io/fabric/v1/custom_nodes/<plugin_name>/mymodule/mynode"

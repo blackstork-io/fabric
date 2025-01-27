@@ -1,8 +1,6 @@
 package plugin
 
 import (
-	"fmt"
-
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/plugin/ast"
 	"github.com/blackstork-io/fabric/plugin/ast/nodes"
@@ -131,13 +129,12 @@ func (c *ContentElement) SetPluginMeta(meta *nodes.FabricContentMetadata) {
 	}
 	c.pluginData["meta"] = meta.AsPluginData()
 	c.node.Content.(*nodes.FabricContent).Meta = meta
-	nodes.WalkContent(c.node, func(c *nodes.Custom, _ *nodes.Node, _ nodes.Path) {
-		c.Data.TypeUrl = fmt.Sprintf(
-			"%s%s/%s", nodes.CustomNodeTypeURLPrefix,
-			meta.Plugin,
-			c.GetStrippedNodeType(),
-		)
-	})
+	for cursor, content := range nodes.WalkContent[*nodes.Custom](c.node) {
+		if cursor.IsEntering() {
+			continue
+		}
+		content.Data.TypeUrl = nodes.FullyQualifiedCustomNodeTypeURL(meta.Plugin, content.GetStrippedNodeType())
+	}
 }
 
 // AsMarkdownSrc returns the markdown source of the content element.

@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/ast/nodes"
 	astv1 "github.com/blackstork-io/fabric/plugin/ast/v1"
@@ -177,7 +178,7 @@ func (p *grpcPlugin) clientPublishFunc(name string, client PluginServiceClient) 
 }
 
 func (p *grpcPlugin) clientNodeRendererFunc(name string, client PluginServiceClient) plugin.NodeRendererFunc {
-	return func(ctx context.Context, node *plugin.RenderNodeParams) (result *nodes.Node, diags diagnostics.Diag) {
+	return func(ctx context.Context, node *plugin.RenderNodeParams) (result []*nodes.Node, diags diagnostics.Diag) {
 		p.logger.DebugContext(ctx, "Calling node renderer", "name", name)
 		defer func(start time.Time) {
 			p.logger.DebugContext(ctx, "Called node renderer", "name", name, "took", time.Since(start))
@@ -192,7 +193,8 @@ func (p *grpcPlugin) clientNodeRendererFunc(name string, client PluginServiceCli
 		if diags.AppendErr(err, "Failed to render node") {
 			return
 		}
-		result = astv1.DecodeNode(res.GetSubtreeReplacement())
+
+		result = utils.FnMap(res.GetSubtreeReplacement(), astv1.DecodeNode)
 		diags.Extend(decodeDiagnosticList(res.GetDiagnostics()))
 		return result, diags
 	}

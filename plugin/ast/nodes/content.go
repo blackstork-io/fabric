@@ -29,7 +29,11 @@ func (s *nodeContentSigil) ValidateChild(child *Node) bool {
 // NodeContent is implemented by all possible node types in the fabric AST.
 type NodeContent interface {
 	isNodeContent() nodeContentSigil
+	// ValidateParent is called when adding a node to a parent.
+	// It should return true if the parent is valid for the node.
 	ValidateParent(parent *Node) bool
+	// ValidateChild is called when adding a child to a node.
+	// It should return true if the child is valid for the node.
 	ValidateChild(child *Node) bool
 }
 
@@ -332,6 +336,8 @@ const (
 	ScopeDocument
 )
 
+const ScopeCount = int(ScopeDocument) + 1
+
 // Custom content node.
 // Should be converted to normal AST nodes by the plugin prior to rendering.
 type Custom struct {
@@ -340,8 +346,25 @@ type Custom struct {
 	Scope RendererScope
 }
 
+func (s *Custom) ValidateChild(child *Node) bool {
+	slog.Error(
+		"Custom nodes can't contain any children, attempted to add",
+		"child", fmt.Sprintf("%T", child.Content),
+	)
+	return false
+}
+
 // Prefix format: types.blackstork.io/fabric/v1/custom_nodes/<plugin_name>/<node_type>
 const CustomNodeTypeURLPrefix = "types.blackstork.io/fabric/v1/custom_nodes/"
+
+func FullyQualifiedCustomNodeTypeURL(pluginName, nodeType string) string {
+	return fmt.Sprintf(
+		"%s%s/%s",
+		CustomNodeTypeURLPrefix,
+		strings.Trim(pluginName, "/"),
+		strings.Trim(nodeType, "/"),
+	)
+}
 
 // GetStrippedNodeType returns local component of the custom node type url
 func (c *Custom) GetStrippedNodeType() string {

@@ -3,7 +3,6 @@ package plugin
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/hcl/v2"
 
@@ -160,7 +159,7 @@ func (p *Schema) Publish(ctx context.Context, name string, params *PublishParams
 	return
 }
 
-func (p *Schema) RenderNode(ctx context.Context, params *RenderNodeParams) (repl *nodes.Node, diags diagnostics.Diag) {
+func (p *Schema) RenderNode(ctx context.Context, params *RenderNodeParams) (repl []*nodes.Node, diags diagnostics.Diag) {
 	if p == nil {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
@@ -203,15 +202,12 @@ func (p *Schema) RenderNode(ctx context.Context, params *RenderNodeParams) (repl
 		})
 		return
 	}
-	// types.blackstork.io/fabric/v1/custom_nodes/<plugin_name>/<node_type>
-	split := strings.SplitAfterN(custom.Data.GetTypeUrl(), "/", 6)
-	nodeType := split[len(split)-1]
 	renderer, found := p.NodeRenderers[custom.GetStrippedNodeType()]
 	if !found {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Node renderer not found",
-			Detail:   fmt.Sprintf("Node renderer for type '%s' (%s) not found in schema", nodeType, custom.Data.GetTypeUrl()),
+			Detail:   fmt.Sprintf("Node renderer for type '%s' (%s) not found in schema", custom.GetStrippedNodeType(), custom.Data.GetTypeUrl()),
 		})
 		return
 	}

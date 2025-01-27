@@ -180,13 +180,13 @@ func DecodeNode(node *Node) *nodes.Node {
 
 func decodeScope(s Custom_RenderScope) nodes.RendererScope {
 	switch s {
-	case Custom_SCOPE_UNSPECIFIED, Custom_SCOPE_NODE:
+	case Custom_RENDER_SCOPE_UNSPECIFIED, Custom_RENDER_SCOPE_NODE:
 		return nodes.ScopeNode
-	case Custom_SCOPE_CONTENT:
+	case Custom_RENDER_SCOPE_CONTENT:
 		return nodes.ScopeContent
-	case Custom_SCOPE_SECTION:
+	case Custom_RENDER_SCOPE_SECTION:
 		return nodes.ScopeSection
-	case Custom_SCOPE_DOCUMENT:
+	case Custom_RENDER_SCOPE_DOCUMENT:
 		return nodes.ScopeDocument
 	default:
 		slog.Error("unsupported scope", "scope", s)

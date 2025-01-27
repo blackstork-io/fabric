@@ -16,13 +16,26 @@ import (
 
 type PluginPublishAction struct {
 	*PluginAction
-	Publisher *plugin.Publisher
+	Publisher     *plugin.Publisher
+	nodeRenderers NodeRenderers
 }
 
-func (block *PluginPublishAction) Publish(ctx context.Context, dataCtx plugindata.Map, documentName string, document *nodes.Node) diagnostics.Diag {
-	nodes.WalkContent(document, func(c *nodes.Custom, n *nodes.Node, p nodes.Path) {
-		c.Data.TypeUrl
+func (block *PluginPublishAction) Publish(ctx context.Context, dataCtx plugindata.Map, documentName string, document *nodes.Node) (diags diagnostics.Diag) {
+	// TODO: ask publisher for support info, ignore natively supported nodes
+	publisherInfo, diag := block.Publisher.Info(ctx, &plugin.PublisherInfoParams{
+		Config: block.Config,
+		Args:   block.Args,
 	})
+	if diags.Extend(diag) {
+		return
+	}
+
+	customRenderer := newCustomNodeRenderer(document, block.PluginName, publisherInfo, block.nodeRenderers)
+	document, diag = customRenderer.renderNodes(ctx)
+	if diags.Extend(diag) {
+		return
+	}
+
 	return block.Publisher.Execute(ctx, &plugin.PublishParams{
 		Config:       block.Config,
 		Args:         block.Args,
@@ -32,8 +45,8 @@ func (block *PluginPublishAction) Publish(ctx context.Context, dataCtx plugindat
 	})
 }
 
-func LoadPluginPublishAction(ctx context.Context, publishers Publishers, node *definitions.ParsedPlugin) (_ *PluginPublishAction, diags diagnostics.Diag) {
-	p, ok := publishers.Publisher(node.PluginName)
+func LoadPluginPublishAction(ctx context.Context, plugins Plugins, node *definitions.ParsedPlugin) (_ *PluginPublishAction, diags diagnostics.Diag) {
+	p, ok := plugins.Publisher(node.PluginName)
 	if !ok {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -71,5 +84,6 @@ func LoadPluginPublishAction(ctx context.Context, publishers Publishers, node *d
 			Config:     cfg,
 			Args:       args,
 		},
+		nodeRenderers: plugins,
 	}, diags
 }

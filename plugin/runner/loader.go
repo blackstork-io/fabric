@@ -13,6 +13,7 @@ import (
 
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
+	"github.com/blackstork-io/fabric/plugin/ast/nodes"
 	pluginapiv1 "github.com/blackstork-io/fabric/plugin/pluginapi/v1"
 )
 
@@ -36,15 +37,21 @@ type loadedPublisher struct {
 	*plugin.Publisher
 }
 
+type loadedNodeRenderer struct {
+	plugin   *plugin.Schema
+	renderer plugin.NodeRendererFunc
+}
+
 type loader struct {
-	logger       *slog.Logger
-	tracer       trace.Tracer
-	binaryMap    map[string]string
-	builtin      *plugin.Schema
-	pluginMap    map[string]loadedPlugin
-	dataMap      map[string]loadedDataSource
-	contentMap   map[string]loadedContentProvider
-	publisherMap map[string]loadedPublisher
+	logger          *slog.Logger
+	tracer          trace.Tracer
+	binaryMap       map[string]string
+	builtin         *plugin.Schema
+	pluginMap       map[string]loadedPlugin
+	dataMap         map[string]loadedDataSource
+	contentMap      map[string]loadedContentProvider
+	publisherMap    map[string]loadedPublisher
+	nodeRendererMap map[string]loadedNodeRenderer
 }
 
 func makeLoader(
@@ -54,14 +61,15 @@ func makeLoader(
 	tracer trace.Tracer,
 ) *loader {
 	return &loader{
-		tracer:       tracer,
-		logger:       logger,
-		binaryMap:    binaryMap,
-		builtin:      builtin,
-		pluginMap:    make(map[string]loadedPlugin),
-		dataMap:      make(map[string]loadedDataSource),
-		contentMap:   make(map[string]loadedContentProvider),
-		publisherMap: make(map[string]loadedPublisher),
+		tracer:          tracer,
+		logger:          logger,
+		binaryMap:       binaryMap,
+		builtin:         builtin,
+		pluginMap:       make(map[string]loadedPlugin),
+		dataMap:         make(map[string]loadedDataSource),
+		contentMap:      make(map[string]loadedContentProvider),
+		publisherMap:    make(map[string]loadedPublisher),
+		nodeRendererMap: make(map[string]loadedNodeRenderer),
 	}
 }
 
@@ -165,29 +173,42 @@ func (l *loader) registerPublisher(ctx context.Context, name string, schema *plu
 	return nil
 }
 
-func (l *loader) registerPlugin(ctx context.Context, schema *plugin.Schema, closefn func() error) diagnostics.Diag {
+func (l *loader) registerNodeRenderer(ctx context.Context, nodeType string, schema *plugin.Schema, renderer plugin.NodeRendererFunc) diagnostics.Diag {
+	l.logger.DebugContext(ctx, "Registering node renderer", "name", nodeType, "plugin", schema.Name, "version", schema.Version)
+	fqn := nodes.FullyQualifiedCustomNodeTypeURL(schema.Name, nodeType)
+	if found, has := l.publisherMap[fqn]; has {
+		return diagnostics.Diag{{
+			Severity: hcl.DiagError,
+			Summary:  "Duplicate node renderer",
+			Detail:   fmt.Sprintf("Node renderer %s provided by plugin %s@%s and %s@%s", fqn, schema.Name, schema.Version, found.plugin.Name, found.plugin.Version),
+		}}
+	}
+
+	l.nodeRendererMap[fqn] = loadedNodeRenderer{
+		plugin:   schema,
+		renderer: renderer,
+	}
+	return nil
+}
+
+func (l *loader) registerPlugin(ctx context.Context, schema *plugin.Schema, closefn func() error) (diags diagnostics.Diag) {
 	l.logger.DebugContext(ctx, "Registering a plugin", "name", schema.Name, "version", schema.Version)
-	if diags := schema.Validate(); diags.HasErrors() {
+	if diags.Extend(schema.Validate()) {
 		l.logger.ErrorContext(ctx, "Validation errors while registering a plugin", "name", schema.Name, "version", schema.Version)
-		return diags
+		return
 	}
 	schema = plugin.WithLogging(schema, l.logger)
 	schema = plugin.WithTracing(schema, l.tracer)
 	if found, has := l.pluginMap[schema.Name]; has {
-		diags := diagnostics.Diag{{
+		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  fmt.Sprintf("Plugin %s conflict", schema.Name),
 			Detail:   fmt.Sprintf("%s@%s and %s@%s have the same schema name", schema.Name, schema.Version, found.Name, found.Version),
-		}}
-		err := found.closefn()
-		if err != nil {
-			diags = append(diags, &hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  fmt.Sprintf("Failed to close plugin %s@%s", found.Name, found.Version),
-				Detail:   err.Error(),
-			})
+		})
+		if err := closefn(); err != nil {
+			diags.AppendErr(err, fmt.Sprintf("Failed to close plugin %s@%s", found.Name, found.Version))
 		}
-		return diags
+		return
 	}
 	plugin := loadedPlugin{
 		closefn: closefn,
@@ -195,21 +216,26 @@ func (l *loader) registerPlugin(ctx context.Context, schema *plugin.Schema, clos
 	}
 	l.pluginMap[schema.Name] = plugin
 	for name, source := range schema.DataSources {
-		if diags := l.registerDataSource(ctx, name, schema, source); diags.HasErrors() {
-			return diags
+		if diags.Extend(l.registerDataSource(ctx, name, schema, source)) {
+			return
 		}
 	}
 	for name, provider := range schema.ContentProviders {
-		if diags := l.registerContentProvider(ctx, name, schema, provider); diags.HasErrors() {
-			return diags
+		if diags.Extend(l.registerContentProvider(ctx, name, schema, provider)) {
+			return
 		}
 	}
 	for name, publisher := range schema.Publishers {
-		if diags := l.registerPublisher(ctx, name, schema, publisher); diags.HasErrors() {
-			return diags
+		if diags.Extend(l.registerPublisher(ctx, name, schema, publisher)) {
+			return
 		}
 	}
-	return nil
+	for nodeType, renderer := range schema.NodeRenderers {
+		if diags.Extend(l.registerNodeRenderer(ctx, nodeType, schema, renderer)) {
+			return
+		}
+	}
+	return
 }
 
 func (l *loader) loadBinary(ctx context.Context, name, binaryPath string) (diags diagnostics.Diag) {

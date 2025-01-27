@@ -131,16 +131,16 @@ func EncodeNode(node *nodes.Node) *Node {
 func encodeScope(scope nodes.RendererScope) Custom_RenderScope {
 	switch scope {
 	case nodes.ScopeNode:
-		return Custom_SCOPE_NODE
+		return Custom_RENDER_SCOPE_NODE
 	case nodes.ScopeContent:
-		return Custom_SCOPE_CONTENT
+		return Custom_RENDER_SCOPE_CONTENT
 	case nodes.ScopeSection:
-		return Custom_SCOPE_SECTION
+		return Custom_RENDER_SCOPE_SECTION
 	case nodes.ScopeDocument:
-		return Custom_SCOPE_DOCUMENT
+		return Custom_RENDER_SCOPE_DOCUMENT
 	default:
 		slog.Error("unsupported renderer scope", "scope", scope)
-		return Custom_SCOPE_NODE
+		return Custom_RENDER_SCOPE_NODE
 	}
 }
 

@@ -11,6 +11,8 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
+// TODO: add tracing for node renderers
+
 // WithTracing wraps a plugin schema with tracing instrumentation.
 func WithTracing(plugin *Schema, tracer trace.Tracer) *Schema {
 	plugin.ContentProviders = makeContentProvidersTracing(plugin.Name, plugin.ContentProviders, tracer)

@@ -38,7 +38,7 @@ func (block *Section) RenderContent(ctx context.Context, dataCtx plugindata.Map)
 
 	// verify required vars
 	if len(block.requiredVars) > 0 {
-		diag := verifyRequiredVars(dataCtx, block.requiredVars, block.source.Block)
+		diag = verifyRequiredVars(dataCtx, block.requiredVars, block.source.Block)
 		if diags.Extend(diag) {
 			return
 		}

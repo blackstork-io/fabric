@@ -9,6 +9,7 @@ import (
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 
+	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	astv1 "github.com/blackstork-io/fabric/plugin/ast/v1"
 )
@@ -185,7 +186,7 @@ func (srv *grpcServer) RenderNode(ctx context.Context, req *RenderNodeRequest) (
 	result, diags := srv.schema.RenderNode(ctx, decodeRenderNodeParams(req))
 
 	return &RenderNodeResponse{
-		SubtreeReplacement: astv1.EncodeNode(result),
+		SubtreeReplacement: utils.FnMap(result, astv1.EncodeNode),
 		Diagnostics:        encodeDiagnosticList(diags),
 	}, nil
 }

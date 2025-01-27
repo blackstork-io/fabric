@@ -138,10 +138,8 @@ func (doc *Document) Publish(ctx context.Context, document *nodes.Node, data plu
 	}
 	var diags diagnostics.Diag
 	for _, block := range doc.PublishBlocks {
-		diag := block.Publish(ctx, dataCtx, documentName, document)
-		if diag != nil {
-			diags.Extend(diag)
-		}
+		diag := block.Publish(ctx, dataCtx, documentName, nodes.Clone(document))
+		diags.Extend(diag)
 	}
 	return diags
 }

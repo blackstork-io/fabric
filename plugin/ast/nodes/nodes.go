@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
+
+	"iter"
 )
 
 // Node is a node in the fabric AST.
@@ -51,7 +53,32 @@ func (n *Node) GetChildren() []*Node {
 	return n.children
 }
 
+// Clone creates a deep copy of the whole tree and a shallow copy of the content.
+// Changes to the node (eg replacing children) will not affect the original node.
+// Changes to the content will affect the original node, create a copy of the content if needed.
+func Clone(root *Node) (clone *Node) {
+	for root.parent != nil {
+		root = root.parent
+	}
+	return cloneChildren(nil, []*Node{root})[0]
+}
+
+func cloneChildren(parent *Node, children []*Node) []*Node {
+	clone := make([]*Node, len(children))
+	for i, n := range children {
+		clone[i] = &Node{
+			Content: n.Content,
+			parent:  parent,
+		}
+		if len(n.children) > 0 {
+			clone[i].children = cloneChildren(clone[i], n.children)
+		}
+	}
+	return clone
+}
+
 func (n *Node) GetRelativePath(relativeRoot *Node) (path Path) {
+	path = Path{}
 	for ; n != nil && n != relativeRoot; n = n.parent {
 		path = append(path, n.indexInParent())
 	}
@@ -134,34 +161,53 @@ func (n *Node) insert(after bool, nodes ...*Node) *Node {
 // ReplaceWith replaces the node with the given nodes.
 // Returns the replaced node.
 func (n *Node) ReplaceWith(nodes ...*Node) *Node {
+	if n == nil {
+		return nil
+	}
 	idx := n.indexInParent()
 	if idx < 0 {
-		panic("node is not in the tree")
+		panic("node is not in the tree or root node")
 	}
-	nextSiblings := slices.Clone(n.parent.children[idx+1:])
+	// performing the replacement with a temporary slice
+	// so that the validation logic gets the proper insertion context
+	nextSiblings := n.parent.children[idx+1:]
+	nodes = slices.Grow(nodes, len(nextSiblings))
+	nodes = append(nodes, nextSiblings...)
 	n.parent.children = n.parent.children[:idx]
 	n.parent.AppendChildren(nodes...)
-	n.parent.AppendChildren(nextSiblings...)
 	n.parent = nil
 	return n
 }
 
 // NextSibling returns the next sibling of the node or nil if it is the last child.
 func (n *Node) NextSibling() *Node {
-	idx := n.indexInParent()
-	if idx < 0 {
+	if n == nil || n.parent == nil {
 		return nil
 	}
-	return n.parent.children[idx+1]
+	children := n.parent.children
+	idx := slices.Index(children, n) + 1
+	if idx <= 0 || idx >= len(children) {
+		return nil
+	}
+	return children[idx]
 }
 
 // PrevSibling returns the previous sibling of the node or nil if it is the first child.
 func (n *Node) PrevSibling() *Node {
-	idx := n.indexInParent()
-	if idx <= 0 {
+	if n == nil || n.parent == nil {
 		return nil
 	}
-	return n.parent.children[idx-1]
+	children := n.parent.children
+	idx := slices.Index(children, n) - 1
+	if idx < 0 || idx >= len(children) {
+		return nil
+	}
+	return children[idx]
+}
+
+// Parent returns the parent of the node or nil if it is the root node.
+func (n *Node) Parent() *Node {
+	return n.parent
 }
 
 // RemoveFromTree removes the node from the tree, returning the node itself.
@@ -185,24 +231,130 @@ func (n *Node) validate(child *Node) bool {
 	return n.Content.ValidateChild(child) && child.Content.ValidateParent(n)
 }
 
-func (n *Node) Walk(fn func(*Node, Path)) {
-	n.walk(Path{}, fn)
+// Cursor represents a position in the AST. It can be used only within a single iteration step.
+type Cursor struct {
+	path       Path
+	isEntering bool
+	node       *Node
 }
 
-func (n *Node) walk(p Path, fn func(*Node, Path)) {
-	fn(n, p)
-	idx := len(p)
-	p = append(p, 0)
-	for i, c := range n.children {
-		p[idx] = i
-		c.walk(p, fn)
+func newCursor(n *Node, startingPath Path) *Cursor {
+	return &Cursor{
+		path:       startingPath,
+		isEntering: true,
+		node:       n,
 	}
 }
 
-func WalkContent[T NodeContent](n *Node, fn func(T, *Node, Path)) {
-	n.Walk(func(n *Node, p Path) {
-		if c, ok := n.Content.(T); ok {
-			fn(c, n, p)
+func (c *Cursor) dfs(yield func(*Cursor) bool) {
+	// TODO: test heavily
+	initPath := c.path
+	for i, step := range initPath {
+		c.path = c.path[:i]
+		if !yield(c) {
+			return
 		}
-	})
+		c.node = c.node.children[step]
+	}
+dfs_loop:
+	for {
+		if !yield(c) {
+			return
+		}
+		if len(c.node.children) != 0 {
+			c.node = c.node.children[0]
+			c.path = append(c.path, 0)
+			continue
+		}
+
+		c.isEntering = false
+
+		if !yield(c) {
+			return
+		}
+
+		curPath := c.path
+		for {
+			if len(curPath) == len(initPath) {
+				// no more nodes, exit
+				break dfs_loop
+			}
+			parent := c.node.parent
+			curPath[len(curPath)-1]++
+			children := parent.children
+			if curPath[len(curPath)-1] < len(children) && curPath[len(curPath)-1] > 0 {
+				c.node = children[curPath[len(curPath)-1]]
+				c.isEntering = true
+				break
+			}
+
+			// done with parent, leave it
+			c.node = parent
+			curPath = curPath[:len(curPath)-1]
+			c.path = curPath
+			if !yield(c) {
+				return
+			}
+		}
+	}
+	for i := len(c.path) - 1; i >= 0; i-- {
+		c.path = c.path[:i]
+		c.node = c.node.parent
+		if !yield(c) {
+			return
+		}
+	}
+}
+
+// Walk traverses the AST.
+// Cursor should not leave the loop body, tree should not be modified during the iteration.
+func (n *Node) Walk() iter.Seq[*Cursor] {
+	return newCursor(n, Path{}).dfs
+}
+
+// Walk traverses the AST according to the given path, and then walks all of the children.
+func (n *Node) WalkFromPath(path Path) iter.Seq[*Cursor] {
+	return newCursor(n, path).dfs
+}
+
+// Path gets the path to the current node.
+func (c *Cursor) Path() Path {
+	return c.path.Clone()
+}
+
+// PathLen gets the length of the path to the current node.
+func (c *Cursor) PathLen() int {
+	return len(c.path)
+}
+
+// Node gets the current node.
+func (c *Cursor) Node() *Node {
+	return c.node
+}
+
+// Content gets the content of the current node.
+func (c *Cursor) Content() NodeContent {
+	return c.node.Content
+}
+
+// IsEntering returns true if the cursor is entering the node.
+func (c *Cursor) IsEntering() bool {
+	return c.isEntering
+}
+
+// IsLeaving returns true if the cursor is leaving the node.
+func (c *Cursor) IsLeaving() bool {
+	return !c.isEntering
+}
+
+// WalkContent traverses the AST in depth-first order, returning only nodes with the given content type.
+// Cursor should not leave the loop body, tree should not be modified during the iteration.
+func WalkContent[T NodeContent](n *Node) iter.Seq2[*Cursor, T] {
+	return func(yield func(*Cursor, T) bool) {
+		for c := range n.Walk() {
+			if content, ok := c.Content().(T); ok && !yield(c, content) {
+				return
+			}
+		}
+	}
 }

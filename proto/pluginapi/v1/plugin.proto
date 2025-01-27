@@ -75,7 +75,7 @@ message RenderNodeRequest {
 }
 
 message RenderNodeResponse {
-    ast.v1.Node subtree_replacement = 1;
+    repeated ast.v1.Node subtree_replacement = 1;
     repeated Diagnostic diagnostics = 2;
 }
 

@@ -16,8 +16,14 @@ type Publishers interface {
 	Publisher(name string) (*plugin.Publisher, bool)
 }
 
+type NodeRenderers interface {
+	NodeRenderer(customNodeType string) (plugin.NodeRendererFunc, bool)
+	AllNodeRenderers() map[string]struct{}
+}
+
 type Plugins interface {
 	DataSources
 	ContentProviders
 	Publishers
+	NodeRenderers
 }

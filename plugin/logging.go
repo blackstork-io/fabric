@@ -13,6 +13,8 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
+// TODO: add logging for node renderers
+
 // WithLogging wraps the plugin with logging instrumentation.
 func WithLogging(plugin *Schema, logger *slog.Logger) *Schema {
 	logger = logger.With("component", "plugin")
