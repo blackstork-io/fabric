@@ -3,6 +3,8 @@ dir: mocks/{{ replaceAll .InterfaceDirRelative "internal" "internalpkg" }}
 mockname: "{{.InterfaceName}}"
 outpkg: "{{.PackageName}}_mocks"
 filename: "{{.InterfaceName | snakecase}}.go"
+resolve-type-alias: False
+issue-845-fix: true
 packages:
   github.com/blackstork-io/fabric/parser/definitions:
     config:
@@ -44,10 +46,6 @@ packages:
     interfaces:
       Client:
   github.com/blackstork-io/fabric/internal/snyk/client:
-    config:
-    interfaces:
-      Client:
-  github.com/blackstork-io/fabric/internal/microsoft/client:
     config:
     interfaces:
       Client:
