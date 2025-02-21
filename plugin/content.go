@@ -97,6 +97,7 @@ type ContentSection struct {
 	id       uint32
 	Children []Content
 	meta     *nodes.ContentMeta
+	mtx      sync.RWMutex
 }
 
 func NewSection(contentID uint32) *ContentSection {
@@ -110,46 +111,45 @@ func NewSection(contentID uint32) *ContentSection {
 
 // Add content to the content tree.
 func (c *ContentSection) Add(content Content, loc *Location) error {
-	return addContent(c, content, loc)
-}
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
 
-func addContent(parent *ContentSection, child Content, loc *Location) error {
-	if parent.idStore == nil {
-		parent.idStore = &idStore{}
+	if c.idStore == nil {
+		c.idStore = &idStore{}
 	}
-	if section, ok := child.(*ContentSection); ok {
-		section.idStore = parent.idStore
+	if section, ok := content.(*ContentSection); ok {
+		section.idStore = c.idStore
 	}
 	if loc == nil {
-		child.setID(parent.next())
-		parent.Children = append(parent.Children, child)
+		content.setID(c.next())
+		c.Children = append(c.Children, content)
 		return nil
 	}
 	if loc.Effect != LocationEffectUnspecified {
-		child.setID(parent.next())
+		content.setID(c.next())
 	} else {
-		child.setID(loc.Index)
+		content.setID(loc.Index)
 	}
-	foundIdx := slices.IndexFunc(parent.Children, func(c Content) bool {
+	foundIdx := slices.IndexFunc(c.Children, func(c Content) bool {
 		return c.ID() == loc.Index
 	})
 	if foundIdx > -1 {
 		switch loc.Effect {
 		case LocationEffectBefore:
-			parent.Children = append(parent.Children[:foundIdx], append([]Content{child}, parent.Children[foundIdx:]...)...)
+			c.Children = append(c.Children[:foundIdx], append([]Content{content}, c.Children[foundIdx:]...)...)
 		case LocationEffectAfter:
-			parent.Children = append(parent.Children[:foundIdx+1], append([]Content{child}, parent.Children[foundIdx+1:]...)...)
+			c.Children = append(c.Children[:foundIdx+1], append([]Content{content}, c.Children[foundIdx+1:]...)...)
 		default:
-			parent.Children[foundIdx] = child
+			c.Children[foundIdx] = content
 		}
 		return nil
 	}
-	for _, c := range parent.Children {
+	for _, c := range c.Children {
 		section, ok := c.(*ContentSection)
 		if !ok {
 			continue
 		}
-		err := addContent(section, child, loc)
+		err := section.Add(content, loc)
 		if err == ErrContentLocationNotFound {
 			continue
 		} else if err != nil {
@@ -160,10 +160,14 @@ func addContent(parent *ContentSection, child Content, loc *Location) error {
 }
 
 func (c *ContentSection) setID(id uint32) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
 	c.id = id
 }
 
 func (c *ContentSection) SetMeta(meta *nodes.ContentMeta) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
 	c.meta = meta
 	for _, child := range c.Children {
 		child.SetMeta(meta)
@@ -171,10 +175,14 @@ func (c *ContentSection) SetMeta(meta *nodes.ContentMeta) {
 }
 
 func (c *ContentSection) ID() uint32 {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
 	return c.id
 }
 
 func (c *ContentSection) Meta() *nodes.ContentMeta {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
 	return c.meta
 }
 
@@ -184,6 +192,8 @@ func (c *ContentSection) AsPluginData() plugindata.Data {
 
 // Compact removes empty sections from the content tree.
 func (c *ContentSection) Compact() {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
 	c.Children = slices.DeleteFunc(c.Children, func(c Content) bool {
 		if _, ok := c.(*ContentEmpty); ok {
 			return true
@@ -198,6 +208,8 @@ func (c *ContentSection) Compact() {
 
 // IsEmpty returns true if the section does not contain children
 func (c *ContentSection) IsEmpty() bool {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
 	return len(c.Children) == 0
 }
 
@@ -206,6 +218,8 @@ func (c *ContentSection) AsData() plugindata.Data {
 	if c == nil {
 		return nil
 	}
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
 	children := make(plugindata.List, len(c.Children))
 	for i, child := range c.Children {
 		children[i] = child.AsData()
@@ -232,6 +246,8 @@ type ContentElement struct {
 	serializedNode *astv1.FabricContentNode
 	source         astsrc.ASTSource
 	node           *nodes.FabricContentNode
+
+	mtx sync.RWMutex
 }
 
 // NewElement is the preferred way to create a new content element.
@@ -354,10 +370,14 @@ func (c *ContentElement) setID(id uint32) {
 }
 
 func (c *ContentElement) Meta() *nodes.ContentMeta {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
 	return c.meta
 }
 
 func (c *ContentElement) SetMeta(meta *nodes.ContentMeta) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
 	c.meta = meta
 }
 

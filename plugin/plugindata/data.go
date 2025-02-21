@@ -61,6 +61,21 @@ func (d Map) Any() any {
 	return dst
 }
 
+func (d Map) Clone() Map {
+	dst := make(Map, len(d))
+	for k, v := range d {
+		switch v := v.(type) {
+		case Map:
+			dst[k] = v.Clone()
+		case List:
+			dst[k] = v.Clone()
+		default:
+			dst[k] = v
+		}
+	}
+	return dst
+}
+
 type List []Data
 
 func (d List) Any() any {
@@ -79,6 +94,21 @@ type Time time.Time
 
 func (d Time) Any() any {
 	return (time.Time)(d)
+}
+
+func (d List) Clone() List {
+	dst := make(List, len(d))
+	for i, v := range d {
+		switch v := v.(type) {
+		case Map:
+			dst[i] = v.Clone()
+		case List:
+			dst[i] = v.Clone()
+		default:
+			dst[i] = v
+		}
+	}
+	return dst
 }
 
 func UnmarshalJSON(data []byte) (Data, error) {

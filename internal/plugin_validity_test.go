@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"io"
+	"log/slog"
 	"strings"
 	"testing"
 
@@ -31,8 +33,9 @@ import (
 // TestAllPluginSchemaValidity tests that all plugin schemas are valid
 func TestAllPluginSchemaValidity(t *testing.T) {
 	ver := "1.2.3"
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	plugins := []*plugin.Schema{
-		builtin.Plugin(ver, nil, nil),
+		builtin.Plugin(ver, logger, nil),
 		elastic.Plugin(ver, nil),
 		github.Plugin(ver, nil),
 		graphql.Plugin(ver),

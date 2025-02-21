@@ -140,6 +140,18 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 		diags.Extend(diag)
 	}
 
+	depAttrs, depAttrsFound := utils.Pop(body.Attributes, definitions.AttrDependsOn)
+	if depAttrsFound {
+		diag := gohcl.DecodeExpression(depAttrs.Expr, nil, &res.DependsOn)
+		diags.Extend(diag)
+	}
+
+	// if title := d.Block.Body.Attributes[definitions.AttrTitle]; title != nil {
+	// 	titleContent, diag := db.ParseTitle(ctx, title)
+	// 	if !diag.Extend(diags) {
+	// 		doc.Content = append(doc.Content, titleContent)
+	// 	}
+	// }
 	plugin.Block.Body = body
 	invocation := &evaluation.BlockInvocation{
 		Block: plugin.Block,
@@ -168,6 +180,7 @@ func (db *DefinedBlocks) parsePlugin(ctx context.Context, plugin *definitions.Pl
 
 		res.Vars = res.Vars.MergeWithBaseVars(baseEval.Vars)
 		res.RequiredVars = append(res.RequiredVars, baseEval.RequiredVars...)
+		res.DependsOn = append(res.DependsOn, baseEval.DependsOn...)
 		if res.IsIncluded == nil {
 			res.IsIncluded = baseEval.IsIncluded
 		}

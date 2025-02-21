@@ -20,6 +20,7 @@ const (
 	PluginTypeRef    = "ref"
 	AttrRefBase      = "base"
 	AttrTitle        = "title"
+	AttrDependsOn    = "depends_on"
 	AttrLocalVar     = "local_var"
 	AttrRequiredVars = "required_vars"
 	AttrIsIncluded   = "is_included"

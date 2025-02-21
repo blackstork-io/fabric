@@ -3,7 +3,6 @@ package eval
 import (
 	"context"
 	"log/slog"
-	"maps"
 	"slices"
 
 	"github.com/hashicorp/hcl/v2"
@@ -25,33 +24,8 @@ type Document struct {
 }
 
 func (doc *Document) FetchData(ctx context.Context) (plugindata.Data, diagnostics.Diag) {
-	logger := *slog.Default()
-	logger.DebugContext(ctx, "Fetching data for the document template")
-	result := make(plugindata.Map)
-	diags := diagnostics.Diag{}
-	for _, block := range doc.DataBlocks {
-		var dsMap plugindata.Map
-		found, ok := result[block.PluginName]
-		if ok {
-			dsMap = found.(plugindata.Map)
-		} else {
-			dsMap = make(plugindata.Map)
-			result[block.PluginName] = dsMap
-		}
-		if _, found := dsMap[block.BlockName]; found {
-			diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagWarning,
-				Summary:  "Data conflict",
-				Detail:   "Result of this block overwrites results from the previous invocation.",
-				Subject:  &block.SrcRange,
-			})
-		}
-		dsMap[block.BlockName], diags = block.FetchData(ctx)
-		if diags.HasErrors() {
-			return nil, diags
-		}
-	}
-	return result, diags
+	evaluator := makeAsyncDataEvaluator(ctx, doc, slog.Default())
+	return evaluator.Execute()
 }
 
 func filterChildrenByTags(children []*Content, requiredTags []string) []*Content {
@@ -71,8 +45,8 @@ func filterChildrenByTags(children []*Content, requiredTags []string) []*Content
 }
 
 func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Map, requiredTags []string) (*plugin.ContentSection, plugindata.Data, diagnostics.Diag) {
-	logger := *slog.Default()
-	logger.DebugContext(ctx, "Fetching data for the document template")
+	logger := slog.Default()
+	logger.WarnContext(ctx, "Render content for the document template", "document", doc.Source.Name)
 	data, diags := doc.FetchData(ctx)
 	if diags.HasErrors() {
 		return nil, nil, diags
@@ -110,40 +84,16 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 		children = filterChildrenByTags(children, requiredTags)
 	}
 
-	result := plugin.NewSection(0)
-	// create a position map for content blocks
-	posMap := make(map[int]uint32, len(children))
-	for i := range children {
-		empty := new(plugin.ContentEmpty)
-		result.Add(empty, nil)
-		posMap[i] = empty.ID()
+	evaluator, diag := makeAsyncContentEvaluator(ctx, children, docDataCtx)
+	if diags.Extend(diag) {
+		return nil, nil, diags
 	}
-	// sort content blocks by invocation order
-	invokeList := make([]int, 0, len(children))
-	for i := range children {
-		invokeList = append(invokeList, i)
-	}
-	slices.SortStableFunc(invokeList, func(a, b int) int {
-		ao := children[a].InvocationOrder()
-		bo := children[b].InvocationOrder()
-		return ao.Weight() - bo.Weight()
-	})
-	// execute content blocks based on the invocation order
-	for _, idx := range invokeList {
-		// clone the data context for each content block
-		dataCtx := maps.Clone(docDataCtx)
-		// set the current content to the data context
-		dataCtx[definitions.BlockKindDocument].(plugindata.Map)[definitions.BlockKindContent] = result.AsData()
-		// TODO: if section, set section
 
-		// execute the content block
-		diag := children[idx].RenderContent(ctx, dataCtx, result, result, posMap[idx])
-		if diags.Extend(diag) {
-			return nil, nil, diags
-		}
+	result, diag := evaluator.Execute(docDataCtx)
+	if diags.Extend(diag) {
+		return nil, nil, diags
 	}
-	// compact the content tree to remove empty content nodes
-	result.Compact()
+
 	return result, docDataCtx, diags
 }
 
