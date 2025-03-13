@@ -130,14 +130,14 @@
       },
       {
         "name": "sleep",
-        "type": "data-source",
+        "type": "content-provider",
         "arguments": [
           "duration"
         ]
       },
       {
         "name": "sleep",
-        "type": "content-provider",
+        "type": "data-source",
         "arguments": [
           "duration"
         ]
