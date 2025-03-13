@@ -23,15 +23,59 @@ func TestEngineFetchData(t *testing.T) {
 					path = "testdata/a.json"
 				}
 
+				data json "test2" {
+					path = "testdata/a.json"
+				}
+
 				content text {
-					text = "hello"
+					value = "hello"
 				}
 			}
 			`,
 		},
 		"document.hello.data.json.test",
 		plugindata.Map{
-			"property_for": plugindata.String("a.json"),
+			"data": plugindata.Map{
+				"json": plugindata.Map{
+					"test": plugindata.Map{
+						"property_for": plugindata.String("a.json"),
+					},
+				},
+			},
+		},
+		[][]diagtest.Assert{},
+	)
+	fetchDataTest(
+		t, "Basic",
+		[]string{
+			`
+			document "hello" {
+				data json "test" {
+					path = "testdata/a.json"
+				}
+
+				data json "test2" {
+					path = "testdata/a.json"
+				}
+
+				content text {
+					value = "hello"
+				}
+			}
+			`,
+		},
+		"document.hello.data.json",
+		plugindata.Map{
+			"data": plugindata.Map{
+				"json": plugindata.Map{
+					"test": plugindata.Map{
+						"property_for": plugindata.String("a.json"),
+					},
+					"test2": plugindata.Map{
+						"property_for": plugindata.String("a.json"),
+					},
+				},
+			},
 		},
 		[][]diagtest.Assert{},
 	)
@@ -44,7 +88,7 @@ func TestEngineFetchData(t *testing.T) {
 			}
 			document "hello" {
 				content text {
-					text = "hello"
+					value = "hello"
 				}
 			}
 			`,

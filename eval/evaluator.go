@@ -29,6 +29,42 @@ func makeAsyncDataEvaluator(ctx context.Context, doc *Document, logger *slog.Log
 	}
 }
 
+func makeAsyncDataEvaluatorWithPath(ctx context.Context, doc *Document, path []string, logger *slog.Logger) *asyncDataEvaluator {
+
+	var dataSourceName string
+	if len(path) > 0 {
+		dataSourceName = path[0]
+	}
+
+	var blockName string
+	if len(path) > 1 {
+		blockName = path[1]
+	}
+
+	matchingBlocks := []*PluginDataAction{}
+
+	for i := range doc.DataBlocks {
+		block := doc.DataBlocks[i]
+
+		if dataSourceName != "" && block.PluginName != dataSourceName {
+			continue
+		}
+
+		if blockName != "" && block.BlockName != blockName {
+			continue
+		}
+
+		matchingBlocks = append(matchingBlocks, block)
+	}
+
+	return &asyncDataEvaluator{
+		ctx:    ctx,
+		blocks: matchingBlocks,
+		logger: logger,
+	}
+}
+
+
 type asyncDataEvalResult struct {
 	pluginName string
 	blockName  string
@@ -38,6 +74,7 @@ type asyncDataEvalResult struct {
 
 func (doc *asyncDataEvaluator) Execute() (plugindata.Data, diagnostics.Diag) {
 	doc.logger.DebugContext(doc.ctx, "Fetching data for the document template")
+
 	resultch := make(chan *asyncDataEvalResult, len(doc.blocks))
 	for _, block := range doc.blocks {
 		go func(block *PluginDataAction, resultch chan<- *asyncDataEvalResult) {

@@ -10,7 +10,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/hashicorp/hcl/v2"
 	"go.opentelemetry.io/otel/attribute"
@@ -325,7 +324,7 @@ func (e *Engine) loadDocumentData(
 	ctx context.Context,
 	doc string,
 	path []string,
-) (_ []*eval.PluginDataAction, diags diagnostics.Diag) {
+) (_ plugindata.Data, diags diagnostics.Diag) {
 
 	pathStr := strings.Join(path, ".")
 
@@ -363,58 +362,22 @@ func (e *Engine) loadDocumentData(
 			Detail:   fmt.Sprintf("Definition for document named '%s' not found", doc),
 		}}
 	}
-	e.logger.DebugContext(ctx, "Parsing document template")
+	e.logger.DebugContext(ctx, "Parsing a document template")
 	docParsed, diag := e.blocks.ParseDocument(ctx, docBlock)
 	if diags.Extend(diag) {
 		return nil, diags
 	}
 
-	var dataSourceName string
-	if len(path) > 0 {
-		dataSourceName = path[0]
+	document, diag := eval.LoadDocument(ctx, e.runner, docParsed)
+	if diags.Extend(diag) {
+		return nil, diags
 	}
 
-	var blockName string
-	if len(path) > 1 {
-		blockName = path[1]
+	data, diag := document.FetchDataWithPath(ctx, path)
+	if diags.Extend(diag) {
+		return nil, diags
 	}
-
-	matchingBlocks := []*definitions.ParsedPlugin{}
-
-	for i := range docParsed.Data {
-		block := docParsed.Data[i]
-
-		if dataSourceName != "" && block.PluginName != dataSourceName {
-			continue
-		}
-
-		if blockName != "" && block.BlockName != blockName {
-			continue
-		}
-
-		matchingBlocks = append(matchingBlocks, block)
-	}
-
-	if len(matchingBlocks) == 0 {
-		return nil, diagnostics.Diag{{
-			Severity: hcl.DiagError,
-			Summary:  "Can't find matching data sources",
-			Detail:   fmt.Sprintf("Data sources matching '%s' path not found", pathStr),
-		}}
-	}
-
-	actions := []*eval.PluginDataAction{}
-	for i := range matchingBlocks {
-		block := matchingBlocks[i]
-		action, diag := eval.LoadDataAction(ctx, e.runner, block)
-		if diags.Extend(diag) {
-			continue
-		}
-
-		actions = append(actions, action)
-	}
-
-	return actions, diags
+	return data, diags
 }
 
 var ErrInvalidDataTarget = diagnostics.Diag{{
@@ -423,63 +386,11 @@ var ErrInvalidDataTarget = diagnostics.Diag{{
 	Detail:   "Target must be in the format 'document.<doc-name>.data.<plugin-name>.<block-name>' or 'data.<plugin-name>.<block-name>'",
 }}
 
-func fetchDataConcurrent(
-	ctx context.Context,
-	actions []*eval.PluginDataAction,
-) (results plugindata.Map, diags diagnostics.Diag) {
-
-	diagChan := make(chan diagnostics.Diag, len(actions))
-
-	wg := sync.WaitGroup{}
-	mu := sync.Mutex{}
-
-	results = plugindata.Map{}
-
-	for i := range actions {
-		wg.Add(1)
-
-		action := actions[i]
-		go func(action *eval.PluginDataAction, diagChan chan<- diagnostics.Diag) {
-			defer wg.Done()
-			data, diag := action.FetchData(ctx)
-			diagChan <- diag
-
-			if diag != nil {
-				return
-			}
-			dataSourceName := action.PluginName
-			blockName := action.BlockName
-
-			mu.Lock()
-			var dataSourceData plugindata.Map
-			dataSourceDataVal, ok := results[dataSourceName]
-			if ok {
-				dataSourceData = dataSourceDataVal.(plugindata.Map)
-			} else {
-				dataSourceData = plugindata.Map{}
-			}
-			dataSourceData[blockName] = data
-			results[dataSourceName] = dataSourceData
-			mu.Unlock()
-		}(action, diagChan)
-	}
-	wg.Wait()
-
-	for i := 0; i < len(actions); i++ {
-		slog.DebugContext(ctx, "Reading diag from channel", "i", i, "total", len(actions))
-		if diag := <-diagChan; diag != nil {
-			diags.Extend(diag)
-		}
-	}
-	return results, diags
-
-}
-
 func (e *Engine) FetchData(ctx context.Context, target string) (result plugindata.Data, diags diagnostics.Diag) {
 	ctx, span := e.tracer.Start(ctx, "Engine.FetchData", trace.WithAttributes(
 		attribute.String("target", target),
 	))
-	e.logger.InfoContext(ctx, "Fetching data", "target", target)
+	e.logger.InfoContext(ctx, "Fetching the data", "target", target)
 	defer func() {
 		if diags.HasErrors() {
 			span.RecordError(diags)
@@ -509,12 +420,11 @@ func (e *Engine) FetchData(ctx context.Context, target string) (result plugindat
 		}
 		docName := parts[0]
 		path := parts[2:]
-		var loadedDataBlocks []*eval.PluginDataAction
-		loadedDataBlocks, diag = e.loadDocumentData(ctx, docName, path)
-		if diags.Extend(diag) {
-			return nil, diags
-		}
-		result, diag = fetchDataConcurrent(ctx, loadedDataBlocks)
+
+		result, diag = e.loadDocumentData(ctx, docName, path)
+		// Wrap the result, to have `data` root key
+		result = plugindata.Map{"data": result}
+
 	case "data":
 		parts := strings.Split(base, ".")
 		if len(parts) != 2 {
@@ -531,6 +441,7 @@ func (e *Engine) FetchData(ctx context.Context, target string) (result plugindat
 	if diags.Extend(diag) {
 		return nil, diags
 	}
+
 	return result, nil
 }
 

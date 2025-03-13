@@ -28,6 +28,11 @@ func (doc *Document) FetchData(ctx context.Context) (plugindata.Data, diagnostic
 	return evaluator.Execute()
 }
 
+func (doc *Document) FetchDataWithPath(ctx context.Context, path []string) (plugindata.Data, diagnostics.Diag) {
+	evaluator := makeAsyncDataEvaluatorWithPath(ctx, doc, path, slog.Default())
+	return evaluator.Execute()
+}
+
 func filterChildrenByTags(children []*Content, requiredTags []string) []*Content {
 	return slices.DeleteFunc(children, func(child *Content) bool {
 		switch {
