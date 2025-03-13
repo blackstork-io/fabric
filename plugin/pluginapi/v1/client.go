@@ -33,8 +33,8 @@ func NewClient(name, binaryPath string, logger *slog.Logger) (p *plugin.Schema, 
 		),
 		GRPCDialOptions: []grpc.DialOption{
 			grpc.WithDefaultCallOptions(
-				grpc.MaxCallRecvMsgSize(defaultMsgSize),
-				grpc.MaxCallSendMsgSize(defaultMsgSize),
+				grpc.MaxCallRecvMsgSize(maxMsgSize),
+				grpc.MaxCallSendMsgSize(maxMsgSize),
 			),
 		},
 	})
