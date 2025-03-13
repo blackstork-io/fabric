@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
 	"encoding/json"
 	"fmt"
@@ -227,7 +228,10 @@ func generateMetadataFile(plugins []*plugin.Schema, outputDir string) {
 		sort.Slice(resources, func(i, j int) bool {
 			a := resources[i]
 			b := resources[j]
-			return a.Name < b.Name && a.Type < b.Type
+			return cmp.Or(
+				cmp.Compare(a.Name, b.Name),
+				cmp.Compare(a.Type, b.Type),
+			) < 0
 		})
 
 		pluginDetails[i] = PluginDetails{
@@ -265,7 +269,6 @@ func generateMetadataFile(plugins []*plugin.Schema, outputDir string) {
 }
 
 func main() {
-
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	// parse flags
