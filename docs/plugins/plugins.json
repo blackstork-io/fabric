@@ -28,17 +28,91 @@
     "shortname": "builtin",
     "resources": [
       {
-        "name": "blockquote",
+        "name": "sleep",
+        "type": "content-provider",
+        "arguments": [
+          "duration"
+        ]
+      },
+      {
+        "name": "table",
+        "type": "content-provider",
+        "arguments": [
+          "columns",
+          "rows"
+        ]
+      },
+      {
+        "name": "sleep",
+        "type": "data-source",
+        "arguments": [
+          "duration"
+        ]
+      },
+      {
+        "name": "image",
+        "type": "content-provider",
+        "arguments": [
+          "alt",
+          "src"
+        ]
+      },
+      {
+        "name": "hub",
+        "type": "publisher",
+        "config_params": [
+          "api_token",
+          "api_url"
+        ],
+        "arguments": [
+          "title"
+        ]
+      },
+      {
+        "name": "rss",
+        "type": "data-source",
+        "arguments": [
+          "fill_in_content",
+          "items_after",
+          "items_before",
+          "max_items_to_fill",
+          "url",
+          "use_browser_user_agent"
+        ]
+      },
+      {
+        "name": "json",
+        "type": "data-source",
+        "arguments": [
+          "glob",
+          "path"
+        ]
+      },
+      {
+        "name": "text",
         "type": "content-provider",
         "arguments": [
           "value"
         ]
       },
       {
-        "name": "code",
+        "name": "http",
+        "type": "data-source",
+        "arguments": [
+          "body",
+          "headers",
+          "insecure",
+          "method",
+          "timeout",
+          "url"
+        ]
+      },
+      {
+        "name": "title",
         "type": "content-provider",
         "arguments": [
-          "language",
+          "absolute_size",
+          "relative_size",
           "value"
         ]
       },
@@ -62,108 +136,10 @@
         ]
       },
       {
-        "name": "http",
-        "type": "data-source",
-        "arguments": [
-          "body",
-          "headers",
-          "insecure",
-          "method",
-          "timeout",
-          "url"
-        ]
-      },
-      {
-        "name": "hub",
-        "type": "publisher",
-        "config_params": [
-          "api_token",
-          "api_url"
-        ],
-        "arguments": [
-          "title"
-        ]
-      },
-      {
-        "name": "image",
-        "type": "content-provider",
-        "arguments": [
-          "alt",
-          "src"
-        ]
-      },
-      {
-        "name": "json",
-        "type": "data-source",
-        "arguments": [
-          "glob",
-          "path"
-        ]
-      },
-      {
-        "name": "list",
-        "type": "content-provider",
-        "arguments": [
-          "format",
-          "item_template",
-          "items"
-        ]
-      },
-      {
         "name": "local_file",
         "type": "publisher",
         "arguments": [
           "path"
-        ]
-      },
-      {
-        "name": "rss",
-        "type": "data-source",
-        "arguments": [
-          "fill_in_content",
-          "items_after",
-          "items_before",
-          "max_items_to_fill",
-          "url",
-          "use_browser_user_agent"
-        ]
-      },
-      {
-        "name": "sleep",
-        "type": "content-provider",
-        "arguments": [
-          "duration"
-        ]
-      },
-      {
-        "name": "sleep",
-        "type": "data-source",
-        "arguments": [
-          "duration"
-        ]
-      },
-      {
-        "name": "table",
-        "type": "content-provider",
-        "arguments": [
-          "columns",
-          "rows"
-        ]
-      },
-      {
-        "name": "text",
-        "type": "content-provider",
-        "arguments": [
-          "value"
-        ]
-      },
-      {
-        "name": "title",
-        "type": "content-provider",
-        "arguments": [
-          "absolute_size",
-          "relative_size",
-          "value"
         ]
       },
       {
@@ -177,7 +153,31 @@
         ]
       },
       {
-        "name": "txt",
+        "name": "code",
+        "type": "content-provider",
+        "arguments": [
+          "language",
+          "value"
+        ]
+      },
+      {
+        "name": "blockquote",
+        "type": "content-provider",
+        "arguments": [
+          "value"
+        ]
+      },
+      {
+        "name": "list",
+        "type": "content-provider",
+        "arguments": [
+          "format",
+          "item_template",
+          "items"
+        ]
+      },
+      {
+        "name": "yaml",
         "type": "data-source",
         "arguments": [
           "glob",
@@ -185,7 +185,7 @@
         ]
       },
       {
-        "name": "yaml",
+        "name": "txt",
         "type": "data-source",
         "arguments": [
           "glob",
@@ -227,7 +227,7 @@
         ]
       },
       {
-        "name": "falcon_discover_host_details",
+        "name": "falcon_vulnerabilities",
         "type": "data-source",
         "config_params": [
           "client_cloud",
@@ -237,7 +237,8 @@
         ],
         "arguments": [
           "filter",
-          "limit"
+          "limit",
+          "sort"
         ]
       },
       {
@@ -256,7 +257,7 @@
         ]
       },
       {
-        "name": "falcon_vulnerabilities",
+        "name": "falcon_discover_host_details",
         "type": "data-source",
         "config_params": [
           "client_cloud",
@@ -266,8 +267,7 @@
         ],
         "arguments": [
           "filter",
-          "limit",
-          "sort"
+          "limit"
         ]
       }
     ]
@@ -277,6 +277,30 @@
     "version": "v0.4.2",
     "shortname": "elastic",
     "resources": [
+      {
+        "name": "elasticsearch",
+        "type": "data-source",
+        "config_params": [
+          "api_key",
+          "api_key_str",
+          "base_url",
+          "basic_auth_password",
+          "basic_auth_username",
+          "bearer_auth",
+          "ca_certs",
+          "cloud_id"
+        ],
+        "arguments": [
+          "aggs",
+          "fields",
+          "id",
+          "index",
+          "only_hits",
+          "query",
+          "query_string",
+          "size"
+        ]
+      },
       {
         "name": "elastic_security_cases",
         "type": "data-source",
@@ -302,30 +326,6 @@
           "tags",
           "to"
         ]
-      },
-      {
-        "name": "elasticsearch",
-        "type": "data-source",
-        "config_params": [
-          "api_key",
-          "api_key_str",
-          "base_url",
-          "basic_auth_password",
-          "basic_auth_username",
-          "bearer_auth",
-          "ca_certs",
-          "cloud_id"
-        ],
-        "arguments": [
-          "aggs",
-          "fields",
-          "id",
-          "index",
-          "only_hits",
-          "query",
-          "query_string",
-          "size"
-        ]
       }
     ]
   },
@@ -334,19 +334,6 @@
     "version": "v0.4.2",
     "shortname": "github",
     "resources": [
-      {
-        "name": "github_gist",
-        "type": "publisher",
-        "config_params": [
-          "github_token"
-        ],
-        "arguments": [
-          "description",
-          "filename",
-          "gist_id",
-          "make_public"
-        ]
-      },
       {
         "name": "github_issues",
         "type": "data-source",
@@ -365,6 +352,19 @@
           "since",
           "sort",
           "state"
+        ]
+      },
+      {
+        "name": "github_gist",
+        "type": "publisher",
+        "config_params": [
+          "github_token"
+        ],
+        "arguments": [
+          "description",
+          "filename",
+          "gist_id",
+          "make_public"
         ]
       }
     ]
@@ -456,6 +456,27 @@
     "shortname": "iris",
     "resources": [
       {
+        "name": "iris_cases",
+        "type": "data-source",
+        "config_params": [
+          "api_key",
+          "api_url",
+          "insecure"
+        ],
+        "arguments": [
+          "case_ids",
+          "customer_id",
+          "end_open_date",
+          "owner_id",
+          "severity_id",
+          "size",
+          "soc_id",
+          "sort",
+          "start_open_date",
+          "state_id"
+        ]
+      },
+      {
         "name": "iris_alerts",
         "type": "data-source",
         "config_params": [
@@ -477,27 +498,6 @@
           "sort",
           "status_id",
           "tags"
-        ]
-      },
-      {
-        "name": "iris_cases",
-        "type": "data-source",
-        "config_params": [
-          "api_key",
-          "api_url",
-          "insecure"
-        ],
-        "arguments": [
-          "case_ids",
-          "customer_id",
-          "end_open_date",
-          "owner_id",
-          "severity_id",
-          "size",
-          "soc_id",
-          "sort",
-          "start_open_date",
-          "state_id"
         ]
       }
     ]
@@ -522,6 +522,23 @@
           "prompt",
           "temperature",
           "top_p"
+        ]
+      },
+      {
+        "name": "microsoft_sentinel_incidents",
+        "type": "data-source",
+        "config_params": [
+          "client_id",
+          "client_secret",
+          "resource_group_name",
+          "subscription_id",
+          "tenant_id",
+          "workspace_name"
+        ],
+        "arguments": [
+          "filter",
+          "order_by",
+          "size"
         ]
       },
       {
@@ -575,23 +592,6 @@
         "arguments": [
           "query"
         ]
-      },
-      {
-        "name": "microsoft_sentinel_incidents",
-        "type": "data-source",
-        "config_params": [
-          "client_id",
-          "client_secret",
-          "resource_group_name",
-          "subscription_id",
-          "tenant_id",
-          "workspace_name"
-        ],
-        "arguments": [
-          "filter",
-          "order_by",
-          "size"
-        ]
       }
     ]
   },
@@ -600,21 +600,6 @@
     "version": "v0.4.2",
     "shortname": "misp",
     "resources": [
-      {
-        "name": "misp_event_reports",
-        "type": "publisher",
-        "config_params": [
-          "api_key",
-          "base_url",
-          "skip_ssl"
-        ],
-        "arguments": [
-          "distribution",
-          "event_id",
-          "name",
-          "sharing_group_id"
-        ]
-      },
       {
         "name": "misp_events",
         "type": "data-source",
@@ -642,6 +627,21 @@
           "uuid",
           "value",
           "with_attachments"
+        ]
+      },
+      {
+        "name": "misp_event_reports",
+        "type": "publisher",
+        "config_params": [
+          "api_key",
+          "base_url",
+          "skip_ssl"
+        ],
+        "arguments": [
+          "distribution",
+          "event_id",
+          "name",
+          "sharing_group_id"
         ]
       }
     ]
