@@ -325,7 +325,6 @@ func (e *Engine) loadDocumentData(
 	doc string,
 	path []string,
 ) (_ plugindata.Data, diags diagnostics.Diag) {
-
 	pathStr := strings.Join(path, ".")
 
 	ctx, span := e.tracer.Start(ctx, "Engine.loadDocumentData", trace.WithAttributes(
