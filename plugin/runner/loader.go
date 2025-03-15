@@ -227,7 +227,6 @@ func (l *loader) registerPublisher(
 	return nil
 }
 
-
 func (l *loader) registerFormatter(
 	ctx context.Context,
 	name string,

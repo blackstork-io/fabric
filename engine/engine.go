@@ -519,7 +519,7 @@ func (e *Engine) PublishContent(
 	content *plugin.ContentSection,
 	dataCtx plugindata.Data,
 ) (diags diagnostics.Diag) {
-	//FIXME: should be calling formatting somewhere here
+	// FIXME: should be calling formatting somewhere here
 
 	ctx, span := e.tracer.Start(ctx, "Engine.Publish", trace.WithAttributes(
 		attribute.String("target", target),

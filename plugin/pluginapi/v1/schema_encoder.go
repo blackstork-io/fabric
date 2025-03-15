@@ -80,8 +80,8 @@ func encodePublisherShema(src *plugin.Publisher) (_ *PublisherSchema, diags diag
 		return nil, nil
 	}
 	schema := &PublisherSchema{
-		Doc:            src.Doc,
-		Tags:           src.Tags,
+		Doc:     src.Doc,
+		Tags:    src.Tags,
 		Formats: src.Formats,
 	}
 

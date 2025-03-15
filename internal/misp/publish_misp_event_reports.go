@@ -58,8 +58,8 @@ func makeMispEventReportsPublisher(loader ClientLoaderFn) *plugin.Publisher {
 				},
 			},
 		},
-		Formats: []string{"md"},
-		PublishFunc:    publishEventReport(loader),
+		Formats:     []string{"md"},
+		PublishFunc: publishEventReport(loader),
 	}
 }
 
