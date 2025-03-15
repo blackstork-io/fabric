@@ -151,7 +151,7 @@ func (p *grpcPlugin) clientPublishFunc(name string, client PluginServiceClient) 
 		cfgEncoded, diag := encodeBlock(params.Config)
 		diags.Extend(diag)
 		datactx := encodeMapData(params.DataContext)
-		format := encodeOutputFormat(params.Format)
+		format := params.Format
 		res, err := client.Publish(ctx, &PublishRequest{
 			Publisher:    name,
 			Config:       cfgEncoded,

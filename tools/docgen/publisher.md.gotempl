@@ -45,7 +45,7 @@ fabric {
 Note the version constraint set for the plugin.
 {{ end -}}
 
-{{- with .publisher.AllowedFormats }}
+{{- with .publisher.Formats }}
 #### Formats
 
 The publisher supports the following document formats:

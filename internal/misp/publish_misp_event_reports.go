@@ -58,7 +58,7 @@ func makeMispEventReportsPublisher(loader ClientLoaderFn) *plugin.Publisher {
 				},
 			},
 		},
-		AllowedFormats: []plugin.OutputFormat{plugin.OutputFormatMD},
+		Formats: []string{"md"},
 		PublishFunc:    publishEventReport(loader),
 	}
 }
@@ -93,10 +93,10 @@ func publishEventReport(loader ClientLoaderFn) plugin.PublishFunc {
 			}}
 		}
 		datactx := params.DataContext
-		datactx["format"] = plugindata.String(params.Format.String())
+		datactx["format"] = plugindata.String(params.Format)
 		var printer print.Printer
 		switch params.Format {
-		case plugin.OutputFormatMD:
+		case "md":
 			printer = mdprint.New()
 		default:
 			return diagnostics.Diag{{
@@ -105,8 +105,8 @@ func publishEventReport(loader ClientLoaderFn) plugin.PublishFunc {
 				Detail:   "Only md format is supported",
 			}}
 		}
-		printer = print.WithLogging(printer, logger, slog.String("format", params.Format.String()))
-		printer = print.WithTracing(printer, tracer, attribute.String("format", params.Format.String()))
+		printer = print.WithLogging(printer, logger, slog.String("format", params.Format))
+		printer = print.WithTracing(printer, tracer, attribute.String("format", params.Format))
 
 		buff := bytes.NewBuffer(nil)
 		err := printer.Print(ctx, buff, document)

@@ -54,8 +54,8 @@ func makeGithubGistPublisher(loader ClientLoaderFn) *plugin.Publisher {
 				},
 			},
 		},
-		AllowedFormats: []plugin.OutputFormat{plugin.OutputFormatMD, plugin.OutputFormatHTML},
-		PublishFunc:    publishGithubGist(loader),
+		Formats:     []string{"md", "html"},
+		PublishFunc: publishGithubGist(loader),
 	}
 }
 
@@ -90,12 +90,12 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 			}}
 		}
 		datactx := params.DataContext
-		datactx["format"] = plugindata.String(params.Format.String())
+		datactx["format"] = plugindata.String(params.Format)
 		var printer print.Printer
 		switch params.Format {
-		case plugin.OutputFormatMD:
+		case "md":
 			printer = mdprint.New()
-		case plugin.OutputFormatHTML:
+		case "html":
 			printer = htmlprint.New()
 		default:
 			return diagnostics.Diag{{
@@ -104,8 +104,8 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 				Detail:   "Only md and html formats are supported",
 			}}
 		}
-		printer = print.WithLogging(printer, logger, slog.String("format", params.Format.String()))
-		printer = print.WithTracing(printer, tracer, attribute.String("format", params.Format.String()))
+		printer = print.WithLogging(printer, logger, slog.String("format", params.Format))
+		printer = print.WithTracing(printer, tracer, attribute.String("format", params.Format))
 
 		buff := bytes.NewBuffer(nil)
 		err := printer.Print(ctx, buff, document)
@@ -118,7 +118,7 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 		}
 
 		client := loader(params.Config.GetAttrVal("github_token").AsString())
-		fileName := params.DocumentName + "." + params.Format.String()
+		fileName := params.DocumentName + "." + params.Format
 		filenameAttr := params.Args.GetAttrVal("filename")
 		if !filenameAttr.IsNull() && filenameAttr.AsString() != "" {
 			fileName = filenameAttr.AsString()
@@ -140,7 +140,14 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 		slog.InfoContext(ctx, "Publishing to GitHub gist", "filename", fileName)
 		gistId := params.Args.GetAttrVal("gist_id")
 		if gistId.IsNull() || gistId.AsString() == "" {
-			slog.DebugContext(ctx, "No gist id set, creating a new gist", "is_public", payload.Public, "files", len(payload.Files))
+			slog.DebugContext(
+				ctx,
+				"No gist id set, creating a new gist",
+				"is_public",
+				payload.Public,
+				"files",
+				len(payload.Files),
+			)
 			gist, _, err := client.Gists().Create(ctx, payload)
 			if err != nil {
 				return diagnostics.Diag{{

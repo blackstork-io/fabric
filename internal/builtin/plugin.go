@@ -39,5 +39,8 @@ func Plugin(version string, logger *slog.Logger, tracer trace.Tracer) *plugin.Sc
 			"local_file": makeLocalFilePublisher(logger, tracer),
 			"hub":        makeHubPublisher(version, defaultHubClientLoader, logger, tracer),
 		},
+		Formatters: plugin.Formatters{
+			"html": makeHTMLFormatter(logger, tracer),
+		},
 	}
 }

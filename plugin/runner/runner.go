@@ -18,6 +18,7 @@ type Runner struct {
 	dataMap      map[string]loadedDataSource
 	contentMap   map[string]loadedContentProvider
 	publisherMap map[string]loadedPublisher
+	formatterMap map[string]loadedFormatter
 }
 
 func Load(
@@ -46,6 +47,7 @@ func Load(
 		dataMap:      loader.dataMap,
 		contentMap:   loader.contentMap,
 		publisherMap: loader.publisherMap,
+		formatterMap: loader.formatterMap,
 	}, nil
 }
 
@@ -87,6 +89,14 @@ func (m *Runner) Publisher(name string) (*plugin.Publisher, bool) {
 		return nil, false
 	}
 	return publisher.Publisher, true
+}
+
+func (m *Runner) Formatter(name string) (*plugin.Formatter, bool) {
+	formatter, ok := m.formatterMap[name]
+	if !ok {
+		return nil, false
+	}
+	return formatter.Formatter, true
 }
 
 func (m *Runner) Close() diagnostics.Diag {

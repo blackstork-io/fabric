@@ -233,7 +233,7 @@ func parseBlockDefinitions(body *hclsyntax.Body) (res *DefinedBlocks, diags diag
 			res.GlobalConfig = cfg
 		default:
 			diags.Append(definitions.NewNestingDiag(
-				"Top level of fabric document",
+				"Top level of the document",
 				block,
 				body,
 				[]string{

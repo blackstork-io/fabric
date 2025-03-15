@@ -36,6 +36,11 @@ type loadedPublisher struct {
 	*plugin.Publisher
 }
 
+type loadedFormatter struct {
+	plugin *plugin.Schema
+	*plugin.Formatter
+}
+
 type loader struct {
 	logger       *slog.Logger
 	tracer       trace.Tracer
@@ -45,6 +50,7 @@ type loader struct {
 	dataMap      map[string]loadedDataSource
 	contentMap   map[string]loadedContentProvider
 	publisherMap map[string]loadedPublisher
+	formatterMap map[string]loadedFormatter
 }
 
 func makeLoader(
@@ -62,6 +68,7 @@ func makeLoader(
 		dataMap:      make(map[string]loadedDataSource),
 		contentMap:   make(map[string]loadedContentProvider),
 		publisherMap: make(map[string]loadedPublisher),
+		formatterMap: make(map[string]loadedFormatter),
 	}
 }
 
@@ -109,13 +116,34 @@ func (l *loader) closeAll() diagnostics.Diag {
 	return diags
 }
 
-func (l *loader) registerDataSource(ctx context.Context, name string, schema *plugin.Schema, ds *plugin.DataSource) diagnostics.Diag {
-	l.logger.DebugContext(ctx, "Registering data source", "name", name, "plugin", schema.Name, "version", schema.Version)
+func (l *loader) registerDataSource(
+	ctx context.Context,
+	name string,
+	schema *plugin.Schema,
+	ds *plugin.DataSource,
+) diagnostics.Diag {
+	l.logger.DebugContext(
+		ctx,
+		"Registering data source",
+		"name",
+		name,
+		"plugin",
+		schema.Name,
+		"version",
+		schema.Version,
+	)
 	if found, has := l.dataMap[name]; has {
 		return diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Duplicate data source",
-			Detail:   fmt.Sprintf("Data source %s provided by plugin %s@%s and %s@%s", name, schema.Name, schema.Version, found.plugin.Name, found.plugin.Version),
+			Detail: fmt.Sprintf(
+				"Data source %s provided by plugin %s@%s and %s@%s",
+				name,
+				schema.Name,
+				schema.Version,
+				found.plugin.Name,
+				found.plugin.Version,
+			),
 		}}
 	}
 	l.dataMap[name] = loadedDataSource{
@@ -125,13 +153,34 @@ func (l *loader) registerDataSource(ctx context.Context, name string, schema *pl
 	return nil
 }
 
-func (l *loader) registerContentProvider(ctx context.Context, name string, schema *plugin.Schema, cp *plugin.ContentProvider) diagnostics.Diag {
-	l.logger.DebugContext(ctx, "Registering content provider", "name", name, "plugin", schema.Name, "version", schema.Version)
+func (l *loader) registerContentProvider(
+	ctx context.Context,
+	name string,
+	schema *plugin.Schema,
+	cp *plugin.ContentProvider,
+) diagnostics.Diag {
+	l.logger.DebugContext(
+		ctx,
+		"Registering content provider",
+		"name",
+		name,
+		"plugin",
+		schema.Name,
+		"version",
+		schema.Version,
+	)
 	if found, has := l.contentMap[name]; has {
 		return diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Duplicate content provider",
-			Detail:   fmt.Sprintf("Content provider %s provided by plugin %s@%s and %s@%s", name, schema.Name, schema.Version, found.plugin.Name, found.plugin.Version),
+			Detail: fmt.Sprintf(
+				"Content provider %s provided by plugin %s@%s and %s@%s",
+				name,
+				schema.Name,
+				schema.Version,
+				found.plugin.Name,
+				found.plugin.Version,
+			),
 		}}
 	}
 	l.contentMap[name] = loadedContentProvider{
@@ -150,13 +199,25 @@ func (l *loader) registerContentProvider(ctx context.Context, name string, schem
 	return nil
 }
 
-func (l *loader) registerPublisher(ctx context.Context, name string, schema *plugin.Schema, pub *plugin.Publisher) diagnostics.Diag {
+func (l *loader) registerPublisher(
+	ctx context.Context,
+	name string,
+	schema *plugin.Schema,
+	pub *plugin.Publisher,
+) diagnostics.Diag {
 	l.logger.DebugContext(ctx, "Registering publisher", "name", name, "plugin", schema.Name, "version", schema.Version)
 	if found, has := l.publisherMap[name]; has {
 		return diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Duplicate publisher",
-			Detail:   fmt.Sprintf("Publisher %s provided by plugin %s@%s and %s@%s", name, schema.Name, schema.Version, found.plugin.Name, found.plugin.Version),
+			Detail: fmt.Sprintf(
+				"Publisher %s provided by plugin %s@%s and %s@%s",
+				name,
+				schema.Name,
+				schema.Version,
+				found.plugin.Name,
+				found.plugin.Version,
+			),
 		}}
 	}
 	l.publisherMap[name] = loadedPublisher{
@@ -166,10 +227,46 @@ func (l *loader) registerPublisher(ctx context.Context, name string, schema *plu
 	return nil
 }
 
+
+func (l *loader) registerFormatter(
+	ctx context.Context,
+	name string,
+	schema *plugin.Schema,
+	frmt *plugin.Formatter,
+) diagnostics.Diag {
+	l.logger.DebugContext(ctx, "Registering formatter", "name", name, "plugin", schema.Name, "version", schema.Version)
+	if found, has := l.publisherMap[name]; has {
+		return diagnostics.Diag{{
+			Severity: hcl.DiagError,
+			Summary:  "Duplicate formatter",
+			Detail: fmt.Sprintf(
+				"Formatter '%s' provided by plugins %s@%s and %s@%s at the same time",
+				name,
+				schema.Name,
+				schema.Version,
+				found.plugin.Name,
+				found.plugin.Version,
+			),
+		}}
+	}
+	l.formatterMap[name] = loadedFormatter{
+		plugin:    schema,
+		Formatter: frmt,
+	}
+	return nil
+}
+
 func (l *loader) registerPlugin(ctx context.Context, schema *plugin.Schema, closefn func() error) diagnostics.Diag {
 	l.logger.DebugContext(ctx, "Registering a plugin", "name", schema.Name, "version", schema.Version)
 	if diags := schema.Validate(); diags.HasErrors() {
-		l.logger.ErrorContext(ctx, "Validation errors while registering a plugin", "name", schema.Name, "version", schema.Version)
+		l.logger.ErrorContext(
+			ctx,
+			"Validation errors while registering a plugin",
+			"name",
+			schema.Name,
+			"version",
+			schema.Version,
+		)
 		return diags
 	}
 	schema = plugin.WithLogging(schema, l.logger)
@@ -178,7 +275,13 @@ func (l *loader) registerPlugin(ctx context.Context, schema *plugin.Schema, clos
 		diags := diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  fmt.Sprintf("Plugin %s conflict", schema.Name),
-			Detail:   fmt.Sprintf("%s@%s and %s@%s have the same schema name", schema.Name, schema.Version, found.Name, found.Version),
+			Detail: fmt.Sprintf(
+				"%s@%s and %s@%s have the same schema name",
+				schema.Name,
+				schema.Version,
+				found.Name,
+				found.Version,
+			),
 		}}
 		err := found.closefn()
 		if err != nil {
@@ -207,6 +310,11 @@ func (l *loader) registerPlugin(ctx context.Context, schema *plugin.Schema, clos
 	}
 	for name, publisher := range schema.Publishers {
 		if diags := l.registerPublisher(ctx, name, schema, publisher); diags.HasErrors() {
+			return diags
+		}
+	}
+	for name, formatter := range schema.Formatters {
+		if diags := l.registerFormatter(ctx, name, schema, formatter); diags.HasErrors() {
 			return diags
 		}
 	}

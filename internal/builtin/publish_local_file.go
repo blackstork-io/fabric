@@ -24,9 +24,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 	"github.com/blackstork-io/fabric/print"
-	"github.com/blackstork-io/fabric/print/htmlprint"
 	"github.com/blackstork-io/fabric/print/mdprint"
-	"github.com/blackstork-io/fabric/print/pdfprint"
 )
 
 func makeLocalFilePublisher(logger *slog.Logger, tracer trace.Tracer) *plugin.Publisher {
@@ -50,8 +48,8 @@ func makeLocalFilePublisher(logger *slog.Logger, tracer trace.Tracer) *plugin.Pu
 				},
 			},
 		},
-		AllowedFormats: []plugin.OutputFormat{plugin.OutputFormatMD, plugin.OutputFormatHTML, plugin.OutputFormatPDF},
-		PublishFunc:    publishLocalFile(logger, tracer),
+		Formats:     []string{"md", "pdf", "html"},
+		PublishFunc: publishLocalFile(logger, tracer),
 	}
 }
 
@@ -66,25 +64,25 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 			}}
 		}
 		datactx := params.DataContext
-		datactx["format"] = plugindata.String(params.Format.String())
+		datactx["format"] = plugindata.String(params.Format)
 
-		var printer print.Printer
-		switch params.Format {
-		case plugin.OutputFormatMD:
-			printer = mdprint.New()
-		case plugin.OutputFormatHTML:
-			printer = htmlprint.New()
-		case plugin.OutputFormatPDF:
-			printer = pdfprint.New()
-		default:
-			return diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Unsupported format",
-				Detail:   "Only md, html and pdf formats are supported",
-			}}
-		}
-		printer = print.WithLogging(printer, logger, slog.String("format", params.Format.String()))
-		printer = print.WithTracing(printer, tracer, attribute.String("format", params.Format.String()))
+		var printer print.Printer = mdprint.New()
+		// switch params.Format {
+		// case plugin.OutputFormatMD:
+		// 	printer = mdprint.New()
+		// case plugin.OutputFormatHTML:
+		// 	printer = htmlprint.New()
+		// case plugin.OutputFormatPDF:
+		// 	printer = pdfprint.New()
+		// default:
+		// 	return diagnostics.Diag{{
+		// 		Severity: hcl.DiagError,
+		// 		Summary:  "Unsupported format",
+		// 		Detail:   "Only md, html and pdf formats are supported",
+		// 	}}
+		// }
+		printer = print.WithLogging(printer, logger, slog.String("format", params.Format))
+		printer = print.WithTracing(printer, tracer, attribute.String("format", params.Format))
 		pathAttr := params.Args.GetAttrVal("path")
 		if pathAttr.IsNull() || pathAttr.AsString() == "" {
 			return diagnostics.Diag{{

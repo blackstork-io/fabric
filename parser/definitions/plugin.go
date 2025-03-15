@@ -79,9 +79,9 @@ func DefinePlugin(block *hclsyntax.Block, atTopLevel bool) (plugin *Plugin, diag
 	diags.Append(validateBlockName(block, 1, nameRequired))
 	var usage string
 	if nameRequired {
-		usage = "plugin_name block_name"
+		usage = "block_type block_name"
 	} else {
-		usage = "plugin_name <block_name>"
+		usage = "block_type <block_name>"
 	}
 	diags.Append(validateLabelsLength(block, 2, usage))
 
