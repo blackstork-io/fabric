@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
 	"encoding/json"
 	"fmt"
@@ -83,7 +84,7 @@ func generateDataSourceDocs(log *slog.Logger, p *plugin.Schema, outputDir string
 	dataSourcesDir := filepath.Join(outputDir, "data-sources")
 
 	// Create a directory for plugin's data sources if it doesn't exist
-	err := os.MkdirAll(dataSourcesDir, 0o766)
+	err := os.MkdirAll(dataSourcesDir, 0o750)
 	if err != nil {
 		log.Error("Can't create a directory", "path", dataSourcesDir)
 		panic(err)
@@ -107,7 +108,7 @@ func generateContentProviderDocs(log *slog.Logger, p *plugin.Schema, outputDir s
 	contentProvidersDir := filepath.Join(outputDir, "content-providers")
 
 	// Create a directory for plugin's content providers if it doesn't exist
-	err := os.MkdirAll(contentProvidersDir, 0o766)
+	err := os.MkdirAll(contentProvidersDir, 0o750)
 	if err != nil {
 		log.Error("Can't create a directory", "path", contentProvidersDir)
 		panic(err)
@@ -132,7 +133,7 @@ func generatePublisherDocs(log *slog.Logger, p *plugin.Schema, outputDir string)
 	publishersDir := filepath.Join(outputDir, "publishers")
 
 	// Create a directory for plugin's publishers if it doesn't exist
-	err := os.MkdirAll(publishersDir, 0o766)
+	err := os.MkdirAll(publishersDir, 0o750)
 	if err != nil {
 		log.Error("Can't create a directory", "path", publishersDir)
 		panic(err)
@@ -225,7 +226,12 @@ func generateMetadataFile(plugins []*plugin.Schema, outputDir string) {
 		}
 
 		sort.Slice(resources, func(i, j int) bool {
-			return resources[i].Name < resources[j].Name
+			a := resources[i]
+			b := resources[j]
+			return cmp.Or(
+				cmp.Compare(a.Name, b.Name),
+				cmp.Compare(a.Type, b.Type),
+			) < 0
 		})
 
 		pluginDetails[i] = PluginDetails{
@@ -247,24 +253,33 @@ func generateMetadataFile(plugins []*plugin.Schema, outputDir string) {
 	}
 
 	pluginDetailsPath := filepath.Join(outputDir, "plugins.json")
-	file, err := os.Create(pluginDetailsPath)
+	file, err := os.Create(pluginDetailsPath) //nolint:gosec
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 
-	file.Write(jsonData)
+	_, err = file.Write(jsonData)
+	if err != nil {
+		slog.Error("Can't write create a plugins JSON file", "path", pluginDetailsPath)
+		return
+	}
 
 	slog.Info("Plugin details file generated", "path", pluginDetailsPath)
 }
 
 func main() {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
 	// parse flags
 	flags := pflag.NewFlagSet("docgen", pflag.ExitOnError)
 	flags.StringVar(&version, "version", "v0.0.0-dev", "version of the build")
 	flags.StringVar(&outputDir, "output", "./dist/docs", "output directory")
-	flags.Parse(os.Args[1:])
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	err := flags.Parse(os.Args[1:])
+	if err != nil {
+		logger.Error("Can't parse provided arguments", "err", err)
+		return
+	}
 	// load all plugins
 	plugins := []*plugin.Schema{
 		builtin.Plugin(version, logger, nil),
@@ -299,7 +314,7 @@ func main() {
 		pluginOutputDir := filepath.Join(outputDir, pluginShortname)
 
 		// Create a plugin directory if it doesn't exist
-		err := os.MkdirAll(pluginOutputDir, 0o766)
+		err := os.MkdirAll(pluginOutputDir, 0o750)
 		if err != nil {
 			log.Error("Can't create a plugin directory", "path", pluginOutputDir)
 			panic(err)
@@ -329,7 +344,7 @@ func main() {
 }
 
 func renderPluginDoc(pluginSchema *plugin.Schema, fp string) error {
-	f, err := os.Create(fp)
+	f, err := os.Create(fp) // nolint: gosec
 	if err != nil {
 		return err
 	}
@@ -338,8 +353,13 @@ func renderPluginDoc(pluginSchema *plugin.Schema, fp string) error {
 	return base.ExecuteTemplate(f, "plugin", pluginSchema)
 }
 
-func renderContentProviderDoc(pluginSchema *plugin.Schema, contentProviderName string, contentProvider *plugin.ContentProvider, fp string) error {
-	f, err := os.Create(fp)
+func renderContentProviderDoc(
+	pluginSchema *plugin.Schema,
+	contentProviderName string,
+	contentProvider *plugin.ContentProvider,
+	fp string,
+) error {
+	f, err := os.Create(fp) // nolint: gosec
 	if err != nil {
 		return err
 	}
@@ -356,8 +376,13 @@ func renderContentProviderDoc(pluginSchema *plugin.Schema, contentProviderName s
 	return base.ExecuteTemplate(f, "content-provider", templContext)
 }
 
-func renderPublisherDoc(pluginSchema *plugin.Schema, publisherName string, publisher *plugin.Publisher, fp string) error {
-	f, err := os.Create(fp)
+func renderPublisherDoc(
+	pluginSchema *plugin.Schema,
+	publisherName string,
+	publisher *plugin.Publisher,
+	fp string,
+) error {
+	f, err := os.Create(fp) // nolint: gosec
 	if err != nil {
 		return err
 	}
@@ -372,8 +397,13 @@ func renderPublisherDoc(pluginSchema *plugin.Schema, publisherName string, publi
 	return base.ExecuteTemplate(f, "publisher", templContext)
 }
 
-func renderDataSourceDoc(pluginSchema *plugin.Schema, dataSourceName string, dataSource *plugin.DataSource, fp string) error {
-	f, err := os.Create(fp)
+func renderDataSourceDoc(
+	pluginSchema *plugin.Schema,
+	dataSourceName string,
+	dataSource *plugin.DataSource,
+	fp string,
+) error {
+	f, err := os.Create(fp) // nolint: gosec
 	if err != nil {
 		return err
 	}

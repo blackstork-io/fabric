@@ -15,7 +15,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-var defaultMsgSize = 1024 * 1024 * 20
+var maxMsgSize = 1024 * 1024 * 100 // 100MB
 
 var handshake = goplugin.HandshakeConfig{
 	ProtocolVersion:  1,
@@ -69,8 +69,8 @@ func (p *grpcPlugin) GRPCClient(ctx context.Context, broker *goplugin.GRPCBroker
 
 func (p *grpcPlugin) callOptions() []grpc.CallOption {
 	return []grpc.CallOption{
-		grpc.MaxCallRecvMsgSize(defaultMsgSize),
-		grpc.MaxCallSendMsgSize(defaultMsgSize),
+		grpc.MaxCallRecvMsgSize(maxMsgSize),
+		grpc.MaxCallSendMsgSize(maxMsgSize),
 	}
 }
 

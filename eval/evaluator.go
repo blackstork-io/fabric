@@ -29,6 +29,45 @@ func makeAsyncDataEvaluator(ctx context.Context, doc *Document, logger *slog.Log
 	}
 }
 
+func makeAsyncDataEvaluatorWithPath(
+	ctx context.Context,
+	doc *Document,
+	path []string,
+	logger *slog.Logger,
+) *asyncDataEvaluator {
+	var dataSourceName string
+	if len(path) > 0 {
+		dataSourceName = path[0]
+	}
+
+	var blockName string
+	if len(path) > 1 {
+		blockName = path[1]
+	}
+
+	matchingBlocks := []*PluginDataAction{}
+
+	for i := range doc.DataBlocks {
+		block := doc.DataBlocks[i]
+
+		if dataSourceName != "" && block.PluginName != dataSourceName {
+			continue
+		}
+
+		if blockName != "" && block.BlockName != blockName {
+			continue
+		}
+
+		matchingBlocks = append(matchingBlocks, block)
+	}
+
+	return &asyncDataEvaluator{
+		ctx:    ctx,
+		blocks: matchingBlocks,
+		logger: logger,
+	}
+}
+
 type asyncDataEvalResult struct {
 	pluginName string
 	blockName  string
@@ -38,10 +77,15 @@ type asyncDataEvalResult struct {
 
 func (doc *asyncDataEvaluator) Execute() (plugindata.Data, diagnostics.Diag) {
 	doc.logger.DebugContext(doc.ctx, "Fetching data for the document template")
+
 	resultch := make(chan *asyncDataEvalResult, len(doc.blocks))
 	for _, block := range doc.blocks {
 		go func(block *PluginDataAction, resultch chan<- *asyncDataEvalResult) {
-			doc.logger.DebugContext(doc.ctx, "Fetching data for block", "plugin", block.PluginName, "block", block.BlockName)
+			doc.logger.DebugContext(
+				doc.ctx, "Fetching data for block",
+				"plugin", block.PluginName,
+				"block", block.BlockName,
+			)
 			data, diags := block.FetchData(doc.ctx)
 			resultch <- &asyncDataEvalResult{
 				pluginName: block.PluginName,
@@ -73,7 +117,11 @@ func (doc *asyncDataEvaluator) Execute() (plugindata.Data, diagnostics.Diag) {
 				return nil, diagnostics.Diag{{
 					Severity: hcl.DiagError,
 					Summary:  "Conflicting data",
-					Detail:   fmt.Sprintf("Different type data block with the same name already exists at plugin '%s' and block '%s'", res.pluginName, res.blockName),
+					Detail: fmt.Sprintf(
+						"Different type data block with the same name already exists at plugin '%s' and block '%s'",
+						res.pluginName,
+						res.blockName,
+					),
 				}}
 			}
 		} else {
@@ -150,7 +198,10 @@ type asyncContentEvaluator struct {
 	rootNode  *plugin.ContentSection
 }
 
-func (ace *asyncContentEvaluator) executeGroup(dataCtx plugindata.Map, invokeOrder plugin.InvocationOrder) diagnostics.Diag {
+func (ace *asyncContentEvaluator) executeGroup(
+	dataCtx plugindata.Map,
+	invokeOrder plugin.InvocationOrder,
+) diagnostics.Diag {
 	list, ok := ace.invokeMap[invokeOrder]
 	if !ok || len(list) == 0 {
 		return nil
@@ -194,7 +245,11 @@ func (ace *asyncContentEvaluator) Execute(dataCtx plugindata.Map) (*plugin.Conte
 	return ace.rootNode, diags
 }
 
-func makeAsyncContentEvaluator(ctx context.Context, content []*Content, dataCtx plugindata.Map) (*asyncContentEvaluator, diagnostics.Diag) {
+func makeAsyncContentEvaluator(
+	ctx context.Context,
+	content []*Content,
+	dataCtx plugindata.Map,
+) (*asyncContentEvaluator, diagnostics.Diag) {
 	namedMap := make(map[string]*asyncContent)
 	invokeMap := make(map[plugin.InvocationOrder][]*asyncContent)
 	rootNode := plugin.NewSection(0)
@@ -235,7 +290,11 @@ func assignAsyncContent(
 					return diagnostics.Diag{{
 						Severity: hcl.DiagError,
 						Summary:  "Dependency not found",
-						Detail:   fmt.Sprintf("Content block '%s' depends on '%s' but it's not found", c.Plugin.BlockName, depName),
+						Detail: fmt.Sprintf(
+							"Content block '%s' depends on '%s' but it's not found",
+							c.Plugin.BlockName,
+							depName,
+						),
 					}}
 				}
 
