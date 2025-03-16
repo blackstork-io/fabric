@@ -20,7 +20,7 @@ func Test_makeLocalFilePublisher(t *testing.T) {
 	assert.NotNil(t, schema.Doc)
 	assert.NotNil(t, schema.Tags)
 	assert.NotNil(t, schema.Args)
-	assert.Equal(t, []string{"md", "html", "pdf"}, schema.Formats)
+	assert.Equal(t, []string{"md", "pdf", "html"}, schema.Formats)
 	assert.NotNil(t, schema.PublishFunc)
 }
 
