@@ -13,7 +13,6 @@ import (
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
-	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
 func makeHTMLFormatter(logger *slog.Logger, tracer trace.Tracer) *plugin.Formatter {
@@ -24,8 +23,9 @@ func makeHTMLFormatter(logger *slog.Logger, tracer trace.Tracer) *plugin.Formatt
 		tracer = nooptrace.Tracer{}
 	}
 	return &plugin.Formatter{
-		Doc:    "Formats content in HTML",
-		Format: "html",
+		Doc:     "Formats content in HTML",
+		Format:  "html",
+		FileExt: "html",
 		Args: &dataspec.RootSpec{
 			Attrs: []*dataspec.AttrSpec{
 				{
@@ -49,8 +49,8 @@ func makeHTMLFormatterFunc(logger *slog.Logger, tracer trace.Tracer) plugin.Form
 				Detail:   "document is required",
 			}}
 		}
-		datactx := params.DataContext
-		datactx["format"] = plugindata.String(params.Format)
+		//datactx := params.DataContext
+		//datactx["format"] = plugindata.String(params.Format)
 
 		logger.InfoContext(ctx, "HTML FORMATTER CALLED", "params", params)
 		return nil

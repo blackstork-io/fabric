@@ -17,7 +17,6 @@ type FormatParams struct {
 	Config       *dataspec.Block
 	Args         *dataspec.Block
 	DataContext  plugindata.Map
-	Format       string
 }
 
 type Formatter struct {
