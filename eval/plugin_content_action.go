@@ -24,7 +24,12 @@ type PluginContentAction struct {
 	DependsOn    []string
 }
 
-func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx plugindata.Map, doc, parent *plugin.ContentSection, contentID uint32) (diags diagnostics.Diag) {
+func (action *PluginContentAction) RenderContent(
+	ctx context.Context,
+	dataCtx plugindata.Map,
+	doc, parent *plugin.ContentSection,
+	contentID uint32,
+) (diags diagnostics.Diag) {
 	contentMap := plugindata.Map{}
 	if action.PluginAction.Meta != nil {
 		contentMap[definitions.BlockKindMeta] = action.PluginAction.Meta.AsPluginData()
@@ -75,7 +80,11 @@ func (action *PluginContentAction) RenderContent(ctx context.Context, dataCtx pl
 	return
 }
 
-func LoadPluginContentAction(ctx context.Context, providers ContentProviders, node *definitions.ParsedPlugin) (_ *PluginContentAction, diags diagnostics.Diag) {
+func LoadPluginContentAction(
+	ctx context.Context,
+	providers ContentProviders,
+	node *definitions.ParsedPlugin,
+) (_ *PluginContentAction, diags diagnostics.Diag) {
 	cp, ok := providers.ContentProvider(node.PluginName)
 	if !ok {
 		return nil, diagnostics.Diag{{
@@ -93,9 +102,10 @@ func LoadPluginContentAction(ctx context.Context, providers ContentProviders, no
 	} else if node.Config.Exists() {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
-			Summary:  "ContentProvider doesn't support configuration",
-			Detail: fmt.Sprintf("ContentProvider '%s' does not support configuration, "+
-				"but was provided with one. Remove it.", node.PluginName),
+			Summary:  "Content provider doesn't support configuration",
+			Detail: fmt.Sprintf(
+				"Content provider '%s' does not support configuration, but was provided with one.",
+				node.PluginName),
 			Subject: node.Config.Range().Ptr(),
 			Context: node.Invocation.Range().Ptr(),
 		})

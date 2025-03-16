@@ -16,6 +16,7 @@ const (
 	BlockKindSection      = "section"
 	BlockKindGlobalConfig = "fabric"
 	BlockKindDynamic      = "dynamic"
+	BlockKindFormat       = "format"
 
 	PluginTypeRef    = "ref"
 	AttrRefBase      = "base"

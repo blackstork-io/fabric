@@ -8,4 +8,5 @@ type ParsedDocument struct {
 	Content      []*ParsedContent
 	Data         []*ParsedPlugin
 	Publish      []*ParsedPlugin
+	Format       []*ParsedPlugin
 }

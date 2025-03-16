@@ -481,7 +481,6 @@ func (e *Engine) RenderContent(
 	ctx, span := e.tracer.Start(ctx, "Engine.RenderContent", trace.WithAttributes(
 		attribute.String("target", target),
 	))
-	e.logger.InfoContext(ctx, "Rendering the content", "target", target)
 	defer func() {
 		if diags.HasErrors() {
 			span.RecordError(diags)
@@ -520,6 +519,8 @@ func (e *Engine) PublishContent(
 	content *plugin.ContentSection,
 	dataCtx plugindata.Data,
 ) (diags diagnostics.Diag) {
+	// FIXME: should be calling formatting somewhere here
+
 	ctx, span := e.tracer.Start(ctx, "Engine.Publish", trace.WithAttributes(
 		attribute.String("target", target),
 	))

@@ -21,6 +21,7 @@ type Document struct {
 	DataBlocks    []*PluginDataAction
 	ContentBlocks []*Content
 	PublishBlocks []*PluginPublishAction
+	FormatBlocks  []*PluginFormatAction
 }
 
 func (doc *Document) FetchData(ctx context.Context) (plugindata.Data, diagnostics.Diag) {
@@ -49,9 +50,13 @@ func filterChildrenByTags(children []*Content, requiredTags []string) []*Content
 	})
 }
 
-func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Map, requiredTags []string) (*plugin.ContentSection, plugindata.Data, diagnostics.Diag) {
+func (doc *Document) RenderContent(
+	ctx context.Context,
+	docDataCtx plugindata.Map,
+	requiredTags []string,
+) (*plugin.ContentSection, plugindata.Data, diagnostics.Diag) {
 	logger := slog.Default()
-	logger.WarnContext(ctx, "Render content for the document template", "document", doc.Source.Name)
+	logger.InfoContext(ctx, "Rendering document content", "document", doc.Source.Name)
 	data, diags := doc.FetchData(ctx)
 	if diags.HasErrors() {
 		return nil, nil, diags
@@ -102,7 +107,12 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 	return result, docDataCtx, diags
 }
 
-func (doc *Document) Publish(ctx context.Context, content plugin.Content, data plugindata.Data, documentName string) diagnostics.Diag {
+func (doc *Document) Publish(
+	ctx context.Context,
+	content plugin.Content,
+	data plugindata.Data,
+	documentName string,
+) diagnostics.Diag {
 	logger := *slog.Default()
 	logger.DebugContext(ctx, "Fetching data for the document template")
 	docData := plugindata.Map{
@@ -125,8 +135,12 @@ func (doc *Document) Publish(ctx context.Context, content plugin.Content, data p
 	return diags
 }
 
-func LoadDocument(ctx context.Context, plugins Plugins, node *definitions.ParsedDocument) (_ *Document, diags diagnostics.Diag) {
-	block := Document{
+func LoadDocument(
+	ctx context.Context,
+	plugins Plugins,
+	node *definitions.ParsedDocument,
+) (_ *Document, diags diagnostics.Diag) {
+	doc := Document{
 		Source:       node.Source,
 		Meta:         node.Meta,
 		Vars:         node.Vars,
@@ -148,21 +162,30 @@ func LoadDocument(ctx context.Context, plugins Plugins, node *definitions.Parsed
 			})
 		}
 		dataNames[key] = struct{}{}
-		block.DataBlocks = append(block.DataBlocks, decoded)
+		doc.DataBlocks = append(doc.DataBlocks, decoded)
 	}
 	for _, child := range node.Content {
 		decoded, diag := LoadContent(ctx, plugins, child)
 		if diags.Extend(diag) {
 			return nil, diags
 		}
-		block.ContentBlocks = append(block.ContentBlocks, decoded)
+		doc.ContentBlocks = append(doc.ContentBlocks, decoded)
 	}
+
+	for _, child := range node.Format {
+		decoded, diag := LoadPluginFormatAction(ctx, plugins, child)
+		if diags.Extend(diag) {
+			return nil, diags
+		}
+		doc.FormatBlocks = append(doc.FormatBlocks, decoded)
+	}
+
 	for _, child := range node.Publish {
 		decoded, diag := LoadPluginPublishAction(ctx, plugins, child)
 		if diags.Extend(diag) {
 			return nil, diags
 		}
-		block.PublishBlocks = append(block.PublishBlocks, decoded)
+		doc.PublishBlocks = append(doc.PublishBlocks, decoded)
 	}
-	return &block, diags
+	return &doc, diags
 }

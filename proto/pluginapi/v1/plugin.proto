@@ -52,7 +52,7 @@ message PublishRequest {
     Block          args          = 2;
     Block          config        = 3;
     MapData        data_context  = 4;
-    OutputFormat   format        = 5;
+    string         format        = 5;
     string         document_name = 6;
 }
 

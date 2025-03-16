@@ -86,7 +86,7 @@ func (s *MispPublishEventReportsTestSuite) TestBasic() {
 			SetAttr("name", cty.StringVal("name")).
 			SetAttr("distribution", cty.StringVal("0")).
 			Decode(),
-		Format: plugin.OutputFormatMD,
+		Format: "md",
 		DataContext: plugindata.Map{
 			"document": plugindata.Map{
 				"meta": plugindata.Map{
@@ -114,7 +114,8 @@ func (s *MispPublishEventReportsTestSuite) TestBasic() {
 }
 
 func (s *MispPublishEventReportsTestSuite) TestError() {
-	s.cli.On("AddEventReport", mock.Anything, mock.Anything).Return(client.AddEventReportResponse{}, errors.New("something went wrong"))
+	s.cli.On("AddEventReport", mock.Anything, mock.Anything).
+		Return(client.AddEventReportResponse{}, errors.New("something went wrong"))
 	ctx := context.Background()
 	titleMeta := plugindata.Map{
 		"provider": plugindata.String("title"),
@@ -131,7 +132,7 @@ func (s *MispPublishEventReportsTestSuite) TestError() {
 			SetAttr("name", cty.StringVal("name")).
 			SetAttr("distribution", cty.StringVal("0")).
 			Decode(),
-		Format: plugin.OutputFormatMD,
+		Format: "md",
 		DataContext: plugindata.Map{
 			"document": plugindata.Map{
 				"meta": plugindata.Map{

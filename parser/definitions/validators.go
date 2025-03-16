@@ -39,15 +39,15 @@ func validateBlockName(block *hclsyntax.Block, idx int, required bool) *hcl.Diag
 
 func validatePluginKind(block *hclsyntax.Block, kind string, kindRange hcl.Range) *hcl.Diagnostic {
 	switch kind {
-	case BlockKindContent, BlockKindData, BlockKindPublish:
+	case BlockKindContent, BlockKindData, BlockKindPublish, BlockKindFormat:
 		return nil
 	default:
 		return &hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid plugin kind",
 			Detail: fmt.Sprintf(
-				"Unknown plugin kind '%s', valid plugin kinds are '%s', '%s' and '%s'",
-				kind, BlockKindContent, BlockKindData, BlockKindPublish,
+				"Unknown plugin kind '%s', valid plugin kinds are: '%s', '%s', '%s', '%s'",
+				kind, BlockKindContent, BlockKindData, BlockKindFormat, BlockKindPublish,
 			),
 			Subject: kindRange.Ptr(),
 			Context: block.DefRange().Ptr(),
@@ -59,8 +59,8 @@ func validatePluginKindLabel(block *hclsyntax.Block, idx int) *hcl.Diagnostic {
 	if idx >= len(block.Labels) {
 		return &hcl.Diagnostic{
 			Severity: hcl.DiagError,
-			Summary:  "Missing plugin kind",
-			Detail:   "Plugin kind was not specified",
+			Summary:  "Missing block type",
+			Detail:   "Block type was not specified",
 			Subject:  block.DefRange().Ptr(),
 		}
 	}

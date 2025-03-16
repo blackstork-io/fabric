@@ -5,48 +5,42 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/zclconf/go-cty/cty"
 
-	"github.com/blackstork-io/fabric/cmd/fabctx"
 	"github.com/blackstork-io/fabric/parser/definitions"
 	"github.com/blackstork-io/fabric/pkg/diagnostics"
-	"github.com/blackstork-io/fabric/pkg/utils"
 	"github.com/blackstork-io/fabric/plugin"
 	"github.com/blackstork-io/fabric/plugin/dataspec"
-	"github.com/blackstork-io/fabric/plugin/dataspec/constraint"
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-type PluginPublishAction struct {
+type PluginFormatAction struct {
 	*PluginAction
-	Publisher *plugin.Publisher
-	Format    string
+	Formatter *plugin.Formatter
 }
 
-func (block *PluginPublishAction) Publish(
+func (block *PluginFormatAction) FormatExecute(
 	ctx context.Context,
 	dataCtx plugindata.Map,
 	documentName string,
 ) diagnostics.Diag {
-	return block.Publisher.Execute(ctx, &plugin.PublishParams{
+	return block.Formatter.Execute(ctx, &plugin.FormatParams{
 		Config:       block.Config,
 		Args:         block.Args,
 		DataContext:  dataCtx,
-		Format:       block.Format,
 		DocumentName: documentName,
 	})
 }
 
-func LoadPluginPublishAction(
+func LoadPluginFormatAction(
 	ctx context.Context,
-	publishers Publishers,
+	formatters Formatters,
 	node *definitions.ParsedPlugin,
-) (_ *PluginPublishAction, diags diagnostics.Diag) {
-	p, ok := publishers.Publisher(node.PluginName)
+) (_ *PluginFormatAction, diags diagnostics.Diag) {
+	p, ok := formatters.Formatter(node.PluginName)
 	if !ok {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
-			Summary:  "Missing publisher",
+			Summary:  "Missing formatter",
 			Detail:   fmt.Sprintf("'%s' not found in any plugin", node.PluginName),
 		}}
 	}
@@ -59,9 +53,9 @@ func LoadPluginPublishAction(
 	} else if node.Config.Exists() {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
-			Summary:  "Publisher doesn't support configuration",
+			Summary:  "Formatter doesn't support configuration",
 			Detail: fmt.Sprintf(
-				"Publisher '%s' does not support configuration, but was provided with one.",
+				"Formatter '%s' does not support configuration, but was provided with one",
 				node.PluginName),
 			Subject: node.Config.Range().Ptr(),
 			Context: node.Invocation.Range().Ptr(),
@@ -69,31 +63,29 @@ func LoadPluginPublishAction(
 		return nil, diags
 	}
 
-	var format string
-	// XXX: So format is optional? Not including format in invocation doesn't validate it
-	// anyway, this would change with the new AST
-	if attr, found := utils.Pop(node.Invocation.Body.Attributes, "format"); found {
-		val, diag := dataspec.DecodeAttr(fabctx.GetEvalContext(ctx), attr, &dataspec.AttrSpec{
-			Name:        "format",
-			Type:        cty.String,
-			Constraints: constraint.RequiredMeaningful,
-			OneOf: constraint.OneOf(
-				utils.FnMap(p.Formats, func(f string) cty.Value {
-					return cty.StringVal(f)
-				})),
-		})
-
-		if diags.Extend(diag) {
-			return
-		}
-		format = val.Value.AsString()
-	}
+	// 	var format string
+	// 	if attr, found := utils.Pop(node.Invocation.Body.Attributes, "format"); found {
+	// 		val, diag := dataspec.DecodeAttr(fabctx.GetEvalContext(ctx), attr, &dataspec.AttrSpec{
+	// 			Name:        "format",
+	// 			Type:        cty.String,
+	// 			Constraints: constraint.RequiredMeaningful,
+	// 			OneOf: constraint.OneOf(
+	// 				utils.FnMap(p.Format, func(f string) cty.Value {
+	// 					return cty.StringVal(f)
+	// 				})),
+	// 		})
+	//
+	// 		if diags.Extend(diag) {
+	// 			return
+	// 		}
+	// 		format = val.Value.AsString()
+	// 	}
 
 	args, diag := dataspec.DecodeAndEvalBlock(ctx, node.Invocation.Block, p.Args, nil)
 	if diags.Extend(diag) {
 		return nil, diags
 	}
-	return &PluginPublishAction{
+	return &PluginFormatAction{
 		PluginAction: &PluginAction{
 			PluginName: node.PluginName,
 			BlockName:  node.BlockName,
@@ -101,7 +93,6 @@ func LoadPluginPublishAction(
 			Config:     cfg,
 			Args:       args,
 		},
-		Publisher: p,
-		Format:    format,
+		Formatter: p,
 	}, diags
 }

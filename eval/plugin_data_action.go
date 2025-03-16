@@ -28,7 +28,11 @@ func (action *PluginDataAction) FetchData(ctx context.Context) (plugindata.Data,
 	return res, diags
 }
 
-func LoadDataAction(ctx context.Context, sources DataSources, node *definitions.ParsedPlugin) (_ *PluginDataAction, diags diagnostics.Diag) {
+func LoadDataAction(
+	ctx context.Context,
+	sources DataSources,
+	node *definitions.ParsedPlugin,
+) (_ *PluginDataAction, diags diagnostics.Diag) {
 	defer func() {
 		diags.Refine(diagnostics.DefaultSubject(node.Invocation.Range()))
 	}()
@@ -50,9 +54,10 @@ func LoadDataAction(ctx context.Context, sources DataSources, node *definitions.
 	} else if node.Config.Exists() {
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
-			Summary:  "DataSource doesn't support configuration",
-			Detail: fmt.Sprintf("DataSource '%s' does not support configuration, "+
-				"but was provided with one. Remove it.", node.PluginName),
+			Summary:  "Data source doesn't support configuration",
+			Detail: fmt.Sprintf(
+				"Data source '%s' does not support configuration, but was provided with one.",
+				node.PluginName),
 			Subject: node.Config.Range().Ptr(),
 			Context: node.Invocation.Range().Ptr(),
 		})
