@@ -60,7 +60,7 @@ func makeHubPublisher(
 				},
 			},
 		},
-		Formats:     []string{"raw"},
+		Formats:     []string{},
 		PublishFunc: publishHub(version, loader, logger, tracer),
 	}
 }

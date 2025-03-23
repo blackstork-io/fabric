@@ -40,6 +40,7 @@ func Plugin(version string, logger *slog.Logger, tracer trace.Tracer) *plugin.Sc
 			"hub":        makeHubPublisher(version, defaultHubClientLoader, logger, tracer),
 		},
 		Formatters: plugin.Formatters{
+			"md":   makeMarkdownFormatter(logger, tracer),
 			"html": makeHTMLFormatter(logger, tracer),
 		},
 	}

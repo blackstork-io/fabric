@@ -18,11 +18,11 @@ type PluginFormatAction struct {
 	Formatter *plugin.Formatter
 }
 
-func (block *PluginFormatAction) FormatExecute(
+func (block *PluginFormatAction) Execute(
 	ctx context.Context,
 	dataCtx plugindata.Map,
 	documentName string,
-) diagnostics.Diag {
+) ([]byte, diagnostics.Diag) {
 	return block.Formatter.Execute(ctx, &plugin.FormatParams{
 		Config:       block.Config,
 		Args:         block.Args,
@@ -92,6 +92,34 @@ func LoadPluginFormatAction(
 			Meta:       node.Meta,
 			Config:     cfg,
 			Args:       args,
+		},
+		Formatter: p,
+	}, diags
+}
+
+func CreatePluginFormatActionMD(
+	ctx context.Context,
+	formatters Formatters,
+) (_ *PluginFormatAction, diags diagnostics.Diag) {
+
+	pluginName := "md"
+
+	p, ok := formatters.Formatter(pluginName)
+	if !ok {
+		return nil, diagnostics.Diag{{
+			Severity: hcl.DiagError,
+			Summary:  "Missing formatter",
+			Detail:   fmt.Sprintf("'%s' not found in any plugin", pluginName),
+		}}
+	}
+
+	return &PluginFormatAction{
+		PluginAction: &PluginAction{
+			PluginName: pluginName,
+			BlockName:  "",
+			Meta:       nil,
+			Config:     nil,
+			Args:       nil,
 		},
 		Formatter: p,
 	}, diags

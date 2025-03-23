@@ -17,7 +17,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-func makeHTMLFormatter(logger *slog.Logger, tracer trace.Tracer) *plugin.Formatter {
+func makeMarkdownFormatter(logger *slog.Logger, tracer trace.Tracer) *plugin.Formatter {
 	if logger == nil {
 		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
@@ -25,19 +25,19 @@ func makeHTMLFormatter(logger *slog.Logger, tracer trace.Tracer) *plugin.Formatt
 		tracer = nooptrace.Tracer{}
 	}
 	return &plugin.Formatter{
-		Doc:     "Formats content in HTML",
-		Format:  "html",
-		FileExt: "html",
+		Doc:     "Formats content in Markdown",
+		Format:  "md",
+		FileExt: "md",
 		Args: &dataspec.RootSpec{
 			Attrs: []*dataspec.AttrSpec{
 				{
 					Name: "page_title",
-					Doc:  "HTML Page title",
+					Doc:  "Markdown Page title",
 					Type: cty.String,
 				},
 				{
 					Name: "template_per_type",
-					Doc:  "HTML templates for specific block types (content and section)",
+					Doc:  "Markdown templates for specific block types (content and section)",
 					Type: plugindata.Encapsulated.CtyType(),
 					Constraints: constraint.RequiredMeaningful,
 					ExampleVal: cty.ObjectVal(map[string]cty.Value{
@@ -47,7 +47,7 @@ func makeHTMLFormatter(logger *slog.Logger, tracer trace.Tracer) *plugin.Formatt
 				},
 				{
 					Name: "template_per_block",
-					Doc:  "HTML templates for specific content and section blocks",
+					Doc:  "Markdown templates for specific content and section blocks",
 					Type: plugindata.Encapsulated.CtyType(),
 					Constraints: constraint.RequiredMeaningful,
 					ExampleVal: cty.ObjectVal(map[string]cty.Value{
@@ -57,11 +57,11 @@ func makeHTMLFormatter(logger *slog.Logger, tracer trace.Tracer) *plugin.Formatt
 				},
 			},
 		},
-		FormatFunc: makeHTMLFormatterFunc(logger, tracer),
+		FormatFunc: makeMarkdownFormatterFunc(logger, tracer),
 	}
 }
 
-func makeHTMLFormatterFunc(logger *slog.Logger, tracer trace.Tracer) plugin.FormatFunc {
+func makeMarkdownFormatterFunc(logger *slog.Logger, tracer trace.Tracer) plugin.FormatFunc {
 	return func(ctx context.Context, params *plugin.FormatParams) ([]byte, diagnostics.Diag) {
 		document, _ := parseScope(params.DataContext)
 		if document == nil {
@@ -74,8 +74,8 @@ func makeHTMLFormatterFunc(logger *slog.Logger, tracer trace.Tracer) plugin.Form
 		//datactx := params.DataContext
 		//datactx["format"] = plugindata.String(params.Format)
 
-		logger.InfoContext(ctx, "HTML FORMATTER CALLED", "params", params)
-		return []byte("HELLO FORMATTED HTML"), nil
+		logger.InfoContext(ctx, "Markdown FORMATTER CALLED", "params", params)
+		return []byte("HELLO FORMATTED MD"), nil
 
 		// var printer print.Printer
 		// switch params.Format {
@@ -140,3 +140,4 @@ func makeHTMLFormatterFunc(logger *slog.Logger, tracer trace.Tracer) plugin.Form
 		// return nil
 	}
 }
+

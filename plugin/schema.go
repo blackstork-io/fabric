@@ -144,11 +144,11 @@ func (p *Schema) Publish(ctx context.Context, name string, params *PublishParams
 			Detail:   fmt.Sprintf("Publisher '%s' not found in schema", name),
 		}}
 	}
-	if !slices.Contains(publisher.Formats, params.Format) {
+	if params.Format != nil && !slices.Contains(publisher.Formats, *params.Format) {
 		return diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid format",
-			Detail:   fmt.Sprintf("Publisher '%s' does not support format '%s'", name, params.Format),
+			Detail:   fmt.Sprintf("Publisher '%s' does not support format '%s'", name, *params.Format),
 		}}
 	}
 	return publisher.Execute(ctx, params)

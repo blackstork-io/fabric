@@ -27,9 +27,9 @@ import (
 	"github.com/blackstork-io/fabric/print/mdprint"
 )
 
-func makeLocalFilePublisher(logger *slog.Logger, tracer trace.Tracer) *plugin.Publisher {
-	if logger == nil {
-		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
+func makeLocalFilePublisher(log *slog.Logger, tracer trace.Tracer) *plugin.Publisher {
+	if log == nil {
+		log = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
 	if tracer == nil {
 		tracer = nooptrace.Tracer{}
@@ -49,11 +49,11 @@ func makeLocalFilePublisher(logger *slog.Logger, tracer trace.Tracer) *plugin.Pu
 			},
 		},
 		Formats:     []string{"md", "pdf", "html"},
-		PublishFunc: publishLocalFile(logger, tracer),
+		PublishFunc: publishLocalFile(log, tracer),
 	}
 }
 
-func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFunc {
+func publishLocalFile(log *slog.Logger, tracer trace.Tracer) plugin.PublishFunc {
 	return func(ctx context.Context, params *plugin.PublishParams) diagnostics.Diag {
 		document, _ := parseScope(params.DataContext)
 		if document == nil {
@@ -65,6 +65,8 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 		}
 		datactx := params.DataContext
 		datactx["format"] = plugindata.String(params.Format)
+
+		log.InfoContext(ctx, "PUBLISHING A LOCAL FILE", "format", params.Format)
 
 		var printer print.Printer = mdprint.New()
 		// switch params.Format {
@@ -81,7 +83,7 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 		// 		Detail:   "Only md, html and pdf formats are supported",
 		// 	}}
 		// }
-		printer = print.WithLogging(printer, logger, slog.String("format", params.Format))
+		printer = print.WithLogging(printer, log, slog.String("format", params.Format))
 		printer = print.WithTracing(printer, tracer, attribute.String("format", params.Format))
 		pathAttr := params.Args.GetAttrVal("path")
 		if pathAttr.IsNull() || pathAttr.AsString() == "" {
@@ -99,7 +101,7 @@ func publishLocalFile(logger *slog.Logger, tracer trace.Tracer) plugin.PublishFu
 				Detail:   err.Error(),
 			}}
 		}
-		logger.InfoContext(ctx, "Writing to a file", "path", path)
+		log.InfoContext(ctx, "Writing to a file", "path", path)
 		dir := filepath.Dir(path)
 		err = os.MkdirAll(dir, 0o755)
 		if err != nil {

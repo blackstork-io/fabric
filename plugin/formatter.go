@@ -10,7 +10,7 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-type FormatFunc func(ctx context.Context, params *FormatParams) diagnostics.Diag
+type FormatFunc func(ctx context.Context, params *FormatParams) ([]byte, diagnostics.Diag)
 
 type FormatParams struct {
 	DocumentName string
@@ -26,6 +26,11 @@ type Formatter struct {
 	FormatFunc FormatFunc
 	Args       *dataspec.RootSpec
 	Config     *dataspec.RootSpec
+}
+
+type FormattedContent struct {
+	Format  string
+	Content []byte
 }
 
 func (formatter *Formatter) Validate() diagnostics.Diag {
@@ -47,15 +52,18 @@ func (formatter *Formatter) Validate() diagnostics.Diag {
 	return diags
 }
 
-func (formatter *Formatter) Execute(ctx context.Context, params *FormatParams) (diags diagnostics.Diag) {
+func (formatter *Formatter) Execute(
+	ctx context.Context,
+	params *FormatParams,
+) (content []byte, diags diagnostics.Diag) {
 	if formatter == nil {
-		return diagnostics.Diag{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Missing Formatter schema",
 		}}
 	}
 	if formatter.FormatFunc == nil {
-		return diagnostics.Diag{{
+		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Incomplete Formatter schema",
 			Detail:   "Format function not loaded",
