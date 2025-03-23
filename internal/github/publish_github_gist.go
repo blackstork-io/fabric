@@ -54,8 +54,8 @@ func makeGithubGistPublisher(loader ClientLoaderFn) *plugin.Publisher {
 				},
 			},
 		},
-		AllowedFormats: []plugin.OutputFormat{plugin.OutputFormatMD, plugin.OutputFormatHTML},
-		PublishFunc:    publishGithubGist(loader),
+		Formats:     []string{"md", "html"},
+		PublishFunc: publishGithubGist(loader),
 	}
 }
 
@@ -78,8 +78,8 @@ func parseContent(data plugindata.Map) (document *plugin.ContentSection) {
 
 func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 	// TODO: confirm if to be passed from the caller
-	logger := slog.Default()
-	tracer := nooptrace.Tracer{}
+	log := slog.Default()
+	// tracer := nooptrace.Tracer{}
 	return func(ctx context.Context, params *plugin.PublishParams) diagnostics.Diag {
 		document := parseContent(params.DataContext)
 		if document == nil {
@@ -89,45 +89,60 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 				Detail:   "document is required",
 			}}
 		}
-		datactx := params.DataContext
-		datactx["format"] = plugindata.String(params.Format.String())
-		var printer print.Printer
-		switch params.Format {
-		case plugin.OutputFormatMD:
-			printer = mdprint.New()
-		case plugin.OutputFormatHTML:
-			printer = htmlprint.New()
-		default:
-			return diagnostics.Diag{{
-				Severity: hcl.DiagError,
-				Summary:  "Unsupported format",
-				Detail:   "Only md and html formats are supported",
-			}}
-		}
-		printer = print.WithLogging(printer, logger, slog.String("format", params.Format.String()))
-		printer = print.WithTracing(printer, tracer, attribute.String("format", params.Format.String()))
 
-		buff := bytes.NewBuffer(nil)
-		err := printer.Print(ctx, buff, document)
-		if err != nil {
+		log.DebugContext(ctx, "Publishing content to Github gist")
+
+		if params.FormattedContent != nil {
 			return diagnostics.Diag{{
 				Severity: hcl.DiagError,
-				Summary:  "Failed to write to a file",
-				Detail:   err.Error(),
+				Summary:  "No formatted content provided",
+				Detail:   "Github gist published expectes formatted content",
 			}}
 		}
 
-		client := loader(params.Config.GetAttrVal("github_token").AsString())
-		fileName := params.DocumentName + "." + params.Format.String()
+//		datactx := params.DataContext
+// 		datactx["format"] = plugindata.String(format)
+// 		var printer print.Printer
+// 		switch format {
+// 		case "md":
+// 			printer = mdprint.New()
+// 		case "html":
+// 			printer = htmlprint.New()
+// 		default:
+// 			return diagnostics.Diag{{
+// 				Severity: hcl.DiagError,
+// 				Summary:  "Unsupported format",
+// 				Detail:   "Only md and html formats are supported",
+// 			}}
+// 		}
+// 		printer = print.WithLogging(printer, log, slog.String("format", format))
+// 		printer = print.WithTracing(printer, tracer, attribute.String("format", format))
+
+// 		buff := bytes.NewBuffer(nil)
+// 		err := printer.Print(ctx, buff, document)
+// 		if err != nil {
+// 			return diagnostics.Diag{{
+// 				Severity: hcl.DiagError,
+// 				Summary:  "Failed to write to a file",
+// 				Detail:   err.Error(),
+// 			}}
+// 		}
+
+		fileExt := params.FormattedContent.Format
+		fileName := params.DocumentName + "." + fileExt
 		filenameAttr := params.Args.GetAttrVal("filename")
 		if !filenameAttr.IsNull() && filenameAttr.AsString() != "" {
 			fileName = filenameAttr.AsString()
 		}
+
+		content := string(params.FormattedContent.Content)
+
+		client := loader(params.Config.GetAttrVal("github_token").AsString())
 		payload := &gh.Gist{
 			Public: gh.Bool(params.Args.GetAttrVal("make_public").True()),
 			Files: map[gh.GistFilename]gh.GistFile{
 				gh.GistFilename(fileName): {
-					Content:  gh.String(buff.String()),
+					Content:  gh.String(content),
 					Filename: gh.String(fileName),
 				},
 			},
@@ -140,7 +155,14 @@ func publishGithubGist(loader ClientLoaderFn) plugin.PublishFunc {
 		slog.InfoContext(ctx, "Publishing to GitHub gist", "filename", fileName)
 		gistId := params.Args.GetAttrVal("gist_id")
 		if gistId.IsNull() || gistId.AsString() == "" {
-			slog.DebugContext(ctx, "No gist id set, creating a new gist", "is_public", payload.Public, "files", len(payload.Files))
+			slog.DebugContext(
+				ctx,
+				"No gist id set, creating a new gist",
+				"is_public",
+				payload.Public,
+				"files",
+				len(payload.Files),
+			)
 			gist, _, err := client.Gists().Create(ctx, payload)
 			if err != nil {
 				return diagnostics.Diag{{

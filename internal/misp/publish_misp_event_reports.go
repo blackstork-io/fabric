@@ -58,8 +58,8 @@ func makeMispEventReportsPublisher(loader ClientLoaderFn) *plugin.Publisher {
 				},
 			},
 		},
-		AllowedFormats: []plugin.OutputFormat{plugin.OutputFormatMD},
-		PublishFunc:    publishEventReport(loader),
+		Formats:     []string{"md"},
+		PublishFunc: publishEventReport(loader),
 	}
 }
 
@@ -92,11 +92,21 @@ func publishEventReport(loader ClientLoaderFn) plugin.PublishFunc {
 				Detail:   "document is required",
 			}}
 		}
+
+		if params.Format == nil {
+			return diagnostics.Diag{{
+				Severity: hcl.DiagError,
+				Summary:  "No format specified",
+				Detail:   "format must be specified for MISP publisher",
+			}}
+		}
+		format := *params.Format
+
 		datactx := params.DataContext
-		datactx["format"] = plugindata.String(params.Format.String())
+		datactx["format"] = plugindata.String(format)
 		var printer print.Printer
-		switch params.Format {
-		case plugin.OutputFormatMD:
+		switch format {
+		case "md":
 			printer = mdprint.New()
 		default:
 			return diagnostics.Diag{{
@@ -105,8 +115,8 @@ func publishEventReport(loader ClientLoaderFn) plugin.PublishFunc {
 				Detail:   "Only md format is supported",
 			}}
 		}
-		printer = print.WithLogging(printer, logger, slog.String("format", params.Format.String()))
-		printer = print.WithTracing(printer, tracer, attribute.String("format", params.Format.String()))
+		printer = print.WithLogging(printer, logger, slog.String("format", format))
+		printer = print.WithTracing(printer, tracer, attribute.String("format", format))
 
 		buff := bytes.NewBuffer(nil)
 		err := printer.Print(ctx, buff, document)

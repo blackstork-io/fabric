@@ -40,3 +40,9 @@ message ContentElement {
 }
 
 message ContentEmpty {}
+
+
+message FormattedContent {
+    string format = 1;
+    bytes content = 2;
+}

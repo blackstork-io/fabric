@@ -228,6 +228,11 @@ func fetchFeedItems(ctx context.Context, feed *gofeed.Feed, userAgent string, it
 			}
 			defer resp.Body.Close()
 
+			if resp.StatusCode != http.StatusOK {
+				_log.ErrorContext(ctx, "Failed to download a page for a feed item", "status_code", resp.StatusCode)
+				return
+			}
+
 			parsedLink, err := url.Parse(item.Link)
 			if err != nil {
 				_log.ErrorContext(ctx, "Can't parse the item link", "err", err)

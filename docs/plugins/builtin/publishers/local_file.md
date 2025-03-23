@@ -22,8 +22,8 @@ The publisher is built-in, which means it's a part of `fabric` binary. It's avai
 The publisher supports the following document formats:
 
 - `md`
-- `html`
 - `pdf`
+- `html`
 
 To set the output format, specify it inside `publish` block with `format` argument.
 

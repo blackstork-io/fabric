@@ -58,6 +58,12 @@ func (p *grpcPlugin) GRPCClient(ctx context.Context, broker *goplugin.GRPCBroker
 		}
 		cg.ContentFunc = p.clientGenerateFunc(name, client)
 	}
+	for name, formatter := range schema.Formatters {
+		if formatter == nil {
+			return nil, fmt.Errorf("nil formatter")
+		}
+		formatter.FormatFunc = p.clientFormatFunc(name, client)
+	}
 	for name, pub := range schema.Publishers {
 		if pub == nil {
 			return nil, fmt.Errorf("nil publisher")
@@ -76,9 +82,9 @@ func (p *grpcPlugin) callOptions() []grpc.CallOption {
 
 func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient) plugin.ProvideContentFunc {
 	return func(ctx context.Context, params *plugin.ProvideContentParams) (result *plugin.ContentResult, diags diagnostics.Diag) {
-		p.logger.DebugContext(ctx, "Calling content provider", "name", name)
+		p.logger.DebugContext(ctx, "Calling a content provider", "name", name)
 		defer func(start time.Time) {
-			p.logger.DebugContext(ctx, "Called content provider", "name", name, "took", time.Since(start))
+			p.logger.DebugContext(ctx, "Called a content provider", "name", name, "took", time.Since(start))
 		}(time.Now())
 		if params == nil {
 			diags.Add("Content provider error", "Nil params")
@@ -109,9 +115,9 @@ func (p *grpcPlugin) clientGenerateFunc(name string, client PluginServiceClient)
 
 func (p *grpcPlugin) clientDataFunc(name string, client PluginServiceClient) plugin.RetrieveDataFunc {
 	return func(ctx context.Context, params *plugin.RetrieveDataParams) (data plugindata.Data, diags diagnostics.Diag) {
-		p.logger.DebugContext(ctx, "Calling data source", "name", name)
+		p.logger.DebugContext(ctx, "Calling a data source", "name", name)
 		defer func(start time.Time) {
-			p.logger.DebugContext(ctx, "Called data source", "name", name, "took", time.Since(start))
+			p.logger.DebugContext(ctx, "Called a data source", "name", name, "took", time.Since(start))
 		}(time.Now())
 		if params == nil {
 			diags.Add("Data source error", "Nil params")
@@ -136,6 +142,43 @@ func (p *grpcPlugin) clientDataFunc(name string, client PluginServiceClient) plu
 	}
 }
 
+func (p *grpcPlugin) clientFormatFunc(name string, client PluginServiceClient) plugin.FormatFunc {
+	return func(ctx context.Context, params *plugin.PublishParams) (diags diagnostics.Diag) {
+		p.logger.DebugContext(ctx, "Calling a formatter", "name", name)
+		defer func(start time.Time) {
+			p.logger.DebugContext(ctx, "Called a formatter", "name", name, "took", time.Since(start))
+		}(time.Now())
+		if params == nil {
+			diags.Add("Formatter error", "Nil params")
+			return
+		}
+		argsEncoded, diag := encodeBlock(params.Args)
+		diags.Extend(diag)
+		cfgEncoded, diag := encodeBlock(params.Config)
+		diags.Extend(diag)
+		datactx := encodeMapData(params.DataContext)
+		format := params.Format
+		res, err := client.Publish(ctx, &FormatRequest{
+			Publisher:    name,
+			Config:       cfgEncoded,
+			Args:         argsEncoded,
+			DataContext:  datactx,
+			Format:       format,
+			DocumentName: params.DocumentName,
+		}, p.callOptions()...)
+
+		if diags.AppendErr(err, "Failed to publish") {
+			return diagnostics.Diag{{
+				Severity: hcl.DiagError,
+				Summary:  "Failed to publish",
+				Detail:   err.Error(),
+			}}
+		}
+		diags.Extend(decodeDiagnosticList(res.GetDiagnostics()))
+		return
+	}
+}
+
 func (p *grpcPlugin) clientPublishFunc(name string, client PluginServiceClient) plugin.PublishFunc {
 	return func(ctx context.Context, params *plugin.PublishParams) (diags diagnostics.Diag) {
 		p.logger.DebugContext(ctx, "Calling publisher", "name", name)
@@ -151,13 +194,21 @@ func (p *grpcPlugin) clientPublishFunc(name string, client PluginServiceClient) 
 		cfgEncoded, diag := encodeBlock(params.Config)
 		diags.Extend(diag)
 		datactx := encodeMapData(params.DataContext)
-		format := encodeOutputFormat(params.Format)
+
+		var content *FormattedContent
+		if params.FormattedContent != nil {
+			content = &FormattedContent{
+				Format: params.FormattedContent.Format,
+				Content: params.FormattedContent.Content,
+			}
+		}
+
 		res, err := client.Publish(ctx, &PublishRequest{
 			Publisher:    name,
 			Config:       cfgEncoded,
 			Args:         argsEncoded,
 			DataContext:  datactx,
-			Format:       format,
+			FormattedContent: content,
 			DocumentName: params.DocumentName,
 		}, p.callOptions()...)
 

@@ -19,6 +19,7 @@ type Schema struct {
 	Tags             []string
 	DataSources      DataSources
 	ContentProviders ContentProviders
+	Formatters       Formatters
 	Publishers       Publishers
 }
 
@@ -50,7 +51,11 @@ func (p *Schema) Validate() diagnostics.Diag {
 	return diags
 }
 
-func (p *Schema) RetrieveData(ctx context.Context, name string, params *RetrieveDataParams) (_ plugindata.Data, diags diagnostics.Diag) {
+func (p *Schema) RetrieveData(
+	ctx context.Context,
+	name string,
+	params *RetrieveDataParams,
+) (_ plugindata.Data, diags diagnostics.Diag) {
 	if p == nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -76,7 +81,11 @@ func (p *Schema) RetrieveData(ctx context.Context, name string, params *Retrieve
 	return source.Execute(ctx, params)
 }
 
-func (p *Schema) ProvideContent(ctx context.Context, name string, params *ProvideContentParams) (_ *ContentResult, diags diagnostics.Diag) {
+func (p *Schema) ProvideContent(
+	ctx context.Context,
+	name string,
+	params *ProvideContentParams,
+) (_ *ContentResult, diags diagnostics.Diag) {
 	if p == nil {
 		return nil, diagnostics.Diag{{
 			Severity: hcl.DiagError,
@@ -135,11 +144,11 @@ func (p *Schema) Publish(ctx context.Context, name string, params *PublishParams
 			Detail:   fmt.Sprintf("Publisher '%s' not found in schema", name),
 		}}
 	}
-	if !slices.Contains(publisher.AllowedFormats, params.Format) {
+	if params.Format != nil && !slices.Contains(publisher.Formats, *params.Format) {
 		return diagnostics.Diag{{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid format",
-			Detail:   fmt.Sprintf("Publisher '%s' does not support format '%s'", name, params.Format),
+			Detail:   fmt.Sprintf("Publisher '%s' does not support format '%s'", name, *params.Format),
 		}}
 	}
 	return publisher.Execute(ctx, params)

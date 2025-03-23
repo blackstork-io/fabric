@@ -20,20 +20,40 @@ import (
 type PluginPublishAction struct {
 	*PluginAction
 	Publisher *plugin.Publisher
-	Format    plugin.OutputFormat
+	Format    *string
 }
 
-func (block *PluginPublishAction) Publish(ctx context.Context, dataCtx plugindata.Map, documentName string) diagnostics.Diag {
+func (block *PluginPublishAction) Publish(
+	ctx context.Context,
+	dataCtx plugindata.Map,
+	documentName string,
+	formatter *PluginFormatAction,
+) diagnostics.Diag {
+
+	var formattedContent []byte
+	var diag diagnostics.Diag
+	if formatter != nil {
+		formattedContent, diag = formatter.Execute(ctx, dataCtx, documentName)
+		if diag.HasErrors() {
+			return diag
+		}
+	}
+
 	return block.Publisher.Execute(ctx, &plugin.PublishParams{
-		Config:       block.Config,
-		Args:         block.Args,
-		DataContext:  dataCtx,
-		Format:       block.Format,
-		DocumentName: documentName,
+		Config:           block.Config,
+		Args:             block.Args,
+		DataContext:      dataCtx,
+		Format:           block.Format,
+		DocumentName:     documentName,
+		FormattedContent: formattedContent,
 	})
 }
 
-func LoadPluginPublishAction(ctx context.Context, publishers Publishers, node *definitions.ParsedPlugin) (_ *PluginPublishAction, diags diagnostics.Diag) {
+func LoadPluginPublishAction(
+	ctx context.Context,
+	publishers Publishers,
+	node *definitions.ParsedPlugin,
+) (_ *PluginPublishAction, diags diagnostics.Diag) {
 	p, ok := publishers.Publisher(node.PluginName)
 	if !ok {
 		return nil, diagnostics.Diag{{
@@ -52,47 +72,56 @@ func LoadPluginPublishAction(ctx context.Context, publishers Publishers, node *d
 		diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagWarning,
 			Summary:  "Publisher doesn't support configuration",
-			Detail: fmt.Sprintf("Publisher '%s' does not support configuration, "+
-				"but was provided with one. Remove it.", node.PluginName),
+			Detail: fmt.Sprintf(
+				"Publisher '%s' does not support configuration, but was provided with one.",
+				node.PluginName),
 			Subject: node.Config.Range().Ptr(),
 			Context: node.Invocation.Range().Ptr(),
 		})
 		return nil, diags
 	}
 
-	var format plugin.OutputFormat
-	// XXX: So format is optional? Not including format in invocation doesn't validate it
-	// anyway, this would change with the new AST
-	if attr, found := utils.Pop(node.Invocation.Body.Attributes, "format"); found {
-		val, diag := dataspec.DecodeAttr(fabctx.GetEvalContext(ctx), attr, &dataspec.AttrSpec{
+	var format *string
+	formatAttr, found := utils.Pop(node.Invocation.Body.Attributes, "format");
+
+	if found && len(p.Formats) > 0 {
+		val, diag := dataspec.DecodeAttr(fabctx.GetEvalContext(ctx), formatAttr, &dataspec.AttrSpec{
 			Name:        "format",
 			Type:        cty.String,
 			Constraints: constraint.RequiredMeaningful,
-			OneOf: constraint.OneOf(utils.FnMap(p.AllowedFormats, func(f plugin.OutputFormat) cty.Value {
-				return cty.StringVal(f.String())
-			})),
+			// FIXME: how does it work with an empty Formats list?
+			OneOf: constraint.OneOf(
+				utils.FnMap(p.Formats, func(f string) cty.Value {
+					return cty.StringVal(f)
+				})),
 		})
-
 		if diags.Extend(diag) {
 			return
 		}
 		formatStr := val.Value.AsString()
-		switch formatStr {
-		case plugin.OutputFormatMD.String():
-			format = plugin.OutputFormatMD
-		case plugin.OutputFormatHTML.String():
-			format = plugin.OutputFormatHTML
-		case plugin.OutputFormatPDF.String():
-			format = plugin.OutputFormatPDF
-		default:
-			diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "Invalid format",
-				Detail:   fmt.Sprintf("'%s' is not a valid format", formatStr),
-				Subject:  &attr.SrcRange,
-			})
-			return
-		}
+		format = &formatStr
+	} else if found && len(p.Formats) == 0 {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagWarning,
+			Summary:  "Publisher doesn't support format specification",
+			Detail: fmt.Sprintf(
+				"Publisher '%s' does not support format specification, but was provided with one.",
+				node.PluginName),
+			Subject: node.Config.Range().Ptr(),
+			Context: node.Invocation.Range().Ptr(),
+		})
+		return nil, diags
+	} else if !found && len(p.Formats) > 0 {
+		diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagWarning,
+			Summary:  "No format specified for publisher",
+			Detail: fmt.Sprintf(
+				"Format value must be set for the publisher '%s'",
+				node.PluginName),
+			Subject: node.Config.Range().Ptr(),
+			Context: node.Invocation.Range().Ptr(),
+		})
+		return nil, diags
 	}
 
 	args, diag := dataspec.DecodeAndEvalBlock(ctx, node.Invocation.Block, p.Args, nil)

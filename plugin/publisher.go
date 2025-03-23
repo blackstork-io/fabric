@@ -10,49 +10,23 @@ import (
 	"github.com/blackstork-io/fabric/plugin/plugindata"
 )
 
-type OutputFormat int
-
-const (
-	OutputFormatUnspecified OutputFormat = iota
-	OutputFormatMD
-	OutputFormatHTML
-	OutputFormatPDF
-)
-
-func (f OutputFormat) String() string {
-	switch f {
-	case OutputFormatMD:
-		return "md"
-	case OutputFormatHTML:
-		return "html"
-	case OutputFormatPDF:
-		return "pdf"
-	default:
-		return "unknown"
-	}
-}
-
-func (f OutputFormat) Ext() string {
-	return "." + f.String()
-}
-
 type PublishFunc func(ctx context.Context, params *PublishParams) diagnostics.Diag
 
 type PublishParams struct {
-	DocumentName string
-	Config       *dataspec.Block
-	Args         *dataspec.Block
-	DataContext  plugindata.Map
-	Format       OutputFormat
+	DocumentName     string
+	Config           *dataspec.Block
+	Args             *dataspec.Block
+	DataContext      plugindata.Map
+	FormattedContent *FormattedContent
 }
 
 type Publisher struct {
-	Doc            string
-	Tags           []string
-	PublishFunc    PublishFunc
-	Args           *dataspec.RootSpec
-	Config         *dataspec.RootSpec
-	AllowedFormats []OutputFormat
+	Doc         string
+	Tags        []string
+	PublishFunc PublishFunc
+	Args        *dataspec.RootSpec
+	Config      *dataspec.RootSpec
+	Formats     []string
 }
 
 func (pub *Publisher) Validate() diagnostics.Diag {

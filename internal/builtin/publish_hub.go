@@ -19,7 +19,12 @@ import (
 	pluginapiv1 "github.com/blackstork-io/fabric/plugin/pluginapi/v1"
 )
 
-func makeHubPublisher(version string, loader hubClientLoadFn, logger *slog.Logger, tracer trace.Tracer) *plugin.Publisher {
+func makeHubPublisher(
+	version string,
+	loader hubClientLoadFn,
+	logger *slog.Logger,
+	tracer trace.Tracer,
+) *plugin.Publisher {
 	if logger == nil {
 		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
@@ -55,8 +60,8 @@ func makeHubPublisher(version string, loader hubClientLoadFn, logger *slog.Logge
 				},
 			},
 		},
-		AllowedFormats: []plugin.OutputFormat{plugin.OutputFormatUnspecified},
-		PublishFunc:    publishHub(version, loader, logger, tracer),
+		Formats:     []string{},
+		PublishFunc: publishHub(version, loader, logger, tracer),
 	}
 }
 

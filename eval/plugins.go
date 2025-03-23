@@ -16,8 +16,13 @@ type Publishers interface {
 	Publisher(name string) (*plugin.Publisher, bool)
 }
 
+type Formatters interface {
+	Formatter(name string) (*plugin.Formatter, bool)
+}
+
 type Plugins interface {
 	DataSources
 	ContentProviders
 	Publishers
+	Formatters
 }

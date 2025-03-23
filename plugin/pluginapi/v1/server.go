@@ -129,12 +129,11 @@ func (srv *grpcServer) Publish(ctx context.Context, req *PublishRequest) (*Publi
 		return nil, status.Errorf(codes.InvalidArgument, "failed to decode args: %v", err)
 	}
 	datactx := decodeMapData(req.GetDataContext().GetValue())
-	format := decodeOutputFormat(req.GetFormat())
 	diags := srv.schema.Publish(ctx, publisher, &plugin.PublishParams{
 		Config:       cfg,
 		Args:         args,
 		DataContext:  datactx,
-		Format:       format,
+		Format:       req.GetFormat(),
 		DocumentName: req.GetDocumentName(),
 	})
 	return &PublishResponse{

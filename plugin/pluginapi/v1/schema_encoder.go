@@ -75,27 +75,14 @@ func encodeInvocationOrder(src plugin.InvocationOrder) InvocationOrder {
 	}
 }
 
-func encodeOutputFormat(src plugin.OutputFormat) OutputFormat {
-	switch src {
-	case plugin.OutputFormatMD:
-		return OutputFormat_OUTPUT_FORMAT_MD
-	case plugin.OutputFormatHTML:
-		return OutputFormat_OUTPUT_FORMAT_HTML
-	case plugin.OutputFormatPDF:
-		return OutputFormat_OUTPUT_FORMAT_PDF
-	default:
-		return OutputFormat_OUTPUT_FORMAT_UNSPECIFIED
-	}
-}
-
 func encodePublisherShema(src *plugin.Publisher) (_ *PublisherSchema, diags diagnostics.Diag) {
 	if src == nil {
 		return nil, nil
 	}
 	schema := &PublisherSchema{
-		Doc:            src.Doc,
-		Tags:           src.Tags,
-		AllowedFormats: utils.FnMap(src.AllowedFormats, encodeOutputFormat),
+		Doc:     src.Doc,
+		Tags:    src.Tags,
+		Formats: src.Formats,
 	}
 
 	var diag diagnostics.Diag

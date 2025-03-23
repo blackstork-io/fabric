@@ -2,6 +2,7 @@ package eval
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"slices"
 
@@ -21,6 +22,7 @@ type Document struct {
 	DataBlocks    []*PluginDataAction
 	ContentBlocks []*Content
 	PublishBlocks []*PluginPublishAction
+	FormatBlocks  []*PluginFormatAction
 }
 
 func (doc *Document) FetchData(ctx context.Context) (plugindata.Data, diagnostics.Diag) {
@@ -49,9 +51,13 @@ func filterChildrenByTags(children []*Content, requiredTags []string) []*Content
 	})
 }
 
-func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Map, requiredTags []string) (*plugin.ContentSection, plugindata.Data, diagnostics.Diag) {
-	logger := slog.Default()
-	logger.WarnContext(ctx, "Render content for the document template", "document", doc.Source.Name)
+func (doc *Document) RenderContent(
+	ctx context.Context,
+	docDataCtx plugindata.Map,
+	requiredTags []string,
+) (*plugin.ContentSection, plugindata.Data, diagnostics.Diag) {
+	log := slog.Default()
+	log.InfoContext(ctx, "Rendering document content", "document", doc.Source.Name)
 	data, diags := doc.FetchData(ctx)
 	if diags.HasErrors() {
 		return nil, nil, diags
@@ -102,9 +108,15 @@ func (doc *Document) RenderContent(ctx context.Context, docDataCtx plugindata.Ma
 	return result, docDataCtx, diags
 }
 
-func (doc *Document) Publish(ctx context.Context, content plugin.Content, data plugindata.Data, documentName string) diagnostics.Diag {
-	logger := *slog.Default()
-	logger.DebugContext(ctx, "Fetching data for the document template")
+func (doc *Document) Publish(
+	ctx context.Context,
+	content plugin.Content,
+	data plugindata.Data,
+	documentName string,
+) diagnostics.Diag {
+	log := *slog.Default()
+	log.DebugContext(ctx, "Publishing a document")
+
 	docData := plugindata.Map{
 		definitions.BlockKindContent: content.AsData(),
 	}
@@ -115,9 +127,62 @@ func (doc *Document) Publish(ctx context.Context, content plugin.Content, data p
 		definitions.BlockKindData:     data,
 		definitions.BlockKindDocument: docData,
 	}
+
+	var formatDiags diagnostics.Diag
+
+	requiredFormats := map[string]*PluginFormatAction{}
+	for _, block := range doc.PublishBlocks {
+
+		if block.Format == nil {
+			continue
+		}
+
+		formatToPublish := *block.Format
+		if _, ok := requiredFormats[formatToPublish]; !ok {
+
+			var formatBlock *PluginFormatAction
+			for _, fb := range doc.FormatBlocks {
+				if fb.PluginName == formatToPublish {
+					formatBlock = fb
+					break
+				}
+			}
+
+			if formatBlock == nil {
+				formatDiags.Extend(diagnostics.Diag{{
+					Severity: hcl.DiagError,
+					Summary:  "Missing formatter requested by publisher",
+					Detail: fmt.Sprintf(
+						"'%s' formatter required by '%s' publisher not found",
+						block.PluginName,
+						formatToPublish,
+					),
+				}})
+				continue
+			}
+
+			requiredFormats[formatToPublish] = formatBlock
+		}
+	}
+	if formatDiags.HasErrors() {
+		return formatDiags
+	}
+
 	var diags diagnostics.Diag
 	for _, block := range doc.PublishBlocks {
-		diag := block.Publish(ctx, dataCtx, documentName)
+
+		log.DebugContext(
+			ctx, "Executing a publish block",
+			"publisher", block.PluginName,
+			"block_name", block.BlockName,
+		)
+
+		var formatter *PluginFormatAction
+		if block.Format != nil {
+			formatter = requiredFormats[*block.Format]
+		}
+
+		diag := block.Publish(ctx, dataCtx, documentName, formatter)
 		if diag != nil {
 			diags.Extend(diag)
 		}
@@ -125,8 +190,12 @@ func (doc *Document) Publish(ctx context.Context, content plugin.Content, data p
 	return diags
 }
 
-func LoadDocument(ctx context.Context, plugins Plugins, node *definitions.ParsedDocument) (_ *Document, diags diagnostics.Diag) {
-	block := Document{
+func LoadDocument(
+	ctx context.Context,
+	plugins Plugins,
+	node *definitions.ParsedDocument,
+) (_ *Document, diags diagnostics.Diag) {
+	doc := Document{
 		Source:       node.Source,
 		Meta:         node.Meta,
 		Vars:         node.Vars,
@@ -148,21 +217,42 @@ func LoadDocument(ctx context.Context, plugins Plugins, node *definitions.Parsed
 			})
 		}
 		dataNames[key] = struct{}{}
-		block.DataBlocks = append(block.DataBlocks, decoded)
+		doc.DataBlocks = append(doc.DataBlocks, decoded)
 	}
 	for _, child := range node.Content {
 		decoded, diag := LoadContent(ctx, plugins, child)
 		if diags.Extend(diag) {
 			return nil, diags
 		}
-		block.ContentBlocks = append(block.ContentBlocks, decoded)
+		doc.ContentBlocks = append(doc.ContentBlocks, decoded)
 	}
+
+	for _, child := range node.Format {
+		decoded, diag := LoadPluginFormatAction(ctx, plugins, child)
+		if diags.Extend(diag) {
+			return nil, diags
+		}
+		doc.FormatBlocks = append(doc.FormatBlocks, decoded)
+	}
+
+	// register MD format block if it's not defined
+	mdIdx := slices.IndexFunc(doc.FormatBlocks, func(b *PluginFormatAction) bool {
+		return b.Formatter.Format == "md"
+	})
+	if mdIdx == -1 {
+		mdFormatAction, diag := CreatePluginFormatActionMD(ctx, plugins)
+		doc.FormatBlocks = append(doc.FormatBlocks, mdFormatAction)
+		if diags.Extend(diag) {
+			return nil, diags
+		}
+	}
+
 	for _, child := range node.Publish {
 		decoded, diag := LoadPluginPublishAction(ctx, plugins, child)
 		if diags.Extend(diag) {
 			return nil, diags
 		}
-		block.PublishBlocks = append(block.PublishBlocks, decoded)
+		doc.PublishBlocks = append(doc.PublishBlocks, decoded)
 	}
-	return &block, diags
+	return &doc, diags
 }

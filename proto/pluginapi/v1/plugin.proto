@@ -46,14 +46,25 @@ message ProvideContentResponse {
     repeated Diagnostic diagnostics = 2;
 }
 
+message FormatContentRequest {
+    string   formatter    = 1;
+    Block    args         = 2;
+    Block    config       = 3;
+    MapData  data_context = 4;
+}
+
+message FormatContentResponse {
+    FormattedContent    result      = 1;
+    repeated Diagnostic diagnostics = 2;
+}
 
 message PublishRequest {
-    string         publisher     = 1;
-    Block          args          = 2;
-    Block          config        = 3;
-    MapData        data_context  = 4;
-    OutputFormat   format        = 5;
-    string         document_name = 6;
+    string           publisher         = 1;
+    Block            args              = 2;
+    Block            config            = 3;
+    MapData          data_context      = 4;
+    optional FormattedContent formatted_content = 5;
+    string           document_name     = 6;
 }
 
 message PublishResponse {

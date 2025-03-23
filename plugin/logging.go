@@ -55,7 +55,7 @@ func makePublisherLogging(plugin, name string, publisher Publisher, logger *slog
 		logger.DebugContext(ctx, "Executing publisher", "params", slog.GroupValue(
 			slog.String("plugin", plugin),
 			slog.String("publisher", name),
-			slog.String("format", params.Format.String()),
+			slog.Any("format", params.Format),
 			slog.Any("config", logDataBlockValue(params.Config)),
 			slog.Any("args", logDataBlockValue(params.Args)),
 			slog.String("document_name", params.DocumentName),
